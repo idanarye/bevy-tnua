@@ -1,0 +1,8 @@
+(function() {var implementors = {};
+implementors["bevy"] = [];
+implementors["bevy_ecs"] = [];
+implementors["bevy_internal"] = [];
+implementors["bevy_render"] = [{"text":"impl <a class=\"trait\" href=\"bevy_ecs/bundle/trait.Bundle.html\" title=\"trait bevy_ecs::bundle::Bundle\">Bundle</a> for <a class=\"struct\" href=\"bevy_render/view/visibility/struct.VisibilityBundle.html\" title=\"struct bevy_render::view::visibility::VisibilityBundle\">VisibilityBundle</a>","synthetic":false,"types":["bevy_render::view::visibility::VisibilityBundle"]}];
+implementors["bevy_scene"] = [{"text":"impl <a class=\"trait\" href=\"bevy_ecs/bundle/trait.Bundle.html\" title=\"trait bevy_ecs::bundle::Bundle\">Bundle</a> for <a class=\"struct\" href=\"bevy_scene/struct.SceneBundle.html\" title=\"struct bevy_scene::SceneBundle\">SceneBundle</a>","synthetic":false,"types":["bevy_scene::bundle::SceneBundle"]},{"text":"impl <a class=\"trait\" href=\"bevy_ecs/bundle/trait.Bundle.html\" title=\"trait bevy_ecs::bundle::Bundle\">Bundle</a> for <a class=\"struct\" href=\"bevy_scene/struct.DynamicSceneBundle.html\" title=\"struct bevy_scene::DynamicSceneBundle\">DynamicSceneBundle</a>","synthetic":false,"types":["bevy_scene::bundle::DynamicSceneBundle"]}];
+implementors["bevy_transform"] = [{"text":"impl <a class=\"trait\" href=\"bevy_ecs/bundle/trait.Bundle.html\" title=\"trait bevy_ecs::bundle::Bundle\">Bundle</a> for <a class=\"struct\" href=\"bevy_transform/struct.TransformBundle.html\" title=\"struct bevy_transform::TransformBundle\">TransformBundle</a>","synthetic":false,"types":["bevy_transform::TransformBundle"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

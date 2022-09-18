@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["DynamicHandleImpl","Internal type definition that is only exposed for documentation purposes."],["FixedHandleImpl","Internal type definition that is only exposed for documentation purposes."]]};

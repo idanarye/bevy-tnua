@@ -1,0 +1,253 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Universal shader translator."><meta name="keywords" content="rust, rustlang, rust-lang, naga"><title>naga - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate naga</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.9.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#constants">Constants</a></li><li><a href="#types">Type Definitions</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../naga/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">naga</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/naga/lib.rs.html#1-1697">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Universal shader translator.</p>
+<p>The central structure of the crate is <a href="struct.Module.html" title="Module"><code>Module</code></a>. A <code>Module</code> contains:</p>
+<ul>
+<li>
+<p><a href="struct.Function.html" title="Function"><code>Function</code></a>s, which have arguments, a return type, local variables, and a body,</p>
+</li>
+<li>
+<p><a href="struct.EntryPoint.html" title="EntryPoint"><code>EntryPoint</code></a>s, which are specialized functions that can serve as the entry
+point for pipeline stages like vertex shading or fragment shading,</p>
+</li>
+<li>
+<p><a href="enum.Expression.html#variant.Constant"><code>Constant</code></a>s and <a href="enum.Expression.html#variant.GlobalVariable"><code>GlobalVariable</code></a>s used by <code>EntryPoint</code>s and <code>Function</code>s, and</p>
+</li>
+<li>
+<p><a href="struct.Type.html" title="Type"><code>Type</code></a>s used by the above.</p>
+</li>
+</ul>
+<p>The body of an <code>EntryPoint</code> or <code>Function</code> is represented using two types:</p>
+<ul>
+<li>
+<p>An <a href="enum.Expression.html" title="Expression"><code>Expression</code></a> produces a value, but has no side effects or control flow.
+<code>Expressions</code> include variable references, unary and binary operators, and so
+on.</p>
+</li>
+<li>
+<p>A <a href="enum.Statement.html" title="Statement"><code>Statement</code></a> can have side effects and structured control flow.
+<code>Statement</code>s do not produce a value, other than by storing one in some
+designated place. <code>Statements</code> include blocks, conditionals, and loops, but also
+operations that have side effects, like stores and function calls.</p>
+</li>
+</ul>
+<p><code>Statement</code>s form a tree, with pointers into the DAG of <code>Expression</code>s.</p>
+<p>Restricting side effects to statements simplifies analysis and code generation.
+A Naga backend can generate code to evaluate an <code>Expression</code> however and
+whenever it pleases, as long as it is certain to observe the side effects of all
+previously executed <code>Statement</code>s.</p>
+<p>Many <code>Statement</code> variants use the <a href="struct.Block.html" title="Block"><code>Block</code></a> type, which is <code>Vec&lt;Statement&gt;</code>,
+with optional span info, representing a series of statements executed in order. The body of an
+<code>EntryPoint</code>s or <code>Function</code> is a <code>Block</code>, and <code>Statement</code> has a
+<a href="enum.Statement.html#variant.Block" title="Statement::Block"><code>Block</code></a> variant.</p>
+<h3 id="arenas"><a href="#arenas">Arenas</a></h3>
+<p>To improve translator performance and reduce memory usage, most structures are
+stored in an <a href="struct.Arena.html" title="Arena"><code>Arena</code></a>. An <code>Arena&lt;T&gt;</code> stores a series of <code>T</code> values, indexed by
+<a href="struct.Handle.html"><code>Handle&lt;T&gt;</code></a> values, which are just wrappers around integer indexes.
+For example, a <code>Function</code>’s expressions are stored in an <code>Arena&lt;Expression&gt;</code>,
+and compound expressions refer to their sub-expressions via <code>Handle&lt;Expression&gt;</code>
+values. (When examining the serialized form of a <code>Module</code>, note that the first
+element of an <code>Arena</code> has an index of 1, not 0.)</p>
+<p>A <a href="struct.UniqueArena.html" title="UniqueArena"><code>UniqueArena</code></a> is just like an <code>Arena</code>, except that it stores only a single
+instance of each value. The value type must implement <code>Eq</code> and <code>Hash</code>. Like an
+<code>Arena</code>, inserting a value into a <code>UniqueArena</code> returns a <code>Handle</code> which can be
+used to efficiently access the value, without a hash lookup. Inserting a value
+multiple times returns the same <code>Handle</code>.</p>
+<p>If the <code>span</code> feature is enabled, both <code>Arena</code> and <code>UniqueArena</code> can associate a
+source code span with each element.</p>
+<h3 id="function-calls"><a href="#function-calls">Function Calls</a></h3>
+<p>Naga’s representation of function calls is unusual. Most languages treat
+function calls as expressions, but because calls may have side effects, Naga
+represents them as a kind of statement, <a href="enum.Statement.html#variant.Call" title="Statement::Call"><code>Statement::Call</code></a>. If the function
+returns a value, a call statement designates a particular <a href="enum.Expression.html#variant.CallResult" title="Expression::CallResult"><code>Expression::CallResult</code></a>
+expression to represent its return value, for use by subsequent statements and
+expressions.</p>
+<h3 id="expression-evaluation-time"><a href="#expression-evaluation-time"><code>Expression</code> evaluation time</a></h3>
+<p>It is essential to know when an <a href="enum.Expression.html" title="Expression"><code>Expression</code></a> should be evaluated, because its
+value may depend on previous <a href="enum.Statement.html" title="Statement"><code>Statement</code></a>s’ effects. But whereas the order of
+execution for a tree of <code>Statement</code>s is apparent from its structure, it is not
+so clear for <code>Expressions</code>, since an expression may be referred to by any number
+of <code>Statement</code>s and other <code>Expression</code>s.</p>
+<p>Naga’s rules for when <code>Expression</code>s are evaluated are as follows:</p>
+<ul>
+<li>
+<p><a href="enum.Expression.html#variant.Constant"><code>Constant</code></a> expressions are considered to be
+implicitly evaluated before execution begins.</p>
+</li>
+<li>
+<p><a href="enum.Expression.html#variant.FunctionArgument"><code>FunctionArgument</code></a> and <a href="enum.Expression.html#variant.LocalVariable"><code>LocalVariable</code></a> expressions are considered
+implicitly evaluated upon entry to the function to which they belong.
+Function arguments cannot be assigned to, and <code>LocalVariable</code> expressions
+produce a <em>pointer to</em> the variable’s value (for use with <a href="enum.Expression.html#variant.Load"><code>Load</code></a> and
+<a href="enum.Statement.html#variant.Store"><code>Store</code></a>). Neither varies while the function executes, so it suffices to
+consider these expressions evaluated once on entry.</p>
+</li>
+<li>
+<p>Similarly, <a href="enum.Expression.html#variant.GlobalVariable"><code>GlobalVariable</code></a> expressions are considered implicitly
+evaluated before execution begins, since their value does not change while
+code executes, for one of two reasons:</p>
+<ul>
+<li>
+<p>Most <code>GlobalVariable</code> expressions produce a pointer to the variable’s
+value, for use with <a href="enum.Expression.html#variant.Load"><code>Load</code></a> and <a href="enum.Statement.html#variant.Store"><code>Store</code></a>, as <code>LocalVariable</code>
+expressions do. Although the variable’s value may change, its address
+does not.</p>
+</li>
+<li>
+<p>A <code>GlobalVariable</code> expression referring to a global in the
+<a href="enum.AddressSpace.html#variant.Handle" title="AddressSpace::Handle"><code>AddressSpace::Handle</code></a> address space produces the value directly, not
+a pointer. Such global variables hold opaque types like shaders or
+images, and cannot be assigned to.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>A <a href="enum.Expression.html#variant.CallResult"><code>CallResult</code></a> expression that is the <code>result</code> of a <a href="enum.Statement.html#variant.Call" title="Statement::Call"><code>Statement::Call</code></a>,
+representing the call’s return value, is evaluated when the <code>Call</code> statement
+is executed.</p>
+</li>
+<li>
+<p>Similarly, an <a href="enum.Expression.html#variant.AtomicResult"><code>AtomicResult</code></a> expression that is the <code>result</code> of an
+<a href="enum.Statement.html#variant.Atomic"><code>Atomic</code></a> statement, representing the result of the atomic operation, is
+evaluated when the <code>Atomic</code> statement is executed.</p>
+</li>
+<li>
+<p>All other expressions are evaluated when the (unique) <a href="enum.Statement.html#variant.Emit" title="Statement::Emit"><code>Statement::Emit</code></a>
+statement that covers them is executed. The <a href="enum.Expression.html#method.needs_pre_emit" title="Expression::needs_pre_emit"><code>Expression::needs_pre_emit</code></a>
+method returns <code>true</code> if the given expression is one of those variants that
+does <em>not</em> need to be covered by an <code>Emit</code> statement.</p>
+</li>
+</ul>
+<p>Now, strictly speaking, not all <code>Expression</code> variants actually care when they’re
+evaluated. For example, you can evaluate a <a href="enum.BinaryOperator.html#variant.Add" title="BinaryOperator::Add"><code>BinaryOperator::Add</code></a> expression
+any time you like, as long as you give it the right operands. It’s really only a
+very small set of expressions that are affected by timing:</p>
+<ul>
+<li>
+<p><a href="enum.Expression.html#variant.Load"><code>Load</code></a>, <a href="enum.Expression.html#variant.ImageSample"><code>ImageSample</code></a>, and <a href="enum.Expression.html#variant.ImageLoad"><code>ImageLoad</code></a> expressions are influenced by
+stores to the variables or images they access, and must execute at the
+proper time relative to them.</p>
+</li>
+<li>
+<p><a href="enum.Expression.html#variant.Derivative"><code>Derivative</code></a> expressions are sensitive to control flow uniformity: they
+must not be moved out of an area of uniform control flow into a non-uniform
+area.</p>
+</li>
+<li>
+<p>More generally, any expression that’s used by more than one other expression
+or statement should probably be evaluated only once, and then stored in a
+variable to be cited at each point of use.</p>
+</li>
+</ul>
+<p>Naga tries to help back ends handle all these cases correctly in a somewhat
+circuitous way. The <a href="valid/struct.ModuleInfo.html"><code>ModuleInfo</code></a> structure returned by <a href="valid/struct.Validator.html#method.validate"><code>Validator::validate</code></a>
+provides a reference count for each expression in each function in the module.
+Naturally, any expression with a reference count of two or more deserves to be
+evaluated and stored in a temporary variable at the point that the <code>Emit</code>
+statement covering it is executed. But if we selectively lower the reference
+count threshold to <em>one</em> for the sensitive expression types listed above, so
+that we <em>always</em> generate a temporary variable and save their value, then the
+same code that manages multiply referenced expressions will take care of
+introducing temporaries for time-sensitive expressions as well. The
+<code>Expression::bake_ref_count</code> method (private to the back ends) is meant to help
+with this.</p>
+<h3 id="expression-scope"><a href="#expression-scope"><code>Expression</code> scope</a></h3>
+<p>Each <code>Expression</code> has a <em>scope</em>, which is the region of the function within
+which it can be used by <code>Statement</code>s and other <code>Expression</code>s. It is a validation
+error to use an <code>Expression</code> outside its scope.</p>
+<p>An expression’s scope is defined as follows:</p>
+<ul>
+<li>
+<p>The scope of a <a href="enum.Expression.html#variant.Constant"><code>Constant</code></a>, <a href="enum.Expression.html#variant.GlobalVariable"><code>GlobalVariable</code></a>, <a href="enum.Expression.html#variant.FunctionArgument"><code>FunctionArgument</code></a> or
+<a href="enum.Expression.html#variant.LocalVariable"><code>LocalVariable</code></a> expression covers the entire <code>Function</code> in which it
+occurs.</p>
+</li>
+<li>
+<p>The scope of an expression evaluated by an <a href="enum.Statement.html#variant.Emit"><code>Emit</code></a> statement covers the
+subsequent expressions in that <code>Emit</code>, the subsequent statements in the <code>Block</code>
+to which that <code>Emit</code> belongs (if any) and their sub-statements (if any).</p>
+</li>
+<li>
+<p>The <code>result</code> expression of a <a href="enum.Statement.html#variant.Call"><code>Call</code></a> or <a href="enum.Statement.html#variant.Atomic"><code>Atomic</code></a> statement has a scope
+covering the subsequent statements in the <code>Block</code> in which the statement
+occurs (if any) and their sub-statements (if any).</p>
+</li>
+</ul>
+<p>For example, this implies that an expression evaluated by some statement in a
+nested <code>Block</code> is not available in the <code>Block</code>’s parents. Such a value would
+need to be stored in a local variable to be carried upwards in the statement
+tree.</p>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="back/index.html" title="naga::back mod">back</a></div><div class="item-right docblock-short"><p>Backend functions that export shader <a href="struct.Module.html"><code>Module</code></a>s into binary and text formats.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="front/index.html" title="naga::front mod">front</a></div><div class="item-right docblock-short"><p>Frontend parsers that consume binary and text shaders and load them into <a href="struct.Module.html"><code>Module</code></a>s.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="keywords/index.html" title="naga::keywords mod">keywords</a></div><div class="item-right docblock-short"><p>Lists of reserved keywords for each shading language with a <a href="front/index.html" title="crate::front">frontend</a> or <a href="back/index.html" title="crate::back">backend</a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="proc/index.html" title="naga::proc mod">proc</a></div><div class="item-right docblock-short"><p><a href="struct.Module.html"><code>Module</code></a> processing functionality.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="valid/index.html" title="naga::valid mod">valid</a></div><div class="item-right docblock-short"><p>Shader validator.</p>
+</div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Arena.html" title="naga::Arena struct">Arena</a></div><div class="item-right docblock-short"><p>An arena holding some kind of component (e.g., type, constant,
+instruction, etc.) that can be referenced.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Barrier.html" title="naga::Barrier struct">Barrier</a></div><div class="item-right docblock-short"><p>Memory barrier flags.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Block.html" title="naga::Block struct">Block</a></div><div class="item-right docblock-short"><p>A code block is a vector of statements, with maybe a vector of spans.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Constant.html" title="naga::Constant struct">Constant</a></div><div class="item-right docblock-short"><p>Constant value.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.EarlyDepthTest.html" title="naga::EarlyDepthTest struct">EarlyDepthTest</a></div><div class="item-right docblock-short"><p>Early fragment tests.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.EntryPoint.html" title="naga::EntryPoint struct">EntryPoint</a></div><div class="item-right docblock-short"><p>The main function for a pipeline stage.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Function.html" title="naga::Function struct">Function</a></div><div class="item-right docblock-short"><p>A function defined in the module.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.FunctionArgument.html" title="naga::FunctionArgument struct">FunctionArgument</a></div><div class="item-right docblock-short"><p>A function argument.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.FunctionResult.html" title="naga::FunctionResult struct">FunctionResult</a></div><div class="item-right docblock-short"><p>A function result.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.GlobalVariable.html" title="naga::GlobalVariable struct">GlobalVariable</a></div><div class="item-right docblock-short"><p>Variable defined at module level.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Handle.html" title="naga::Handle struct">Handle</a></div><div class="item-right docblock-short"><p>A strongly typed reference to an arena item.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.LocalVariable.html" title="naga::LocalVariable struct">LocalVariable</a></div><div class="item-right docblock-short"><p>Variable defined at function level.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Module.html" title="naga::Module struct">Module</a></div><div class="item-right docblock-short"><p>Shader module.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Range.html" title="naga::Range struct">Range</a></div><div class="item-right docblock-short"><p>A strongly typed range of handles.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.ResourceBinding.html" title="naga::ResourceBinding struct">ResourceBinding</a></div><div class="item-right docblock-short"><p>Pipeline binding information for global resources.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SourceLocation.html" title="naga::SourceLocation struct">SourceLocation</a></div><div class="item-right docblock-short"><p>A human-readable representation for a span, tailored for text source.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Span.html" title="naga::Span struct">Span</a></div><div class="item-right docblock-short"><p>A source code span, used for error reporting.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.StorageAccess.html" title="naga::StorageAccess struct">StorageAccess</a></div><div class="item-right docblock-short"><p>Flags describing an image.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.StructMember.html" title="naga::StructMember struct">StructMember</a></div><div class="item-right docblock-short"><p>Member of a user-defined structure.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SwitchCase.html" title="naga::SwitchCase struct">SwitchCase</a></div><div class="item-right docblock-short"><p>A case for a switch statement.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Type.html" title="naga::Type struct">Type</a></div><div class="item-right docblock-short"><p>A data type declared in the module.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.UniqueArena.html" title="naga::UniqueArena struct">UniqueArena</a></div><div class="item-right docblock-short"><p>An arena whose elements are guaranteed to be unique.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.WithSpan.html" title="naga::WithSpan struct">WithSpan</a></div><div class="item-right docblock-short"><p>Wrapper class for <a href="https://doc.rust-lang.org/1.63.0/std/error/trait.Error.html" title="Error"><code>Error</code></a>, augmenting it with a list of <a href="type.SpanContext.html" title="SpanContext"><code>SpanContext</code></a>s.</p>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.AddressSpace.html" title="naga::AddressSpace enum">AddressSpace</a></div><div class="item-right docblock-short"><p>Addressing space of variables.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ArraySize.html" title="naga::ArraySize enum">ArraySize</a></div><div class="item-right docblock-short"><p>Size of an array.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.AtomicFunction.html" title="naga::AtomicFunction enum">AtomicFunction</a></div><div class="item-right docblock-short"><p>Function on an atomic value.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.BinaryOperator.html" title="naga::BinaryOperator enum">BinaryOperator</a></div><div class="item-right docblock-short"><p>Operation that can be applied on two values.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Binding.html" title="naga::Binding enum">Binding</a></div><div class="item-right docblock-short"><p>Describes how an input/output variable is to be bound.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.BuiltIn.html" title="naga::BuiltIn enum">BuiltIn</a></div><div class="item-right docblock-short"><p>Built-in inputs and outputs.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ConservativeDepth.html" title="naga::ConservativeDepth enum">ConservativeDepth</a></div><div class="item-right docblock-short"><p>Enables adjusting depth without disabling early Z.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ConstantInner.html" title="naga::ConstantInner enum">ConstantInner</a></div><div class="item-right docblock-short"><p>Additional information, dependent on the kind of constant.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.DerivativeAxis.html" title="naga::DerivativeAxis enum">DerivativeAxis</a></div><div class="item-right docblock-short"><p>Axis on which to compute a derivative.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Expression.html" title="naga::Expression enum">Expression</a></div><div class="item-right docblock-short"><p>An expression that can be evaluated to obtain a value.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ImageClass.html" title="naga::ImageClass enum">ImageClass</a></div><div class="item-right docblock-short"><p>Sub-class of the image type.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ImageDimension.html" title="naga::ImageDimension enum">ImageDimension</a></div><div class="item-right docblock-short"><p>The number of dimensions an image has.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ImageQuery.html" title="naga::ImageQuery enum">ImageQuery</a></div><div class="item-right docblock-short"><p>Type of an image query.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Interpolation.html" title="naga::Interpolation enum">Interpolation</a></div><div class="item-right docblock-short"><p>The interpolation qualifier of a binding or struct field.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.MathFunction.html" title="naga::MathFunction enum">MathFunction</a></div><div class="item-right docblock-short"><p>Built-in shader function for math.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.RelationalFunction.html" title="naga::RelationalFunction enum">RelationalFunction</a></div><div class="item-right docblock-short"><p>Built-in shader function for testing relation between values.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SampleLevel.html" title="naga::SampleLevel enum">SampleLevel</a></div><div class="item-right docblock-short"><p>Sampling modifier to control the level of detail.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Sampling.html" title="naga::Sampling enum">Sampling</a></div><div class="item-right docblock-short"><p>The sampling qualifiers of a binding or struct field.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ScalarKind.html" title="naga::ScalarKind enum">ScalarKind</a></div><div class="item-right docblock-short"><p>Primitive type for a scalar.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ScalarValue.html" title="naga::ScalarValue enum">ScalarValue</a></div><div class="item-right docblock-short"><p>A literal scalar value, used in constants.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ShaderStage.html" title="naga::ShaderStage enum">ShaderStage</a></div><div class="item-right docblock-short"><p>Stage of the programmable pipeline.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Statement.html" title="naga::Statement enum">Statement</a></div><div class="item-right docblock-short"><p>Instructions which make up an executable block.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.StorageFormat.html" title="naga::StorageFormat enum">StorageFormat</a></div><div class="item-right docblock-short"><p>Image storage format.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SwitchValue.html" title="naga::SwitchValue enum">SwitchValue</a></div><div class="item-right docblock-short"><p>The value of the switch case.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SwizzleComponent.html" title="naga::SwizzleComponent enum">SwizzleComponent</a></div><div class="item-right docblock-short"><p>Component selection for a vector swizzle.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.TypeInner.html" title="naga::TypeInner enum">TypeInner</a></div><div class="item-right docblock-short"><p>Enum with additional information, depending on the kind of type.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.UnaryOperator.html" title="naga::UnaryOperator enum">UnaryOperator</a></div><div class="item-right docblock-short"><p>Operation that can be applied on a single value.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.VectorSize.html" title="naga::VectorSize enum">VectorSize</a></div><div class="item-right docblock-short"><p>Number of components in a vector.</p>
+</div></div></div><h2 id="constants" class="small-section-header"><a href="#constants">Constants</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="constant" href="constant.BOOL_WIDTH.html" title="naga::BOOL_WIDTH constant">BOOL_WIDTH</a></div><div class="item-right docblock-short"><p>Width of a boolean type, in bytes.</p>
+</div></div></div><h2 id="types" class="small-section-header"><a href="#types">Type Definitions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.Bytes.html" title="naga::Bytes type">Bytes</a></div><div class="item-right docblock-short"><p>Number of bytes per scalar.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.FastHashMap.html" title="naga::FastHashMap type">FastHashMap</a></div><div class="item-right docblock-short"><p>Hash map that is faster but not resilient to DoS attacks.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.FastHashSet.html" title="naga::FastHashSet type">FastHashSet</a></div><div class="item-right docblock-short"><p>Hash set that is faster but not resilient to DoS attacks.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.SpanContext.html" title="naga::SpanContext type">SpanContext</a></div><div class="item-right docblock-short"><p>A source code span together with “context”, a user-readable description of what part of the error it refers to.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

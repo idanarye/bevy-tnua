@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Image representations for ffi."><meta name="keywords" content="rust, rustlang, rust-lang, flat"><title>image::flat - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../image/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../image/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Module flat</a></h2><div class="sidebar-elems"><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../image/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Module <a href="../index.html">image</a>::<wbr><a class="mod" href="#">flat</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../../src/image/flat.rs.html#1-1712">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Image representations for ffi.</p>
+<h2 id="usage"><a href="#usage">Usage</a></h2>
+<p>Imagine you want to offer a very simple ffi interface: The caller provides an image buffer and
+your program creates a thumbnail from it and dumps that image as <code>png</code>. This module is designed
+to help you transition from raw memory data to Rust representation.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::ptr</span>;
+<span class="kw">use</span> <span class="ident">std::slice</span>;
+<span class="kw">use</span> <span class="ident">image::Rgb</span>;
+<span class="kw">use</span> <span class="ident">image::flat</span>::{<span class="ident">FlatSamples</span>, <span class="ident">SampleLayout</span>};
+<span class="kw">use</span> <span class="ident">image::imageops::thumbnail</span>;
+
+<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
+<span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">store_rgb8_compressed</span>(
+    <span class="ident">data</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">len</span>: <span class="ident">usize</span>,
+    <span class="ident">layout</span>: <span class="kw-2">*const</span> <span class="ident">SampleLayout</span>
+)
+    -&gt; <span class="ident">bool</span>
+{
+    <span class="kw">let</span> <span class="ident">samples</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">data</span>, <span class="ident">len</span>) };
+    <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ptr::read</span>(<span class="ident">layout</span>) };
+
+    <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">FlatSamples</span> {
+        <span class="ident">samples</span>,
+        <span class="ident">layout</span>,
+        <span class="ident">color_hint</span>: <span class="prelude-val">None</span>,
+    };
+
+    <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">buffer</span>.<span class="ident">as_view</span>::<span class="op">&lt;</span><span class="ident">Rgb</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>() {
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="bool-val">false</span>, <span class="comment">// Invalid layout.</span>
+        <span class="prelude-val">Ok</span>(<span class="ident">view</span>) =&gt; <span class="ident">view</span>,
+    };
+
+    <span class="ident">thumbnail</span>(<span class="kw-2">&amp;</span><span class="ident">view</span>, <span class="number">64</span>, <span class="number">64</span>)
+        .<span class="ident">save</span>(<span class="string">&quot;output.png&quot;</span>)
+        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="bool-val">true</span>)
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="bool-val">false</span>)
+}</code></pre></div>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.FlatSamples.html" title="image::flat::FlatSamples struct">FlatSamples</a></div><div class="item-right docblock-short"><p>A flat buffer over a (multi channel) image.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SampleLayout.html" title="image::flat::SampleLayout struct">SampleLayout</a></div><div class="item-right docblock-short"><p>A ffi compatible description of a sample buffer.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.View.html" title="image::flat::View struct">View</a></div><div class="item-right docblock-short"><p>A flat buffer that can be used as an image view.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.ViewMut.html" title="image::flat::ViewMut struct">ViewMut</a></div><div class="item-right docblock-short"><p>A mutable owning version of a flat buffer.</p>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Error.html" title="image::flat::Error enum">Error</a></div><div class="item-right docblock-short"><p>Denotes invalid flat sample buffers when trying to convert to stricter types.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.NormalForm.html" title="image::flat::NormalForm enum">NormalForm</a></div><div class="item-right docblock-short"><p>Different normal forms of buffers.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="image" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

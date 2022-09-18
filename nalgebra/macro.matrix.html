@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Construct a fixed-size matrix directly from data."><meta name="keywords" content="rust, rustlang, rust-lang, matrix"><title>matrix in nalgebra - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" href="https://nalgebra.org/img/favicon.ico"></head><body class="rustdoc macro"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../nalgebra/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../nalgebra/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><div class="sidebar-elems"><h2 class="location"><a href="index.html">In nalgebra</a></h2></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../nalgebra/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Macro <a href="index.html">nalgebra</a>::<wbr><a class="macro" href="#">matrix</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/nalgebra_macros/lib.rs.html#137">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="docblock item-decl"><pre class="rust macro"><code>matrix!() { /* proc-macro */ }</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Construct a fixed-size matrix directly from data.</p>
+<p><strong>Note: Requires the <code>macro</code> feature to be enabled (enabled by default)</strong>.</p>
+<p>This macro facilitates easy construction of matrices when the entries of the matrix are known
+(either as constants or expressions). This macro produces an instance of <code>SMatrix</code>. This means
+that the data of the matrix is stored on the stack, and its dimensions are fixed at
+compile-time. If you want to construct a dynamic matrix, use <a href="macro.dmatrix.html" title="dmatrix!"><code>dmatrix!</code></a> instead.</p>
+<p><code>matrix!</code> is intended to be both the simplest and most efficient way to construct (small)
+matrices, and can also be used in <em>const fn</em> contexts.</p>
+<p>The syntax is MATLAB-like. Column elements are separated by a comma (<code>,</code>), and a semi-colon
+(<code>;</code>) designates that a new row begins.</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">nalgebra::matrix</span>;
+
+<span class="comment">// Produces a Matrix3&lt;_&gt; == SMatrix&lt;_, 3, 3&gt;</span>
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="macro">matrix!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>;
+                <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>;
+                <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>];</code></pre></div>
+<p>You can construct matrices with arbitrary expressions for its elements:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">nalgebra</span>::{<span class="ident">matrix</span>, <span class="ident">Matrix2</span>};
+<span class="kw">let</span> <span class="ident">theta</span> <span class="op">=</span> <span class="number">0.45f64</span>;
+
+<span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="macro">matrix!</span>[<span class="ident">theta</span>.<span class="ident">cos</span>(), <span class="op">-</span> <span class="ident">theta</span>.<span class="ident">sin</span>();
+                <span class="ident">theta</span>.<span class="ident">sin</span>(),   <span class="ident">theta</span>.<span class="ident">cos</span>()];</code></pre></div>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="nalgebra" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

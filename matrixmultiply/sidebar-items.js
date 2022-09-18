@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["dgemm","General matrix multiplication (f64)"],["sgemm","General matrix multiplication (f32)"]]};

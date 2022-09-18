@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["details","Free functions for some special cases of bounding-volume computation."]],"struct":[["AABB","An Axis Aligned Bounding Box."],["BoundingSphere","A Bounding Sphere."],["SimdAABB","Four AABB represented as a single SoA AABB with SIMD components."]],"trait":[["BoundingVolume","Trait of bounding volumes."]]};

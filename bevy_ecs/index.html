@@ -1,0 +1,264 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Bevy ECS"><meta name="keywords" content="rust, rustlang, rust-lang, bevy_ecs"><title>bevy_ecs - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../bevy_ecs/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../bevy_ecs/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate bevy_ecs</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.8.1</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../bevy_ecs/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">bevy_ecs</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/bevy_ecs/lib.rs.html#1-1649">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="bevy-ecs"><a href="#bevy-ecs">Bevy ECS</a></h2>
+<p><a href="https://crates.io/crates/bevy_ecs"><img src="https://img.shields.io/crates/v/bevy_ecs.svg" alt="Crates.io" /></a>
+<a href="https://github.com/bevyengine/bevy/blob/HEAD/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" /></a>
+<a href="https://discord.gg/bevy"><img src="https://img.shields.io/discord/691052431525675048.svg?label=&amp;logo=discord&amp;logoColor=ffffff&amp;color=7389D8&amp;labelColor=6A7EC2" alt="Discord" /></a></p>
+<h3 id="what-is-bevy-ecs"><a href="#what-is-bevy-ecs">What is Bevy ECS?</a></h3>
+<p>Bevy ECS is an Entity Component System custom-built for the <a href="https://bevyengine.org/">Bevy</a> game engine.
+It aims to be simple to use, ergonomic, fast, massively parallel, opinionated, and featureful.
+It was created specifically for Bevy’s needs, but it can easily be used as a standalone crate in other projects.</p>
+<h3 id="ecs"><a href="#ecs">ECS</a></h3>
+<p>All app logic in Bevy uses the Entity Component System paradigm, which is often shortened to ECS. ECS is a software pattern that involves breaking your program up into Entities, Components, and Systems. Entities are unique “things” that are assigned groups of Components, which are then processed using Systems.</p>
+<p>For example, one entity might have a <code>Position</code> and <code>Velocity</code> component, whereas another entity might have a <code>Position</code> and <code>UI</code> component. You might have a movement system that runs on all entities with a Position and Velocity component.</p>
+<p>The ECS pattern encourages clean, decoupled designs by forcing you to break up your app data and logic into its core components. It also helps make your code faster by optimizing memory access patterns and making parallelism easier.</p>
+<h3 id="concepts"><a href="#concepts">Concepts</a></h3>
+<p>Bevy ECS is Bevy’s implementation of the ECS pattern. Unlike other Rust ECS implementations, which often require complex lifetimes, traits, builder patterns, or macros, Bevy ECS uses normal Rust data types for all of these concepts:</p>
+<h4 id="components"><a href="#components">Components</a></h4>
+<p>Components are normal Rust structs. They are data stored in a <code>World</code> and specific instances of Components correlate to Entities.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Position</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }</code></pre></div>
+<h4 id="worlds"><a href="#worlds">Worlds</a></h4>
+<p>Entities, Components, and Resources are stored in a <code>World</code>. Worlds, much like Rust std collections like HashSet and Vec, expose operations to insert, read, write, and remove the data they store.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::world::World</span>;
+
+<span class="kw">let</span> <span class="ident">world</span> <span class="op">=</span> <span class="ident">World::default</span>();</code></pre></div>
+<h4 id="entities"><a href="#entities">Entities</a></h4>
+<p>Entities are unique identifiers that correlate to zero or more Components.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Position</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Velocity</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">world</span> <span class="op">=</span> <span class="ident">World::new</span>();
+
+<span class="kw">let</span> <span class="ident">entity</span> <span class="op">=</span> <span class="ident">world</span>.<span class="ident">spawn</span>()
+    .<span class="ident">insert</span>(<span class="ident">Position</span> { <span class="ident">x</span>: <span class="number">0.0</span>, <span class="ident">y</span>: <span class="number">0.0</span> })
+    .<span class="ident">insert</span>(<span class="ident">Velocity</span> { <span class="ident">x</span>: <span class="number">1.0</span>, <span class="ident">y</span>: <span class="number">0.0</span> })
+    .<span class="ident">id</span>();
+
+<span class="kw">let</span> <span class="ident">entity_ref</span> <span class="op">=</span> <span class="ident">world</span>.<span class="ident">entity</span>(<span class="ident">entity</span>);
+<span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">entity_ref</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">Position</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+<span class="kw">let</span> <span class="ident">velocity</span> <span class="op">=</span> <span class="ident">entity_ref</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">Velocity</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();</code></pre></div>
+<h4 id="systems"><a href="#systems">Systems</a></h4>
+<p>Systems are normal Rust functions. Thanks to the Rust type system, Bevy ECS can use function parameter types to determine what data needs to be sent to the system. It also uses this “data access” information to determine what Systems can run in parallel with each other.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Position</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+
+<span class="kw">fn</span> <span class="ident">print_position</span>(<span class="ident">query</span>: <span class="ident">Query</span><span class="op">&lt;</span>(<span class="ident">Entity</span>, <span class="kw-2">&amp;</span><span class="ident">Position</span>)<span class="op">&gt;</span>) {
+    <span class="kw">for</span> (<span class="ident">entity</span>, <span class="ident">position</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">query</span> {
+        <span class="macro">println!</span>(<span class="string">&quot;Entity {:?} is at position: x {}, y {}&quot;</span>, <span class="ident">entity</span>, <span class="ident">position</span>.<span class="ident">x</span>, <span class="ident">position</span>.<span class="ident">y</span>);
+    }
+}</code></pre></div>
+<h4 id="resources"><a href="#resources">Resources</a></h4>
+<p>Apps often require unique resources, such as asset collections, renderers, audio servers, time, etc. Bevy ECS makes this pattern a first class citizen. <code>Resource</code> is a special kind of component that does not belong to any entity. Instead, it is identified uniquely by its type:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Time</span> {
+    <span class="ident">seconds</span>: <span class="ident">f32</span>,
+}
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">world</span> <span class="op">=</span> <span class="ident">World::new</span>();
+
+<span class="ident">world</span>.<span class="ident">insert_resource</span>(<span class="ident">Time::default</span>());
+
+<span class="kw">let</span> <span class="ident">time</span> <span class="op">=</span> <span class="ident">world</span>.<span class="ident">get_resource</span>::<span class="op">&lt;</span><span class="ident">Time</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+
+<span class="comment">// You can also access resources from Systems</span>
+<span class="kw">fn</span> <span class="ident">print_time</span>(<span class="ident">time</span>: <span class="ident">Res</span><span class="op">&lt;</span><span class="ident">Time</span><span class="op">&gt;</span>) {
+    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">time</span>.<span class="ident">seconds</span>);
+}</code></pre></div>
+<p>The <a href="examples/resources.rs"><code>resources.rs</code></a> example illustrates how to read and write a Counter resource from Systems.</p>
+<h4 id="schedules"><a href="#schedules">Schedules</a></h4>
+<p>Schedules consist of zero or more Stages, which run a set of Systems according to some execution strategy. Bevy ECS provides a few built in Stage implementations (ex: parallel, serial), but you can also implement your own! Schedules run Stages one-by-one in an order defined by the user.</p>
+<p>The built in “parallel stage” considers dependencies between systems and (by default) run as many of them in parallel as possible. This maximizes performance, while keeping the system execution safe. You can also define explicit dependencies between systems.</p>
+<h3 id="using-bevy-ecs"><a href="#using-bevy-ecs">Using Bevy ECS</a></h3>
+<p>Bevy ECS should feel very natural for those familiar with Rust syntax:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Position</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Velocity</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+
+<span class="comment">// This system moves each entity with a Position and Velocity component</span>
+<span class="kw">fn</span> <span class="ident">movement</span>(<span class="kw-2">mut</span> <span class="ident">query</span>: <span class="ident">Query</span><span class="op">&lt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">Position</span>, <span class="kw-2">&amp;</span><span class="ident">Velocity</span>)<span class="op">&gt;</span>) {
+    <span class="kw">for</span> (<span class="kw-2">mut</span> <span class="ident">position</span>, <span class="ident">velocity</span>) <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">query</span> {
+        <span class="ident">position</span>.<span class="ident">x</span> <span class="op">+</span><span class="op">=</span> <span class="ident">velocity</span>.<span class="ident">x</span>;
+        <span class="ident">position</span>.<span class="ident">y</span> <span class="op">+</span><span class="op">=</span> <span class="ident">velocity</span>.<span class="ident">y</span>;
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="comment">// Create a new empty World to hold our Entities and Components</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">world</span> <span class="op">=</span> <span class="ident">World::new</span>();
+
+    <span class="comment">// Spawn an entity with Position and Velocity components</span>
+    <span class="ident">world</span>.<span class="ident">spawn</span>()
+        .<span class="ident">insert</span>(<span class="ident">Position</span> { <span class="ident">x</span>: <span class="number">0.0</span>, <span class="ident">y</span>: <span class="number">0.0</span> })
+        .<span class="ident">insert</span>(<span class="ident">Velocity</span> { <span class="ident">x</span>: <span class="number">1.0</span>, <span class="ident">y</span>: <span class="number">0.0</span> });
+
+    <span class="comment">// Create a new Schedule, which defines an execution strategy for Systems</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">schedule</span> <span class="op">=</span> <span class="ident">Schedule::default</span>();
+
+    <span class="comment">// Add a Stage to our schedule. Each Stage in a schedule runs all of its systems</span>
+    <span class="comment">// before moving on to the next Stage</span>
+    <span class="ident">schedule</span>.<span class="ident">add_stage</span>(<span class="string">&quot;update&quot;</span>, <span class="ident">SystemStage::parallel</span>()
+        .<span class="ident">with_system</span>(<span class="ident">movement</span>)
+    );
+
+    <span class="comment">// Run the schedule once. If your app has a &quot;loop&quot;, you would run this once per loop</span>
+    <span class="ident">schedule</span>.<span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="ident">world</span>);
+}</code></pre></div>
+<h3 id="features"><a href="#features">Features</a></h3><h4 id="query-filters"><a href="#query-filters">Query Filters</a></h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Position</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Player</span>;
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Alive</span>;
+
+<span class="comment">// Gets the Position component of all Entities with Player component and without the Alive</span>
+<span class="comment">// component. </span>
+<span class="kw">fn</span> <span class="ident">system</span>(<span class="ident">query</span>: <span class="ident">Query</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Position</span>, (<span class="ident">With</span><span class="op">&lt;</span><span class="ident">Player</span><span class="op">&gt;</span>, <span class="ident">Without</span><span class="op">&lt;</span><span class="ident">Alive</span><span class="op">&gt;</span>)<span class="op">&gt;</span>) {
+    <span class="kw">for</span> <span class="ident">position</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">query</span> {
+    }
+}</code></pre></div>
+<h4 id="change-detection"><a href="#change-detection">Change Detection</a></h4>
+<p>Bevy ECS tracks <em>all</em> changes to Components and Resources.</p>
+<p>Queries can filter for changed Components:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Position</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Velocity</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+
+<span class="comment">// Gets the Position component of all Entities whose Velocity has changed since the last run of the System</span>
+<span class="kw">fn</span> <span class="ident">system_changed</span>(<span class="ident">query</span>: <span class="ident">Query</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Position</span>, <span class="ident">Changed</span><span class="op">&lt;</span><span class="ident">Velocity</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="kw">for</span> <span class="ident">position</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">query</span> {
+    }
+}
+
+<span class="comment">// Gets the Position component of all Entities that had a Velocity component added since the last run of the System</span>
+<span class="kw">fn</span> <span class="ident">system_added</span>(<span class="ident">query</span>: <span class="ident">Query</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Position</span>, <span class="ident">Added</span><span class="op">&lt;</span><span class="ident">Velocity</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="kw">for</span> <span class="ident">position</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">query</span> {
+    }
+}</code></pre></div>
+<p>Resources also expose change state:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="kw">struct</span> <span class="ident">Time</span>(<span class="ident">f32</span>);
+
+<span class="comment">// Prints &quot;time changed!&quot; if the Time resource has changed since the last run of the System</span>
+<span class="kw">fn</span> <span class="ident">system</span>(<span class="ident">time</span>: <span class="ident">Res</span><span class="op">&lt;</span><span class="ident">Time</span><span class="op">&gt;</span>) {
+    <span class="kw">if</span> <span class="ident">time</span>.<span class="ident">is_changed</span>() {
+        <span class="macro">println!</span>(<span class="string">&quot;time changed!&quot;</span>);
+    }
+}</code></pre></div>
+<p>The <a href="examples/change_detection.rs"><code>change_detection.rs</code></a> example shows how to query only for updated entities and react on changes in resources.</p>
+<h4 id="component-storage"><a href="#component-storage">Component Storage</a></h4>
+<p>Bevy ECS supports multiple component storage types.</p>
+<p>Components can be stored in:</p>
+<ul>
+<li><strong>Tables</strong>: Fast and cache friendly iteration, but slower adding and removing of components. This is the default storage type.</li>
+<li><strong>Sparse Sets</strong>: Fast adding and removing of components, but slower iteration.</li>
+</ul>
+<p>Component storage types are configurable, and they default to table storage if the storage is not manually defined.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">TableStoredComponent</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="attribute">#[<span class="ident">component</span>(<span class="ident">storage</span> <span class="op">=</span> <span class="string">&quot;SparseSet&quot;</span>)]</span>
+<span class="kw">struct</span> <span class="ident">SparseStoredComponent</span>;</code></pre></div>
+<h4 id="component-bundles"><a href="#component-bundles">Component Bundles</a></h4>
+<p>Define sets of Components that should be added together.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Player</span>;
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Position</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Velocity</span> { <span class="ident">x</span>: <span class="ident">f32</span>, <span class="ident">y</span>: <span class="ident">f32</span> }
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Bundle</span>, <span class="ident">Default</span>)]</span>
+<span class="kw">struct</span> <span class="ident">PlayerBundle</span> {
+    <span class="ident">player</span>: <span class="ident">Player</span>,
+    <span class="ident">position</span>: <span class="ident">Position</span>,
+    <span class="ident">velocity</span>: <span class="ident">Velocity</span>,
+}
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">world</span> <span class="op">=</span> <span class="ident">World::new</span>();
+
+<span class="comment">// Spawn a new entity and insert the default PlayerBundle</span>
+<span class="ident">world</span>.<span class="ident">spawn</span>().<span class="ident">insert_bundle</span>(<span class="ident">PlayerBundle::default</span>());
+
+<span class="comment">// Bundles play well with Rust&#39;s struct update syntax</span>
+<span class="ident">world</span>.<span class="ident">spawn</span>().<span class="ident">insert_bundle</span>(<span class="ident">PlayerBundle</span> {
+    <span class="ident">position</span>: <span class="ident">Position</span> { <span class="ident">x</span>: <span class="number">1.0</span>, <span class="ident">y</span>: <span class="number">1.0</span> },
+    ..<span class="ident">Default::default</span>()
+});</code></pre></div>
+<h4 id="events"><a href="#events">Events</a></h4>
+<p>Events offer a communication channel between one or more systems. Events can be sent using the system parameter <code>EventWriter</code> and received with <code>EventReader</code>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">bevy_ecs::prelude</span>::<span class="kw-2">*</span>;
+
+<span class="kw">struct</span> <span class="ident">MyEvent</span> {
+    <span class="ident">message</span>: <span class="ident">String</span>,
+}
+
+<span class="kw">fn</span> <span class="ident">writer</span>(<span class="kw-2">mut</span> <span class="ident">writer</span>: <span class="ident">EventWriter</span><span class="op">&lt;</span><span class="ident">MyEvent</span><span class="op">&gt;</span>) {
+    <span class="ident">writer</span>.<span class="ident">send</span>(<span class="ident">MyEvent</span> {
+        <span class="ident">message</span>: <span class="string">&quot;hello!&quot;</span>.<span class="ident">to_string</span>(),
+    });
+}
+
+<span class="kw">fn</span> <span class="ident">reader</span>(<span class="kw-2">mut</span> <span class="ident">reader</span>: <span class="ident">EventReader</span><span class="op">&lt;</span><span class="ident">MyEvent</span><span class="op">&gt;</span>) {
+    <span class="kw">for</span> <span class="ident">event</span> <span class="kw">in</span> <span class="ident">reader</span>.<span class="ident">iter</span>() {
+    }
+}</code></pre></div>
+<p>A minimal set up using events can be seen in <a href="examples/events.rs"><code>events.rs</code></a>.</p>
+</div></details><h2 id="reexports" class="small-section-header"><a href="#reexports">Re-exports</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left import-item" id="reexport.ptr"><code>pub use <a class="mod" href="../bevy_ptr/index.html" title="mod bevy_ptr">bevy_ptr</a> as ptr;</code></div><div class="item-right docblock-short"></div></div></div><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="archetype/index.html" title="bevy_ecs::archetype mod">archetype</a></div><div class="item-right docblock-short"><p>Types for defining <a href="archetype/struct.Archetype.html" title="Archetype"><code>Archetype</code></a>s, collections of entities that have the same set of
+components.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="bundle/index.html" title="bevy_ecs::bundle mod">bundle</a></div><div class="item-right docblock-short"><p>Types for handling <a href="bundle/trait.Bundle.html" title="Bundle"><code>Bundle</code></a>s.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="change_detection/index.html" title="bevy_ecs::change_detection mod">change_detection</a></div><div class="item-right docblock-short"><p>Types that detect when their internal data mutate.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="component/index.html" title="bevy_ecs::component mod">component</a></div><div class="item-right docblock-short"><p>Types for declaring and storing <a href="component/trait.Component.html" title="Component"><code>Component</code></a>s.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="entity/index.html" title="bevy_ecs::entity mod">entity</a></div><div class="item-right docblock-short"><p>Entity handling types.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="event/index.html" title="bevy_ecs::event mod">event</a></div><div class="item-right docblock-short"><p>Event handling types.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="prelude/index.html" title="bevy_ecs::prelude mod">prelude</a></div><div class="item-right docblock-short"><p>Most commonly used re-exported types.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="query/index.html" title="bevy_ecs::query mod">query</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="reflect/index.html" title="bevy_ecs::reflect mod">reflect</a></div><div class="item-right docblock-short"><p>Types that enable reflection support.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="schedule/index.html" title="bevy_ecs::schedule mod">schedule</a></div><div class="item-right docblock-short"><p>Tools for controlling system execution.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="storage/index.html" title="bevy_ecs::storage mod">storage</a></div><div class="item-right docblock-short"><p>Storage layouts for ECS data.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="system/index.html" title="bevy_ecs::system mod">system</a></div><div class="item-right docblock-short"><p>Tools for controlling behavior in an ECS application.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="world/index.html" title="bevy_ecs::world mod">world</a></div><div class="item-right docblock-short"></div></div></div><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.all_tuples.html" title="bevy_ecs::all_tuples macro">all_tuples</a></div><div class="item-right docblock-short"></div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="bevy_ecs" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

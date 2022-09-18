@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Handle types used for traversal and modification of triangulations."><meta name="keywords" content="rust, rustlang, rust-lang, handles"><title>spade::handles - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spade/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../spade/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Module handles</a></h2><div class="sidebar-elems"><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#constants">Constants</a></li><li><a href="#types">Type Definitions</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spade/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Module <a href="../index.html">spade</a>::<wbr><a class="mod" href="#">handles</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../../src/spade/lib.rs.html#169-176">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Handle types used for traversal and modification of triangulations.</p>
+<p>A handle can either be a “reference handle” or a “fixed handle”. Reference handles are
+used for immutable access to a triangulation. Fixed handles allow mutation but have a
+more limited API.</p>
+<h2 id="reference-handles"><a href="#reference-handles">Reference handles</a></h2>
+<p>Reference handles come in one of four variants:</p>
+<ul>
+<li><a href="Self::FaceHandle">FaceHandle</a>s refer to a single face (triangle) of the triangulation.
+They are used get the triangle’s adjacent vertices and edges. They also may refer to
+the single outer face.</li>
+<li><a href="Self::VertexHandle">VertexHandle</a>s refer to a single vertex of the triangulation. They
+allow to retrieve the vertex position and its outgoing edges.</li>
+<li><a href="Self::DirectedEdgeHandle">DirectedEdgeHandle</a>s refer to a single directed edge. They
+allow to retrieve the edges origin and destination vertex, its adjacent face as well as
+its previous and next edge.</li>
+<li><a href="Self::UndirectedEdgeHandle">UndirectedEdgeHandle</a>s refer to an edge without specifying its
+direction.</li>
+</ul>
+<p>All handles also allow to set and retrieve arbitrary additional data associated with that
+element. Refer to the type parameters of <a href="../trait.Triangulation.html" title="Triangulation">Triangulation</a> for more details.</p>
+<h2 id="fixed-handles"><a href="#fixed-handles">Fixed handles</a></h2>
+<p>Reference handles all hold an immutable reference to the underlying triangulation.
+This reference is used to implement a feature rich and intuitive API. However,
+due to Rust’s ownership semantics, modification of a triangulation
+can not be done using these handles as that would require a mutable reference. This is
+required in some cases, e.g. whenever traversal of the triangulation is mixed with insertion
+operations or when attempting to remove vertices.
+As a solution, Spade relies on <em>fixed</em> handles for mutation: These are created from normal
+handles by calling <code>some_handle.fix()</code> and do not keep a reference to the triangulation.</p>
+<p>Internally, fixed handles are implemented as indices into a <code>Vec</code>. <strong>Removing elements from
+the triangulation can possibly invalidate any fixed handle</strong>. Attempting to resolve an invalid
+handle may either refer to a different element or panic at run time. It is the callers
+responsibility to make sure that fixed handles are not used anymore after a removal operation
+has taken place.</p>
+<p>Fixed handles also come in four variants, depending on which element they refer to:</p>
+<ul>
+<li><a href="Self::FixedVertexHandle">FixedVertexHandle</a></li>
+<li><a href="Self::FixedFaceHandle">FixedFaceHandle</a></li>
+<li><a href="Self::FixedDirectedEdgeHandle">FixedDirectedEdgeHandle</a></li>
+<li><a href="Self::FixedUndirectedEdgeHandle">FixedUndirectedEdgeHandle</a></li>
+</ul>
+<h2 id="retrieving-handles-by-iteration"><a href="#retrieving-handles-by-iteration">Retrieving handles by iteration</a></h2>
+<p>The <a href="../trait.Triangulation.html" title="Triangulation">Triangulation</a> trait defines iterators for all handle types:</p>
+<div><table><thead><tr><th></th><th>Vertices</th><th>Directed Edges</th><th>Undirected Edges</th><th>Faces</th></tr></thead><tbody>
+<tr><td><strong>Reference</strong></td><td><a href="../trait.Triangulation.html#method.vertices">vertices()</a></td><td><a href="../trait.Triangulation.html#method.directed_edges">directed_edges()</a></td><td><a href="../trait.Triangulation.html#method.undirected_edges">undirected_edges()</a></td><td><a href="../trait.Triangulation.html#method.inner_faces">inner_faces()</a><br><a href="../trait.Triangulation.html#method.all_faces">all_faces()</a></td></tr>
+<tr><td><strong>Fixed</strong></td><td><a href="../trait.Triangulation.html#method.fixed_vertices">fixed_vertices()</a></td><td><a href="../trait.Triangulation.html#method.fixed_directed_edges">fixed_directed_edges()</a></td><td><a href="../trait.Triangulation.html#method.fixed_undirected_edges">fixed_undirected_edges()</a></td><td><a href="../trait.Triangulation.html#method.fixed_inner_faces">fixed_inner_faces()</a><br> <a href="../trait.Triangulation.html#method.fixed_inner_faces">fixed_faces()</a></td></tr>
+</tbody></table>
+</div><h2 id="converting-between-reference-and-fixed-handles"><a href="#converting-between-reference-and-fixed-handles">Converting between reference and fixed handles</a></h2>
+<p>Converting a reference handle into its fixed counterpart is performed via the
+<code>fix()</code> method (defined on any handle type).</p>
+<p>Converting a fixed handle type back into a reference handle requires calling either
+<a href="../trait.Triangulation.html#method.vertex" title="Triangulation::vertex">Triangulation::vertex</a>, <a href="../trait.Triangulation.html#method.face" title="Triangulation::face">Triangulation::face</a>,
+<a href="../trait.Triangulation.html#method.directed_edge" title="Triangulation::directed_edge">Triangulation::directed_edge</a> or <a href="../trait.Triangulation.html#method.undirected_edge" title="Triangulation::undirected_edge">Triangulation::undirected_edge</a>.</p>
+<h2 id="example-using-handles"><a href="#example-using-handles">Example: Using handles</a></h2>
+<p>This example implements a nearest neighbor algorithm on a delaunay triangulation. Starting
+from an arbitrary start vertex, it greedily walks to the closes vertex until arriving at a
+local minimum. Due to the special properties of Delaunay triangulations, this is also the
+global nearest neighbor.</p>
+<p><em>Note: Spade already implements this method, see <a href="../struct.DelaunayTriangulation.html#method.nearest_neighbor" title="DelaunayTriangulation::nearest_neighbor">DelaunayTriangulation::nearest_neighbor</a></em></p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spade::handles::VertexHandle</span>;
+<span class="kw">use</span> <span class="ident">spade</span>::{<span class="ident">DelaunayTriangulation</span>, <span class="ident">Point2</span>, <span class="ident">Triangulation</span>};
+
+<span class="kw">fn</span> <span class="ident">nearest_neighbor</span>(
+    <span class="ident">triangulation</span>: <span class="kw-2">&amp;</span><span class="ident">DelaunayTriangulation</span><span class="op">&lt;</span><span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">target_point</span>: <span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
+) -&gt; <span class="ident">VertexHandle</span><span class="op">&lt;</span><span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current</span> <span class="op">=</span> <span class="ident">triangulation</span>.<span class="ident">vertices</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">best_distance</span> <span class="op">=</span> <span class="ident">current</span>.<span class="ident">position</span>().<span class="ident">distance_2</span>(<span class="ident">target_point</span>);
+    <span class="kw">loop</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">closer</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">for</span> <span class="ident">neighbor</span> <span class="kw">in</span> <span class="ident">current</span>.<span class="ident">out_edges</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">edge</span><span class="op">|</span> <span class="ident">edge</span>.<span class="ident">to</span>()) {
+            <span class="kw">let</span> <span class="ident">neighbor_distance</span> <span class="op">=</span> <span class="ident">neighbor</span>.<span class="ident">position</span>().<span class="ident">distance_2</span>(<span class="ident">target_point</span>);
+            <span class="kw">if</span> <span class="ident">neighbor_distance</span> <span class="op">&lt;</span> <span class="ident">best_distance</span> {
+                <span class="ident">best_distance</span> <span class="op">=</span> <span class="ident">neighbor_distance</span>;
+                <span class="ident">closer</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">neighbor</span>);
+                <span class="kw">break</span>;
+            }
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">closer</span>) <span class="op">=</span> <span class="ident">closer</span> {
+            <span class="ident">current</span> <span class="op">=</span> <span class="ident">closer</span>;
+        } <span class="kw">else</span> {
+            <span class="kw">return</span> <span class="ident">current</span>;
+        }
+    }
+}
+
+
+<span class="kw">let</span> <span class="ident">vertices</span> <span class="op">=</span> <span class="macro">vec!</span>[
+    <span class="ident">Point2::new</span>(<span class="number">0.0</span>, <span class="number">1.0</span>),
+    <span class="ident">Point2::new</span>(<span class="number">1.0</span>, <span class="number">1.0</span>),
+    <span class="ident">Point2::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>),
+    <span class="ident">Point2::new</span>(<span class="number">1.0</span>, <span class="number">0.0</span>),
+];
+<span class="kw">let</span> <span class="ident">triangulation</span>: <span class="ident">DelaunayTriangulation</span><span class="op">&lt;</span><span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Triangulation::bulk_load</span>(<span class="ident">vertices</span>)<span class="question-mark">?</span>;
+
+<span class="comment">// Check that everything works!</span>
+<span class="kw">for</span> <span class="ident">vertex</span> <span class="kw">in</span> <span class="ident">triangulation</span>.<span class="ident">vertices</span>() {
+    <span class="kw">let</span> <span class="ident">nearest_neighbor</span> <span class="op">=</span> <span class="ident">nearest_neighbor</span>(<span class="kw-2">&amp;</span><span class="ident">triangulation</span>, <span class="ident">vertex</span>.<span class="ident">position</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">nearest_neighbor</span>, <span class="ident">vertex</span>);
+}</code></pre></div>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.InnerTag.html" title="spade::handles::InnerTag struct">InnerTag</a></div><div class="item-right docblock-short"><p>Marker type that signifies that a face is an inner faces.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.PossiblyOuterTag.html" title="spade::handles::PossiblyOuterTag struct">PossiblyOuterTag</a></div><div class="item-right docblock-short"><p>Marker type that signifies that a face can possibly be the outer faces.</p>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.VoronoiVertex.html" title="spade::handles::VoronoiVertex enum">VoronoiVertex</a></div><div class="item-right docblock-short"><p>A handle to a vertex of the voronoi diagram.</p>
+</div></div></div><h2 id="constants" class="small-section-header"><a href="#constants">Constants</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="constant" href="constant.OUTER_FACE.html" title="spade::handles::OUTER_FACE constant">OUTER_FACE</a></div><div class="item-right docblock-short"><p>Returns a reference to the single outer face.</p>
+</div></div></div><h2 id="types" class="small-section-header"><a href="#types">Type Definitions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.DirectedEdgeHandle.html" title="spade::handles::DirectedEdgeHandle type">DirectedEdgeHandle</a></div><div class="item-right docblock-short"><p>Handle to a directed edge of a triangulation.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.DirectedVoronoiEdge.html" title="spade::handles::DirectedVoronoiEdge type">DirectedVoronoiEdge</a></div><div class="item-right docblock-short"><p>A handle to a directed edge of the Voronoi diagram.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.FaceHandle.html" title="spade::handles::FaceHandle type">FaceHandle</a></div><div class="item-right docblock-short"><p>Handle to a face of a triangulation.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.FixedDirectedEdgeHandle.html" title="spade::handles::FixedDirectedEdgeHandle type">FixedDirectedEdgeHandle</a></div><div class="item-right docblock-short"><p>Fixed handle to a directed edge.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.FixedFaceHandle.html" title="spade::handles::FixedFaceHandle type">FixedFaceHandle</a></div><div class="item-right docblock-short"><p>“Fixed handle to a face.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.FixedUndirectedEdgeHandle.html" title="spade::handles::FixedUndirectedEdgeHandle type">FixedUndirectedEdgeHandle</a></div><div class="item-right docblock-short"><p>Fixed handle to an undirected edge.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.FixedVertexHandle.html" title="spade::handles::FixedVertexHandle type">FixedVertexHandle</a></div><div class="item-right docblock-short"><p>Fixed handle to a vertex.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.UndirectedEdgeHandle.html" title="spade::handles::UndirectedEdgeHandle type">UndirectedEdgeHandle</a></div><div class="item-right docblock-short"><p>Handle to an undirected edge of a triangulation.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.UndirectedVoronoiEdge.html" title="spade::handles::UndirectedVoronoiEdge type">UndirectedVoronoiEdge</a></div><div class="item-right docblock-short"><p>A handle to an undirected edge of the Voronoi diagram.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.VertexHandle.html" title="spade::handles::VertexHandle type">VertexHandle</a></div><div class="item-right docblock-short"><p>Handle to a vertex of a triangulation.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.VoronoiFace.html" title="spade::handles::VoronoiFace type">VoronoiFace</a></div><div class="item-right docblock-short"><p>A handle to a face of the voronoi diagram.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spade" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

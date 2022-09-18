@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Space-efficient optional values"><meta name="keywords" content="rust, rustlang, rust-lang, optional"><title>optional - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../optional/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../optional/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate optional</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.5.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../optional/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">optional</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/optional/lib.rs.html#6-1944">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="space-efficient-optional-values"><a href="#space-efficient-optional-values">Space-efficient optional values</a></h2><h3 id="booleans"><a href="#booleans">Booleans</a></h3>
+<p>Type <code>OptionBool</code> represents an optional boolean value, similar to
+<code>Option&lt;bool&gt;</code>. Most function implementations are similar or equal.
+Note that the <code>map_bool(..)</code> <code>and_bool(..)</code>, <code>and_then_bool(..)</code>,
+<code>or_bool(..)</code> and <code>or_else_bool(..)</code> functions are working similar to the
+methods without the <code>_bool</code> suffix, but require and return <code>OptionBool</code>
+instead of <code>Option&lt;bool&gt;</code>. This allows people to stay within the type.</p>
+<p>The <code>OptionBool</code> type is expected to require only 1 byte of storage:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">assert!</span>(<span class="number">1</span> <span class="op">==</span> <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">optional::OptionBool</span><span class="op">&gt;</span>());</code></pre></div>
+<p>However, since this crate was originally authored, <a href="https://users.rust-lang.org/t/list-of-fundamental-crates/17806/5?u=ryan">improvements in the
+compiler</a>
+have built in this optimization for <code>Option&lt;bool&gt;</code> as well. The
+<code>OptionBool</code> type remains however because it <a href="https://github.com/llogiq/optional/issues/33">may still perform faster in
+some bench marks</a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">assert!</span>(<span class="number">1</span> <span class="op">==</span> <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span>());</code></pre></div>
+<h3 id="any-type-can-be-optional"><a href="#any-type-can-be-optional">Any type can be optional</a></h3>
+<p>Then there is the <code>Optioned&lt;T&gt;</code> type which wraps a type <code>T</code> as an optional
+value of <code>T</code> where one particular value represents None. <code>Optioned&lt;T&gt;</code>
+requires the exact same space as T:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">assert!</span>(<span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">optional::Optioned</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span><span class="op">&gt;</span>() <span class="op">==</span>
+    <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>());
+<span class="macro">assert!</span>(<span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">optional::Optioned</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span>() <span class="op">==</span>
+    <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>());
+<span class="macro">assert!</span>(<span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">optional::Optioned</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>() <span class="op">==</span>
+    <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>());</code></pre></div>
+<p>There are implementations for <code>u8..64,usize</code> with <code>std::u..::MAX</code>
+representing None, also for <code>i8..64,isize</code> with <code>std::i..::MIN</code>
+representing None, and for <code>f32, f64</code> with <code>std::f..::NAN</code> representing
+None.</p>
+<p>Using Optioned for your own types is as simple as implementing <code>Noned</code> for
+your type, provided that your type is already Copy and Sized.</p>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.IterBool.html" title="optional::IterBool struct">IterBool</a></div><div class="item-right docblock-short"><p>iterate over an <code>OptionBool</code></p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Optioned.html" title="optional::Optioned struct">Optioned</a></div><div class="item-right docblock-short"><p>An <code>Option&lt;T&gt;</code>-like structure that takes only as much space as the enclosed
+value, at the cost of removing one particular <code>None</code> value from the value
+domain (see <code>Noned</code>)</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.OptionedIter.html" title="optional::OptionedIter struct">OptionedIter</a></div><div class="item-right docblock-short"><p>iterate over an Optioned<T></p>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.OptionBool.html" title="optional::OptionBool enum">OptionBool</a></div><div class="item-right docblock-short"><p>The <code>OptionBool</code> type, a space-efficient Option<bool> replacement</p>
+</div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Noned.html" title="optional::Noned trait">Noned</a></div><div class="item-right docblock-short"><p>A trait whose implementation for any type <code>T</code> allows the use of
+<code>Optioned&lt;T&gt;</code> where <code>T</code> is bound by both <code>Sized</code> and <code>Copy</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.OptEq.html" title="optional::OptEq trait">OptEq</a></div><div class="item-right docblock-short"><p>Equality within Optioned</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.OptOrd.html" title="optional::OptOrd trait">OptOrd</a></div><div class="item-right docblock-short"><p>Ordering within Optioned</p>
+</div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.none.html" title="optional::none fn">none</a></div><div class="item-right docblock-short"><p>Create a <code>None Optioned&lt;T&gt;</code>. Note that the type must be inferrible
+from the context, or you’d need to call with <code>::&lt;T&gt;</code> where <code>T</code> is
+the specific type.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.some.html" title="optional::some fn">some</a></div><div class="item-right docblock-short"><p>Create an <code>Optioned&lt;T&gt;</code> that is <code>some(t)</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.wrap.html" title="optional::wrap fn">wrap</a></div><div class="item-right docblock-short"><p>Wrap a <code>T</code> into an <code>Optioned&lt;T&gt;</code>, regardless of its None-ness.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="optional" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

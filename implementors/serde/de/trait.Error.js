@@ -1,0 +1,6 @@
+(function() {var implementors = {};
+implementors["erased_serde"] = [{"text":"impl <a class=\"trait\" href=\"serde/de/trait.Error.html\" title=\"trait serde::de::Error\">Error</a> for <a class=\"struct\" href=\"erased_serde/struct.Error.html\" title=\"struct erased_serde::Error\">Error</a>","synthetic":false,"types":["erased_serde::error::Error"]}];
+implementors["ron"] = [{"text":"impl <a class=\"trait\" href=\"serde/de/trait.Error.html\" title=\"trait serde::de::Error\">Error</a> for <a class=\"struct\" href=\"ron/error/struct.Error.html\" title=\"struct ron::error::Error\">Error</a>","synthetic":false,"types":["ron::error::Error"]}];
+implementors["serde"] = [];
+implementors["toml"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/serde/1.0.144/serde/de/trait.Error.html\" title=\"trait serde::de::Error\">Error</a> for <a class=\"struct\" href=\"toml/de/struct.Error.html\" title=\"struct toml::de::Error\">Error</a>","synthetic":false,"types":["toml::de::Error"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

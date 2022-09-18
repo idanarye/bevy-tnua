@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"attr":[["reflect_trait",""]],"derive":[["FromReflect","Derives the `FromReflect` trait."],["Reflect",""],["TypeUuid",""]],"macro":[["impl_from_reflect_value",""],["impl_reflect_struct","A replacement for `#[derive(Reflect)]` to be used with foreign types which the definitions of cannot be altered."],["impl_reflect_value",""]]};

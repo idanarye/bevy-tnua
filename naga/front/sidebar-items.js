@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["glsl","Frontend for GLSL (OpenGL Shading Language)."],["spv","Frontend for SPIR-V (Standard Portable Intermediate Representation)."],["wgsl","Frontend for WGSL (WebGPU Shading Language)."]],"struct":[["Typifier","Helper processor that derives the types of all expressions."]]};

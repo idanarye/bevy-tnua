@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["ViewRangefinder3d","A distance calculator for the draw order of `PhaseItem`s."]]};

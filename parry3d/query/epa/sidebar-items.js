@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["epa3","Three-dimensional penetration depth queries using the Expanding Polytope Algorithm."]]};

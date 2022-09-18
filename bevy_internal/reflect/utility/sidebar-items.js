@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["GenericTypeInfoCell","A container for [`TypeInfo`] over generic types, allowing instances to be stored statically."],["NonGenericTypeInfoCell","A container for [`TypeInfo`] over non-generic types, allowing instances to be stored statically."]]};

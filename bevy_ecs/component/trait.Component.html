@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A data type that can be used to store data for an entity."><meta name="keywords" content="rust, rustlang, rust-lang, Component"><title>Component in bevy_ecs::component - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bevy_ecs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../bevy_ecs/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Component</a></h2><div class="sidebar-elems"><section><div class="block"><h3 class="sidebar-title"><a href="#required-associated-types">Required Associated Types</a></h3><ul><li><a href="#associatedtype.Storage">Storage</a></li></ul></div><div class="block"><h3 class="sidebar-title"><a href="#implementors">Implementors</a></h3></div></section><h2 class="location"><a href="index.html">In bevy_ecs::component</a></h2></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bevy_ecs/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Trait <a href="../index.html">bevy_ecs</a>::<wbr><a href="index.html">component</a>::<wbr><a class="trait" href="#">Component</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../../src/bevy_ecs/component.rs.html#112-114">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="docblock item-decl"><pre class="rust trait"><code>pub trait Component: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'static {
+    type <a href="#associatedtype.Storage" class="associatedtype">Storage</a>: <a class="trait" href="trait.ComponentStorage.html" title="trait bevy_ecs::component::ComponentStorage">ComponentStorage</a>;
+}</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A data type that can be used to store data for an <a href="../entity/index.html">entity</a>.</p>
+<p><code>Component</code> is a <a href="https://doc.rust-lang.org/book/appendix-03-derivable-traits.html">derivable trait</a>: this means that a data type can implement it by applying a <code>#[derive(Component)]</code> attribute to it.
+However, components must always satisfy the <code>Send + Sync + 'static</code> trait bounds.</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
+<p>Components can take many forms: they are usually structs, but can also be of every other kind of data type, like enums or zero sized types.
+The following examples show how components are laid out in code.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// A component can contain data...</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">LicensePlate</span>(<span class="ident">String</span>);
+
+<span class="comment">// ... but it can also be a zero-sized marker.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Car</span>;
+
+<span class="comment">// Components can also be structs with named fields...</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">VehiclePerformance</span> {
+    <span class="ident">acceleration</span>: <span class="ident">f32</span>,
+    <span class="ident">top_speed</span>: <span class="ident">f32</span>,
+    <span class="ident">handling</span>: <span class="ident">f32</span>,
+}
+
+<span class="comment">// ... or enums.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">enum</span> <span class="ident">WheelCount</span> {
+    <span class="ident">Two</span>,
+    <span class="ident">Three</span>,
+    <span class="ident">Four</span>,
+}</code></pre></div>
+<h2 id="component-and-data-access"><a href="#component-and-data-access">Component and data access</a></h2>
+<p>See the <a href="../entity/index.html#usage"><code>entity</code></a> module level documentation to learn how to add or remove components from an entity.</p>
+<p>See the documentation for <a href="../system/struct.Query.html"><code>Query</code></a> to learn how to access component data from a system.</p>
+<h2 id="choosing-a-storage-type"><a href="#choosing-a-storage-type">Choosing a storage type</a></h2>
+<p>Components can be stored in the world using different strategies with their own performance implications.
+By default, components are added to the <a href="../storage/struct.Table.html"><code>Table</code></a> storage, which is optimized for query iteration.</p>
+<p>Alternatively, components can be added to the <a href="../storage/struct.SparseSet.html"><code>SparseSet</code></a> storage, which is optimized for component insertion and removal.
+This is achieved by adding an additional <code>#[component(storage = &quot;SparseSet&quot;)]</code> attribute to the derive one:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="attribute">#[<span class="ident">component</span>(<span class="ident">storage</span> <span class="op">=</span> <span class="string">&quot;SparseSet&quot;</span>)]</span>
+<span class="kw">struct</span> <span class="ident">ComponentA</span>;</code></pre></div>
+<h2 id="implementing-the-trait-for-foreign-types"><a href="#implementing-the-trait-for-foreign-types">Implementing the trait for foreign types</a></h2>
+<p>As a consequence of the <a href="https://doc.rust-lang.org/book/ch10-02-traits.html#implementing-a-trait-on-a-type">orphan rule</a>, it is not possible to separate into two different crates the implementation of <code>Component</code> from the definition of a type.
+This means that it is not possible to directly have a type defined in a third party library as a component.
+This important limitation can be easily worked around using the <a href="https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types">newtype pattern</a>:
+this makes it possible to locally define and implement <code>Component</code> for a tuple struct that wraps the foreign type.
+The following example gives a demonstration of this pattern.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// `Component` is defined in the `bevy_ecs` crate.</span>
+<span class="kw">use</span> <span class="ident">bevy_ecs::component::Component</span>;
+
+<span class="comment">// `Duration` is defined in the `std` crate.</span>
+<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+
+<span class="comment">// It is not possible to implement `Component` for `Duration` from this position, as they are</span>
+<span class="comment">// both foreign items, defined in an external crate. However, nothing prevents to define a new</span>
+<span class="comment">// `Cooldown` type that wraps `Duration`. As `Cooldown` is defined in a local crate, it is</span>
+<span class="comment">// possible to implement `Component` for it.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Component</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Cooldown</span>(<span class="ident">Duration</span>);</code></pre></div>
+</div></details><h2 id="required-associated-types" class="small-section-header">Required Associated Types<a href="#required-associated-types" class="anchor"></a></h2><div class="methods"><div id="associatedtype.Storage" class="method has-srclink"><div class="rightside"><a class="srclink" href="../../src/bevy_ecs/component.rs.html#113">source</a></div><h4 class="code-header">type <a href="#associatedtype.Storage" class="associatedtype">Storage</a>: <a class="trait" href="trait.ComponentStorage.html" title="trait bevy_ecs::component::ComponentStorage">ComponentStorage</a></h4></div></div><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor"></a></h2><div class="item-list" id="implementors-list"></div><script type="text/javascript" src="../../implementors/bevy_ecs/component/trait.Component.js" data-ignore-extern-crates="" async></script></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bevy_ecs" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

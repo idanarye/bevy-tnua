@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["AddBundle",""],["Archetype",""],["ArchetypeComponentId",""],["ArchetypeGeneration","A generational id that changes every time the set of archetypes changes"],["ArchetypeId",""],["ArchetypeIdentity",""],["Archetypes",""],["Edges","Archetypes and bundles form a graph. Adding or removing a bundle moves an [`Entity`] to a new [`Archetype`]."]]};

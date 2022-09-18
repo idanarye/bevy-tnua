@@ -1,0 +1,699 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Handle to a directed edge of a triangulation."><meta name="keywords" content="rust, rustlang, rust-lang, DirectedEdgeHandle"><title>DirectedEdgeHandle in spade::handles - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc type"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spade/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../spade/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">DirectedEdgeHandle</a></h2><div class="sidebar-elems"><section><div class="block"><h3 class="sidebar-title"><a href="#implementations">Methods</a></h3><ul><li><a href="#method.as_undirected">as_undirected</a></li><li><a href="#method.as_voronoi_edge">as_voronoi_edge</a></li><li><a href="#method.ccw">ccw</a></li><li><a href="#method.cw">cw</a></li><li><a href="#method.data">data</a></li><li><a href="#method.distance_2">distance_2</a></li><li><a href="#method.face">face</a></li><li><a href="#method.from">from</a></li><li><a href="#method.is_outer_edge">is_outer_edge</a></li><li><a href="#method.is_part_of_convex_hull">is_part_of_convex_hull</a></li><li><a href="#method.length_2">length_2</a></li><li><a href="#method.nearest_point">nearest_point</a></li><li><a href="#method.next">next</a></li><li><a href="#method.opposite_position">opposite_position</a></li><li><a href="#method.opposite_vertex">opposite_vertex</a></li><li><a href="#method.prev">prev</a></li><li><a href="#method.project_point">project_point</a></li><li><a href="#method.rev">rev</a></li><li><a href="#method.side_query">side_query</a></li><li><a href="#method.to">to</a></li><li><a href="#method.vertices">vertices</a></li></ul></div><div class="block"><h3 class="sidebar-title"><a href="#trait-implementations">Trait Implementations</a></h3><ul><li><a href="#impl-AsRef%3CDE%3E">AsRef&lt;DE&gt;</a></li><li><a href="#impl-Debug">Debug</a></li></ul></div></section><h2 class="location"><a href="index.html">In spade::handles</a></h2></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spade/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Type Definition <a href="../index.html">spade</a>::<wbr><a href="index.html">handles</a>::<wbr><a class="type" href="#">DirectedEdgeHandle</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../../src/spade/delaunay_core/handles/public_handles.rs.html#105-106">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="docblock item-decl"><pre class="rust typedef"><code>pub type DirectedEdgeHandle&lt;'a, V, DE, UE, F&gt; = <a class="struct" href="../internals/struct.DynamicHandleImpl.html" title="struct spade::internals::DynamicHandleImpl">DynamicHandleImpl</a>&lt;'a, V, DE, UE, F, DirectedEdgeTag, <a class="struct" href="struct.InnerTag.html" title="struct spade::handles::InnerTag">InnerTag</a>&gt;;</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Handle to a directed edge of a triangulation.</p>
+<p>Use this handle to examine the edge’s surroundings, e.g. its origin and destination
+vertices or the adjacent face.</p>
+<h2 id="retrieving-neighboring-edges"><a href="#retrieving-neighboring-edges">Retrieving neighboring edges:</a></h2>
+<p>Use <a href="#method.next">next()</a>, <a href="#method.prev">prev()</a>, <a href="#method.rev">rev()</a> to access
+any adjacent edge:</p>
+<svg viewBox="-10.100000000000001 -23.7 61.2 44.4" width="300" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<pattern height="1" id="delaunay_directed_edge_details_pattern0001" patternTransform="rotate(63.512 0 0) scale(2)" patternUnits="userSpaceOnUse" width="1">
+<line stroke="rgb(255 255 255)" stroke-width="1.01" x1="0" x2="0" y1="-0.1" y2="1.1"/>
+<line stroke="rgb(211 211 211)" stroke-width="1.01" x1="1" x2="1" y1="-0.1" y2="1.1"/>
+</pattern>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0002" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0003" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0004" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0005" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0006" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0007" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0008" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0009" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0010" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0011" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0012" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0013" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0014" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0015" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0016" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0017" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0018" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0019" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0020" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0021" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0022" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0023" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0024" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0025" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0026" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0027" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0028" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0029" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0030" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0031" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0032" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0033" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0034" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0035" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0036" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0037" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0038" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0039" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0040" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0041" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0042" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0043" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0044" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0045" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0046" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0047" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0048" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0049" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0050" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0051" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0052" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0053" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0054" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0055" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0056" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0057" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0058" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_details_filled_arrow0059" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+</defs>
+<rect height="100%" style="fill: url(#delaunay_directed_edge_details_pattern0001)" width="100%" x="-10.100000000000001" y="-23.7"/>
+<g>
+<path d="M-41,61 L-50,-50 L-30,25 z" style="fill: rgb(211 211 211)"/>
+<path d="M-41,-60 L-40,-40 L-50,-50 z" style="fill: rgb(211 211 211)"/>
+<path d="M-40,-40 L-30,25 L-50,-50 z" style="fill: rgb(211 211 211)"/>
+<path d="M-30,25 L-40,-40 L0,0 z" style="fill: rgb(211 211 211)"/>
+<path d="M-41,61 L-30,25 L40,20 z" style="fill: rgb(211 211 211)"/>
+<path d="M0,0 L-40,-40 L41,-20 z" style="fill: rgb(211 211 211)"/>
+<path d="M0,0 L40,20 L-30,25 z" style="fill: rgb(211 211 211)"/>
+<path d="M40,20 L0,0 L41,-20 z" style="fill: rgb(211 211 211)"/>
+<path d="M-41,-60 L41,-70 L-40,-40 z" style="fill: rgb(211 211 211)"/>
+<path d="M41,-80 L41,-70 L-41,-60 z" style="fill: rgb(211 211 211)"/>
+<path d="M41,-70 L41,-20 L-40,-40 z" style="fill: rgb(211 211 211)"/>
+<path d="M107,-20 L40,20 L41,-20 z" style="fill: rgb(211 211 211)"/>
+<path d="M107,-20 L41,-20 L90,-40 z" style="fill: rgb(211 211 211)"/>
+<path d="M41,-70 L90,-40 L41,-20 z" style="fill: rgb(211 211 211)"/>
+<path d="M41,-80 L90,-40 L41,-70 z" style="fill: rgb(211 211 211)"/>
+<path d="M90,60 L-41,61 L40,20 z" style="fill: rgb(211 211 211)"/>
+<path d="M40,20 L107,-20 L90,60 z" style="fill: rgb(211 211 211)"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0002); fill: none" x1="-45.90444925417811" x2="-42.590649472968934" y1="-53.71349755465084" y2="-57.39549731154993"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0003); fill: none" x1="-45.09555074582189" x2="-48.409350527031066" y1="-56.28650244534916" y2="-52.60450268845007"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0004); fill: none" x1="-46.50689250093845" x2="-42.51730014102411" y1="-45.71493290600952" y2="-41.72534054609518"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0005); fill: none" x1="-43.49310749906155" x2="-47.48269985897589" y1="-44.28506709399048" y2="-48.27465945390482"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0006); fill: none" x1="-40.88631901126908" x2="-49.199384126757614" y1="55.472733348860295" y2="-47.05506974216496"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0007); fill: none" x1="-50.11368098873092" x2="-41.800615873242386" y1="-44.472733348860295" y2="58.05506974216496"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0008); fill: none" x1="-41.28464441658018" x2="-40.70911416060327" y1="-54.478897070683274" y2="-42.968291951144955"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0009); fill: none" x1="-39.71535558341982" x2="-40.29088583939673" y1="-45.521102929316726" y2="-57.031708048855045"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0010); fill: none" x1="-49.12394698809487" x2="-31.314079517857692" y1="-44.54141674787936" y2="22.245586265510045"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0011); fill: none" x1="-30.87605301190513" x2="-48.68592048214231" y1="19.54141674787936" y2="-47.24558626551005"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0012); fill: none" x1="-39.71717363728767" x2="-31.009659703446168" y1="-34.478803639739404" y2="22.120036930230356"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0013); fill: none" x1="-30.28282636271233" x2="-38.99034029655383" y1="19.4788036397394" y2="-37.120036930230356"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0014); fill: none" x1="-32.142758825583364" x2="-40.65890127299169" y1="30.096291260846915" y2="57.96730290691053"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0015); fill: none" x1="-38.85724117441664" x2="-30.341098727008312" y1="55.90370873915309" y2="28.032697093089467"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0016); fill: none" x1="-36.50689250093845" x2="-2.517300141024109" y1="-35.71493290600952" y2="-1.7253405460951758"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0017); fill: none" x1="-3.4931074990615443" x2="-37.48269985897589" y1="-4.285067093990477" y2="-38.27465945390482"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0018); fill: none" x1="-25.416279698402327" x2="-1.9461605749800188" y1="21.909189718419892" y2="2.35075711556797"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0019); fill: none" x1="-4.583720301597676" x2="-28.05383942501998" y1="3.090810281580109" y2="22.64924288443203"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0020); fill: none" x1="-24.47407880293773" x2="37.047522248501025" y1="25.16671809697171" y2="20.77231802186894"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0021); fill: none" x1="34.474078802937726" x2="-27.047522248501025" y1="19.83328190302829" y2="24.22768197813106"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0022); fill: none" x1="-34.647885776758415" x2="38.381249757090096" y1="-41.385089651024494" y2="-68.43291762652395"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0023); fill: none" x1="35.647885776758415" x2="-37.381249757090096" y1="-68.6149103489755" y2="-41.567082373476055"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0024); fill: none" x1="4.668909937019562" x2="37.06627881352028" y1="2.9605540022097214" y2="19.15923844046008"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0025); fill: none" x1="35.33109006298044" x2="2.933721186479724" y1="17.03944599779028" y2="0.840761559539921"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0026); fill: none" x1="34.83992268341569" x2="-38.57626390141909" y1="21.98423841482623" y2="59.14551804418705"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0027); fill: none" x1="-35.83992268341569" x2="37.57626390141909" y1="59.01576158517376" y2="21.854481955812947"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0028); fill: none" x1="35.79460114175866" x2="-36.95322958838372" y1="-21.862101696100332" y2="-39.82452903687623"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0029); fill: none" x1="-34.79460114175866" x2="37.95322958838372" y1="-38.13789830389967" y2="-20.175470963123768"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0030); fill: none" x1="-35.47265722329792" x2="38.0898528175226" y1="-60.10991737278242" y2="-69.08095518263859"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0031); fill: none" x1="35.47265722329792" x2="-38.0898528175226" y1="-69.89008262721758" y2="-60.91904481736142"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0032); fill: none" x1="5.188743684973439" x2="38.54921189700029" y1="-1.9080196465571957" y2="-18.181418774375175"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0033); fill: none" x1="35.81125631502656" x2="2.4507881029997067" y1="-18.091980353442807" y2="-1.8185812256248268"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0034); fill: none" x1="-35.52394267578582" x2="38.21813444455758" y1="-60.75920760133199" y2="-78.74508006970844"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0035); fill: none" x1="35.52394267578582" x2="-38.21813444455758" y1="-79.240792398668" y2="-61.25491993029158"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0036); fill: none" x1="40.44" x2="40.44" y1="-74.5" y2="-73"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0037); fill: none" x1="41.56" x2="41.56" y1="-75.5" y2="-77"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0038); fill: none" x1="40.44" x2="40.44" y1="-64.5" y2="-23"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0039); fill: none" x1="41.56" x2="41.56" y1="-25.5" y2="-67"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0040); fill: none" x1="40.30271786663033" x2="39.51515149149206" y1="-14.515713571805037" y2="16.986941433725917"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0041); fill: none" x1="40.69728213336967" x2="41.48484850850794" y1="14.515713571805037" y2="-16.986941433725917"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0042); fill: none" x1="46.5" x2="104" y1="-19.44" y2="-19.44"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0043); fill: none" x1="101.5" x2="44" y1="-20.56" y2="-20.56"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0044); fill: none" x1="101.9905195807074" x2="42.288803281876845" y1="-17.661473556120452" y2="17.981342144673903"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0045); fill: none" x1="45.009480419292615" x2="104.71119671812315" y1="17.661473556120452" y2="-17.981342144673903"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0046); fill: none" x1="46.303784358882496" x2="87.43407938747332" y1="-21.559958805377054" y2="-38.34783432725085"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0047); fill: none" x1="84.6962156411175" x2="43.565920612526696" y1="-38.44004119462294" y2="-21.652165672749145"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0048); fill: none" x1="45.39827601102188" x2="87.14903992637362" y1="-66.65055704170537" y2="-41.08886484863288"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0049); fill: none" x1="85.60172398897811" x2="43.850960073626375" y1="-43.34944295829462" y2="-68.91113515136712"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0050); fill: none" x1="44.90650576643299" x2="87.32188556522158" y1="-76.08811903340276" y2="-41.46331919765697"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0051); fill: none" x1="86.09349423356701" x2="43.67811443477843" y1="-43.911880966597245" y2="-78.53668080234303"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0052); fill: none" x1="93.13538029258017" x2="104.63036872176808" y1="-35.446650637069474" y2="-21.923134838024875"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0053); fill: none" x1="103.86461970741983" x2="92.36963127823192" y1="-24.55334936293053" y2="-38.07686516197513"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0054); fill: none" x1="43.94494922530619" x2="87.30756434504043" y1="23.87310929483743" y2="58.56320139062482"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0055); fill: none" x1="86.05505077469381" x2="42.69243565495957" y1="56.126890705162566" y2="21.436798609375174"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0056); fill: none" x1="84.49588555545317" x2="-38.00436208828952" y1="59.48199982497025" y2="60.4171162191973"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0057); fill: none" x1="-35.495885555453164" x2="87.00436208828951" y1="61.51800017502975" y2="60.5828837808027"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0058); fill: none" x1="105.30900788647574" x2="90.07580731094613" y1="-14.73652722321101" y2="56.9491225439872"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_details_filled_arrow0059); fill: none" x1="91.69099211352426" x2="106.92419268905387" y1="54.73652722321101" y2="-16.9491225439872"/>
+<circle cx="-50" cy="-50" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-41" cy="-60" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-41" cy="61" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-40" cy="-40" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-30" cy="25" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="0" cy="0" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="40" cy="20" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="41" cy="-70" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="41" cy="-80" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="41" cy="-20" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="107" cy="-20" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="90" cy="-40" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="90" cy="60" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<text dy="-2.1" font-size="5" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (20 10) rotate (26.56505117707799) translate(-20 -10)" x="20" y="10">
+e
+</text>
+<text dy="5" font-size="5" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (20 10) rotate (26.56505117707799) translate(-20 -10)" x="20" y="10">
+e.rev()
+</text>
+<text dy="-2.1" font-size="5" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (40.5 0) rotate (-88.56790381583535) translate(-40.5 -0)" x="40.5" y="0">
+e.next()
+</text>
+<text dy="5.2" font-size="5" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (20.5 -10) rotate (-26.003345844511443) translate(-20.5 10)" x="20.5" y="-10">
+e.prev()
+</text>
+</g>
+</svg>
+<h2 id="retrieving-adjacent-faces-and-vertices"><a href="#retrieving-adjacent-faces-and-vertices">Retrieving adjacent faces and vertices</a></h2>
+<p>Use <a href="#method.face">face()</a>, <a href="#method.from()">from()</a> and <a href="#method.to()">to()</a> to access the adjacent face and
+vertices:</p>
+<svg viewBox="-10.100000000000001 -25.5 61.2 66" width="300" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<pattern height="1" id="delaunay_directed_edge_face_and_vertex_pattern0001" patternTransform="rotate(63.512 0 0) scale(2)" patternUnits="userSpaceOnUse" width="1">
+<line stroke="rgb(255 255 255)" stroke-width="1.01" x1="0" x2="0" y1="-0.1" y2="1.1"/>
+<line stroke="rgb(211 211 211)" stroke-width="1.01" x1="1" x2="1" y1="-0.1" y2="1.1"/>
+</pattern>
+<pattern height="1" id="delaunay_directed_edge_face_and_vertex_pattern0002" patternTransform="rotate(127.024 0 0) scale(5)" patternUnits="userSpaceOnUse" width="1">
+<line stroke="rgb(211 211 211)" stroke-width="1.01" x1="0" x2="0" y1="-0.1" y2="1.1"/>
+<line stroke="rgb(169 169 169)" stroke-width="1.01" x1="1" x2="1" y1="-0.1" y2="1.1"/>
+</pattern>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0003" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0004" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0005" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0006" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0007" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0008" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0009" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0010" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0011" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0012" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0013" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0014" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0015" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0016" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0017" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0018" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0019" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0020" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0021" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0022" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0023" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0024" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0025" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0026" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0027" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0028" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0029" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0030" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0031" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0032" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0033" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0034" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0035" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0036" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0037" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0038" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0039" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0040" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0041" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0042" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0043" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0044" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0045" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0046" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0047" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0048" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0049" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0050" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0051" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0052" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0053" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0054" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0055" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0056" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0057" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0058" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0059" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0060" markerHeight="3" markerWidth="5" orient="auto" refX="4" refY="0.5" stroke="none">
+<path d="M1,0 L4,0 L0,2 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0061" markerHeight="3" markerWidth="5" orient="auto" refX="4.9" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(0 0 0)" id="delaunay_directed_edge_face_and_vertex_filled_arrow0062" markerHeight="3" markerWidth="5" orient="auto" refX="4.9" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+</defs>
+<rect height="100%" style="fill: url(#delaunay_directed_edge_face_and_vertex_pattern0001)" width="100%" x="-10.100000000000001" y="-25.5"/>
+<g>
+<path d="M-41,61 L-50,-50 L-30,25 z" style="fill: rgb(211 211 211)"/>
+<path d="M-41,-60 L-40,-40 L-50,-50 z" style="fill: rgb(211 211 211)"/>
+<path d="M-40,-40 L-30,25 L-50,-50 z" style="fill: rgb(211 211 211)"/>
+<path d="M-30,25 L-40,-40 L0,0 z" style="fill: rgb(211 211 211)"/>
+<path d="M-41,61 L-30,25 L40,20 z" style="fill: rgb(211 211 211)"/>
+<path d="M0,0 L-40,-40 L41,-20 z" style="fill: rgb(211 211 211)"/>
+<path d="M0,0 L40,20 L-30,25 z" style="fill: rgb(211 211 211)"/>
+<path d="M40,20 L0,0 L41,-20 z" style="fill: url(#delaunay_directed_edge_face_and_vertex_pattern0002)"/>
+<path d="M-41,-60 L41,-70 L-40,-40 z" style="fill: rgb(211 211 211)"/>
+<path d="M41,-80 L41,-70 L-41,-60 z" style="fill: rgb(211 211 211)"/>
+<path d="M41,-70 L41,-20 L-40,-40 z" style="fill: rgb(211 211 211)"/>
+<path d="M107,-20 L40,20 L41,-20 z" style="fill: rgb(211 211 211)"/>
+<path d="M107,-20 L41,-20 L90,-40 z" style="fill: rgb(211 211 211)"/>
+<path d="M41,-70 L90,-40 L41,-20 z" style="fill: rgb(211 211 211)"/>
+<path d="M41,-80 L90,-40 L41,-70 z" style="fill: rgb(211 211 211)"/>
+<path d="M90,60 L-41,61 L40,20 z" style="fill: rgb(211 211 211)"/>
+<path d="M40,20 L107,-20 L90,60 z" style="fill: rgb(211 211 211)"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0003); fill: none" x1="-45.90444925417811" x2="-42.590649472968934" y1="-53.71349755465084" y2="-57.39549731154993"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0004); fill: none" x1="-45.09555074582189" x2="-48.409350527031066" y1="-56.28650244534916" y2="-52.60450268845007"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0005); fill: none" x1="-46.50689250093845" x2="-42.51730014102411" y1="-45.71493290600952" y2="-41.72534054609518"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0006); fill: none" x1="-43.49310749906155" x2="-47.48269985897589" y1="-44.28506709399048" y2="-48.27465945390482"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0007); fill: none" x1="-40.88631901126908" x2="-49.199384126757614" y1="55.472733348860295" y2="-47.05506974216496"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0008); fill: none" x1="-50.11368098873092" x2="-41.800615873242386" y1="-44.472733348860295" y2="58.05506974216496"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0009); fill: none" x1="-41.28464441658018" x2="-40.70911416060327" y1="-54.478897070683274" y2="-42.968291951144955"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0010); fill: none" x1="-39.71535558341982" x2="-40.29088583939673" y1="-45.521102929316726" y2="-57.031708048855045"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0011); fill: none" x1="-49.12394698809487" x2="-31.314079517857692" y1="-44.54141674787936" y2="22.245586265510045"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0012); fill: none" x1="-30.87605301190513" x2="-48.68592048214231" y1="19.54141674787936" y2="-47.24558626551005"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0013); fill: none" x1="-39.71717363728767" x2="-31.009659703446168" y1="-34.478803639739404" y2="22.120036930230356"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0014); fill: none" x1="-30.28282636271233" x2="-38.99034029655383" y1="19.4788036397394" y2="-37.120036930230356"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0015); fill: none" x1="-32.142758825583364" x2="-40.65890127299169" y1="30.096291260846915" y2="57.96730290691053"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0016); fill: none" x1="-38.85724117441664" x2="-30.341098727008312" y1="55.90370873915309" y2="28.032697093089467"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0017); fill: none" x1="-36.50689250093845" x2="-2.517300141024109" y1="-35.71493290600952" y2="-1.7253405460951758"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0018); fill: none" x1="-3.4931074990615443" x2="-37.48269985897589" y1="-4.285067093990477" y2="-38.27465945390482"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0019); fill: none" x1="-25.416279698402327" x2="-1.9461605749800188" y1="21.909189718419892" y2="2.35075711556797"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0020); fill: none" x1="-4.583720301597676" x2="-28.05383942501998" y1="3.090810281580109" y2="22.64924288443203"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0021); fill: none" x1="-24.47407880293773" x2="37.047522248501025" y1="25.16671809697171" y2="20.77231802186894"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0022); fill: none" x1="34.474078802937726" x2="-27.047522248501025" y1="19.83328190302829" y2="24.22768197813106"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0023); fill: none" x1="-34.647885776758415" x2="38.381249757090096" y1="-41.385089651024494" y2="-68.43291762652395"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0024); fill: none" x1="35.647885776758415" x2="-37.381249757090096" y1="-68.6149103489755" y2="-41.567082373476055"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0025); fill: none" x1="4.668909937019562" x2="37.06627881352028" y1="2.9605540022097214" y2="19.15923844046008"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0026); fill: none" x1="35.33109006298044" x2="2.933721186479724" y1="17.03944599779028" y2="0.840761559539921"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0027); fill: none" x1="34.83992268341569" x2="-38.57626390141909" y1="21.98423841482623" y2="59.14551804418705"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0028); fill: none" x1="-35.83992268341569" x2="37.57626390141909" y1="59.01576158517376" y2="21.854481955812947"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0029); fill: none" x1="35.79460114175866" x2="-36.95322958838372" y1="-21.862101696100332" y2="-39.82452903687623"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0030); fill: none" x1="-34.79460114175866" x2="37.95322958838372" y1="-38.13789830389967" y2="-20.175470963123768"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0031); fill: none" x1="-35.47265722329792" x2="38.0898528175226" y1="-60.10991737278242" y2="-69.08095518263859"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0032); fill: none" x1="35.47265722329792" x2="-38.0898528175226" y1="-69.89008262721758" y2="-60.91904481736142"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0033); fill: none" x1="5.188743684973439" x2="38.54921189700029" y1="-1.9080196465571957" y2="-18.181418774375175"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0034); fill: none" x1="35.81125631502656" x2="2.4507881029997067" y1="-18.091980353442807" y2="-1.8185812256248268"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0035); fill: none" x1="-35.52394267578582" x2="38.21813444455758" y1="-60.75920760133199" y2="-78.74508006970844"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0036); fill: none" x1="35.52394267578582" x2="-38.21813444455758" y1="-79.240792398668" y2="-61.25491993029158"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0037); fill: none" x1="40.44" x2="40.44" y1="-74.5" y2="-73"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0038); fill: none" x1="41.56" x2="41.56" y1="-75.5" y2="-77"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0039); fill: none" x1="40.44" x2="40.44" y1="-64.5" y2="-23"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0040); fill: none" x1="41.56" x2="41.56" y1="-25.5" y2="-67"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0041); fill: none" x1="40.30271786663033" x2="39.51515149149206" y1="-14.515713571805037" y2="16.986941433725917"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0042); fill: none" x1="40.69728213336967" x2="41.48484850850794" y1="14.515713571805037" y2="-16.986941433725917"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0043); fill: none" x1="46.5" x2="104" y1="-19.44" y2="-19.44"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0044); fill: none" x1="101.5" x2="44" y1="-20.56" y2="-20.56"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0045); fill: none" x1="101.9905195807074" x2="42.288803281876845" y1="-17.661473556120452" y2="17.981342144673903"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0046); fill: none" x1="45.009480419292615" x2="104.71119671812315" y1="17.661473556120452" y2="-17.981342144673903"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0047); fill: none" x1="46.303784358882496" x2="87.43407938747332" y1="-21.559958805377054" y2="-38.34783432725085"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0048); fill: none" x1="84.6962156411175" x2="43.565920612526696" y1="-38.44004119462294" y2="-21.652165672749145"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0049); fill: none" x1="45.39827601102188" x2="87.14903992637362" y1="-66.65055704170537" y2="-41.08886484863288"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0050); fill: none" x1="85.60172398897811" x2="43.850960073626375" y1="-43.34944295829462" y2="-68.91113515136712"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0051); fill: none" x1="44.90650576643299" x2="87.32188556522158" y1="-76.08811903340276" y2="-41.46331919765697"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0052); fill: none" x1="86.09349423356701" x2="43.67811443477843" y1="-43.911880966597245" y2="-78.53668080234303"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0053); fill: none" x1="93.13538029258017" x2="104.63036872176808" y1="-35.446650637069474" y2="-21.923134838024875"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0054); fill: none" x1="103.86461970741983" x2="92.36963127823192" y1="-24.55334936293053" y2="-38.07686516197513"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0055); fill: none" x1="43.94494922530619" x2="87.30756434504043" y1="23.87310929483743" y2="58.56320139062482"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0056); fill: none" x1="86.05505077469381" x2="42.69243565495957" y1="56.126890705162566" y2="21.436798609375174"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0057); fill: none" x1="84.49588555545317" x2="-38.00436208828952" y1="59.48199982497025" y2="60.4171162191973"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0058); fill: none" x1="-35.495885555453164" x2="87.00436208828951" y1="61.51800017502975" y2="60.5828837808027"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0059); fill: none" x1="105.30900788647574" x2="90.07580731094613" y1="-14.73652722321101" y2="56.9491225439872"/>
+<line style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0060); fill: none" x1="91.69099211352426" x2="106.92419268905387" y1="54.73652722321101" y2="-16.9491225439872"/>
+<circle cx="-50" cy="-50" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-41" cy="-60" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-41" cy="61" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-40" cy="-40" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-30" cy="25" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="0" cy="0" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="40" cy="20" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="41" cy="-70" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="41" cy="-80" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="41" cy="-20" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="107" cy="-20" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="90" cy="-40" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="90" cy="60" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<text dy="-2.1" font-size="5" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (20 10) rotate (26.56505117707799) translate(-20 -10)" x="20" y="10">
+e
+</text>
+<text dy="0" font-size="5" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (25.191358024691358 -0.3827160493827151) rotate (0) translate(-25.191358024691358 0.3827160493827151)" x="25.191358024691358" y="-0.3827160493827151">
+e.face()
+</text>
+<text dy="0" font-size="5" style="fill: rgb(0 0 0)" transform="translate (-7 16) rotate (0) translate(7 -16)" x="-7" y="16">
+e.from()
+</text>
+<path d="M1.8,6 L4,12" style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0061); stroke-dasharray: 1 0.5; fill: none"/>
+<text dy="0" font-size="5" style="fill: rgb(0 0 0)" transform="translate (33 36) rotate (0) translate(-33 -36)" x="33" y="36">
+e.to()
+</text>
+<path d="M40.5,26 L40.5,31" style="stroke-width: 0.7; stroke: rgb(0 0 0); marker-start: url(#delaunay_directed_edge_face_and_vertex_filled_arrow0062); stroke-dasharray: 1 0.5; fill: none"/>
+</g>
+</svg>
+<p><em>See also the <a href="index.html">handles module</a>.</em></p>
+</div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><div id="implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#198-317">source</a></span><a href="#impl" class="anchor"></a><h3 class="code-header in-band">impl&lt;'a, V, DE, UE, F&gt; <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.vertices" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#202-204">source</a></span><a href="#method.vertices" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.vertices" class="fnname">vertices</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.array.html">[</a><a class="type" href="type.VertexHandle.html" title="type spade::handles::VertexHandle">VertexHandle</a>&lt;'a, V, DE, UE, F&gt;<a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.array.html">; 2]</a></h4></section></summary><div class="docblock"><p>Returns the edge’s two vertices.</p>
+<p>The first vertex is <code>self.from()</code>, the second vertex is <code>self.to()</code>.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.from" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#207-210">source</a></span><a href="#method.from" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.from" class="fnname">from</a>(&amp;self) -&gt; <a class="type" href="type.VertexHandle.html" title="type spade::handles::VertexHandle">VertexHandle</a>&lt;'a, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Returns the edge’s origin vertex.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.to" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#213-215">source</a></span><a href="#method.to" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.to" class="fnname">to</a>(&amp;self) -&gt; <a class="type" href="type.VertexHandle.html" title="type spade::handles::VertexHandle">VertexHandle</a>&lt;'a, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Returns the edge’s destination vertex.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.rev" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#219-221">source</a></span><a href="#method.rev" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.rev" class="fnname">rev</a>(&amp;self) -&gt; Self</h4></section></summary><div class="docblock"><p>Returns this edge in reversed direction.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.opposite_vertex" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#227-233">source</a></span><a href="#method.opposite_vertex" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.opposite_vertex" class="fnname">opposite_vertex</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="type" href="type.VertexHandle.html" title="type spade::handles::VertexHandle">VertexHandle</a>&lt;'a, V, DE, UE, F&gt;&gt;</h4></section></summary><div class="docblock"><p>Returns the vertex which lies opposite of this edge.</p>
+<p>This is equal to calling <code>self.prev().from()</code> or <code>self.next().to()</code>.
+Returns <code>None</code> if this edge is part of the convex hull.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.next" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#242-245">source</a></span><a href="#method.next" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.next" class="fnname">next</a>(&amp;self) -&gt; <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Returns the oriented next edge.</p>
+<p>The oriented next edge shares the same face as this edge.
+When traversing the face’s edges in oriented order,
+this edge is the predecessor of the oriented next edge.
+“Oriented” means counterclockwise for right handed
+coordinate systems.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.prev" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#254-257">source</a></span><a href="#method.prev" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.prev" class="fnname">prev</a>(&amp;self) -&gt; <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Returns the oriented previous edge.</p>
+<p>The oriented previous edge shares the same face as this edge.
+When traversing the face’s edges in oriented order,
+this edge is the successor of the oriented previous edge.
+“Oriented” means counterclockwise for right handed
+coordinate systems.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.face" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#260-263">source</a></span><a href="#method.face" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.face" class="fnname">face</a>(&amp;self) -&gt; <a class="type" href="type.FaceHandle.html" title="type spade::handles::FaceHandle">FaceHandle</a>&lt;'a, <a class="struct" href="struct.PossiblyOuterTag.html" title="struct spade::handles::PossiblyOuterTag">PossiblyOuterTag</a>, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Returns the face located to the left of this edge.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.cw" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#269-271">source</a></span><a href="#method.cw" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.cw" class="fnname">cw</a>(&amp;self) -&gt; <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Returns the next edge in clockwise direction.</p>
+<p>Note that this assumes that you use a right handed coordinate system,
+otherwise the sense of orientation is inverted.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.ccw" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#277-279">source</a></span><a href="#method.ccw" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.ccw" class="fnname">ccw</a>(&amp;self) -&gt; <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Returns the next edge in counter clockwise direction.</p>
+<p>Note that this assumes that you use a right handed coordinate system,
+otherwise the sense of orientation is inverted.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.data" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#285-287">source</a></span><a href="#method.data" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.data" class="fnname">data</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.reference.html">&amp;'a </a>DE</h4></section></summary><div class="docblock"><p>Returns a reference to the data associated with this directed edge.</p>
+<p>Use <a href="../trait.Triangulation.html#method.directed_edge_data_mut">Triangulation::directed_edge_data_mut</a>
+to modify the edge data.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.as_undirected" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#297-299">source</a></span><a href="#method.as_undirected" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.as_undirected" class="fnname">as_undirected</a>(self) -&gt; <a class="type" href="type.UndirectedEdgeHandle.html" title="type spade::handles::UndirectedEdgeHandle">UndirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Converts this directed edge handle into an undirected edge handle.</p>
+<p><em>See also the <a href="index.html">handles</a> module.</em></p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.is_outer_edge" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#302-304">source</a></span><a href="#method.is_outer_edge" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.is_outer_edge" class="fnname">is_outer_edge</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Returns <code>true</code> if this edge is adjacent to the outer face.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.is_part_of_convex_hull" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#307-309">source</a></span><a href="#method.is_part_of_convex_hull" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.is_part_of_convex_hull" class="fnname">is_part_of_convex_hull</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Returns <code>true</code> if either this edge or its reversed edge is adjacent to the outer face.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.as_voronoi_edge" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#314-316">source</a></span><a href="#method.as_voronoi_edge" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.as_voronoi_edge" class="fnname">as_voronoi_edge</a>(&amp;self) -&gt; <a class="type" href="type.DirectedVoronoiEdge.html" title="type spade::handles::DirectedVoronoiEdge">DirectedVoronoiEdge</a>&lt;'a, V, DE, UE, F&gt;</h4></section></summary><div class="docblock"><p>Converts this edge into its dual voronoi edge.</p>
+<p>See also <a href="../internals/struct.DynamicHandleImpl.html#method.as_delaunay_edge">as_delaunay_edge</a>.</p>
+</div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-1" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#319-413">source</a></span><a href="#impl-1" class="anchor"></a><h3 class="code-header in-band">impl&lt;'a, V, DE, UE, F&gt; <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;V: <a class="trait" href="../trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.opposite_position" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#328-330">source</a></span><a href="#method.opposite_position" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.opposite_position" class="fnname">opposite_position</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;&gt;</h4></section></summary><div class="docblock"><p>Returns the position of the vertex opposite of this edge.</p>
+<p>See also <a href="../internals/struct.DynamicHandleImpl.html#method.opposite_vertex">opposite_vertex()</a>.
+Returns <code>None</code> if this edge is an outer edge.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.length_2" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#333-335">source</a></span><a href="#method.length_2" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.length_2" class="fnname">length_2</a>(&amp;self) -&gt; V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a></h4></section></summary><div class="docblock"><p>Returns the squared length of this edge.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.side_query" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#339-342">source</a></span><a href="#method.side_query" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.side_query" class="fnname">side_query</a>(&amp;self, query_point: <a class="struct" href="../struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;) -&gt; <a class="struct" href="../struct.LineSideInfo.html" title="struct spade::LineSideInfo">LineSideInfo</a></h4></section></summary><div class="docblock"><p>Identifies on which side of this edge a point lies.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.project_point" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#381-387">source</a></span><a href="#method.project_point" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.project_point" class="fnname">project_point</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;query_point: <a class="struct" href="../struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;<br>) -&gt; <a class="struct" href="../struct.PointProjection.html" title="struct spade::PointProjection">PointProjection</a>&lt;V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;</h4></section></summary><div class="docblock"><p>Indicates the position of a point being projected onto this edge.</p>
+<p>A point’s projection can either come <em>before</em>, <em>on</em> or <em>behind</em> this edge.
+Note that this method may return inaccurate results due to rounding issues.</p>
+<svg height="400" viewBox="-8.4 -1.68 36.8 7.359999999999999" width="800" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<marker fill="rgb(0 0 0)" id="project_point_filled_arrow0001" markerHeight="3" markerWidth="5" orient="auto" refX="0.1" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z"/>
+</marker>
+</defs>
+<rect height="100%" style="fill: none" width="100%" x="-8.4" y="-1.68"/>
+<g>
+<path d="M-32,-48 L8,-40 L-8,40 L-48,32" style="fill: rgb(143 188 143)"/>
+<path d="M8,-40 L28,-36 L12,44 L-8,40" style="fill: rgb(100 149 237)"/>
+<path d="M68,-28 L28,-36 L12,44 L52,52" style="fill: rgb(250 128 114)"/>
+<line style="stroke-width: 0.5; stroke: rgb(0 0 0); marker-end: url(#project_point_filled_arrow0001); fill: none" x1="0" x2="17.6" y1="0" y2="3.52"/>
+<text dy="0" font-size="2" style="fill: rgb(0 0 0)" transform="translate (-7 -2) rotate (0) translate(7 2)" x="-7" y="-2">
+before
+</text>
+<text dy="0" font-size="2" style="fill: rgb(0 0 0)" transform="translate (4 7) rotate (0) translate(-4 -7)" x="4" y="7">
+on edge
+</text>
+<text dy="0" font-size="2" style="fill: rgb(0 0 0)" transform="translate (21 5) rotate (0) translate(-21 -5)" x="21" y="5">
+behind
+</text>
+<line style="stroke-width: 0.1; stroke: rgb(47 79 79); stroke-dasharray: 1 0.5; fill: none" x1="8" x2="-8" y1="-40" y2="40"/>
+<line style="stroke-width: 0.1; stroke: rgb(47 79 79); stroke-dasharray: 1 0.5; fill: none" x1="28" x2="12" y1="-36" y2="44"/>
+</g>
+</svg>
+<p><em>An image displaying differently colored areas which would result in different point projections</em></p>
+<h5 id="example"><a href="#example">Example</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spade</span>::{<span class="ident">Point2</span>, <span class="ident">Triangulation</span>, <span class="ident">DelaunayTriangulation</span>};
+
+<span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">Point2::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>);
+<span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">Point2::new</span>(<span class="number">2.0</span>, <span class="number">0.0</span>);
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">triangulation</span>: <span class="ident">DelaunayTriangulation</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+<span class="kw">let</span> <span class="ident">v0</span> <span class="op">=</span> <span class="ident">triangulation</span>.<span class="ident">insert</span>(<span class="ident">from</span>)<span class="question-mark">?</span>;
+<span class="kw">let</span> <span class="ident">v1</span> <span class="op">=</span> <span class="ident">triangulation</span>.<span class="ident">insert</span>(<span class="ident">to</span>)<span class="question-mark">?</span>;
+<span class="comment">// This edge goes from &quot;from&quot; to &quot;to&quot;</span>
+<span class="kw">let</span> <span class="ident">edge</span> <span class="op">=</span> <span class="ident">triangulation</span>.<span class="ident">get_edge_from_neighbors</span>(<span class="ident">v0</span>, <span class="ident">v1</span>).<span class="ident">unwrap</span>();
+
+<span class="comment">// These vertices are all projected before the edge</span>
+<span class="macro">assert!</span>(<span class="ident">edge</span>.<span class="ident">project_point</span>(<span class="ident">Point2::new</span>(<span class="op">-</span><span class="number">0.2</span>, <span class="number">0.0</span>)).<span class="ident">is_before_edge</span>());
+<span class="macro">assert!</span>(<span class="ident">edge</span>.<span class="ident">project_point</span>(<span class="ident">Point2::new</span>(<span class="op">-</span><span class="number">1002.0</span>, <span class="op">-</span><span class="number">12.0</span>)).<span class="ident">is_before_edge</span>());
+
+<span class="comment">// These vertices are all projected onto the edge</span>
+<span class="macro">assert!</span>(<span class="ident">edge</span>.<span class="ident">project_point</span>(<span class="ident">Point2::new</span>(<span class="number">1.0</span>, <span class="number">5.0</span>)).<span class="ident">is_on_edge</span>());
+<span class="macro">assert!</span>(<span class="ident">edge</span>.<span class="ident">project_point</span>(<span class="ident">Point2::new</span>(<span class="number">0.5</span>, <span class="op">-</span><span class="number">2.0</span>)).<span class="ident">is_on_edge</span>());
+<span class="macro">assert!</span>(<span class="ident">edge</span>.<span class="ident">project_point</span>(<span class="ident">Point2::new</span>(<span class="number">1.0</span>, <span class="number">0.0</span>)).<span class="ident">is_on_edge</span>());
+
+<span class="comment">// These vertices are all projected behind the edge</span>
+<span class="macro">assert!</span>(<span class="ident">edge</span>.<span class="ident">project_point</span>(<span class="ident">Point2::new</span>(<span class="number">4.000001</span>, <span class="number">0.0</span>)).<span class="ident">is_behind_edge</span>());
+<span class="macro">assert!</span>(<span class="ident">edge</span>.<span class="ident">project_point</span>(<span class="ident">Point2::new</span>(<span class="number">5.0</span>, <span class="op">-</span><span class="number">12.0</span>)).<span class="ident">is_behind_edge</span>());</code></pre></div>
+</div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-2" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#732-747">source</a></span><a href="#impl-2" class="anchor"></a><h3 class="code-header in-band">impl&lt;'a, V, DE, UE, F&gt; <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;V: <a class="trait" href="../trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>: <a class="trait" href="../../num_traits/float/trait.Float.html" title="trait num_traits::float::Float">Float</a>,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.distance_2" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#738-740">source</a></span><a href="#method.distance_2" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.distance_2" class="fnname">distance_2</a>(&amp;self, query_point: <a class="struct" href="../struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;) -&gt; V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a></h4></section></summary><div class="docblock"><p>Returns the squared distance of a point to this edge.</p>
+</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.nearest_point" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#743-746">source</a></span><a href="#method.nearest_point" class="anchor"></a><h4 class="code-header">pub fn <a href="#method.nearest_point" class="fnname">nearest_point</a>(&amp;self, query_point: <a class="struct" href="../struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;) -&gt; <a class="struct" href="../struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;V::<a class="associatedtype" href="../trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;</h4></section></summary><div class="docblock"><p>Yields the nearest point on this edge.</p>
+</div></details></div></details></div><h2 id="trait-implementations" class="small-section-header">Trait Implementations<a href="#trait-implementations" class="anchor"></a></h2><div id="trait-implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-AsRef%3CDE%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#192-196">source</a></span><a href="#impl-AsRef%3CDE%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;'a, V, DE, UE, F&gt; <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/convert/trait.AsRef.html" title="trait core::convert::AsRef">AsRef</a>&lt;DE&gt; for <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.as_ref" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#193-195">source</a></span><a href="#method.as_ref" class="anchor"></a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/1.63.0/core/convert/trait.AsRef.html#tymethod.as_ref" class="fnname">as_ref</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.reference.html">&amp;</a>DE</h4></section></summary><div class='docblock'><p>Converts this type into a shared reference of the (usually inferred) input type.</p>
+</div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Debug" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#20-30">source</a></span><a href="#impl-Debug" class="anchor"></a><h3 class="code-header in-band">impl&lt;'a, V, DE, UE, F&gt; <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/fmt/trait.Debug.html" title="trait core::fmt::Debug">Debug</a> for <a class="type" href="type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'a, V, DE, UE, F&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.fmt" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spade/delaunay_core/handles/handle_impls.rs.html#21-29">source</a></span><a href="#method.fmt" class="anchor"></a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/1.63.0/core/fmt/trait.Debug.html#tymethod.fmt" class="fnname">fmt</a>(&amp;self, f: &amp;mut <a class="struct" href="https://doc.rust-lang.org/1.63.0/core/fmt/struct.Formatter.html" title="struct core::fmt::Formatter">Formatter</a>&lt;'_&gt;) -&gt; <a class="type" href="https://doc.rust-lang.org/1.63.0/core/fmt/type.Result.html" title="type core::fmt::Result">Result</a></h4></section></summary><div class='docblock'><p>Formats the value using the given formatter. <a href="https://doc.rust-lang.org/1.63.0/core/fmt/trait.Debug.html#tymethod.fmt">Read more</a></p>
+</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spade" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

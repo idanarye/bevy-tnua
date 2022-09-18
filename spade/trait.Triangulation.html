@@ -1,0 +1,768 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Defines common operations on triangulations."><meta name="keywords" content="rust, rustlang, rust-lang, Triangulation"><title>Triangulation in spade - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../spade/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../spade/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Triangulation</a></h2><div class="sidebar-elems"><section><div class="block"><h3 class="sidebar-title"><a href="#required-associated-types">Required Associated Types</a></h3><ul><li><a href="#associatedtype.DirectedEdge">DirectedEdge</a></li><li><a href="#associatedtype.Face">Face</a></li><li><a href="#associatedtype.HintGenerator">HintGenerator</a></li><li><a href="#associatedtype.UndirectedEdge">UndirectedEdge</a></li><li><a href="#associatedtype.Vertex">Vertex</a></li></ul></div><div class="block"><h3 class="sidebar-title"><a href="#provided-methods">Provided Methods</a></h3><ul><li><a href="#method.all_faces">all_faces</a></li><li><a href="#method.all_vertices_on_line">all_vertices_on_line</a></li><li><a href="#method.bulk_load">bulk_load</a></li><li><a href="#method.convex_hull">convex_hull</a></li><li><a href="#method.convex_hull_size">convex_hull_size</a></li><li><a href="#method.directed_edge">directed_edge</a></li><li><a href="#method.directed_edge_data_mut">directed_edge_data_mut</a></li><li><a href="#method.directed_edges">directed_edges</a></li><li><a href="#method.directed_voronoi_edges">directed_voronoi_edges</a></li><li><a href="#method.face">face</a></li><li><a href="#method.face_data_mut">face_data_mut</a></li><li><a href="#method.fixed_all_faces">fixed_all_faces</a></li><li><a href="#method.fixed_directed_edges">fixed_directed_edges</a></li><li><a href="#method.fixed_inner_faces">fixed_inner_faces</a></li><li><a href="#method.fixed_undirected_edges">fixed_undirected_edges</a></li><li><a href="#method.fixed_vertices">fixed_vertices</a></li><li><a href="#method.get_edge_from_neighbors">get_edge_from_neighbors</a></li><li><a href="#method.inner_faces">inner_faces</a></li><li><a href="#method.insert">insert</a></li><li><a href="#method.insert_with_hint">insert_with_hint</a></li><li><a href="#method.locate">locate</a></li><li><a href="#method.locate_and_remove">locate_and_remove</a></li><li><a href="#method.locate_vertex">locate_vertex</a></li><li><a href="#method.locate_with_hint">locate_with_hint</a></li><li><a href="#method.new">new</a></li><li><a href="#method.num_all_faces">num_all_faces</a></li><li><a href="#method.num_directed_edges">num_directed_edges</a></li><li><a href="#method.num_inner_faces">num_inner_faces</a></li><li><a href="#method.num_undirected_edges">num_undirected_edges</a></li><li><a href="#method.num_vertices">num_vertices</a></li><li><a href="#method.outer_face">outer_face</a></li><li><a href="#method.remove">remove</a></li><li><a href="#method.undirected_edge">undirected_edge</a></li><li><a href="#method.undirected_edge_data_mut">undirected_edge_data_mut</a></li><li><a href="#method.undirected_edges">undirected_edges</a></li><li><a href="#method.undirected_voronoi_edges">undirected_voronoi_edges</a></li><li><a href="#method.vertex">vertex</a></li><li><a href="#method.vertex_data_mut">vertex_data_mut</a></li><li><a href="#method.vertices">vertices</a></li><li><a href="#method.voronoi_faces">voronoi_faces</a></li><li><a href="#method.with_capacity">with_capacity</a></li></ul></div><div class="block"><h3 class="sidebar-title"><a href="#implementors">Implementors</a></h3></div></section><h2 class="location"><a href="index.html">In spade</a></h2></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../spade/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Trait <a href="index.html">spade</a>::<wbr><a class="trait" href="#">Triangulation</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/spade/triangulation.rs.html#39-564">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="docblock item-decl"><pre class="rust trait"><code>pub trait Triangulation: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a> {
+    type <a href="#associatedtype.Vertex" class="associatedtype">Vertex</a>: <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>;
+    type <a href="#associatedtype.DirectedEdge" class="associatedtype">DirectedEdge</a>: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>;
+    type <a href="#associatedtype.UndirectedEdge" class="associatedtype">UndirectedEdge</a>: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>;
+    type <a href="#associatedtype.Face" class="associatedtype">Face</a>: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>;
+    type <a href="#associatedtype.HintGenerator" class="associatedtype">HintGenerator</a>: <a class="trait" href="trait.HintGenerator.html" title="trait spade::HintGenerator">HintGenerator</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;;
+
+<details class="rustdoc-toggle type-contents-toggle"><summary class="hideme"><span>Show 41 methods</span></summary>    fn <a href="#method.new" class="fnname">new</a>() -&gt; Self { ... }
+<span class="item-spacer"></span>    fn <a href="#method.with_capacity" class="fnname">with_capacity</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;num_vertices: <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;num_undirected_edges: <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;num_faces: <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; Self { ... }
+<span class="item-spacer"></span>    fn <a href="#method.bulk_load" class="fnname">bulk_load</a>(elements: <a class="struct" href="https://doc.rust-lang.org/1.63.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>&gt;) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self, <a class="enum" href="enum.InsertionError.html" title="enum spade::InsertionError">InsertionError</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.vertex" class="fnname">vertex</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="handles/type.VertexHandle.html" title="type spade::handles::VertexHandle">VertexHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.vertex_data_mut" class="fnname">vertex_data_mut</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; &amp;mut Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.face" class="fnname">face</a>&lt;InnerOuter:&nbsp;InnerOuterMarker&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedFaceHandle.html" title="type spade::handles::FixedFaceHandle">FixedFaceHandle</a>&lt;InnerOuter&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="handles/type.FaceHandle.html" title="type spade::handles::FaceHandle">FaceHandle</a>&lt;'_, InnerOuter, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.outer_face" class="fnname">outer_face</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="handles/type.FaceHandle.html" title="type spade::handles::FaceHandle">FaceHandle</a>&lt;'_, <a class="struct" href="handles/struct.PossiblyOuterTag.html" title="struct spade::handles::PossiblyOuterTag">PossiblyOuterTag</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.directed_edge" class="fnname">directed_edge</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedDirectedEdgeHandle.html" title="type spade::handles::FixedDirectedEdgeHandle">FixedDirectedEdgeHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="handles/type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.undirected_edge" class="fnname">undirected_edge</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedUndirectedEdgeHandle.html" title="type spade::handles::FixedUndirectedEdgeHandle">FixedUndirectedEdgeHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="handles/type.UndirectedEdgeHandle.html" title="type spade::handles::UndirectedEdgeHandle">UndirectedEdgeHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.undirected_edge_data_mut" class="fnname">undirected_edge_data_mut</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedUndirectedEdgeHandle.html" title="type spade::handles::FixedUndirectedEdgeHandle">FixedUndirectedEdgeHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; &amp;mut Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.num_all_faces" class="fnname">num_all_faces</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.num_inner_faces" class="fnname">num_inner_faces</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.num_undirected_edges" class="fnname">num_undirected_edges</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.num_directed_edges" class="fnname">num_directed_edges</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.convex_hull_size" class="fnname">convex_hull_size</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.directed_edges" class="fnname">directed_edges</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="iterators/type.DirectedEdgeIterator.html" title="type spade::iterators::DirectedEdgeIterator">DirectedEdgeIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.undirected_edges" class="fnname">undirected_edges</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="iterators/type.UndirectedEdgeIterator.html" title="type spade::iterators::UndirectedEdgeIterator">UndirectedEdgeIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.num_vertices" class="fnname">num_vertices</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.vertices" class="fnname">vertices</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="iterators/type.VertexIterator.html" title="type spade::iterators::VertexIterator">VertexIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.fixed_vertices" class="fnname">fixed_vertices</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedVertexIterator.html" title="type spade::iterators::FixedVertexIterator">FixedVertexIterator</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.all_faces" class="fnname">all_faces</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="iterators/type.FaceIterator.html" title="type spade::iterators::FaceIterator">FaceIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.inner_faces" class="fnname">inner_faces</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="iterators/type.InnerFaceIterator.html" title="type spade::iterators::InnerFaceIterator">InnerFaceIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.voronoi_faces" class="fnname">voronoi_faces</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="iterators/type.VoronoiFaceIterator.html" title="type spade::iterators::VoronoiFaceIterator">VoronoiFaceIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.directed_voronoi_edges" class="fnname">directed_voronoi_edges</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="iterators/type.DirectedVoronoiEdgeIterator.html" title="type spade::iterators::DirectedVoronoiEdgeIterator">DirectedVoronoiEdgeIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.undirected_voronoi_edges" class="fnname">undirected_voronoi_edges</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="type" href="iterators/type.UndirectedVoronoiEdgeIterator.html" title="type spade::iterators::UndirectedVoronoiEdgeIterator">UndirectedVoronoiEdgeIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.locate" class="fnname">locate</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;point: <a class="struct" href="struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="enum.PositionInTriangulation.html" title="enum spade::PositionInTriangulation">PositionInTriangulation</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.locate_vertex" class="fnname">locate_vertex</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;point: <a class="struct" href="struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="type" href="handles/type.VertexHandle.html" title="type spade::handles::VertexHandle">VertexHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.get_edge_from_neighbors" class="fnname">get_edge_from_neighbors</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="type" href="handles/type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.locate_with_hint" class="fnname">locate_with_hint</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;point: <a class="struct" href="struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hint: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="enum.PositionInTriangulation.html" title="enum spade::PositionInTriangulation">PositionInTriangulation</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.insert_with_hint" class="fnname">insert_with_hint</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t: Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hint: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>, <a class="enum" href="enum.InsertionError.html" title="enum spade::InsertionError">InsertionError</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.locate_and_remove" class="fnname">locate_and_remove</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;point: <a class="struct" href="struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.remove" class="fnname">remove</a>(&amp;mut self, vertex: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>) -&gt; Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.insert" class="fnname">insert</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vertex: Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>, <a class="enum" href="enum.InsertionError.html" title="enum spade::InsertionError">InsertionError</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.fixed_undirected_edges" class="fnname">fixed_undirected_edges</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedUndirectedEdgeIterator.html" title="type spade::iterators::FixedUndirectedEdgeIterator">FixedUndirectedEdgeIterator</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.fixed_directed_edges" class="fnname">fixed_directed_edges</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedDirectedEdgeIterator.html" title="type spade::iterators::FixedDirectedEdgeIterator">FixedDirectedEdgeIterator</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.fixed_all_faces" class="fnname">fixed_all_faces</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedFaceIterator.html" title="type spade::iterators::FixedFaceIterator">FixedFaceIterator</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.fixed_inner_faces" class="fnname">fixed_inner_faces</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedInnerFaceIterator.html" title="type spade::iterators::FixedInnerFaceIterator">FixedInnerFaceIterator</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.all_vertices_on_line" class="fnname">all_vertices_on_line</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.bool.html">bool</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.convex_hull" class="fnname">convex_hull</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; HullIterator&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.face_data_mut" class="fnname">face_data_mut</a>&lt;InnerOuter:&nbsp;InnerOuterMarker&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedFaceHandle.html" title="type spade::handles::FixedFaceHandle">FixedFaceHandle</a>&lt;InnerOuter&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; &amp;mut Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.directed_edge_data_mut" class="fnname">directed_edge_data_mut</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedDirectedEdgeHandle.html" title="type spade::handles::FixedDirectedEdgeHandle">FixedDirectedEdgeHandle</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; &amp;mut Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a> { ... }
+</details>}</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Defines common operations on triangulations.</p>
+<p>These operations are both available for
+<a href="struct.ConstrainedDelaunayTriangulation.html">ConstrainedDelaunayTriangulations</a> as well as
+regular <a href="struct.DelaunayTriangulation.html">DelaunayTriangulations</a>.</p>
+</div></details><h2 id="required-associated-types" class="small-section-header">Required Associated Types<a href="#required-associated-types" class="anchor"></a></h2><div class="methods"><details class="rustdoc-toggle" open><summary><div id="associatedtype.Vertex" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#41">source</a></div><h4 class="code-header">type <a href="#associatedtype.Vertex" class="associatedtype">Vertex</a>: <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a></h4></div></summary><div class="docblock"><p>The triangulation’s vertex type.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="associatedtype.DirectedEdge" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#43">source</a></div><h4 class="code-header">type <a href="#associatedtype.DirectedEdge" class="associatedtype">DirectedEdge</a>: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a></h4></div></summary><div class="docblock"><p>The triangulation’s edge type. Any new edge is created by using the <code>Default</code> trait.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="associatedtype.UndirectedEdge" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#45">source</a></div><h4 class="code-header">type <a href="#associatedtype.UndirectedEdge" class="associatedtype">UndirectedEdge</a>: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a></h4></div></summary><div class="docblock"><p>The triangulation’s undirected edge type. Any new edge is created by using the <code>Default</code> trait.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="associatedtype.Face" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#47">source</a></div><h4 class="code-header">type <a href="#associatedtype.Face" class="associatedtype">Face</a>: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a></h4></div></summary><div class="docblock"><p>The triangulation’s face type. Any new face is created by using the <code>Default</code> trait.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="associatedtype.HintGenerator" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#50">source</a></div><h4 class="code-header">type <a href="#associatedtype.HintGenerator" class="associatedtype">HintGenerator</a>: <a class="trait" href="trait.HintGenerator.html" title="trait spade::HintGenerator">HintGenerator</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;</h4></div></summary><div class="docblock"><p>The hint generator used by the triangulation. See <a href="trait.HintGenerator.html" title="HintGenerator">HintGenerator</a> for more information.</p>
+</div></details></div><h2 id="provided-methods" class="small-section-header">Provided Methods<a href="#provided-methods" class="anchor"></a></h2><div class="methods"><details class="rustdoc-toggle" open><summary><div id="method.new" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#103-105">source</a></div><h4 class="code-header">fn <a href="#method.new" class="fnname">new</a>() -&gt; Self</h4></div></summary><div class="docblock"><p>Creates a new triangulation.</p>
+<p>A newly created triangulation contains no vertices, no edges and the single
+outer face.</p>
+<h5 id="example"><a href="#example">Example</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spade</span>::{<span class="ident">DelaunayTriangulation</span>, <span class="ident">Point2</span>, <span class="ident">Triangulation</span>};
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">triangulation</span>: <span class="ident">DelaunayTriangulation</span><span class="op">&lt;</span><span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">DelaunayTriangulation::new</span>();
+<span class="comment">// An empty triangulation has no vertices and one face</span>
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_vertices</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_all_faces</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_inner_faces</span>(), <span class="number">0</span>); <span class="comment">// This count excludes the outer face</span>
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_directed_edges</span>(), <span class="number">0</span>);
+
+<span class="ident">triangulation</span>.<span class="ident">insert</span>(<span class="ident">Point2::new</span>(<span class="number">0.0</span>, <span class="number">1.0</span>));
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_vertices</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_inner_faces</span>(), <span class="number">0</span>);
+
+<span class="ident">triangulation</span>.<span class="ident">insert</span>(<span class="ident">Point2::new</span>(<span class="number">1.0</span>, <span class="number">1.0</span>));
+<span class="comment">// Two vertices define the first edge</span>
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_undirected_edges</span>(), <span class="number">1</span>);
+
+<span class="ident">triangulation</span>.<span class="ident">insert</span>(<span class="ident">Point2::new</span>(<span class="number">1.0</span>, <span class="number">0.0</span>));
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_vertices</span>(), <span class="number">3</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_inner_faces</span>(), <span class="number">1</span>);</code></pre></div>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.with_capacity" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#108-114">source</a></div><h4 class="code-header">fn <a href="#method.with_capacity" class="fnname">with_capacity</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;num_vertices: <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;num_undirected_edges: <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;num_faces: <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a><br>) -&gt; Self</h4></div></summary><div class="docblock"><p>Creates a new triangulation and pre-allocates some space for vertices, edges and faces</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.bulk_load" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#135-140">source</a></div><h4 class="code-header">fn <a href="#method.bulk_load" class="fnname">bulk_load</a>(elements: <a class="struct" href="https://doc.rust-lang.org/1.63.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>&gt;) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self, <a class="enum" href="enum.InsertionError.html" title="enum spade::InsertionError">InsertionError</a>&gt;</h4></div></summary><div class="docblock"><p>Creates a new triangulation populated with some vertices.</p>
+<p>This will usually be more efficient than inserting the elements sequentially by calling
+<a href="trait.Triangulation.html#method.insert">insert</a>.</p>
+<p>Returns an <a href="enum.InsertionError.html" title="InsertionError">InsertionError</a> if any input coordinate is invalid. This method should never fail
+if all vertices were successfully checked with <a href="fn.validate_vertex.html" title="crate::validate_vertex">crate::validate_vertex</a>.</p>
+<h5 id="runtime"><a href="#runtime">Runtime</a></h5>
+<p>This method has a run time of <code>O(n)</code> but will run near linearly in practice.
+The runtime can be as worse as <code>O(n²)</code> if the inputs are very degenerate, e.g.
+if all input vertices lie on the same line.</p>
+<h5 id="comparison-to-incremental-insertion"><a href="#comparison-to-incremental-insertion">Comparison to incremental insertion</a></h5>
+<p>This graph shows the difference between incremental and bulk loading for a different number of random points - bulk loading becomes
+more efficient very quickly.
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>
+Gnuplot
+</title>
+<desc>
+Produced by GNUPLOT 5.2 patchlevel 8
+</desc>
+<g id="gnuplot_canvas">
+<rect x="0" y="0" width="1280" height="720" fill="none" />
+<defs>
+<circle id="gpDot" r="0.5" stroke-width="0.5" stroke="currentColor" />
+<path id="gpPt0" stroke-width="0.222" stroke="currentColor" d="M-1,0 h2 M0,-1 v2" />
+<path id="gpPt1" stroke-width="0.222" stroke="currentColor" d="M-1,-1 L1,1 M1,-1 L-1,1" />
+<path id="gpPt2" stroke-width="0.222" stroke="currentColor" d="M-1,0 L1,0 M0,-1 L0,1 M-1,-1 L1,1 M-1,1 L1,-1" />
+<rect id="gpPt3" stroke-width="0.222" stroke="currentColor" x="-1" y="-1" width="2" height="2" />
+<rect id="gpPt4" stroke-width="0.222" stroke="currentColor" fill="currentColor" x="-1" y="-1" width="2" height="2" />
+<circle id="gpPt5" stroke-width="0.222" stroke="currentColor" cx="0" cy="0" r="1" />
+<use xlink:href="#gpPt5" id="gpPt6" fill="currentColor" stroke="none" />
+<path id="gpPt7" stroke-width="0.222" stroke="currentColor" d="M0,-1.33 L-1.33,0.67 L1.33,0.67 z" />
+<use xlink:href="#gpPt7" id="gpPt8" fill="currentColor" stroke="none" />
+<use xlink:href="#gpPt7" id="gpPt9" stroke="currentColor" transform="rotate(180)" />
+<use xlink:href="#gpPt9" id="gpPt10" fill="currentColor" stroke="none" />
+<use xlink:href="#gpPt3" id="gpPt11" stroke="currentColor" transform="rotate(45)" />
+<use xlink:href="#gpPt11" id="gpPt12" fill="currentColor" stroke="none" />
+<path id="gpPt13" stroke-width="0.222" stroke="currentColor" d="M0,1.330 L1.265,0.411 L0.782,-1.067 L-0.782,-1.076 L-1.265,0.411 z" />
+<use xlink:href="#gpPt13" id="gpPt14" fill="currentColor" stroke="none" />
+<filter id="textbox" filterUnits="objectBoundingBox" x="0" y="0" height="1" width="1">
+<feFlood flood-color="white" flood-opacity="1" result="bgnd" />
+<feComposite in="SourceGraphic" in2="bgnd" operator="atop" />
+</filter>
+<filter id="greybox" filterUnits="objectBoundingBox" x="0" y="0" height="1" width="1">
+<feFlood flood-color="lightgrey" flood-opacity="1" result="grey" />
+<feComposite in="SourceGraphic" in2="grey" operator="atop" />
+</filter>
+</defs>
+<g fill="none" color="white" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,662.4 L681.6,662.4  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,662.4 L72.6,662.4  " />
+<g transform="translate(55.3,666.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+0
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,586.4 L681.6,586.4  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,586.4 L72.6,586.4  " />
+<g transform="translate(55.3,590.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+2
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,510.3 L681.6,510.3  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,510.3 L72.6,510.3  " />
+<g transform="translate(55.3,514.2)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+4
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,434.3 L681.6,434.3  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,434.3 L72.6,434.3  " />
+<g transform="translate(55.3,438.2)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+6
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,358.2 L681.6,358.2  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,358.2 L72.6,358.2  " />
+<g transform="translate(55.3,362.1)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+8
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,282.2 L681.6,282.2  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,282.2 L72.6,282.2  " />
+<g transform="translate(55.3,286.1)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+10
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,206.2 L681.6,206.2  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,206.2 L72.6,206.2  " />
+<g transform="translate(55.3,210.1)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+12
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,130.1 L681.6,130.1  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,130.1 L72.6,130.1  " />
+<g transform="translate(55.3,134.0)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+14
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="gray" stroke="currentColor" stroke-width="0.50" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="gray" stroke-dasharray="2,4" class="gridline" d="M63.6,54.1 L681.6,54.1  " />
+</g>
+<g fill="none" color="gray" stroke="gray" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,54.1 L72.6,54.1  " />
+<g transform="translate(55.3,58.0)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="end">
+<text>
+<tspan font-family="Helvetica">
+16
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,662.4 L63.6,653.4  " />
+<g transform="translate(63.6,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+0
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M140.9,662.4 L140.9,653.4  " />
+<g transform="translate(140.9,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+2000
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M218.1,662.4 L218.1,653.4  " />
+<g transform="translate(218.1,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+4000
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M295.4,662.4 L295.4,653.4  " />
+<g transform="translate(295.4,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+6000
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M372.6,662.4 L372.6,653.4  " />
+<g transform="translate(372.6,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+8000
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M449.9,662.4 L449.9,653.4  " />
+<g transform="translate(449.9,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+10000
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M527.1,662.4 L527.1,653.4  " />
+<g transform="translate(527.1,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+12000
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M604.4,662.4 L604.4,653.4  " />
+<g transform="translate(604.4,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+14000
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M681.6,662.4 L681.6,653.4  " />
+<g transform="translate(681.6,684.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+16000
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,54.1 L63.6,662.4 L681.6,662.4 L681.6,54.1 L63.6,54.1 Z  " />
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g transform="translate(19.0,358.3) rotate(270)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+Average time (ms)
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g transform="translate(372.6,711.3)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+Input Size (Elements)
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g transform="translate(372.6,31.0)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="middle">
+<text>
+<tspan font-family="Helvetica">
+bulk vs incremental loading: Comparison
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g id="gnuplot_plot_1">
+<title>
+bulk loading on hierarchy lookup, uniformly distributed
+</title>
+<g fill="none" color="white" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g transform="translate(757.0,67.0)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="start">
+<text>
+<tspan font-family="Helvetica">
+bulk loading on hierarchy lookup, uniformly distributed
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="rgb(178,  34,  34)" d="M706.5,63.1 L748.7,63.1 M102.2,645.0 L140.9,626.5 L179.5,607.2 L295.4,550.4 L449.9,471.2 L643.0,370.9
+		 " />
+</g>
+</g>
+<g id="gnuplot_plot_2">
+<title>
+gnuplot_plot_2
+</title>
+<g fill="none" color="white" stroke="rgb(178,  34,  34)" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<use xlink:href="#gpPt6" transform="translate(102.2,645.0) scale(3.38)" color="rgb(178,  34,  34)" />
+<use xlink:href="#gpPt6" transform="translate(140.9,626.5) scale(3.38)" color="rgb(178,  34,  34)" />
+<use xlink:href="#gpPt6" transform="translate(179.5,607.2) scale(3.38)" color="rgb(178,  34,  34)" />
+<use xlink:href="#gpPt6" transform="translate(295.4,550.4) scale(3.38)" color="rgb(178,  34,  34)" />
+<use xlink:href="#gpPt6" transform="translate(449.9,471.2) scale(3.38)" color="rgb(178,  34,  34)" />
+<use xlink:href="#gpPt6" transform="translate(643.0,370.9) scale(3.38)" color="rgb(178,  34,  34)" />
+</g>
+</g>
+<g id="gnuplot_plot_3">
+<title>
+incremental loading on hierarchy lookup, uniformly distributed
+</title>
+<g fill="none" color="white" stroke="rgb(178,  34,  34)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g transform="translate(757.0,85.0)" stroke="none" fill="black" font-family="Helvetica" font-size="12.00" text-anchor="start">
+<text>
+<tspan font-family="Helvetica">
+incremental loading on hierarchy lookup, uniformly distributed
+</tspan>
+</text>
+</g>
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="rgb( 46, 139,  87)" d="M706.5,81.1 L748.7,81.1 M102.2,637.4 L140.9,607.2 L179.5,574.2 L295.4,469.2 L449.9,319.0 L643.0,111.6
+		 " />
+</g>
+</g>
+<g id="gnuplot_plot_4">
+<title>
+gnuplot_plot_4
+</title>
+<g fill="none" color="white" stroke="rgb( 46, 139,  87)" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<use xlink:href="#gpPt6" transform="translate(102.2,637.4) scale(3.38)" color="rgb( 46, 139,  87)" />
+<use xlink:href="#gpPt6" transform="translate(140.9,607.2) scale(3.38)" color="rgb( 46, 139,  87)" />
+<use xlink:href="#gpPt6" transform="translate(179.5,574.2) scale(3.38)" color="rgb( 46, 139,  87)" />
+<use xlink:href="#gpPt6" transform="translate(295.4,469.2) scale(3.38)" color="rgb( 46, 139,  87)" />
+<use xlink:href="#gpPt6" transform="translate(449.9,319.0) scale(3.38)" color="rgb( 46, 139,  87)" />
+<use xlink:href="#gpPt6" transform="translate(643.0,111.6) scale(3.38)" color="rgb( 46, 139,  87)" />
+</g>
+</g>
+<g fill="none" color="white" stroke="rgb( 46, 139,  87)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="black" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke="black" d="M63.6,54.1 L63.6,662.4 L681.6,662.4 L681.6,54.1 L63.6,54.1 Z  " />
+</g>
+<g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
+</g>
+</g>
+</svg></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.vertex" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#145-150">source</a></div><h4 class="code-header">fn <a href="#method.vertex" class="fnname">vertex</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>) -&gt; <a class="type" href="handles/type.VertexHandle.html" title="type spade::handles::VertexHandle">VertexHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>Converts a fixed vertex handle to a reference vertex handle.</p>
+<p><em>See also the <a href="handles/index.html">handles</a> module for more information.</em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.vertex_data_mut" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#153-155">source</a></div><h4 class="code-header">fn <a href="#method.vertex_data_mut" class="fnname">vertex_data_mut</a>(&amp;mut self, handle: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>) -&gt; &amp;mut Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a></h4></div></summary><div class="docblock"><p>Returns a mutable reference to the associated data of a vertex.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.face" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#160-166">source</a></div><h4 class="code-header">fn <a href="#method.face" class="fnname">face</a>&lt;InnerOuter:&nbsp;InnerOuterMarker&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedFaceHandle.html" title="type spade::handles::FixedFaceHandle">FixedFaceHandle</a>&lt;InnerOuter&gt;<br>) -&gt; <a class="type" href="handles/type.FaceHandle.html" title="type spade::handles::FaceHandle">FaceHandle</a>&lt;'_, InnerOuter, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>Converts a fixed face handle to a reference face handle.</p>
+<p><em>See also the <a href="handles/index.html">handles</a> module for more information.</em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.outer_face" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#169-179">source</a></div><h4 class="code-header">fn <a href="#method.outer_face" class="fnname">outer_face</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="handles/type.FaceHandle.html" title="type spade::handles::FaceHandle">FaceHandle</a>&lt;'_, <a class="struct" href="handles/struct.PossiblyOuterTag.html" title="struct spade::handles::PossiblyOuterTag">PossiblyOuterTag</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>Returns a reference handle to the single outer face of this triangulation.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.directed_edge" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#184-190">source</a></div><h4 class="code-header">fn <a href="#method.directed_edge" class="fnname">directed_edge</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedDirectedEdgeHandle.html" title="type spade::handles::FixedDirectedEdgeHandle">FixedDirectedEdgeHandle</a><br>) -&gt; <a class="type" href="handles/type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>Converts a fixed directed edge handle handle to a reference directed edge handle.</p>
+<p><em>See also the <a href="handles/index.html">handles</a> module for more information.</em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.undirected_edge" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#195-201">source</a></div><h4 class="code-header">fn <a href="#method.undirected_edge" class="fnname">undirected_edge</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedUndirectedEdgeHandle.html" title="type spade::handles::FixedUndirectedEdgeHandle">FixedUndirectedEdgeHandle</a><br>) -&gt; <a class="type" href="handles/type.UndirectedEdgeHandle.html" title="type spade::handles::UndirectedEdgeHandle">UndirectedEdgeHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>Converts a fixed undirected edge handle to a reference undirected edge handle.</p>
+<p><em>See also the <a href="handles/index.html">handles</a> module for more information.</em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.undirected_edge_data_mut" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#204-209">source</a></div><h4 class="code-header">fn <a href="#method.undirected_edge_data_mut" class="fnname">undirected_edge_data_mut</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedUndirectedEdgeHandle.html" title="type spade::handles::FixedUndirectedEdgeHandle">FixedUndirectedEdgeHandle</a><br>) -&gt; &amp;mut Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a></h4></div></summary><div class="docblock"><p>Returns a mutable reference ot the associated data of an undirected edge.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.num_all_faces" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#215-217">source</a></div><h4 class="code-header">fn <a href="#method.num_all_faces" class="fnname">num_all_faces</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a></h4></div></summary><div class="docblock"><p>Returns the number of all faces, including the single outer face, of this
+triangulation.</p>
+<p>This is always equal to <code>triangulation.num_inner_faces() + 1</code>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.num_inner_faces" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#220-222">source</a></div><h4 class="code-header">fn <a href="#method.num_inner_faces" class="fnname">num_inner_faces</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a></h4></div></summary><div class="docblock"><p>Returns the number of inner faces in this triangulation.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.num_undirected_edges" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#225-227">source</a></div><h4 class="code-header">fn <a href="#method.num_undirected_edges" class="fnname">num_undirected_edges</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a></h4></div></summary><div class="docblock"><p>Returns the number of undirected edges in this triangulation.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.num_directed_edges" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#230-232">source</a></div><h4 class="code-header">fn <a href="#method.num_directed_edges" class="fnname">num_directed_edges</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a></h4></div></summary><div class="docblock"><p>Returns the number of directed edges in this triangulation.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.convex_hull_size" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#240-247">source</a></div><h4 class="code-header">fn <a href="#method.convex_hull_size" class="fnname">convex_hull_size</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a></h4></div></summary><div class="docblock"><p>Returns the number of edges of the convex hull.</p>
+<p><em>See also <a href="trait.Triangulation.html#method.convex_hull">convex_hull</a></em></p>
+<h5 id="complexity"><a href="#complexity">Complexity</a></h5>
+<p>This method does not need to iterate through the convex hull and has a complexity of O(1)</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.directed_edges" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#252-257">source</a></div><h4 class="code-header">fn <a href="#method.directed_edges" class="fnname">directed_edges</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="iterators/type.DirectedEdgeIterator.html" title="type spade::iterators::DirectedEdgeIterator">DirectedEdgeIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>An iterator visiting all directed edges.</p>
+<p>The iterator type is <a href="handles/type.DirectedEdgeHandle.html" title="DirectedEdgeHandle">DirectedEdgeHandle</a>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.undirected_edges" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#262-267">source</a></div><h4 class="code-header">fn <a href="#method.undirected_edges" class="fnname">undirected_edges</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="iterators/type.UndirectedEdgeIterator.html" title="type spade::iterators::UndirectedEdgeIterator">UndirectedEdgeIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>An iterator over all undirected edges.</p>
+<p>The iterator type is <a href="handles/type.UndirectedEdgeHandle.html" title="UndirectedEdgeHandle">UndirectedEdgeHandle</a></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.num_vertices" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#270-272">source</a></div><h4 class="code-header">fn <a href="#method.num_vertices" class="fnname">num_vertices</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.usize.html">usize</a></h4></div></summary><div class="docblock"><p>Returns the number vertices in this triangulation.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.vertices" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#277-281">source</a></div><h4 class="code-header">fn <a href="#method.vertices" class="fnname">vertices</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="iterators/type.VertexIterator.html" title="type spade::iterators::VertexIterator">VertexIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>An iterator visiting all vertices.</p>
+<p>The iterator type is <a href="handles/type.VertexHandle.html" title="VertexHandle">VertexHandle</a></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.fixed_vertices" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#286-288">source</a></div><h4 class="code-header">fn <a href="#method.fixed_vertices" class="fnname">fixed_vertices</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedVertexIterator.html" title="type spade::iterators::FixedVertexIterator">FixedVertexIterator</a></h4></div></summary><div class="docblock"><p>An iterator visiting all vertices.</p>
+<p>The iterator type is <a href="handles/type.FixedVertexHandle.html" title="FixedVertexHandle">FixedVertexHandle</a></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.all_faces" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#296-300">source</a></div><h4 class="code-header">fn <a href="#method.all_faces" class="fnname">all_faces</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="iterators/type.FaceIterator.html" title="type spade::iterators::FaceIterator">FaceIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>An iterator visiting all faces.</p>
+<p>The first returned face is the outer face, all other faces will be inner faces.
+The iterator type is <a href="handles/type.FaceHandle.html">FaceHandle&lt;PossiblyOuterTag, …&gt;</a>.</p>
+<p><em>See also <a href="trait.Triangulation.html#method.inner_faces">inner_faces()</a></em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.inner_faces" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#305-309">source</a></div><h4 class="code-header">fn <a href="#method.inner_faces" class="fnname">inner_faces</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="iterators/type.InnerFaceIterator.html" title="type spade::iterators::InnerFaceIterator">InnerFaceIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>An iterator visiting all inner faces.
+The iterator type is <a href="handles/type.FaceHandle.html">FaceHandle&lt;InnerTag, …&gt;</a>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.voronoi_faces" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#314-319">source</a></div><h4 class="code-header">fn <a href="#method.voronoi_faces" class="fnname">voronoi_faces</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="iterators/type.VoronoiFaceIterator.html" title="type spade::iterators::VoronoiFaceIterator">VoronoiFaceIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>An iterator visiting all faces of the Voronoi diagram.</p>
+<p>The iterator type is <a href="handles/type.VoronoiFace.html" title="VoronoiFace">VoronoiFace</a></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.directed_voronoi_edges" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#324-333">source</a></div><h4 class="code-header">fn <a href="#method.directed_voronoi_edges" class="fnname">directed_voronoi_edges</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="iterators/type.DirectedVoronoiEdgeIterator.html" title="type spade::iterators::DirectedVoronoiEdgeIterator">DirectedVoronoiEdgeIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>An iterator visiting all directed voronoi edges.</p>
+<p>The iterator type is (DirectedVoronoiEdge)<a href="handles/type.DirectedVoronoiEdge.html" title="crate::handles::DirectedVoronoiEdge">crate::handles::DirectedVoronoiEdge</a></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.undirected_voronoi_edges" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#338-347">source</a></div><h4 class="code-header">fn <a href="#method.undirected_voronoi_edges" class="fnname">undirected_voronoi_edges</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="type" href="iterators/type.UndirectedVoronoiEdgeIterator.html" title="type spade::iterators::UndirectedVoronoiEdgeIterator">UndirectedVoronoiEdgeIterator</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>An iterator visiting all undirected voronoi edges.</p>
+<p>The iterator type is (UndirectedVoronoiEdge)<a href="handles/type.UndirectedVoronoiEdge.html" title="crate::handles::UndirectedVoronoiEdge">crate::handles::UndirectedVoronoiEdge</a></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.locate" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#350-356">source</a></div><h4 class="code-header">fn <a href="#method.locate" class="fnname">locate</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;point: <a class="struct" href="struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;<br>) -&gt; <a class="enum" href="enum.PositionInTriangulation.html" title="enum spade::PositionInTriangulation">PositionInTriangulation</a></h4></div></summary><div class="docblock"><p>Returns information about the location of a point in a triangulation.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.locate_vertex" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#362-371">source</a></div><h4 class="code-header">fn <a href="#method.locate_vertex" class="fnname">locate_vertex</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;point: <a class="struct" href="struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="type" href="handles/type.VertexHandle.html" title="type spade::handles::VertexHandle">VertexHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;&gt;</h4></div></summary><div class="docblock"><p>Locates a vertex at a given position.</p>
+<p>Returns <code>None</code> if the point could not be found.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.get_edge_from_neighbors" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#379-387">source</a></div><h4 class="code-header">fn <a href="#method.get_edge_from_neighbors" class="fnname">get_edge_from_neighbors</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;from: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;to: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="type" href="handles/type.DirectedEdgeHandle.html" title="type spade::handles::DirectedEdgeHandle">DirectedEdgeHandle</a>&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;&gt;</h4></div></summary><div class="docblock"><p>Returns an edge between two vertices.</p>
+<p>If the edge does not exist, <code>None</code> is returned.
+This operation runs in <code>O(n)</code> time, where <code>n</code> is
+the degree of <code>from</code>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.locate_with_hint" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#396-402">source</a></div><h4 class="code-header">fn <a href="#method.locate_with_hint" class="fnname">locate_with_hint</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;point: <a class="struct" href="struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;, <br>&nbsp;&nbsp;&nbsp;&nbsp;hint: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>) -&gt; <a class="enum" href="enum.PositionInTriangulation.html" title="enum spade::PositionInTriangulation">PositionInTriangulation</a></h4></div></summary><div class="docblock"><p>Returns information about the location of a point in a triangulation.</p>
+<p>Additionally, a hint can be given to speed up computation.
+The hint should be a vertex close to the position that
+is being looked up.</p>
+<p><em>See also <a href="trait.Triangulation.html#method.locate">locate</a>, <a href="trait.Triangulation.html#method.locate_vertex">locate_vertex</a></em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.insert_with_hint" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#413-419">source</a></div><h4 class="code-header">fn <a href="#method.insert_with_hint" class="fnname">insert_with_hint</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;t: Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;hint: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>, <a class="enum" href="enum.InsertionError.html" title="enum spade::InsertionError">InsertionError</a>&gt;</h4></div></summary><div class="docblock"><p>Inserts a new vertex into the triangulation.</p>
+<p>A hint can be given to speed up the process.
+The hint should be a handle of a vertex close to the new vertex.
+in this case the insertion time can be reduced to O(1) on average
+if the hint is close. If the hint is randomized, running time will
+be O(sqrt(n)) on average with an O(n) worst case.</p>
+<p><em>See also <a href="trait.Triangulation.html#method.insert">insert</a></em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.locate_and_remove" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#430-438">source</a></div><h4 class="code-header">fn <a href="#method.locate_and_remove" class="fnname">locate_and_remove</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;point: <a class="struct" href="struct.Point2.html" title="struct spade::Point2">Point2</a>&lt;&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a> as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;<br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>&gt;</h4></div></summary><div class="docblock"><p>Attempts to remove a vertex from the triangulation.</p>
+<p>Returns the removed vertex data if it could be found.</p>
+<h5 id="handle-invalidation"><a href="#handle-invalidation">Handle invalidation</a></h5>
+<p>This method will invalidate all vertex, edge and face handles
+upon successful removal.</p>
+<p><em>See also <a href="trait.Triangulation.html#method.remove">remove</a></em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.remove" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#447-449">source</a></div><h4 class="code-header">fn <a href="#method.remove" class="fnname">remove</a>(&amp;mut self, vertex: <a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>) -&gt; Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a></h4></div></summary><div class="docblock"><p>Removes a vertex from the triangulation.</p>
+<p>This operation runs in O(d²), where d is the degree of the
+removed vertex (the number of its outgoing edges).</p>
+<h5 id="handle-invalidation-1"><a href="#handle-invalidation-1">Handle invalidation</a></h5>
+<p>This method will invalidate all vertex, edge and face handles.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.insert" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#487-489">source</a></div><h4 class="code-header">fn <a href="#method.insert" class="fnname">insert</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;vertex: Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="handles/type.FixedVertexHandle.html" title="type spade::handles::FixedVertexHandle">FixedVertexHandle</a>, <a class="enum" href="enum.InsertionError.html" title="enum spade::InsertionError">InsertionError</a>&gt;</h4></div></summary><div class="docblock"><p>Inserts a new vertex into the triangulation.</p>
+<p>This operation runs in O(log(n)) on average when using a tree
+lookup to back up the triangulation, or in O(sqrt(n)) when using
+a walk lookup. n denotes the number of vertices, the given
+running times assume that input data is given uniformly randomly
+distributed. If the point has already been contained in the
+triangulation, the old vertex is overwritten.</p>
+<p>Returns either a handle to the new vertex or an error if the vertex could not be inserted.
+The triangulation will remain unchanged if an error ocurred.</p>
+<p>Use <a href="trait.Triangulation.html#method.vertex">vertex</a> to retrieve more information about the inserted vertex.</p>
+<h5 id="example-1"><a href="#example-1">Example</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spade</span>::{<span class="ident">DelaunayTriangulation</span>, <span class="ident">InsertionError</span>, <span class="ident">Triangulation</span>, <span class="ident">Point2</span>};
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">triangulation</span> <span class="op">=</span> <span class="ident">DelaunayTriangulation</span>::<span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="ident">::default</span>();
+
+<span class="kw">let</span> <span class="ident">vertices</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">Point2::new</span>(<span class="number">0.0</span>, <span class="number">1.0</span>), <span class="ident">Point2::new</span>(<span class="number">4.0</span>, <span class="number">2.0</span>), <span class="ident">Point2::new</span>(<span class="number">3.0</span>, <span class="number">4.0</span>)];
+<span class="kw">for</span> <span class="ident">vertex</span> <span class="kw">in</span> <span class="ident">vertices</span> {
+  <span class="comment">// While not required in this example, it might be a good idea in general to prevent underflow errors like this:</span>
+  <span class="kw">let</span> <span class="ident">corrected_position</span> <span class="op">=</span> <span class="ident">spade::mitigate_underflow</span>(<span class="ident">vertex</span>);
+  <span class="ident">triangulation</span>.<span class="ident">insert</span>(<span class="ident">corrected_position</span>)<span class="question-mark">?</span>;
+}
+
+<span class="comment">// Done!</span>
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_inner_faces</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">triangulation</span>.<span class="ident">num_vertices</span>(), <span class="number">3</span>);</code></pre></div>
+<p><em>See also <a href="trait.Triangulation.html#method.insert_with_hint">insert_with_hint</a>, <a href="fn.validate_vertex.html">validate_vertex</a>,
+<a href="fn.mitigate_underflow.html">mitigate_underflow</a>, <a href="trait.Triangulation.html#method.bulk_load">bulk_load</a></em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.fixed_undirected_edges" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#494-496">source</a></div><h4 class="code-header">fn <a href="#method.fixed_undirected_edges" class="fnname">fixed_undirected_edges</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedUndirectedEdgeIterator.html" title="type spade::iterators::FixedUndirectedEdgeIterator">FixedUndirectedEdgeIterator</a></h4></div></summary><div class="docblock"><p>An iterator visiting all undirected edges.</p>
+<p>The iterator type is <a href="handles/type.FixedUndirectedEdgeHandle.html" title="FixedUndirectedEdgeHandle">FixedUndirectedEdgeHandle</a>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.fixed_directed_edges" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#501-503">source</a></div><h4 class="code-header">fn <a href="#method.fixed_directed_edges" class="fnname">fixed_directed_edges</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedDirectedEdgeIterator.html" title="type spade::iterators::FixedDirectedEdgeIterator">FixedDirectedEdgeIterator</a></h4></div></summary><div class="docblock"><p>An iterator visiting all directed edges.</p>
+<p>The iterator type is <a href="handles/type.FixedDirectedEdgeHandle.html" title="FixedDirectedEdgeHandle">FixedDirectedEdgeHandle</a>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.fixed_all_faces" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#511-513">source</a></div><h4 class="code-header">fn <a href="#method.fixed_all_faces" class="fnname">fixed_all_faces</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedFaceIterator.html" title="type spade::iterators::FixedFaceIterator">FixedFaceIterator</a></h4></div></summary><div class="docblock"><p>An iterator visiting all faces.</p>
+<p>The first returned element is the outer face. All other
+faces are inner faces.</p>
+<p>The iterator type is <a href="handles/type.FixedFaceHandle.html">FixedFaceHandle&lt;PossiblyOuterTag, …&gt;</a>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.fixed_inner_faces" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#518-522">source</a></div><h4 class="code-header">fn <a href="#method.fixed_inner_faces" class="fnname">fixed_inner_faces</a>(&amp;self) -&gt; <a class="type" href="iterators/type.FixedInnerFaceIterator.html" title="type spade::iterators::FixedInnerFaceIterator">FixedInnerFaceIterator</a></h4></div></summary><div class="docblock"><p>An iterator visiting all inner faces of the triangulation.</p>
+<p>The iterator type is <a href="handles/type.FixedFaceHandle.html">FixedFaceHandle&lt;InnerTag, …&gt;</a>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.all_vertices_on_line" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#527-529">source</a></div><h4 class="code-header">fn <a href="#method.all_vertices_on_line" class="fnname">all_vertices_on_line</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.63.0/std/primitive.bool.html">bool</a></h4></div></summary><div class="docblock"><p>Returns <code>true</code> if all vertices lie on a single line.</p>
+<p>This is always the case for triangulations with 0, 1 or two vertices.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.convex_hull" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#541-547">source</a></div><h4 class="code-header">fn <a href="#method.convex_hull" class="fnname">convex_hull</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; HullIterator&lt;'_, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Vertex" title="type spade::Triangulation::Vertex">Vertex</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.UndirectedEdge" title="type spade::Triangulation::UndirectedEdge">UndirectedEdge</a>, Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a>&gt;</h4></div></summary><div class="docblock"><p>Returns an iterator over all convex hull edges.</p>
+<p>The edges are returned in clockwise order as seen from any point in the triangulation.</p>
+<svg viewBox="-83.7 -66.01 176.4 130.92" width="470" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<pattern height="1" id="convex_hull_pattern0001" patternTransform="rotate(63.512 0 0) scale(2)" patternUnits="userSpaceOnUse" width="1">
+<line stroke="rgb(255 255 255)" stroke-width="1.01" x1="0" x2="0" y1="-0.1" y2="1.1"/>
+<line stroke="rgb(211 211 211)" stroke-width="1.01" x1="1" x2="1" y1="-0.1" y2="1.1"/>
+</pattern>
+<marker fill="rgb(65 105 225)" id="convex_hull_filled_arrow0002" markerHeight="3" markerWidth="5" orient="auto" refX="4.9" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(65 105 225)" id="convex_hull_filled_arrow0003" markerHeight="3" markerWidth="5" orient="auto" refX="4.9" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(65 105 225)" id="convex_hull_filled_arrow0004" markerHeight="3" markerWidth="5" orient="auto" refX="4.9" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(65 105 225)" id="convex_hull_filled_arrow0005" markerHeight="3" markerWidth="5" orient="auto" refX="4.9" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(65 105 225)" id="convex_hull_filled_arrow0006" markerHeight="3" markerWidth="5" orient="auto" refX="4.9" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+<marker fill="rgb(65 105 225)" id="convex_hull_filled_arrow0007" markerHeight="3" markerWidth="5" orient="auto" refX="4.9" refY="1.5" stroke="none">
+<path d="M0,0 L5,1.5 L0,3 z" transform="scale(-1 1) translate (-5 0)"/>
+</marker>
+</defs>
+<rect height="100%" style="fill: url(#convex_hull_pattern0001)" width="100%" x="-83.7" y="-66.01"/>
+<g>
+<path d="M-2,-24 L5,-12 L-30,-25 z" style="fill: rgb(211 211 211)"/>
+<path d="M-2,-24 L33,-30 L5,-12 z" style="fill: rgb(211 211 211)"/>
+<path d="M12,10 L30,2 L15,39 z" style="fill: rgb(211 211 211)"/>
+<path d="M15,39 L-35,32 L12,10 z" style="fill: rgb(211 211 211)"/>
+<path d="M-14,-52 L-5,-42 L-30,-25 z" style="fill: rgb(211 211 211)"/>
+<path d="M30,2 L5,-12 L33,-30 z" style="fill: rgb(211 211 211)"/>
+<path d="M-2,-24 L-30,-25 L-5,-42 z" style="fill: rgb(211 211 211)"/>
+<path d="M-35,32 L15,39 L-67,52 z" style="fill: rgb(211 211 211)"/>
+<path d="M-35,32 L-35,5 L12,10 z" style="fill: rgb(211 211 211)"/>
+<path d="M15,39 L30,2 L50,50 z" style="fill: rgb(211 211 211)"/>
+<path d="M76,10 L30,2 L33,-30 z" style="fill: rgb(211 211 211)"/>
+<path d="M-5,-42 L33,-30 L-2,-24 z" style="fill: rgb(211 211 211)"/>
+<path d="M5,-12 L12,10 L-35,5 z" style="fill: rgb(211 211 211)"/>
+<path d="M12,10 L5,-12 L30,2 z" style="fill: rgb(211 211 211)"/>
+<path d="M-35,5 L-35,32 L-67,52 z" style="fill: rgb(211 211 211)"/>
+<path d="M-35,5 L-30,-25 L5,-12 z" style="fill: rgb(211 211 211)"/>
+<path d="M33,-30 L-5,-42 L45,-47 z" style="fill: rgb(211 211 211)"/>
+<path d="M-30,-25 L-35,5 L-55,-25 z" style="fill: rgb(211 211 211)"/>
+<path d="M-55,-25 L-14,-52 L-30,-25 z" style="fill: rgb(211 211 211)"/>
+<path d="M-67,52 L-55,-25 L-35,5 z" style="fill: rgb(211 211 211)"/>
+<path d="M50,50 L-67,52 L15,39 z" style="fill: rgb(211 211 211)"/>
+<path d="M76,10 L50,50 L30,2 z" style="fill: rgb(211 211 211)"/>
+<path d="M45,-47 L76,10 L33,-30 z" style="fill: rgb(211 211 211)"/>
+<path d="M-14,-52 L45,-47 L-5,-42 z" style="fill: rgb(211 211 211)"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-35" x2="12" y1="5" y2="10"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-2" x2="33" y1="-24" y2="-30"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="30" x2="15" y1="2" y2="39"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="5" x2="33" y1="-12" y2="-30"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="30" x2="5" y1="2" y2="-12"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="12" x2="-35" y1="10" y2="32"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="15" x2="-35" y1="39" y2="32"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-5" x2="-30" y1="-42" y2="-25"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="5" x2="-35" y1="-12" y2="5"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-5" x2="-2" y1="-42" y2="-24"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="5" x2="-2" y1="-12" y2="-24"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-35" x2="-67" y1="32" y2="52"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-30" x2="5" y1="-25" y2="-12"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="15" x2="-67" y1="39" y2="52"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-35" x2="-30" y1="5" y2="-25"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-14" x2="-5" y1="-52" y2="-42"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="30" x2="76" y1="2" y2="10"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="30" x2="50" y1="2" y2="50"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="30" x2="33" y1="2" y2="-30"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-5" x2="33" y1="-42" y2="-30"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="15" x2="12" y1="39" y2="10"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="5" x2="12" y1="-12" y2="10"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="30" x2="12" y1="2" y2="10"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-35" x2="-35" y1="32" y2="5"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-67" x2="-35" y1="52" y2="5"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-30" x2="-2" y1="-25" y2="-24"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-5" x2="45" y1="-42" y2="-47"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="33" x2="76" y1="-30" y2="10"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-35" x2="-55" y1="5" y2="-25"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-30" x2="-14" y1="-25" y2="-52"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-30" x2="-55" y1="-25" y2="-25"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-55" x2="-14" y1="-25" y2="-52"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-67" x2="-55" y1="52" y2="-25"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="15" x2="50" y1="39" y2="50"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="50" x2="-67" y1="50" y2="52"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="76" x2="50" y1="10" y2="50"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="33" x2="45" y1="-30" y2="-47"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="45" x2="76" y1="-47" y2="10"/>
+<line style="stroke-width: 1; stroke: rgb(0 0 0); fill: none" x1="-14" x2="45" y1="-52" y2="-47"/>
+<circle cx="15" cy="39" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-5" cy="-42" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="30" cy="2" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="5" cy="-12" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-35" cy="32" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-2" cy="-24" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-67" cy="52" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-14" cy="-52" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="76" cy="10" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="12" cy="10" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-35" cy="5" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="33" cy="-30" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-30" cy="-25" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="-55" cy="-25" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="50" cy="50" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<circle cx="45" cy="-47" r="2" style="stroke-width: 0.5; stroke: rgb(0 0 0); fill: rgb(105 105 105)"/>
+<text dy="-1.7" font-size="7" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (15.5 -49.5) rotate (4.844000375080668) translate(-15.5 49.5)" x="15.5" y="-49.5">
+e5
+</text>
+<line style="stroke-width: 1.4; stroke: rgb(65 105 225); marker-start: url(#convex_hull_filled_arrow0002); fill: none" x1="36.03214525592762" x2="-11.608572068247366" y1="-47.75998769017563" y2="-51.797336615953164"/>
+<text dy="-1.7" font-size="7" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (-34.5 -38.5) rotate (-33.366366001059575) translate(34.5 38.5)" x="-34.5" y="-38.5">
+e4
+</text>
+<line style="stroke-width: 1.4; stroke: rgb(65 105 225); marker-start: url(#convex_hull_filled_arrow0003); fill: none" x1="-21.516537783378904" x2="-52.995589924432295" y1="-47.05008487436024" y2="-26.31997736683727"/>
+<text dy="-1.7" font-size="7" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (-61 13.5) rotate (-81.14204123637165) translate(61 -13.5)" x="-61" y="13.5">
+e3
+</text>
+<line style="stroke-width: 1.4; stroke: rgb(65 105 225); marker-start: url(#convex_hull_filled_arrow0004); fill: none" x1="-56.38586879138406" x2="-66.63043498896425" y1="-16.107341921952262" y2="49.6286245125206"/>
+<text dy="6" font-size="7" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (-8.5 51) rotate (-0.9793196543394771) translate(8.5 -51)" x="-8.5" y="51">
+e2
+</text>
+<line style="stroke-width: 1.4; stroke: rgb(65 105 225); marker-start: url(#convex_hull_filled_arrow0005); fill: none" x1="-58.00131463629098" x2="47.600350569677595" y1="51.84617631856908" y2="50.04101964838158"/>
+<text dy="6" font-size="7" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (63 30) rotate (-56.97613244420335) translate(-63 -30)" x="63" y="30">
+e1
+</text>
+<line style="stroke-width: 1.4; stroke: rgb(65 105 225); marker-start: url(#convex_hull_filled_arrow0006); fill: none" x1="54.90489515535873" x2="74.692027958571" y1="42.45400745329427" y2="12.012264679121529"/>
+<text dy="-1.7" font-size="7" style="fill: rgb(0 0 0)" text-anchor="middle" transform="translate (60.5 -18.5) rotate (61.46001481204004) translate(-60.5 18.5)" x="60.5" y="-18.5">
+e0
+</text>
+<line style="stroke-width: 1.4; stroke: rgb(65 105 225); marker-start: url(#convex_hull_filled_arrow0007); fill: none" x1="71.70005247781015" x2="46.14665267258396" y1="2.093644878554132" y2="-44.8916386342811"/>
+</g>
+</svg>
+<p><em>A triangulation with its convex hull being highlighted. <code>e0</code> .. <code>e5</code> denote the returned
+edges in clockwise order.</em></p>
+<p><em>See also <a href="trait.Triangulation.html#method.convex_hull_size">convex_hull_size</a></em></p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.face_data_mut" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#550-555">source</a></div><h4 class="code-header">fn <a href="#method.face_data_mut" class="fnname">face_data_mut</a>&lt;InnerOuter:&nbsp;InnerOuterMarker&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedFaceHandle.html" title="type spade::handles::FixedFaceHandle">FixedFaceHandle</a>&lt;InnerOuter&gt;<br>) -&gt; &amp;mut Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.Face" title="type spade::Triangulation::Face">Face</a></h4></div></summary><div class="docblock"><p>Returns a mutable reference to the associated data of a face.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="method.directed_edge_data_mut" class="method has-srclink"><div class="rightside"><a class="srclink" href="../src/spade/triangulation.rs.html#558-563">source</a></div><h4 class="code-header">fn <a href="#method.directed_edge_data_mut" class="fnname">directed_edge_data_mut</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;handle: <a class="type" href="handles/type.FixedDirectedEdgeHandle.html" title="type spade::handles::FixedDirectedEdgeHandle">FixedDirectedEdgeHandle</a><br>) -&gt; &amp;mut Self::<a class="associatedtype" href="trait.Triangulation.html#associatedtype.DirectedEdge" title="type spade::Triangulation::DirectedEdge">DirectedEdge</a></h4></div></summary><div class="docblock"><p>Returns a mutable reference to the associated data of a directed edge.</p>
+</div></details></div><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor"></a></h2><div class="item-list" id="implementors-list"><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-Triangulation" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../src/spade/cdt.rs.html#167-211">source</a></span><a href="#impl-Triangulation" class="anchor"></a><h3 class="code-header in-band">impl&lt;V, DE, UE, F, L&gt; <a class="trait" href="trait.Triangulation.html" title="trait spade::Triangulation">Triangulation</a> for <a class="struct" href="struct.ConstrainedDelaunayTriangulation.html" title="struct spade::ConstrainedDelaunayTriangulation">ConstrainedDelaunayTriangulation</a>&lt;V, DE, UE, F, L&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;V: <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;DE: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;UE: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;L: <a class="trait" href="trait.HintGenerator.html" title="trait spade::HintGenerator">HintGenerator</a>&lt;&lt;V as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;,&nbsp;</span></h3></section></summary><div class="impl-items"><section id="associatedtype.Vertex-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Vertex-1" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.Vertex" class="associatedtype">Vertex</a> = V</h4></section><section id="associatedtype.DirectedEdge-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.DirectedEdge-1" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.DirectedEdge" class="associatedtype">DirectedEdge</a> = DE</h4></section><section id="associatedtype.UndirectedEdge-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.UndirectedEdge-1" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.UndirectedEdge" class="associatedtype">UndirectedEdge</a> = <a class="struct" href="struct.CdtEdge.html" title="struct spade::CdtEdge">CdtEdge</a>&lt;UE&gt;</h4></section><section id="associatedtype.Face-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Face-1" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.Face" class="associatedtype">Face</a> = F</h4></section><section id="associatedtype.HintGenerator-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.HintGenerator-1" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.HintGenerator" class="associatedtype">HintGenerator</a> = L</h4></section></div></details><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-Triangulation-1" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../src/spade/delaunay_triangulation.rs.html#310-339">source</a></span><a href="#impl-Triangulation-1" class="anchor"></a><h3 class="code-header in-band">impl&lt;V, DE, UE, F, L&gt; <a class="trait" href="trait.Triangulation.html" title="trait spade::Triangulation">Triangulation</a> for <a class="struct" href="struct.DelaunayTriangulation.html" title="struct spade::DelaunayTriangulation">DelaunayTriangulation</a>&lt;V, DE, UE, F, L&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;V: <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;DE: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;UE: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;L: <a class="trait" href="trait.HintGenerator.html" title="trait spade::HintGenerator">HintGenerator</a>&lt;&lt;V as <a class="trait" href="trait.HasPosition.html" title="trait spade::HasPosition">HasPosition</a>&gt;::<a class="associatedtype" href="trait.HasPosition.html#associatedtype.Scalar" title="type spade::HasPosition::Scalar">Scalar</a>&gt;,&nbsp;</span></h3></section></summary><div class="impl-items"><section id="associatedtype.Vertex-2" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Vertex-2" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.Vertex" class="associatedtype">Vertex</a> = V</h4></section><section id="associatedtype.DirectedEdge-2" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.DirectedEdge-2" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.DirectedEdge" class="associatedtype">DirectedEdge</a> = DE</h4></section><section id="associatedtype.UndirectedEdge-2" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.UndirectedEdge-2" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.UndirectedEdge" class="associatedtype">UndirectedEdge</a> = UE</h4></section><section id="associatedtype.Face-2" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Face-2" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.Face" class="associatedtype">Face</a> = F</h4></section><section id="associatedtype.HintGenerator-2" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.HintGenerator-2" class="anchor"></a><h4 class="code-header">type <a href="#associatedtype.HintGenerator" class="associatedtype">HintGenerator</a> = L</h4></section></div></details></div><script type="text/javascript" src="../implementors/spade/triangulation/trait.Triangulation.js" data-ignore-extern-crates="" async></script></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="spade" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["tetrahedron_unit_inertia_tensor_wrt_point","Computes the unit inertia tensor of a tetrahedron, with regard to the given `point`."],["trimesh_signed_volume_and_center_of_mass","Computes the volume and center-of-mass of a mesh."]]};

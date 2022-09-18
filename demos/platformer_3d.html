@@ -1,0 +1,17 @@
+<html lang="en-us">
+    <head>
+        <script type="module">
+            import init from './platformer_3d.js';
+            var res = await init();
+            res.start();
+        </script>
+    </head>
+    <body>
+        <script>
+            document.body.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        </script>
+    </body>
+</html>

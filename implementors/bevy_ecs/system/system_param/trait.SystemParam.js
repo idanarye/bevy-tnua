@@ -1,0 +1,6 @@
+(function() {var implementors = {};
+implementors["bevy"] = [];
+implementors["bevy_ecs"] = [];
+implementors["bevy_internal"] = [];
+implementors["bevy_render"] = [{"text":"impl&lt;'w, 's, P:&nbsp;<a class=\"trait\" href=\"bevy_ecs/system/system_param/trait.SystemParam.html\" title=\"trait bevy_ecs::system::system_param::SystemParam\">SystemParam</a>&gt; <a class=\"trait\" href=\"bevy_ecs/system/system_param/trait.SystemParam.html\" title=\"trait bevy_ecs::system::system_param::SystemParam\">SystemParam</a> for <a class=\"struct\" href=\"bevy_render/struct.Extract.html\" title=\"struct bevy_render::Extract\">Extract</a>&lt;'w, 's, P&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;P::<a class=\"associatedtype\" href=\"bevy_ecs/system/system_param/trait.SystemParam.html#associatedtype.Fetch\" title=\"type bevy_ecs::system::system_param::SystemParam::Fetch\">Fetch</a>: <a class=\"trait\" href=\"bevy_ecs/system/system_param/trait.ReadOnlySystemParamFetch.html\" title=\"trait bevy_ecs::system::system_param::ReadOnlySystemParamFetch\">ReadOnlySystemParamFetch</a>,&nbsp;</span>","synthetic":false,"types":["bevy_render::extract_param::Extract"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

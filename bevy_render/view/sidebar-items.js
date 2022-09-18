@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["visibility",""],["window",""]],"struct":[["ExtractedView",""],["Msaa","Configuration resource for Multi-Sample Anti-Aliasing."],["ViewDepthTexture",""],["ViewPlugin",""],["ViewTarget",""],["ViewUniform",""],["ViewUniformOffset",""],["ViewUniforms",""]]};

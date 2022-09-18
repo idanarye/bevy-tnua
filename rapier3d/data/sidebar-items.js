@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["arena","Arena adapted from the generational-arena crate."],["pubsub","Publish-subscribe mechanism for internal events."]],"struct":[["Coarena","A container for data associated to item existing into another Arena."]]};

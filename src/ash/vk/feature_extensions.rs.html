@@ -1,0 +1,911 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ash-0.37.0+1.3.209/src/vk/feature_extensions.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>feature_extensions.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../ash/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../ash/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../ash/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vk::bitflags</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vk::enums</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">BufferCreateFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Buffer requires protected memory&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTECTED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">CommandPoolCreateFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Command buffers allocated from pool are protected command buffers&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTECTED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">DependencyFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Dependency is across devices&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_GROUP</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VIEW_LOCAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">DeviceQueueCreateFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Queue is a protected-capable device queue&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTECTED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">Format</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G8B8G8R8_422_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B8G8R8G8_422_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G8_B8_R8_3PLANE_420_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G8_B8R8_2PLANE_420_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G8_B8_R8_3PLANE_422_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G8_B8R8_2PLANE_422_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G8_B8_R8_3PLANE_444_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_006</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">R10X6_UNORM_PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_007</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">R10X6G10X6_UNORM_2PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_008</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">R10X6G10X6B10X6A10X6_UNORM_4PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_009</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G10X6B10X6G10X6R10X6_422_UNORM_4PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_010</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B10X6G10X6R10X6G10X6_422_UNORM_4PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_011</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_012</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_013</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_014</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_015</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_016</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">R12X4_UNORM_PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_017</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">R12X4G12X4_UNORM_2PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_018</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">R12X4G12X4B12X4A12X4_UNORM_4PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_019</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G12X4B12X4G12X4R12X4_422_UNORM_4PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_020</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B12X4G12X4R12X4G12X4_422_UNORM_4PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_021</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_022</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_023</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_024</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_025</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_026</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G16B16G16R16_422_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_027</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B16G16R16G16_422_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_028</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G16_B16_R16_3PLANE_420_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_029</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G16_B16R16_2PLANE_420_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_030</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G16_B16_R16_3PLANE_422_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_031</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G16_B16R16_2PLANE_422_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_032</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G16_B16_R16_3PLANE_444_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_033</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">FormatFeatureFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Format can be used as the source image of image transfer commands&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TRANSFER_SRC</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100_0000_0000_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Format can be used as the destination image of image transfer commands&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TRANSFER_DST</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1000_0000_0000_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Format can have midpoint rather than cosited chroma samples&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MIDPOINT_CHROMA_SAMPLES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10_0000_0000_0000_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Format can be used with linear filtering whilst color conversion is enabled&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100_0000_0000_0000_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Format can have different chroma, min and mag filters&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER</span>: <span class="self">Self</span> <span class="op">=</span>
+        <span class="self">Self</span>(<span class="number">0b1000_0000_0000_0000_0000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT</span>: <span class="self">Self</span> <span class="op">=</span>
+        <span class="self">Self</span>(<span class="number">0b1_0000_0000_0000_0000_0000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE</span>: <span class="self">Self</span> <span class="op">=</span>
+        <span class="self">Self</span>(<span class="number">0b10_0000_0000_0000_0000_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Format supports disjoint planes&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DISJOINT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100_0000_0000_0000_0000_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Format can have cosited rather than midpoint chroma samples&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COSITED_CHROMA_SAMPLES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1000_0000_0000_0000_0000_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">ImageAspectFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PLANE_0</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1_0000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PLANE_1</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10_0000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PLANE_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">ImageCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ALIAS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100_0000_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Allows using VkBindImageMemoryDeviceGroupInfo::pSplitInstanceBindRegions when binding memory to the image&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SPLIT_INSTANCE_BIND_REGIONS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;The 3D image can be viewed as a 2D or 2D array image&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TYPE_2D_ARRAY_COMPATIBLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10_0000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BLOCK_TEXEL_VIEW_COMPATIBLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1000_0000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTENDED_USAGE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1_0000_0000</span>);
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Image requires protected memory&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTECTED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1000_0000_0000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DISJOINT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10_0000_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">ImageLayout</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_117_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_117_001</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">MemoryHeapFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;If set, heap allocations allocate multiple instances by default&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MULTI_INSTANCE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">MemoryPropertyFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Memory is protected&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTECTED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">ObjectType</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLER_YCBCR_CONVERSION</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DESCRIPTOR_UPDATE_TEMPLATE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_085_000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">PipelineCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VIEW_INDEX_FROM_DEVICE_INDEX</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DISPATCH_BASE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">QueueFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Queues may support protected operations&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTECTED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="prelude-ty">Result</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ERROR_OUT_OF_POOL_MEMORY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="op">-</span><span class="number">1_000_069_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ERROR_INVALID_EXTERNAL_HANDLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="op">-</span><span class="number">1_000_072_003</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_1&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">StructureType</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SUBGROUP_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_094_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BIND_BUFFER_MEMORY_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_157_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BIND_IMAGE_MEMORY_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_157_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_083_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MEMORY_DEDICATED_REQUIREMENTS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_127_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MEMORY_DEDICATED_ALLOCATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_127_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MEMORY_ALLOCATE_FLAGS_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_060_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_GROUP_RENDER_PASS_BEGIN_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_060_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_060_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_GROUP_SUBMIT_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_060_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_GROUP_BIND_SPARSE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_060_006</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BIND_BUFFER_MEMORY_DEVICE_GROUP_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_060_013</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_060_014</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_GROUP_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_070_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_GROUP_DEVICE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_070_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BUFFER_MEMORY_REQUIREMENTS_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_146_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_MEMORY_REQUIREMENTS_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_146_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_SPARSE_MEMORY_REQUIREMENTS_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_146_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MEMORY_REQUIREMENTS_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_146_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SPARSE_IMAGE_MEMORY_REQUIREMENTS_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_146_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_FEATURES_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_PROPERTIES_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FORMAT_PROPERTIES_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_FORMAT_PROPERTIES_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUEUE_FAMILY_PROPERTIES_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_MEMORY_PROPERTIES_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_006</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SPARSE_IMAGE_FORMAT_PROPERTIES_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_007</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_059_008</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_POINT_CLIPPING_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_117_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RENDER_PASS_INPUT_ATTACHMENT_ASPECT_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_117_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_VIEW_USAGE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_117_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_117_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RENDER_PASS_MULTIVIEW_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_053_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_MULTIVIEW_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_053_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_053_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_120_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span>
+        <span class="ident"><span class="self">Self</span>::PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES</span>;
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTECTED_SUBMIT_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_145_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_PROTECTED_MEMORY_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_145_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_PROTECTED_MEMORY_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_145_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_QUEUE_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_145_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLER_YCBCR_CONVERSION_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLER_YCBCR_CONVERSION_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BIND_IMAGE_PLANE_MEMORY_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_PLANE_MEMORY_REQUIREMENTS_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLER_YCBCR_CONVERSION_IMAGE_FORMAT_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_156_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_085_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_071_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTERNAL_IMAGE_FORMAT_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_071_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_071_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTERNAL_BUFFER_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_071_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_ID_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_071_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTERNAL_MEMORY_BUFFER_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_072_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTERNAL_MEMORY_IMAGE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_072_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXPORT_MEMORY_ALLOCATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_072_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_EXTERNAL_FENCE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_112_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTERNAL_FENCE_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_112_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXPORT_FENCE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_113_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXPORT_SEMAPHORE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_077_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_076_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTERNAL_SEMAPHORE_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_076_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_168_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DESCRIPTOR_SET_LAYOUT_SUPPORT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_168_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_063_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_DRAW_PARAMETER_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span>
+        <span class="ident"><span class="self">Self</span>::PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES</span>;
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">BufferCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_ADDRESS_CAPTURE_REPLAY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">BufferUsageFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SHADER_DEVICE_ADDRESS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10_0000_0000_0000_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">DescriptorPoolCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">UPDATE_AFTER_BIND</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">DescriptorSetLayoutCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">UPDATE_AFTER_BIND_POOL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">FormatFeatureFlags</span> {
+    <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Format can be used with min/max reduction filtering&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLED_IMAGE_FILTER_MINMAX</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1_0000_0000_0000_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">FramebufferCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGELESS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">ImageLayout</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_ATTACHMENT_OPTIMAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_241_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_READ_ONLY_OPTIMAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_241_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STENCIL_ATTACHMENT_OPTIMAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_241_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STENCIL_READ_ONLY_OPTIMAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_241_003</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">MemoryAllocateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_ADDRESS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_ADDRESS_CAPTURE_REPLAY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b100</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="prelude-ty">Result</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ERROR_FRAGMENTATION</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="op">-</span><span class="number">1_000_161_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="op">-</span><span class="number">1_000_257_000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_2&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">StructureType</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VULKAN_1_1_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">49</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">50</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VULKAN_1_2_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">51</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">52</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_FORMAT_LIST_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_147_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ATTACHMENT_DESCRIPTION_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_109_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ATTACHMENT_REFERENCE_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_109_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUBPASS_DESCRIPTION_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_109_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUBPASS_DEPENDENCY_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_109_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RENDER_PASS_CREATE_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_109_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUBPASS_BEGIN_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_109_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUBPASS_END_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_109_006</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_177_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_DRIVER_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_196_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_180_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_082_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_197_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_161_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_161_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_161_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_161_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_161_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_199_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_199_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_221_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_STENCIL_USAGE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_246_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SAMPLER_FILTER_MINMAX_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_130_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SAMPLER_REDUCTION_MODE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_130_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_211_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_108_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FRAMEBUFFER_ATTACHMENTS_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_108_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FRAMEBUFFER_ATTACHMENT_IMAGE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_108_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RENDER_PASS_ATTACHMENT_BEGIN_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_108_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_253_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_175_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_241_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ATTACHMENT_REFERENCE_STENCIL_LAYOUT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_241_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ATTACHMENT_DESCRIPTION_STENCIL_LAYOUT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_241_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_261_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_207_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_207_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SEMAPHORE_TYPE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_207_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIMELINE_SEMAPHORE_SUBMIT_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_207_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SEMAPHORE_WAIT_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_207_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SEMAPHORE_SIGNAL_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_207_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_257_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BUFFER_DEVICE_ADDRESS_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_244_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BUFFER_OPAQUE_CAPTURE_ADDRESS_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_257_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_257_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_MEMORY_OPAQUE_CAPTURE_ADDRESS_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_257_004</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">AccessFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NONE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">AttachmentStoreOp</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NONE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_301_000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">DescriptorType</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">INLINE_UNIFORM_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_138_000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">DynamicState</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CULL_MODE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FRONT_FACE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PRIMITIVE_TOPOLOGY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VIEWPORT_WITH_COUNT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SCISSOR_WITH_COUNT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VERTEX_INPUT_BINDING_STRIDE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_TEST_ENABLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_006</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_WRITE_ENABLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_007</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_COMPARE_OP</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_008</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_BOUNDS_TEST_ENABLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_009</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STENCIL_TEST_ENABLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_010</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STENCIL_OP</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_267_011</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RASTERIZER_DISCARD_ENABLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_377_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPTH_BIAS_ENABLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_377_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PRIMITIVE_RESTART_ENABLE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_377_004</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">EventCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_ONLY</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">Format</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G8_B8R8_2PLANE_444_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_330_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_330_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_330_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">G16_B16R16_2PLANE_444_UNORM</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_330_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">A4R4G4B4_UNORM_PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_340_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">A4B4G4R4_UNORM_PACK16</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_340_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_4X4_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_5X4_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_5X5_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_6X5_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_6X6_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_8X5_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_8X6_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_006</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_8X8_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_007</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_10X5_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_008</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_10X6_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_009</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_10X8_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_010</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_10X10_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_011</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_12X10_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_012</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ASTC_12X12_SFLOAT_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_013</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">ImageAspectFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NONE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">ImageLayout</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">READ_ONLY_OPTIMAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ATTACHMENT_OPTIMAL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_001</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">ObjectType</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PRIVATE_DATA_SLOT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_295_000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">PipelineCacheCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTERNALLY_SYNCHRONIZED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">PipelineCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FAIL_ON_PIPELINE_COMPILE_REQUIRED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1_0000_0000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EARLY_RETURN_ON_FAILURE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10_0000_0000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">PipelineShaderStageCreateFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ALLOW_VARYING_SUBGROUP_SIZE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b1</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">REQUIRE_FULL_SUBGROUPS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0b10</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">PipelineStageFlags</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NONE</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">0</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="prelude-ty">Result</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PIPELINE_COMPILE_REQUIRED</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_297_000</span>);
+}
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;Generated from &#39;VK_VERSION_1_3&#39;&quot;</span>]</span>
+<span class="kw">impl</span> <span class="ident">StructureType</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VULKAN_1_3_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">53</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">54</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PIPELINE_CREATION_FEEDBACK_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_192_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_215_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_TOOL_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_245_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span>
+        <span class="self">Self</span>(<span class="number">1_000_276_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_295_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_PRIVATE_DATA_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_295_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PRIVATE_DATA_SLOT_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_295_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_297_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MEMORY_BARRIER_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BUFFER_MEMORY_BARRIER_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_MEMORY_BARRIER_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEPENDENCY_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUBMIT_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SEMAPHORE_SUBMIT_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COMMAND_BUFFER_SUBMIT_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_006</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_314_007</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_325_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_335_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COPY_BUFFER_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COPY_IMAGE_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COPY_BUFFER_TO_IMAGE_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COPY_IMAGE_TO_BUFFER_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BLIT_IMAGE_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RESOLVE_IMAGE_INFO_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_005</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BUFFER_COPY_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_006</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_COPY_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_007</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_BLIT_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_008</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BUFFER_IMAGE_COPY_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_009</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IMAGE_RESOLVE_2</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_337_010</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_225_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PIPELINE_SHADER_STAGE_REQUIRED_SUBGROUP_SIZE_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_225_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_225_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_138_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_138_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_138_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DESCRIPTOR_POOL_INLINE_UNIFORM_BLOCK_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_138_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_066_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RENDERING_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_044_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RENDERING_ATTACHMENT_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_044_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PIPELINE_RENDERING_CREATE_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_044_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_044_003</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COMMAND_BUFFER_INHERITANCE_RENDERING_INFO</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_044_004</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_280_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_280_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_281_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FORMAT_PROPERTIES_3</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_360_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_413_000</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_413_001</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_BUFFER_MEMORY_REQUIREMENTS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_413_002</span>);
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_IMAGE_MEMORY_REQUIREMENTS</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="number">1_000_413_003</span>);
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="ash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

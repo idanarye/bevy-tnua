@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Capability","/// SPIR-V operand kind: Capability"],["Error",""]],"fn":[["write_vec",""]],"struct":[["BindingInfo",""],["ImageTypeFlags","Flags corresponding to the boolean(-ish) parameters to OpTypeImage."],["Options",""],["PipelineOptions",""],["Writer",""],["WriterFlags",""]],"type":[["BindingMap",""]]};

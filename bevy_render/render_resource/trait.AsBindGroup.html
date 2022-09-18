@@ -1,0 +1,185 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Converts a value to a [`BindGroup`] with a given [`BindGroupLayout`], which can then be used in Bevy shaders. This trait can be derived (and generally should be). Read on for details and examples."><meta name="keywords" content="rust, rustlang, rust-lang, AsBindGroup"><title>AsBindGroup in bevy_render::render_resource - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../bevy_render/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../bevy_render/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">AsBindGroup</a></h2><div class="sidebar-elems"><section><div class="block"><h3 class="sidebar-title"><a href="#required-associated-types">Required Associated Types</a></h3><ul><li><a href="#associatedtype.Data">Data</a></li></ul></div><div class="block"><h3 class="sidebar-title"><a href="#required-methods">Required Methods</a></h3><ul><li><a href="#tymethod.as_bind_group">as_bind_group</a></li><li><a href="#tymethod.bind_group_layout">bind_group_layout</a></li></ul></div><div class="block"><h3 class="sidebar-title"><a href="#implementors">Implementors</a></h3></div></section><h2 class="location"><a href="index.html">In bevy_render::render_resource</a></h2></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../bevy_render/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Trait <a href="../index.html">bevy_render</a>::<wbr><a href="index.html">render_resource</a>::<wbr><a class="trait" href="#">AsBindGroup</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../../src/bevy_render/render_resource/bind_group.rs.html#241-256">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="docblock item-decl"><pre class="rust trait"><code>pub trait AsBindGroup: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> {
+    type <a href="#associatedtype.Data" class="associatedtype">Data</a>: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a>;
+
+    fn <a href="#tymethod.as_bind_group" class="fnname">as_bind_group</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;layout: &amp;<a class="struct" href="struct.BindGroupLayout.html" title="struct bevy_render::render_resource::BindGroupLayout">BindGroupLayout</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;render_device: &amp;<a class="struct" href="../renderer/struct.RenderDevice.html" title="struct bevy_render::renderer::RenderDevice">RenderDevice</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;images: &amp;<a class="type" href="../render_asset/type.RenderAssets.html" title="type bevy_render::render_asset::RenderAssets">RenderAssets</a>&lt;<a class="struct" href="../texture/struct.Image.html" title="struct bevy_render::texture::Image">Image</a>&gt;, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fallback_image: &amp;<a class="struct" href="../texture/struct.FallbackImage.html" title="struct bevy_render::texture::FallbackImage">FallbackImage</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="struct.PreparedBindGroup.html" title="struct bevy_render::render_resource::PreparedBindGroup">PreparedBindGroup</a>&lt;Self&gt;, <a class="enum" href="enum.AsBindGroupError.html" title="enum bevy_render::render_resource::AsBindGroupError">AsBindGroupError</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.bind_group_layout" class="fnname">bind_group_layout</a>(render_device: &amp;<a class="struct" href="../renderer/struct.RenderDevice.html" title="struct bevy_render::renderer::RenderDevice">RenderDevice</a>) -&gt; <a class="struct" href="struct.BindGroupLayout.html" title="struct bevy_render::render_resource::BindGroupLayout">BindGroupLayout</a>;
+}</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Converts a value to a <a href="struct.BindGroup.html" title="BindGroup"><code>BindGroup</code></a> with a given <a href="struct.BindGroupLayout.html" title="BindGroupLayout"><code>BindGroupLayout</code></a>, which can then be used in Bevy shaders.
+This trait can be derived (and generally should be). Read on for details and examples.</p>
+<p>This is an opinionated trait that is intended to make it easy to generically
+convert a type into a <a href="struct.BindGroup.html" title="BindGroup"><code>BindGroup</code></a>. It provides access to specific render resources,
+such as <a href="../render_asset/type.RenderAssets.html" title="RenderAssets&lt;Image&gt;"><code>RenderAssets&lt;Image&gt;</code></a> and <a href="../texture/struct.FallbackImage.html" title="FallbackImage"><code>FallbackImage</code></a>. If a type has a <a href="../../bevy_asset/handle/struct.Handle.html"><code>Handle&lt;Image&gt;</code></a>,
+these can be used to retrieve the corresponding <a href="struct.Texture.html"><code>Texture</code></a> resource.</p>
+<p><a href="trait.AsBindGroup.html#tymethod.as_bind_group" title="AsBindGroup::as_bind_group"><code>AsBindGroup::as_bind_group</code></a> is intended to be called once, then the result cached somewhere. It is generally
+ok to do “expensive” work here, such as creating a <a href="struct.Buffer.html" title="Buffer"><code>Buffer</code></a> for a uniform.</p>
+<p>If for some reason a <a href="struct.BindGroup.html" title="BindGroup"><code>BindGroup</code></a> cannot be created yet (for example, the <a href="struct.Texture.html"><code>Texture</code></a>
+for an <a href="../texture/struct.Image.html" title="Image"><code>Image</code></a> hasn’t loaded yet), just return <a href="enum.AsBindGroupError.html#variant.RetryNextUpdate" title="AsBindGroupError::RetryNextUpdate"><code>AsBindGroupError::RetryNextUpdate</code></a>, which signals that the caller
+should retry again later.</p>
+<h2 id="deriving"><a href="#deriving">Deriving</a></h2>
+<p>This trait can be derived. Field attributes like <code>uniform</code> and <code>texture</code> are used to define which fields should be bindings,
+what their binding type is, and what index they should be bound at:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AsBindGroup</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CoolMaterial</span> {
+    <span class="attribute">#[<span class="ident">uniform</span>(<span class="number">0</span>)]</span>
+    <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="attribute">#[<span class="ident">texture</span>(<span class="number">1</span>)]</span>
+    <span class="attribute">#[<span class="ident">sampler</span>(<span class="number">2</span>)]</span>
+    <span class="ident">color_texture</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident">Image</span><span class="op">&gt;</span>,
+}</code></pre></div>
+<p>In WGSL shaders, the binding would look like this:</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>struct CoolMaterial {
+    color: vec4&lt;f32&gt;,
+};
+
+@group(1) @binding(0)
+var&lt;uniform&gt; material: CoolMaterial;
+@group(1) @binding(1)
+var color_texture: texture_2d&lt;f32&gt;;
+@group(1) @binding(2)
+var color_sampler: sampler;</code></pre></div>
+<p>Note that the “group” index is determined by the usage context. It is not defined in <a href="trait.AsBindGroup.html" title="AsBindGroup"><code>AsBindGroup</code></a>. For example, in Bevy material bind groups
+are generally bound to group 1.</p>
+<p>The following field-level attributes are supported:</p>
+<ul>
+<li><code>uniform(BINDING_INDEX)</code>
+<ul>
+<li>The field will be converted to a shader-compatible type using the <a href="trait.ShaderType.html" title="ShaderType"><code>ShaderType</code></a> trait, written to a <a href="struct.Buffer.html" title="Buffer"><code>Buffer</code></a>, and bound as a uniform.
+<a href="trait.ShaderType.html" title="ShaderType"><code>ShaderType</code></a> is implemented for most math types already, such as <a href="https://doc.rust-lang.org/1.63.0/std/primitive.f32.html" title="f32"><code>f32</code></a>, <a href="../../glam/f32/sse2/vec4/struct.Vec4.html"><code>Vec4</code></a>, and
+<a href="../color/enum.Color.html"><code>Color</code></a>. It can also be derived for custom structs.</li>
+</ul>
+</li>
+<li><code>texture(BINDING_INDEX)</code>
+<ul>
+<li>This field’s <a href="../../bevy_asset/handle/struct.Handle.html"><code>Handle&lt;Image&gt;</code></a> will be used to look up the matching <a href="struct.Texture.html"><code>Texture</code></a>
+GPU resource, which will be bound as a texture in shaders. The field will be assumed to implement <a href="https://doc.rust-lang.org/1.63.0/core/convert/trait.Into.html" title="Into&lt;Option&lt;Handle&lt;Image&gt;&gt;&gt;"><code>Into&lt;Option&lt;Handle&lt;Image&gt;&gt;&gt;</code></a>. In practice,
+most fields should be a <a href="../../bevy_asset/handle/struct.Handle.html"><code>Handle&lt;Image&gt;</code></a> or <a href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="Option&lt;Handle&lt;Image&gt;&gt;"><code>Option&lt;Handle&lt;Image&gt;&gt;</code></a>. If the value of an <a href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="Option&lt;Handle&lt;Image&gt;&gt;"><code>Option&lt;Handle&lt;Image&gt;&gt;</code></a> is
+<a href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html#variant.None" title="None"><code>None</code></a>, the <a href="../texture/struct.FallbackImage.html" title="FallbackImage"><code>FallbackImage</code></a> resource will be used instead. This attribute can be used in conjunction with a <code>sampler</code> binding attribute
+(with a different binding index) if a binding of the sampler for the <a href="../texture/struct.Image.html" title="Image"><code>Image</code></a> is also required.</li>
+</ul>
+</li>
+<li><code>sampler(BINDING_INDEX)</code>
+<ul>
+<li>This field’s <a href="../../bevy_asset/handle/struct.Handle.html"><code>Handle&lt;Image&gt;</code></a> will be used to look up the matching <a href="struct.Sampler.html"><code>Sampler</code></a> GPU
+resource, which will be bound as a sampler in shaders. The field will be assumed to implement <a href="https://doc.rust-lang.org/1.63.0/core/convert/trait.Into.html" title="Into&lt;Option&lt;Handle&lt;Image&gt;&gt;&gt;"><code>Into&lt;Option&lt;Handle&lt;Image&gt;&gt;&gt;</code></a>. In practice,
+most fields should be a <a href="../../bevy_asset/handle/struct.Handle.html"><code>Handle&lt;Image&gt;</code></a> or <a href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="Option&lt;Handle&lt;Image&gt;&gt;"><code>Option&lt;Handle&lt;Image&gt;&gt;</code></a>. If the value of an <a href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="Option&lt;Handle&lt;Image&gt;&gt;"><code>Option&lt;Handle&lt;Image&gt;&gt;</code></a> is
+<a href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html#variant.None" title="None"><code>None</code></a>, the <a href="../texture/struct.FallbackImage.html" title="FallbackImage"><code>FallbackImage</code></a> resource will be used instead. This attribute can be used in conjunction with a <code>texture</code> binding attribute
+(with a different binding index) if a binding of the texture for the <a href="../texture/struct.Image.html" title="Image"><code>Image</code></a> is also required.</li>
+</ul>
+</li>
+</ul>
+<p>Note that fields without field-level binding attributes will be ignored.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AsBindGroup</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CoolMaterial</span> {
+    <span class="attribute">#[<span class="ident">uniform</span>(<span class="number">0</span>)]</span>
+    <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="ident">this_field_is_ignored</span>: <span class="ident">String</span>,
+}</code></pre></div>
+<p>As mentioned above, <a href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html" title="Option&lt;Handle&lt;Image&gt;&gt;"><code>Option&lt;Handle&lt;Image&gt;&gt;</code></a> is also supported:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AsBindGroup</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CoolMaterial</span> {
+    <span class="attribute">#[<span class="ident">uniform</span>(<span class="number">0</span>)]</span>
+    <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="attribute">#[<span class="ident">texture</span>(<span class="number">1</span>)]</span>
+    <span class="attribute">#[<span class="ident">sampler</span>(<span class="number">2</span>)]</span>
+    <span class="ident">color_texture</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="ident">Image</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}</code></pre></div>
+<p>This is useful if you want a texture to be optional. When the value is <a href="https://doc.rust-lang.org/1.63.0/core/option/enum.Option.html#variant.None" title="None"><code>None</code></a>, the <a href="../texture/struct.FallbackImage.html" title="FallbackImage"><code>FallbackImage</code></a> will be used for the binding instead, which defaults
+to “pure white”.</p>
+<p>Field uniforms with the same index will be combined into a single binding:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AsBindGroup</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CoolMaterial</span> {
+    <span class="attribute">#[<span class="ident">uniform</span>(<span class="number">0</span>)]</span>
+    <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="attribute">#[<span class="ident">uniform</span>(<span class="number">0</span>)]</span>
+    <span class="ident">roughness</span>: <span class="ident">f32</span>,
+}</code></pre></div>
+<p>In WGSL shaders, the binding would look like this:</p>
+<div class="example-wrap"><pre class="language-wgsl"><code>struct CoolMaterial {
+    color: vec4&lt;f32&gt;,
+    roughness: f32,
+};
+
+@group(1) @binding(0)
+var&lt;uniform&gt; material: CoolMaterial;</code></pre></div>
+<p>Some less common scenarios will require “struct-level” attributes. These are the currently supported struct-level attributes:</p>
+<ul>
+<li><code>uniform(BINDING_INDEX, ConvertedShaderType)</code>
+<ul>
+<li>This also creates a <a href="struct.Buffer.html" title="Buffer"><code>Buffer</code></a> using <a href="trait.ShaderType.html" title="ShaderType"><code>ShaderType</code></a> and binds it as a uniform, much
+much like the field-level <code>uniform</code> attribute. The difference is that the entire <a href="trait.AsBindGroup.html" title="AsBindGroup"><code>AsBindGroup</code></a> value is converted to <code>ConvertedShaderType</code>,
+which must implement <a href="trait.ShaderType.html" title="ShaderType"><code>ShaderType</code></a>, instead of a specific field implementing <a href="trait.ShaderType.html" title="ShaderType"><code>ShaderType</code></a>. This is useful if more complicated conversion
+logic is required. The conversion is done using the <a href="trait.AsBindGroupShaderType.html" title="AsBindGroupShaderType&lt;ConvertedShaderType&gt;"><code>AsBindGroupShaderType&lt;ConvertedShaderType&gt;</code></a> trait, which is automatically implemented
+if <code>&amp;Self</code> implements <a href="https://doc.rust-lang.org/1.63.0/core/convert/trait.Into.html" title="Into&lt;ConvertedShaderType&gt;"><code>Into&lt;ConvertedShaderType&gt;</code></a>. Only use <a href="trait.AsBindGroupShaderType.html" title="AsBindGroupShaderType"><code>AsBindGroupShaderType</code></a> if access to resources like <a href="../render_asset/type.RenderAssets.html" title="RenderAssets&lt;Image&gt;"><code>RenderAssets&lt;Image&gt;</code></a> is
+required.</li>
+</ul>
+</li>
+<li><code>bind_group_data(DataType)</code>
+<ul>
+<li>The <a href="trait.AsBindGroup.html" title="AsBindGroup"><code>AsBindGroup</code></a> type will be converted to some <code>DataType</code> using <a href="https://doc.rust-lang.org/1.63.0/core/convert/trait.Into.html" title="Into&lt;DataType&gt;"><code>Into&lt;DataType&gt;</code></a> and stored
+as <a href="trait.AsBindGroup.html#associatedtype.Data" title="AsBindGroup::Data"><code>AsBindGroup::Data</code></a> as part of the <a href="trait.AsBindGroup.html#tymethod.as_bind_group" title="AsBindGroup::as_bind_group"><code>AsBindGroup::as_bind_group</code></a> call. This is useful if data needs to be stored alongside
+the generated bind group, such as a unique identifier for a material’s bind group. The most common use case for this attribute
+is “shader pipeline specialization”. See <a href="trait.SpecializedRenderPipeline.html"><code>SpecializedRenderPipeline</code></a>.</li>
+</ul>
+</li>
+</ul>
+<p>The previous <code>CoolMaterial</code> example illustrating “combining multiple field-level uniform attributes with the same binding index” can
+also be equivalently represented with a single struct-level uniform attribute:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AsBindGroup</span>)]</span>
+<span class="attribute">#[<span class="ident">uniform</span>(<span class="number">0</span>, <span class="ident">CoolMaterialUniform</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CoolMaterial</span> {
+    <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="ident">roughness</span>: <span class="ident">f32</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">ShaderType</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CoolMaterialUniform</span> {
+    <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="ident">roughness</span>: <span class="ident">f32</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">CoolMaterial</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CoolMaterialUniform</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">material</span>: <span class="kw-2">&amp;</span><span class="ident">CoolMaterial</span>) -&gt; <span class="ident">CoolMaterialUniform</span> {
+        <span class="ident">CoolMaterialUniform</span> {
+            <span class="ident">color</span>: <span class="ident">material</span>.<span class="ident">color</span>,
+            <span class="ident">roughness</span>: <span class="ident">material</span>.<span class="ident">roughness</span>,
+        }
+    }
+}</code></pre></div>
+<p>Setting <code>bind_group_data</code> looks like this:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">AsBindGroup</span>)]</span>
+<span class="attribute">#[<span class="ident">bind_group_data</span>(<span class="ident">CoolMaterialKey</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CoolMaterial</span> {
+    <span class="attribute">#[<span class="ident">uniform</span>(<span class="number">0</span>)]</span>
+    <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="ident">is_shaded</span>: <span class="ident">bool</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">struct</span> <span class="ident">CoolMaterialKey</span> {
+    <span class="ident">is_shaded</span>: <span class="ident">bool</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">CoolMaterial</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CoolMaterialKey</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">material</span>: <span class="kw-2">&amp;</span><span class="ident">CoolMaterial</span>) -&gt; <span class="ident">CoolMaterialKey</span> {
+        <span class="ident">CoolMaterialKey</span> {
+            <span class="ident">is_shaded</span>: <span class="ident">material</span>.<span class="ident">is_shaded</span>,
+        }
+    }
+}</code></pre></div>
+</div></details><h2 id="required-associated-types" class="small-section-header">Required Associated Types<a href="#required-associated-types" class="anchor"></a></h2><div class="methods"><details class="rustdoc-toggle" open><summary><div id="associatedtype.Data" class="method has-srclink"><div class="rightside"><a class="srclink" href="../../src/bevy_render/render_resource/bind_group.rs.html#243">source</a></div><h4 class="code-header">type <a href="#associatedtype.Data" class="associatedtype">Data</a>: <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.63.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a></h4></div></summary><div class="docblock"><p>Data that will be stored alongside the “prepared” bind group.</p>
+</div></details></div><h2 id="required-methods" class="small-section-header">Required Methods<a href="#required-methods" class="anchor"></a></h2><div class="methods"><details class="rustdoc-toggle" open><summary><div id="tymethod.as_bind_group" class="method has-srclink"><div class="rightside"><a class="srclink" href="../../src/bevy_render/render_resource/bind_group.rs.html#246-252">source</a></div><h4 class="code-header">fn <a href="#tymethod.as_bind_group" class="fnname">as_bind_group</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self, <br>&nbsp;&nbsp;&nbsp;&nbsp;layout: &amp;<a class="struct" href="struct.BindGroupLayout.html" title="struct bevy_render::render_resource::BindGroupLayout">BindGroupLayout</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;render_device: &amp;<a class="struct" href="../renderer/struct.RenderDevice.html" title="struct bevy_render::renderer::RenderDevice">RenderDevice</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;images: &amp;<a class="type" href="../render_asset/type.RenderAssets.html" title="type bevy_render::render_asset::RenderAssets">RenderAssets</a>&lt;<a class="struct" href="../texture/struct.Image.html" title="struct bevy_render::texture::Image">Image</a>&gt;, <br>&nbsp;&nbsp;&nbsp;&nbsp;fallback_image: &amp;<a class="struct" href="../texture/struct.FallbackImage.html" title="struct bevy_render::texture::FallbackImage">FallbackImage</a><br>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.63.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="struct.PreparedBindGroup.html" title="struct bevy_render::render_resource::PreparedBindGroup">PreparedBindGroup</a>&lt;Self&gt;, <a class="enum" href="enum.AsBindGroupError.html" title="enum bevy_render::render_resource::AsBindGroupError">AsBindGroupError</a>&gt;</h4></div></summary><div class="docblock"><p>Creates a bind group for <code>self</code> matching the layout defined in <a href="trait.AsBindGroup.html#tymethod.bind_group_layout" title="AsBindGroup::bind_group_layout"><code>AsBindGroup::bind_group_layout</code></a>.</p>
+</div></details><details class="rustdoc-toggle" open><summary><div id="tymethod.bind_group_layout" class="method has-srclink"><div class="rightside"><a class="srclink" href="../../src/bevy_render/render_resource/bind_group.rs.html#255">source</a></div><h4 class="code-header">fn <a href="#tymethod.bind_group_layout" class="fnname">bind_group_layout</a>(render_device: &amp;<a class="struct" href="../renderer/struct.RenderDevice.html" title="struct bevy_render::renderer::RenderDevice">RenderDevice</a>) -&gt; <a class="struct" href="struct.BindGroupLayout.html" title="struct bevy_render::render_resource::BindGroupLayout">BindGroupLayout</a></h4></div></summary><div class="docblock"><p>Creates the bind group layout matching all bind groups returned by <a href="trait.AsBindGroup.html#tymethod.as_bind_group" title="AsBindGroup::as_bind_group"><code>AsBindGroup::as_bind_group</code></a></p>
+</div></details></div><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor"></a></h2><div class="item-list" id="implementors-list"></div><script type="text/javascript" src="../../implementors/bevy_render/render_resource/bind_group/trait.AsBindGroup.js" data-ignore-extern-crates="" async></script></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bevy_render" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

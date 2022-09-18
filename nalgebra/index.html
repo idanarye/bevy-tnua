@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="nalgebra"><meta name="keywords" content="rust, rustlang, rust-lang, nalgebra"><title>nalgebra - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" href="https://nalgebra.org/img/favicon.ico"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../nalgebra/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../nalgebra/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate nalgebra</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.31.1</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../nalgebra/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">nalgebra</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/nalgebra/lib.rs.html#1-531">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="nalgebra"><a href="#nalgebra">nalgebra</a></h2>
+<p><strong>nalgebra</strong> is a linear algebra library written for Rust targeting:</p>
+<ul>
+<li>General-purpose linear algebra (still lacks a lot of features…)</li>
+<li>Real-time computer graphics.</li>
+<li>Real-time computer physics.</li>
+</ul>
+<h3 id="using-nalgebra"><a href="#using-nalgebra">Using <strong>nalgebra</strong></a></h3>
+<p>You will need the last stable build of the <a href="https://www.rust-lang.org">rust compiler</a>
+and the official package manager: <a href="https://github.com/rust-lang/cargo">cargo</a>.</p>
+<p>Simply add the following to your <code>Cargo.toml</code> file:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code>[<span class="ident">dependencies</span>]
+<span class="comment">// TODO: replace the * by the latest version.</span>
+<span class="ident">nalgebra</span> <span class="op">=</span> <span class="string">&quot;*&quot;</span></code></pre></div>
+<p>Most useful functionalities of <strong>nalgebra</strong> are grouped in the root module <code>nalgebra::</code>.</p>
+<p>However, the recommended way to use <strong>nalgebra</strong> is to import types and traits
+explicitly, and call free-functions using the <code>na::</code> prefix:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">approx</span>; <span class="comment">// For the macro relative_eq!</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">nalgebra</span> <span class="kw">as</span> <span class="ident">na</span>;
+<span class="kw">use</span> <span class="ident">na</span>::{<span class="ident">Vector3</span>, <span class="ident">Rotation3</span>};
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">axis</span>  <span class="op">=</span> <span class="ident">Vector3::x_axis</span>();
+    <span class="kw">let</span> <span class="ident">angle</span> <span class="op">=</span> <span class="number">1.57</span>;
+    <span class="kw">let</span> <span class="ident">b</span>     <span class="op">=</span> <span class="ident">Rotation3::from_axis_angle</span>(<span class="kw-2">&amp;</span><span class="ident">axis</span>, <span class="ident">angle</span>);
+
+    <span class="macro">relative_eq!</span>(<span class="ident">b</span>.<span class="ident">axis</span>().<span class="ident">unwrap</span>(), <span class="ident">axis</span>);
+    <span class="macro">relative_eq!</span>(<span class="ident">b</span>.<span class="ident">angle</span>(), <span class="ident">angle</span>);
+}</code></pre></div>
+<h3 id="features"><a href="#features">Features</a></h3>
+<p><strong>nalgebra</strong> is meant to be a general-purpose, low-dimensional, linear algebra library, with
+an optimized set of tools for computer graphics and physics. Those features include:</p>
+<ul>
+<li>A single parametrizable type <code>Matrix</code> for vectors, (square or rectangular) matrices, and slices
+with dimensions known either at compile-time (using type-level integers) or at runtime.</li>
+<li>Matrices and vectors with compile-time sizes are statically allocated while dynamic ones are
+allocated on the heap.</li>
+<li>Convenient aliases for low-dimensional matrices and vectors: <code>Vector1</code> to <code>Vector6</code> and
+<code>Matrix1x1</code> to <code>Matrix6x6</code>, including rectangular matrices like <code>Matrix2x5</code>.</li>
+<li>Points sizes known at compile time, and convenience aliases: <code>Point1</code> to <code>Point6</code>.</li>
+<li>Translation (seen as a transformation that composes by multiplication): <code>Translation2</code>,
+<code>Translation3</code>.</li>
+<li>Rotation matrices: <code>Rotation2</code>, <code>Rotation3</code>.</li>
+<li>Quaternions: <code>Quaternion</code>, <code>UnitQuaternion</code> (for 3D rotation).</li>
+<li>Unit complex numbers can be used for 2D rotation: <code>UnitComplex</code>.</li>
+<li>Algebraic entities with a norm equal to one: <code>Unit&lt;T&gt;</code>, e.g., <code>Unit&lt;Vector3&lt;f32&gt;&gt;</code>.</li>
+<li>Isometries (translation ⨯ rotation): <code>Isometry2</code>, <code>Isometry3</code></li>
+<li>Similarity transformations (translation ⨯ rotation ⨯ uniform scale): <code>Similarity2</code>, <code>Similarity3</code>.</li>
+<li>Affine transformations stored as a homogeneous matrix: <code>Affine2</code>, <code>Affine3</code>.</li>
+<li>Projective (i.e. invertible) transformations stored as a homogeneous matrix: <code>Projective2</code>,
+<code>Projective3</code>.</li>
+<li>General transformations that does not have to be invertible, stored as a homogeneous matrix:
+<code>Transform2</code>, <code>Transform3</code>.</li>
+<li>3D projections for computer graphics: <code>Perspective3</code>, <code>Orthographic3</code>.</li>
+<li>Matrix factorizations: <code>Cholesky</code>, <code>QR</code>, <code>LU</code>, <code>FullPivLU</code>, <code>SVD</code>, <code>Schur</code>, <code>Hessenberg</code>, <code>SymmetricEigen</code>.</li>
+<li>Insertion and removal of rows of columns of a matrix.</li>
+</ul>
+</div></details><h2 id="reexports" class="small-section-header"><a href="#reexports">Re-exports</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left import-item" id="reexport.core"><code>pub use <a class="mod" href="base/index.html" title="mod nalgebra::base">base</a> as core;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item"><code>pub use crate::<a class="mod" href="base/index.html" title="mod nalgebra::base">base</a>::*;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item"><code>pub use crate::<a class="mod" href="geometry/index.html" title="mod nalgebra::geometry">geometry</a>::*;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item"><code>pub use crate::<a class="mod" href="linalg/index.html" title="mod nalgebra::linalg">linalg</a>::*;</code></div><div class="item-right docblock-short"></div></div></div><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="base/index.html" title="nalgebra::base mod">base</a></div><div class="item-right docblock-short"><p>[Reexported at the root of this crate.] Data structures for vector and matrix computations.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="geometry/index.html" title="nalgebra::geometry mod">geometry</a></div><div class="item-right docblock-short"><p>[Reexported at the root of this crate.] Data structures for points and usual transformations
+(rotations, isometries, etc.)</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="linalg/index.html" title="nalgebra::linalg mod">linalg</a></div><div class="item-right docblock-short"><p>[Reexported at the root of this crate.] Factorization of real matrices.</p>
+</div></div></div><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.dmatrix.html" title="nalgebra::dmatrix macro">dmatrix</a></div><div class="item-right docblock-short"><p>Construct a dynamic matrix directly from data.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.dvector.html" title="nalgebra::dvector macro">dvector</a></div><div class="item-right docblock-short"><p>Construct a dynamic column vector directly from data.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.matrix.html" title="nalgebra::matrix macro">matrix</a></div><div class="item-right docblock-short"><p>Construct a fixed-size matrix directly from data.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.point.html" title="nalgebra::point macro">point</a></div><div class="item-right docblock-short"><p>Construct a fixed-size point directly from data.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.vector.html" title="nalgebra::vector macro">vector</a></div><div class="item-right docblock-short"><p>Construct a fixed-size column vector directly from data.</p>
+</div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Complex.html" title="nalgebra::Complex struct">Complex</a></div><div class="item-right docblock-short"><p>A complex number in Cartesian form.</p>
+</div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ClosedAdd.html" title="nalgebra::ClosedAdd trait">ClosedAdd</a></div><div class="item-right docblock-short"><p>Trait <strong>alias</strong> for <code>Add</code> and <code>AddAssign</code> with result of type <code>Self</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ClosedDiv.html" title="nalgebra::ClosedDiv trait">ClosedDiv</a></div><div class="item-right docblock-short"><p>Trait <strong>alias</strong> for <code>Div</code> and <code>DivAssign</code> with result of type <code>Self</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ClosedMul.html" title="nalgebra::ClosedMul trait">ClosedMul</a></div><div class="item-right docblock-short"><p>Trait <strong>alias</strong> for <code>Mul</code> and <code>MulAssign</code> with result of type <code>Self</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ClosedSub.html" title="nalgebra::ClosedSub trait">ClosedSub</a></div><div class="item-right docblock-short"><p>Trait <strong>alias</strong> for <code>Sub</code> and <code>SubAssign</code> with result of type <code>Self</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ComplexField.html" title="nalgebra::ComplexField trait">ComplexField</a></div><div class="item-right docblock-short"><p>Trait shared by all complex fields and its subfields (like real numbers).</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Field.html" title="nalgebra::Field trait">Field</a></div><div class="item-right docblock-short"><p>Trait implemented by fields, i.e., complex numbers and floats.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.RealField.html" title="nalgebra::RealField trait">RealField</a></div><div class="item-right docblock-short"><p>Trait shared by all reals.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.SimdBool.html" title="nalgebra::SimdBool trait">SimdBool</a></div><div class="item-right docblock-short"><p>Lane-wise generalization of <code>bool</code> for SIMD booleans.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.SimdComplexField.html" title="nalgebra::SimdComplexField trait">SimdComplexField</a></div><div class="item-right docblock-short"><p>Lane-wise generalisation of <code>ComplexField</code> for SIMD complex fields.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.SimdPartialOrd.html" title="nalgebra::SimdPartialOrd trait">SimdPartialOrd</a></div><div class="item-right docblock-short"><p>Lane-wise generalization of the standard <code>PartialOrd</code> for SIMD values.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.SimdRealField.html" title="nalgebra::SimdRealField trait">SimdRealField</a></div><div class="item-right docblock-short"><p>Lanewise generalization of <code>RealField</code> for SIMD reals.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.SimdValue.html" title="nalgebra::SimdValue trait">SimdValue</a></div><div class="item-right docblock-short"><p>Base trait for every SIMD types.</p>
+</div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.abs.html" title="nalgebra::abs fn">abs</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"><p>The absolute value of <code>a</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.center.html" title="nalgebra::center fn">center</a></div><div class="item-right docblock-short"><p>The center of two points.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.clamp.html" title="nalgebra::clamp fn">clamp</a></div><div class="item-right docblock-short"><p>Returns a reference to the input value clamped to the interval <code>[min, max]</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.convert.html" title="nalgebra::convert fn">convert</a></div><div class="item-right docblock-short"><p>Converts an object from one type to an equivalent or more general one.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.convert_ref.html" title="nalgebra::convert_ref fn">convert_ref</a></div><div class="item-right docblock-short"><p>Converts an object from one type to an equivalent or more general one.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.convert_ref_unchecked.html" title="nalgebra::convert_ref_unchecked fn">convert_ref_unchecked</a></div><div class="item-right docblock-short"><p>Use with care! Same as <a href="fn.try_convert.html"><code>try_convert</code></a> but
+without any property checks.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.convert_unchecked.html" title="nalgebra::convert_unchecked fn">convert_unchecked</a></div><div class="item-right docblock-short"><p>Use with care! Same as <a href="fn.try_convert.html"><code>try_convert</code></a> but
+without any property checks.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.distance.html" title="nalgebra::distance fn">distance</a></div><div class="item-right docblock-short"><p>The distance between two points.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.distance_squared.html" title="nalgebra::distance_squared fn">distance_squared</a></div><div class="item-right docblock-short"><p>The squared distance between two points.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.inf.html" title="nalgebra::inf fn">inf</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"><p>Returns the infimum of <code>a</code> and <code>b</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.inf_sup.html" title="nalgebra::inf_sup fn">inf_sup</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"><p>Returns simultaneously the infimum and supremum of <code>a</code> and <code>b</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.is_convertible.html" title="nalgebra::is_convertible fn">is_convertible</a></div><div class="item-right docblock-short"><p>Indicates if <a href="fn.try_convert.html"><code>try_convert</code></a> will succeed without
+actually performing the conversion.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.max.html" title="nalgebra::max fn">max</a></div><div class="item-right docblock-short"><p>Same as <code>cmp::max</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.min.html" title="nalgebra::min fn">min</a></div><div class="item-right docblock-short"><p>Same as <code>cmp::min</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.one.html" title="nalgebra::one fn">one</a></div><div class="item-right docblock-short"><p>Gets the multiplicative identity element.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_clamp.html" title="nalgebra::partial_clamp fn">partial_clamp</a></div><div class="item-right docblock-short"><p>Clamp <code>value</code> between <code>min</code> and <code>max</code>. Returns <code>None</code> if <code>value</code> is not comparable to
+<code>min</code> or <code>max</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_cmp.html" title="nalgebra::partial_cmp fn">partial_cmp</a></div><div class="item-right docblock-short"><p>Compare <code>a</code> and <code>b</code> using a partial ordering relation.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_ge.html" title="nalgebra::partial_ge fn">partial_ge</a></div><div class="item-right docblock-short"><p>Returns <code>true</code> iff <code>a</code> and <code>b</code> are comparable and <code>a &gt;= b</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_gt.html" title="nalgebra::partial_gt fn">partial_gt</a></div><div class="item-right docblock-short"><p>Returns <code>true</code> iff <code>a</code> and <code>b</code> are comparable and <code>a &gt; b</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_le.html" title="nalgebra::partial_le fn">partial_le</a></div><div class="item-right docblock-short"><p>Returns <code>true</code> iff <code>a</code> and <code>b</code> are comparable and <code>a &lt;= b</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_lt.html" title="nalgebra::partial_lt fn">partial_lt</a></div><div class="item-right docblock-short"><p>Returns <code>true</code> iff <code>a</code> and <code>b</code> are comparable and <code>a &lt; b</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_max.html" title="nalgebra::partial_max fn">partial_max</a></div><div class="item-right docblock-short"><p>Return the maximum of <code>a</code> and <code>b</code> if they are comparable.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_min.html" title="nalgebra::partial_min fn">partial_min</a></div><div class="item-right docblock-short"><p>Return the minimum of <code>a</code> and <code>b</code> if they are comparable.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.partial_sort2.html" title="nalgebra::partial_sort2 fn">partial_sort2</a></div><div class="item-right docblock-short"><p>Sorts two values in increasing order using a partial ordering.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.sup.html" title="nalgebra::sup fn">sup</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"><p>Returns the supremum of <code>a</code> and <code>b</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.try_convert.html" title="nalgebra::try_convert fn">try_convert</a></div><div class="item-right docblock-short"><p>Attempts to convert an object to a more specific one.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.try_convert_ref.html" title="nalgebra::try_convert_ref fn">try_convert_ref</a></div><div class="item-right docblock-short"><p>Attempts to convert an object to a more specific one.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.wrap.html" title="nalgebra::wrap fn">wrap</a></div><div class="item-right docblock-short"><p>Wraps <code>val</code> into the range <code>[min, max]</code> using modular arithmetics.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.zero.html" title="nalgebra::zero fn">zero</a></div><div class="item-right docblock-short"><p>Gets the additive identity element.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="nalgebra" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

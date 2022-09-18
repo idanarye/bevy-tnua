@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["derive_shader_type",""]],"macro":[["implement",""]]};

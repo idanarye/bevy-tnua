@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"type":[["Real","The real type (f32 or f64)."],["Rot","The rotation type."],["Vect","The vector type."]]};

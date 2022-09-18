@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["wgsl","Keywords for WGSL (WebGPU Shading Language)."]]};

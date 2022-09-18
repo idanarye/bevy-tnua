@@ -1,0 +1,393 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spade-2.0.0/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spade/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../spade/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spade/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+</pre><pre class="rust"><code><span class="doccomment">//! # Spade</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Delaunay triangulations for the rust eco system.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Features</span>
+<span class="doccomment">//! * A 2D Delaunay triangulation: [DelaunayTriangulation]</span>
+<span class="doccomment">//! * Uses exact geometric predicate evaluation, preventing construction errors due to precision loss.</span>
+<span class="doccomment">//! * A 2D constrained Delaunay triangulation: [ConstrainedDelaunayTriangulation]</span>
+<span class="doccomment">//! * Supports vertex removal</span>
+<span class="doccomment">//! * Serde support with the `serde` feature.</span>
+
+<span class="attribute">#![<span class="ident">forbid</span>(<span class="ident">unsafe_code</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::all</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc::broken_intra_doc_links</span>)]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">fuzzing</span>), <span class="ident">warn</span>(<span class="ident">missing_docs</span>))]</span>
+
+<span class="kw">mod</span> <span class="ident">cdt</span>;
+<span class="kw">mod</span> <span class="ident">delaunay_core</span>;
+<span class="kw">mod</span> <span class="ident">delaunay_triangulation</span>;
+<span class="kw">mod</span> <span class="ident">intersection_iterator</span>;
+<span class="kw">mod</span> <span class="ident">point</span>;
+
+<span class="kw">mod</span> <span class="ident">triangulation</span>;
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cdt</span>::{<span class="ident">CdtEdge</span>, <span class="ident">ConstrainedDelaunayTriangulation</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::delaunay_triangulation::DelaunayTriangulation</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::point</span>::{<span class="ident">HasPosition</span>, <span class="ident">Point2</span>, <span class="ident">SpadeNum</span>};
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::delaunay_core::math</span>::{
+    <span class="ident">mitigate_underflow</span>, <span class="ident">validate_coordinate</span>, <span class="ident">validate_vertex</span>, <span class="ident">InsertionError</span>, <span class="ident">PointProjection</span>,
+    <span class="ident">MAX_ALLOWED_VALUE</span>, <span class="ident">MIN_ALLOWED_VALUE</span>,
+};
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">delaunay_core</span>::{
+    <span class="ident">HierarchyHintGenerator</span>, <span class="ident">HierarchyHintGeneratorWithBranchFactor</span>, <span class="ident">HintGenerator</span>,
+    <span class="ident">LastUsedVertexHintGenerator</span>,
+};
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">delaunay_core::LineSideInfo</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">triangulation</span>::{<span class="ident">PositionInTriangulation</span>, <span class="ident">Triangulation</span>};
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">fuzzing</span>))]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">delaunay_core::TriangulationExt</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">fuzzing</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">delaunay_core::TriangulationExt</span>;
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">delaunay_core::RemovalResult</span>;
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">test_utilities</span>;
+
+<span class="doccomment">/// Handle types used for traversal and modification of triangulations.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A handle can either be a &quot;reference handle&quot; or a &quot;fixed handle&quot;. Reference handles are</span>
+<span class="doccomment">/// used for immutable access to a triangulation. Fixed handles allow mutation but have a</span>
+<span class="doccomment">/// more limited API.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Reference handles</span>
+<span class="doccomment">/// Reference handles come in one of four variants:</span>
+<span class="doccomment">/// * [FaceHandle](Self::FaceHandle)s refer to a single face (triangle) of the triangulation.</span>
+<span class="doccomment">///   They are used get the triangle&#39;s adjacent vertices and edges. They also may refer to</span>
+<span class="doccomment">///    the single outer face.</span>
+<span class="doccomment">/// * [VertexHandle](Self::VertexHandle)s refer to a single vertex of the triangulation. They</span>
+<span class="doccomment">///   allow to retrieve the vertex position and its outgoing edges.</span>
+<span class="doccomment">/// * [DirectedEdgeHandle](Self::DirectedEdgeHandle)s refer to a single directed edge. They</span>
+<span class="doccomment">///   allow to retrieve the edges origin and destination vertex, its adjacent face as well as</span>
+<span class="doccomment">///   its previous and next edge.</span>
+<span class="doccomment">/// * [UndirectedEdgeHandle](Self::UndirectedEdgeHandle)s refer to an edge without specifying its</span>
+<span class="doccomment">///   direction.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// All handles also allow to set and retrieve arbitrary additional data associated with that</span>
+<span class="doccomment">/// element. Refer to the type parameters of [Triangulation] for more details.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Fixed handles</span>
+<span class="doccomment">/// Reference handles all hold an immutable reference to the underlying triangulation.</span>
+<span class="doccomment">/// This reference is used to implement a feature rich and intuitive API. However,</span>
+<span class="doccomment">/// due to Rust&#39;s ownership semantics, modification of a triangulation</span>
+<span class="doccomment">/// can not be done using these handles as that would require a mutable reference. This is</span>
+<span class="doccomment">/// required in some cases, e.g. whenever traversal of the triangulation is mixed with insertion</span>
+<span class="doccomment">/// operations or when attempting to remove vertices.</span>
+<span class="doccomment">/// As a solution, Spade relies on _fixed_ handles for mutation: These are created from normal</span>
+<span class="doccomment">/// handles by calling `some_handle.fix()` and do not keep a reference to the triangulation.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Internally, fixed handles are implemented as indices into a `Vec`. **Removing elements from</span>
+<span class="doccomment">/// the triangulation can possibly invalidate any fixed handle**. Attempting to resolve an invalid</span>
+<span class="doccomment">/// handle may either refer to a different element or panic at run time. It is the callers</span>
+<span class="doccomment">/// responsibility to make sure that fixed handles are not used anymore after a removal operation</span>
+<span class="doccomment">/// has taken place.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Fixed handles also come in four variants, depending on which element they refer to:</span>
+<span class="doccomment">///  * [FixedVertexHandle](Self::FixedVertexHandle)</span>
+<span class="doccomment">///  * [FixedFaceHandle](Self::FixedFaceHandle)</span>
+<span class="doccomment">///  * [FixedDirectedEdgeHandle](Self::FixedDirectedEdgeHandle)</span>
+<span class="doccomment">///  * [FixedUndirectedEdgeHandle](Self::FixedUndirectedEdgeHandle)</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Retrieving handles by iteration</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The [Triangulation] trait defines iterators for all handle types:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// |                | Vertices | Directed Edges  | Undirected Edges | Faces |</span>
+<span class="doccomment">/// |----------------|----------|-----------------|------------------|-------|</span>
+<span class="doccomment">/// | **Reference**  | [vertices()](Triangulation::vertices()) | [directed_edges()](Triangulation::directed_edges) | [undirected_edges()](Triangulation::undirected_edges()) | [inner_faces()](Triangulation::inner_faces())&lt;br&gt;[all_faces()](Triangulation::all_faces()) |</span>
+<span class="doccomment">/// | **Fixed**      | [fixed_vertices()](Triangulation::fixed_vertices()) | [fixed_directed_edges()](Triangulation::fixed_directed_edges()) | [fixed_undirected_edges()](Triangulation::fixed_undirected_edges()) | [fixed_inner_faces()](Triangulation::fixed_inner_faces())&lt;br&gt; [fixed_faces()](Triangulation::fixed_inner_faces()) |</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Converting between reference and fixed handles</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Converting a reference handle into its fixed counterpart is performed via the</span>
+<span class="doccomment">/// `fix()` method (defined on any handle type).</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Converting a fixed handle type back into a reference handle requires calling either</span>
+<span class="doccomment">/// [Triangulation::vertex], [Triangulation::face],</span>
+<span class="doccomment">/// [Triangulation::directed_edge] or [Triangulation::undirected_edge].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Example: Using handles</span>
+<span class="doccomment">/// This example implements a nearest neighbor algorithm on a delaunay triangulation. Starting</span>
+<span class="doccomment">/// from an arbitrary start vertex, it greedily walks to the closes vertex until arriving at a</span>
+<span class="doccomment">/// local minimum. Due to the special properties of Delaunay triangulations, this is also the</span>
+<span class="doccomment">/// global nearest neighbor.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// _Note: Spade already implements this method, see [DelaunayTriangulation::nearest_neighbor]_</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use spade::handles::VertexHandle;</span>
+<span class="doccomment">/// use spade::{DelaunayTriangulation, Point2, Triangulation};</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// fn nearest_neighbor(</span>
+<span class="doccomment">///     triangulation: &amp;DelaunayTriangulation&lt;Point2&lt;f64&gt;&gt;,</span>
+<span class="doccomment">///     target_point: Point2&lt;f64&gt;,</span>
+<span class="doccomment">/// ) -&gt; VertexHandle&lt;Point2&lt;f64&gt;&gt; {</span>
+<span class="doccomment">///     let mut current = triangulation.vertices().next().unwrap();</span>
+<span class="doccomment">///     let mut best_distance = current.position().distance_2(target_point);</span>
+<span class="doccomment">///     loop {</span>
+<span class="doccomment">///         let mut closer = None;</span>
+<span class="doccomment">///         for neighbor in current.out_edges().map(|edge| edge.to()) {</span>
+<span class="doccomment">///             let neighbor_distance = neighbor.position().distance_2(target_point);</span>
+<span class="doccomment">///             if neighbor_distance &lt; best_distance {</span>
+<span class="doccomment">///                 best_distance = neighbor_distance;</span>
+<span class="doccomment">///                 closer = Some(neighbor);</span>
+<span class="doccomment">///                 break;</span>
+<span class="doccomment">///             }</span>
+<span class="doccomment">///         }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///         if let Some(closer) = closer {</span>
+<span class="doccomment">///             current = closer;</span>
+<span class="doccomment">///         } else {</span>
+<span class="doccomment">///             return current;</span>
+<span class="doccomment">///         }</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # fn try_main() -&gt; Result&lt;(), spade::InsertionError&gt; {</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let vertices = vec![</span>
+<span class="doccomment">///     Point2::new(0.0, 1.0),</span>
+<span class="doccomment">///     Point2::new(1.0, 1.0),</span>
+<span class="doccomment">///     Point2::new(0.0, 0.0),</span>
+<span class="doccomment">///     Point2::new(1.0, 0.0),</span>
+<span class="doccomment">/// ];</span>
+<span class="doccomment">/// let triangulation: DelaunayTriangulation&lt;Point2&lt;f64&gt;&gt; = Triangulation::bulk_load(vertices)?;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // Check that everything works!</span>
+<span class="doccomment">/// for vertex in triangulation.vertices() {</span>
+<span class="doccomment">///     let nearest_neighbor = nearest_neighbor(&amp;triangulation, vertex.position());</span>
+<span class="doccomment">///     assert_eq!(nearest_neighbor, vertex);</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// # Ok(()) }</span>
+<span class="doccomment">/// # fn main() { try_main().unwrap() }</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">handles</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::delaunay_core</span>::{
+        <span class="ident">DirectedEdgeHandle</span>, <span class="ident">DirectedVoronoiEdge</span>, <span class="ident">FaceHandle</span>, <span class="ident">FixedDirectedEdgeHandle</span>,
+        <span class="ident">FixedFaceHandle</span>, <span class="ident">FixedUndirectedEdgeHandle</span>, <span class="ident">FixedVertexHandle</span>, <span class="ident">InnerTag</span>, <span class="ident">PossiblyOuterTag</span>,
+        <span class="ident">UndirectedEdgeHandle</span>, <span class="ident">UndirectedVoronoiEdge</span>, <span class="ident">VertexHandle</span>, <span class="ident">VoronoiFace</span>, <span class="ident">VoronoiVertex</span>,
+        <span class="ident">OUTER_FACE</span>,
+    };
+}
+
+<span class="doccomment">/// Iterators over various elements of Delaunay triangulations.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">iterators</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::delaunay_core::iterators</span>::{
+        <span class="ident">DirectedEdgeIterator</span>, <span class="ident">DirectedVoronoiEdgeIterator</span>, <span class="ident">FaceIterator</span>, <span class="ident">FixedDirectedEdgeIterator</span>,
+        <span class="ident">FixedFaceIterator</span>, <span class="ident">FixedInnerFaceIterator</span>, <span class="ident">FixedUndirectedEdgeIterator</span>,
+        <span class="ident">FixedVertexIterator</span>, <span class="ident">InnerFaceIterator</span>, <span class="ident">UndirectedEdgeIterator</span>,
+        <span class="ident">UndirectedVoronoiEdgeIterator</span>, <span class="ident">VertexIterator</span>, <span class="ident">VoronoiFaceIterator</span>,
+    };
+}
+
+<span class="doccomment">/// Internals that must be published due to technical reasons. This is not the place you are</span>
+<span class="doccomment">/// looking for. A change to these items is not considered to be a breaking change.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">internals</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::delaunay_core</span>::{<span class="ident">DynamicHandleImpl</span>, <span class="ident">FixedHandleImpl</span>};
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spade" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

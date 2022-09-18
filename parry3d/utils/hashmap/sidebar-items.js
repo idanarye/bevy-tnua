@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Entry","A view into a single entry in a map, which may either be vacant or occupied."]],"struct":[["FxHasher32","This is the same as FxHasher, but with the guarantee that the internal hash is an u32 instead of something that depends on the platform."]],"type":[["HashMap","Type alias for a hashmap using the `fx` hash algorithm."]]};

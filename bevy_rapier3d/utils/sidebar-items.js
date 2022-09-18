@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["iso_to_transform","Converts a Rapier isometry to a Bevy transform."]]};

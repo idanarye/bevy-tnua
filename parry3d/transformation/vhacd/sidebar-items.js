@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["VHACD","Approximate convex decomposition using the VHACD algorithm."],["VHACDParameters","Parameters controlling the VHACD convex decomposition."]]};

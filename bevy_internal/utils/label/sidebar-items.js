@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":[["define_label","Macro to define a new label trait"]],"trait":[["DynEq",""],["DynHash",""]]};

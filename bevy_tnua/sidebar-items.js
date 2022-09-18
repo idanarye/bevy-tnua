@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["TnuaSystemLabel",""]],"fn":[["tnua_system_set_for_applying_motors",""],["tnua_system_set_for_computing_logic",""],["tnua_system_set_for_reading_sensor",""]],"struct":[["TnuaPlatformControls",""],["TnuaPlatformerPlugin",""],["TnuaProximitySensor",""],["TnuaRapier3dPlugin",""]]};

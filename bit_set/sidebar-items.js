@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["BitSet",""],["Difference",""],["Intersection",""],["Iter","An iterator for `BitSet`."],["SymmetricDifference",""],["Union",""]]};

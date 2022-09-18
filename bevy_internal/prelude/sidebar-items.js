@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"attr":[["bevy_main",""]],"derive":[["Deref","Implements `Deref` for single-item structs. This is especially useful when utilizing the newtype pattern."],["DerefMut","Implements `DerefMut` for single-item structs. This is especially useful when utilizing the newtype pattern."]]};
