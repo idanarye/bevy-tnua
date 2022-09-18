@@ -14,7 +14,7 @@ fn main() {
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 2.0, 10.0)
+        transform: Transform::from_xyz(0.0, 9.0, 30.0)
             .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
         ..Default::default()
     });
@@ -37,6 +37,24 @@ fn setup_level(
         ..Default::default()
     });
     cmd.insert(Collider::halfspace(Vec3::Y).unwrap());
+
+    let obstacles_material = materials.add(Color::GRAY.into());
+    for ([width, height, depth], transform) in [
+        ([4.0, 1.0, 2.0], Transform::from_xyz(3.0, 1.0, 0.0)),
+        (
+            [6.0, 0.1, 2.0],
+            Transform::from_xyz(-3.0, 1.0, 0.0).with_rotation(Quat::from_rotation_z(-0.6)),
+        ),
+    ] {
+        let mut cmd = commands.spawn();
+        cmd.insert_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(width, height, depth))),
+            material: obstacles_material.clone(),
+            transform,
+            ..Default::default()
+        });
+        cmd.insert(Collider::cuboid(0.5 * width, 0.5 * height, 0.5 * depth));
+    }
 }
 
 fn setup_player(
@@ -54,7 +72,7 @@ fn setup_player(
             longitudes: 10,
             uv_profile: shape::CapsuleUvProfile::Aspect,
         })),
-        material: materials.add(Color::WHITE.into()),
+        material: materials.add(Color::YELLOW.into()),
         transform: Transform::from_xyz(0.0, 2.0, 0.0),
         ..Default::default()
     });
