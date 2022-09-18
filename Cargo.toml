@@ -1,0 +1,33 @@
+[package]
+name = "bevy-tnua"
+version = "0.1.0"
+edition = "2021"
+authors = ["IdanArye <idanarye@gmail.com>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/idanarye/bevy-tnua"
+documentation = "https://docs.rs/bevy-tnua"
+readme = "README.md"
+categories = ["game-development"]
+keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
+exclude = [
+    "assets",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = { version = "^0.8", default-features = false }
+bevy_rapier3d = { version = "^0.16", default-features = false, optional = true, features = ["dim3"]}
+
+[features]
+rapier_3d = [
+    "bevy_rapier3d",
+]
+
+[dev-dependencies]
+bevy = { version = "^0.8", default-features = true }
+bevy_rapier3d = { version = "^0.16", features = ["debug-render"]}
+
+[[example]]
+name = "platformer_3d"
+required-features = ["bevy_rapier3d"]
