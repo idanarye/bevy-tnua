@@ -25,7 +25,20 @@ rapier_3d = [
 ]
 
 [dev-dependencies]
-bevy = { version = "^0.8", default-features = true }
+bevy = { version = "^0.8", default-features = false, features = [
+    # "animation",
+    "bevy_asset",
+    # "bevy_audio",
+    "bevy_gilrs",
+    # "bevy_scene",
+    # "bevy_winit",
+    "render",
+    # "png",
+    # "hdr",
+    # "vorbis",
+    "x11",
+    # "filesystem_watcher",
+] }
 bevy_rapier3d = { version = "^0.16", features = ["debug-render"]}
 
 [[example]]
