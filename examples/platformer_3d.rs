@@ -1,11 +1,13 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use bevy_tnua::{TnuaProximitySensor, TnuaRapier3dPlugin};
 
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugin(RapierDebugRenderPlugin::default());
+    app.add_plugin(TnuaRapier3dPlugin);
     app.add_startup_system(setup_camera);
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
@@ -78,4 +80,5 @@ fn setup_player(
     });
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule_y(0.5, 0.5));
+    cmd.insert(TnuaProximitySensor::new(Vec3::ZERO, -1.0 * Vec3::Y));
 }

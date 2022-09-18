@@ -43,4 +43,4 @@ bevy_rapier3d = { version = "^0.16", features = ["debug-render"]}
 
 [[example]]
 name = "platformer_3d"
-required-features = ["bevy_rapier3d"]
+required-features = ["rapier_3d"]
