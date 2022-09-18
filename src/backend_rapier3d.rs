@@ -1,13 +1,18 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::TnuaProximitySensor;
+use crate::{
+    tnua_system_set_for_applying_motors, tnua_system_set_for_reading_sensor, TnuaProximitySensor,
+};
 
 pub struct TnuaRapier3dPlugin;
 
 impl Plugin for TnuaRapier3dPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_proximity_sensors_system);
+        app.add_system_set(
+            tnua_system_set_for_reading_sensor().with_system(update_proximity_sensors_system),
+        );
+        app.add_system_set(tnua_system_set_for_applying_motors().with_system(apply_motors_system));
     }
 }
 
@@ -31,3 +36,5 @@ fn update_proximity_sensors_system(
         }
     }
 }
+
+fn apply_motors_system() {}

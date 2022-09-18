@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use bevy_tnua::{TnuaProximitySensor, TnuaRapier3dPlugin};
+use bevy_tnua::{
+    TnuaPlatformControls, TnuaPlatformerPlugin, TnuaProximitySensor, TnuaRapier3dPlugin,
+};
 
 fn main() {
     let mut app = App::new();
@@ -8,9 +10,11 @@ fn main() {
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugin(RapierDebugRenderPlugin::default());
     app.add_plugin(TnuaRapier3dPlugin);
+    app.add_plugin(TnuaPlatformerPlugin);
     app.add_startup_system(setup_camera);
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
+    app.add_system(apply_controls);
     app.run();
 }
 
@@ -80,5 +84,27 @@ fn setup_player(
     });
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule_y(0.5, 0.5));
-    cmd.insert(TnuaProximitySensor::new(Vec3::ZERO, -1.0 * Vec3::Y));
+    cmd.insert(TnuaProximitySensor::new(Vec3::ZERO, -3.0 * Vec3::Y));
+    cmd.insert(TnuaPlatformControls::default());
+}
+
+fn apply_controls(mut query: Query<&mut TnuaPlatformControls>, keyboard: Res<Input<KeyCode>>) {
+    let mut direction = Vec3::ZERO;
+
+    if keyboard.pressed(KeyCode::Up) {
+        direction -= Vec3::Z;
+    }
+    if keyboard.pressed(KeyCode::Down) {
+        direction += Vec3::Z;
+    }
+    if keyboard.pressed(KeyCode::Left) {
+        direction -= Vec3::X;
+    }
+    if keyboard.pressed(KeyCode::Right) {
+        direction += Vec3::X;
+    }
+
+    for mut controls in query.iter_mut() {
+        controls.move_direction = direction;
+    }
 }
