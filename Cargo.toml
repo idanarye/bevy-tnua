@@ -16,8 +16,8 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.8", default-features = false }
-bevy_rapier3d = { version = "^0.16", default-features = false, optional = true, features = ["dim3"]}
+bevy = { version = "^0.9", default-features = false }
+bevy_rapier3d = { version = "^0.19", default-features = false, optional = true, features = ["dim3"]}
 
 [features]
 rapier_3d = [
@@ -25,7 +25,7 @@ rapier_3d = [
 ]
 
 [dev-dependencies]
-bevy = { version = "^0.8", default-features = false, features = [
+bevy = { version = "^0.9", default-features = false, features = [
     # "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -39,7 +39,7 @@ bevy = { version = "^0.8", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-bevy_rapier3d = { version = "^0.16", features = ["debug-render"]}
+bevy_rapier3d = { version = "^0.19", features = ["debug-render"]}
 
 [[example]]
 name = "platformer_3d"
