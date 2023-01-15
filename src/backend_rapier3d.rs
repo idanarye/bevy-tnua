@@ -29,6 +29,7 @@ fn update_proximity_sensors_system(
     for (owner_entity, transform, velocity, mut sensor) in query.iter_mut() {
         let cast_origin = transform.transform_point(sensor.cast_origin);
         let cast_direction = transform.to_scale_rotation_translation().1 * sensor.cast_direction;
+        sensor.velocity = velocity.linvel;
         if let Some((entity, toi)) = rapier_context.cast_ray_and_get_normal(
             cast_origin,
             cast_direction,
@@ -49,11 +50,11 @@ fn update_proximity_sensors_system(
     }
 }
 
-fn apply_motors_system(time: Res<Time>, mut query: Query<(&TnuaMotor, &mut Velocity)>) {
+fn apply_motors_system(mut query: Query<(&TnuaMotor, &mut Velocity)>) {
     for (motor, mut velocity) in query.iter_mut() {
         if !motor.desired_acceleration.is_finite() {
             continue;
         }
-        velocity.linvel += time.delta().as_secs_f32() * motor.desired_acceleration;
+        velocity.linvel += motor.desired_acceleration;
     }
 }

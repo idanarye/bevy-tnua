@@ -84,18 +84,21 @@ fn setup_player(
         ..Default::default()
     });
     cmd.insert(RigidBody::Dynamic);
+    cmd.insert(LockedAxes::ROTATION_LOCKED); // todo: fix with torque
     cmd.insert(Velocity::default());
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaProximitySensor {
         cast_origin: Vec3::ZERO,
         cast_direction: -Vec3::Y,
         cast_range: 3.0,
+        velocity: Vec3::ZERO,
         output: None,
     });
     cmd.insert(TnuaMotor::default());
     cmd.insert(TnuaPlatformerConfig {
         spring_strengh: 100.0,
         spring_dampening: 10.0,
+        acceleration: 20.0,
     });
     cmd.insert(TnuaPlatformerControls::new_floating_at(2.0));
 }
@@ -117,6 +120,6 @@ fn apply_controls(mut query: Query<&mut TnuaPlatformerControls>, keyboard: Res<I
     }
 
     for mut controls in query.iter_mut() {
-        controls.move_direction = direction;
+        controls.move_direction = direction * 10.0;
     }
 }

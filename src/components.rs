@@ -5,6 +5,7 @@ pub struct TnuaProximitySensor {
     pub cast_origin: Vec3,
     pub cast_direction: Vec3,
     pub cast_range: f32,
+    pub velocity: Vec3,
     pub output: Option<TnuaProximitySensorOutput>,
 }
 
