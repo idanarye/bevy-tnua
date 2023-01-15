@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
-    TnuaPlatformControls, TnuaPlatformerPlugin, TnuaProximitySensor, TnuaRapier3dPlugin,
+    TnuaMotor, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
+    TnuaProximitySensor, TnuaRapier3dPlugin,
 };
 
 fn main() {
@@ -79,16 +80,29 @@ fn setup_player(
             uv_profile: shape::CapsuleUvProfile::Aspect,
         })),
         material: materials.add(Color::YELLOW.into()),
-        transform: Transform::from_xyz(0.0, 2.0, 0.0),
+        transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..Default::default()
     });
     cmd.insert(RigidBody::Dynamic);
+    cmd.insert(Velocity::default());
     cmd.insert(Collider::capsule_y(0.5, 0.5));
-    cmd.insert(TnuaProximitySensor::new(Vec3::ZERO, -3.0 * Vec3::Y));
-    cmd.insert(TnuaPlatformControls::default());
+    cmd.insert(TnuaProximitySensor {
+        cast_origin: Vec3::ZERO,
+        cast_direction: -Vec3::Y,
+        cast_range: 2.0,
+        output: None,
+    });
+    //::new(Vec3::ZERO, -3.0 * Vec3::Y));
+    cmd.insert(TnuaMotor::default());
+    cmd.insert(TnuaPlatformerConfig {
+        ride_height: 1.0,
+        spring_strengh: 10.0,
+        spring_dampening: 0.3,
+    });
+    cmd.insert(TnuaPlatformerControls::default());
 }
 
-fn apply_controls(mut query: Query<&mut TnuaPlatformControls>, keyboard: Res<Input<KeyCode>>) {
+fn apply_controls(mut query: Query<&mut TnuaPlatformerControls>, keyboard: Res<Input<KeyCode>>) {
     let mut direction = Vec3::ZERO;
 
     if keyboard.pressed(KeyCode::Up) {
