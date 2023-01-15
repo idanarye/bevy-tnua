@@ -49,12 +49,11 @@ fn update_proximity_sensors_system(
     }
 }
 
-fn apply_motors_system(mut query: Query<(&TnuaMotor, &mut Velocity)>) {
+fn apply_motors_system(time: Res<Time>, mut query: Query<(&TnuaMotor, &mut Velocity)>) {
     for (motor, mut velocity) in query.iter_mut() {
         if !motor.desired_acceleration.is_finite() {
             continue;
         }
-        println!("Need to go {}", motor.desired_acceleration);
-        velocity.linvel += motor.desired_acceleration;
+        velocity.linvel += time.delta().as_secs_f32() * motor.desired_acceleration;
     }
 }

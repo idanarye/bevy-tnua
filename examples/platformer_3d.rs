@@ -89,17 +89,15 @@ fn setup_player(
     cmd.insert(TnuaProximitySensor {
         cast_origin: Vec3::ZERO,
         cast_direction: -Vec3::Y,
-        cast_range: 2.0,
+        cast_range: 3.0,
         output: None,
     });
-    //::new(Vec3::ZERO, -3.0 * Vec3::Y));
     cmd.insert(TnuaMotor::default());
     cmd.insert(TnuaPlatformerConfig {
-        ride_height: 1.0,
-        spring_strengh: 10.0,
-        spring_dampening: 0.3,
+        spring_strengh: 100.0,
+        spring_dampening: 10.0,
     });
-    cmd.insert(TnuaPlatformerControls::default());
+    cmd.insert(TnuaPlatformerControls::new_floating_at(2.0));
 }
 
 fn apply_controls(mut query: Query<&mut TnuaPlatformerControls>, keyboard: Res<Input<KeyCode>>) {

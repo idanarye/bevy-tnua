@@ -14,7 +14,6 @@ impl Plugin for TnuaPlatformerPlugin {
 
 #[derive(Component)]
 pub struct TnuaPlatformerConfig {
-    pub ride_height: f32,
     pub spring_strengh: f32,
     pub spring_dampening: f32,
 }
@@ -26,11 +25,11 @@ pub struct TnuaPlatformerControls {
     pub move_direction: Vec3,
 }
 
-impl Default for TnuaPlatformerControls {
-    fn default() -> Self {
+impl TnuaPlatformerControls {
+    pub fn new_floating_at(float_at: f32) -> Self {
         Self {
             up: Vec3::Y,
-            float_at: 1.5, // TODO: This should not have a default
+            float_at,
             move_direction: Vec3::ZERO,
         }
     }
