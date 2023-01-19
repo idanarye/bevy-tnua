@@ -17,7 +17,7 @@ exclude = [
 
 [dependencies]
 bevy = { version = "^0.9", default-features = false }
-bevy_rapier3d = { version = "^0.19", default-features = false, optional = true, features = ["dim3"]}
+bevy_rapier3d = { version = "^0.20", default-features = false, optional = true, features = ["dim3"]}
 
 [features]
 rapier_3d = [
@@ -39,7 +39,7 @@ bevy = { version = "^0.9", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-bevy_rapier3d = { version = "^0.19", features = ["debug-render"]}
+bevy_rapier3d = { version = "^0.20", features = ["debug-render"]}
 
 [[example]]
 name = "platformer_3d"
