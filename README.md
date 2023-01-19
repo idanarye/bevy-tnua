@@ -8,6 +8,7 @@
 
 ## Examples:
 
+* https://idanarye.github.io/bevy-tnua/demos/platformer_2d
 * https://idanarye.github.io/bevy-tnua/demos/platformer_3d
 
 ## Versions

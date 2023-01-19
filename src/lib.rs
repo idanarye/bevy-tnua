@@ -1,6 +1,11 @@
+#[cfg(feature = "rapier_2d")]
+mod backend_rapier2d;
 #[cfg(feature = "rapier_3d")]
 mod backend_rapier3d;
 mod platformer;
+
+#[cfg(feature = "rapier_2d")]
+pub use backend_rapier2d::*;
 #[cfg(feature = "rapier_3d")]
 pub use backend_rapier3d::*;
 pub use platformer::*;
