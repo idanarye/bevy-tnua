@@ -1,9 +1,13 @@
+mod common;
+
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
     TnuaMotor, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
     TnuaProximitySensor, TnuaRapier3dPlugin,
 };
+
+use self::common::ui::SpeedControl;
 
 fn main() {
     let mut app = App::new();
@@ -12,6 +16,7 @@ fn main() {
     app.add_plugin(RapierDebugRenderPlugin::default());
     app.add_plugin(TnuaRapier3dPlugin);
     app.add_plugin(TnuaPlatformerPlugin);
+    app.add_plugin(common::ui::ExampleUi);
     app.add_startup_system(setup_camera);
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
@@ -101,9 +106,14 @@ fn setup_player(
         acceleration: 20.0,
     });
     cmd.insert(TnuaPlatformerControls::new_floating_at(2.0));
+    cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
+    cmd.insert(SpeedControl(10.0));
 }
 
-fn apply_controls(mut query: Query<&mut TnuaPlatformerControls>, keyboard: Res<Input<KeyCode>>) {
+fn apply_controls(
+    mut query: Query<(&mut TnuaPlatformerControls, &SpeedControl)>,
+    keyboard: Res<Input<KeyCode>>,
+) {
     let mut direction = Vec3::ZERO;
 
     if keyboard.pressed(KeyCode::Up) {
@@ -119,7 +129,7 @@ fn apply_controls(mut query: Query<&mut TnuaPlatformerControls>, keyboard: Res<I
         direction += Vec3::X;
     }
 
-    for mut controls in query.iter_mut() {
-        controls.move_direction = direction * 10.0;
+    for (mut controls, &SpeedControl(speed)) in query.iter_mut() {
+        controls.move_direction = direction * speed;
     }
 }
