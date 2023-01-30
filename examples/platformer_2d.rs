@@ -8,6 +8,7 @@ use bevy_tnua::{
 };
 
 use self::common::ui::SpeedControl;
+use self::common::ui_plotting::PlotSource;
 
 fn main() {
     let mut app = App::new();
@@ -21,10 +22,20 @@ fn main() {
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
     app.add_system(apply_controls);
+    app.add_system(update_plot_data);
     app.add_startup_system(|mut cfg: ResMut<RapierConfiguration>| {
         cfg.gravity = Vec2::Y * -9.81;
     });
     app.run();
+}
+
+fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) {
+    for (mut plot_source, transform, velocity) in query.iter_mut() {
+        plot_source.set(&[
+            &[("Y", transform.translation.y), ("vel-Y", velocity.linvel.y)],
+            &[("X", transform.translation.x), ("vel-X", velocity.linvel.x)],
+        ]);
+    }
 }
 
 fn setup_camera(mut commands: Commands) {
@@ -98,6 +109,7 @@ fn setup_player(mut commands: Commands) {
     });
     cmd.insert(TnuaPlatformerControls::new_floating_at(2.0));
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
+    cmd.insert(PlotSource::default());
     cmd.insert(SpeedControl(10.0));
 }
 
