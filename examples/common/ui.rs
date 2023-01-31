@@ -77,6 +77,24 @@ fn ui_system(
                                     .text("Acceleration"),
                             );
                             ui.add(
+                                egui::Slider::new(&mut platformer_config.jump_impulse, 0.0..=40.0)
+                                    .text("Jump Impulse"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.end_of_jump_fall_speed,
+                                    0.0..=10.0,
+                                )
+                                .text("End of Jump Fall Speed"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.end_of_jump_acceleration,
+                                    0.0..=400.0,
+                                )
+                                .text("End of Jump Acceleration"),
+                            );
+                            ui.add(
                                 egui::Slider::new(&mut control_factors.speed, 0.0..=30.0)
                                     .text("Speed"),
                             );

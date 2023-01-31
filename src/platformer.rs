@@ -40,6 +40,9 @@ pub struct TnuaPlatformerConfig {
     pub spring_strengh: f32,
     pub spring_dampening: f32,
     pub acceleration: f32,
+    pub jump_impulse: f32,
+    pub end_of_jump_fall_speed: f32,
+    pub end_of_jump_acceleration: f32,
 }
 
 #[derive(Component)]
@@ -130,7 +133,7 @@ fn platformer_control_system(
                 if let (Some(_jump_height), Some(sensor_output)) = (controls.jump, &sensor.output) {
                     let jumping_from = transform.translation()
                         + sensor.cast_direction * (sensor_output.proximity - config.float_height);
-                    motor.desired_acceleration += controls.up * 30.0;
+                    motor.desired_acceleration += controls.up * config.jump_impulse;
                     platformer_state.jump_state = JumpState::JumpingFrom(jumping_from);
                 }
             }
@@ -144,10 +147,10 @@ fn platformer_control_system(
             }
             JumpState::StoppedJumpingAt(_) => {
                 let upward_velocity = effective_velocity.dot(controls.up);
-                let required_downward_boost = upward_velocity + 1.0;
+                let required_downward_boost = upward_velocity + config.end_of_jump_fall_speed;
                 if 0.0 < required_downward_boost {
-                    let capped_acceperation =
-                        required_downward_boost.min(time.delta().as_secs_f32() * 100.0);
+                    let capped_acceperation = required_downward_boost
+                        .min(time.delta().as_secs_f32() * config.end_of_jump_acceleration);
                     motor.desired_acceleration -= controls.up * capped_acceperation;
                 } else {
                     platformer_state.jump_state = JumpState::NoJump;
