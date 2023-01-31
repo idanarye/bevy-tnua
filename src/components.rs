@@ -9,6 +9,18 @@ pub struct TnuaProximitySensor {
     pub output: Option<TnuaProximitySensorOutput>,
 }
 
+impl Default for TnuaProximitySensor {
+    fn default() -> Self {
+        Self {
+            cast_origin: Vec3::ZERO,
+            cast_direction: -Vec3::Y,
+            cast_range: 0.0,
+            velocity: Vec3::ZERO,
+            output: None,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct TnuaProximitySensorOutput {
     pub entity: Entity,

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
     TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
-    TnuaProximitySensor, TnuaRapier2dPlugin,
+    TnuaRapier2dPlugin,
 };
 
 use self::common::ui::ControlFactors;
@@ -94,23 +94,15 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(LockedAxes::ROTATION_LOCKED); // todo: fix with torque
     cmd.insert(Velocity::default());
     cmd.insert(Collider::capsule_y(0.5, 0.5));
-    cmd.insert(TnuaPlatformerBundle {
-        config: TnuaPlatformerConfig {
+    cmd.insert(TnuaPlatformerBundle::new_with_config(
+        TnuaPlatformerConfig {
+            float_height: 2.0,
+            cling_distance: 1.0,
             spring_strengh: 100.0,
             spring_dampening: 10.0,
             acceleration: 20.0,
         },
-        controls: TnuaPlatformerControls::new_floating_at(2.0),
-        motor: Default::default(),
-        proximity_sensor: TnuaProximitySensor {
-            cast_origin: Vec3::ZERO,
-            cast_direction: -Vec3::Y,
-            cast_range: 3.0,
-            velocity: Vec3::ZERO,
-            output: None,
-        },
-        state: Default::default(),
-    });
+    ));
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
     cmd.insert(ControlFactors {

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext, EguiPlugin};
-use bevy_tnua::{TnuaPlatformerConfig, TnuaPlatformerControls, TnuaProximitySensor};
+use bevy_tnua::TnuaPlatformerConfig;
 
 use super::ui_plotting::PlotSource;
 
@@ -30,8 +30,6 @@ fn ui_system(
         &TrackedEntity,
         &PlotSource,
         &mut TnuaPlatformerConfig,
-        &mut TnuaProximitySensor,
-        &mut TnuaPlatformerControls,
         &mut ControlFactors,
     )>,
 ) {
@@ -41,8 +39,6 @@ fn ui_system(
             TrackedEntity(name),
             plot_source,
             mut platformer_config,
-            mut proximity_sensor,
-            mut platformer_controls,
             mut control_factors,
         ) in query.iter_mut()
         {
@@ -51,6 +47,17 @@ fn ui_system(
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.vertical(|ui| {
+                            ui.add(
+                                egui::Slider::new(&mut platformer_config.float_height, 0.0..=10.0)
+                                    .text("Float At"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.cling_distance,
+                                    0.0..=10.0,
+                                )
+                                .text("Cling Distance"),
+                            );
                             ui.add(
                                 egui::Slider::new(
                                     &mut platformer_config.spring_strengh,
@@ -68,14 +75,6 @@ fn ui_system(
                             ui.add(
                                 egui::Slider::new(&mut platformer_config.acceleration, 0.0..=80.0)
                                     .text("Acceleration"),
-                            );
-                            ui.add(
-                                egui::Slider::new(&mut proximity_sensor.cast_range, 0.0..=12.0)
-                                    .text("Cast Range"),
-                            );
-                            ui.add(
-                                egui::Slider::new(&mut platformer_controls.float_at, 0.0..=10.0)
-                                    .text("Float At"),
                             );
                             ui.add(
                                 egui::Slider::new(&mut control_factors.speed, 0.0..=30.0)

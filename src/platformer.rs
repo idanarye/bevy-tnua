@@ -21,8 +21,22 @@ pub struct TnuaPlatformerBundle {
     pub state: TnuaPlatformerState,
 }
 
+impl TnuaPlatformerBundle {
+    pub fn new_with_config(config: TnuaPlatformerConfig) -> Self {
+        Self {
+            config,
+            controls: Default::default(),
+            motor: Default::default(),
+            proximity_sensor: Default::default(),
+            state: Default::default(),
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct TnuaPlatformerConfig {
+    pub float_height: f32,
+    pub cling_distance: f32,
     pub spring_strengh: f32,
     pub spring_dampening: f32,
     pub acceleration: f32,
@@ -31,7 +45,6 @@ pub struct TnuaPlatformerConfig {
 #[derive(Component)]
 pub struct TnuaPlatformerControls {
     pub up: Vec3,
-    pub float_at: f32,
     pub move_direction: Vec3,
     pub jump: Option<f32>,
 }
@@ -49,11 +62,10 @@ enum JumpState {
     StoppedJumpingAt(Vec3),
 }
 
-impl TnuaPlatformerControls {
-    pub fn new_floating_at(float_at: f32) -> Self {
+impl Default for TnuaPlatformerControls {
+    fn default() -> Self {
         Self {
             up: Vec3::Y,
-            float_at,
             move_direction: Vec3::ZERO,
             jump: None,
         }
@@ -67,14 +79,18 @@ fn platformer_control_system(
         &TnuaPlatformerControls,
         &TnuaPlatformerConfig,
         &mut TnuaPlatformerState,
-        &TnuaProximitySensor,
+        &mut TnuaProximitySensor,
         &mut TnuaMotor,
     )>,
 ) {
-    for (transform, controls, config, mut platformer_state, sensor, mut motor) in query.iter_mut() {
+    for (transform, controls, config, mut platformer_state, mut sensor, mut motor) in
+        query.iter_mut()
+    {
+        sensor.cast_range = config.float_height + config.cling_distance;
+
         let effective_velocity;
         if let Some(sensor_output) = &sensor.output {
-            let spring_offset = controls.float_at - sensor_output.proximity;
+            let spring_offset = config.float_height - sensor_output.proximity;
             let spring_force = spring_offset * config.spring_strengh /* subtract dumpning */;
 
             let relative_velocity =
@@ -113,7 +129,7 @@ fn platformer_control_system(
             JumpState::NoJump => {
                 if let (Some(_jump_height), Some(sensor_output)) = (controls.jump, &sensor.output) {
                     let jumping_from = transform.translation()
-                        + sensor.cast_direction * (sensor_output.proximity - controls.float_at);
+                        + sensor.cast_direction * (sensor_output.proximity - config.float_height);
                     motor.desired_acceleration += controls.up * 30.0;
                     platformer_state.jump_state = JumpState::JumpingFrom(jumping_from);
                 }
