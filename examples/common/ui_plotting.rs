@@ -21,8 +21,8 @@ impl Default for PlotSource {
             fields: Default::default(),
             rolling: Default::default(),
             last_update: f32::NEG_INFINITY,
-            update_every: 0.1,
-            keep: 10.0,
+            update_every: 1.0 / 24.0,
+            keep: 5.0,
         }
     }
 }
@@ -64,7 +64,7 @@ impl PlotSource {
         for (i, (plot_fields, plot_data)) in self.fields.iter().zip(plots_data).enumerate() {
             let plot = Plot::new((entity, i))
                 .legend(Legend::default().position(Corner::LeftBottom))
-                .width(160.0)
+                .width(240.0)
                 .include_y(-10.0)
                 .include_y(10.0)
                 .show_axes([false, true]);

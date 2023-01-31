@@ -37,8 +37,8 @@ fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) 
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 9.0, 30.0)
-            .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+        transform: Transform::from_xyz(0.0, 14.0, 30.0)
+            .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
         ..Default::default()
     });
 
