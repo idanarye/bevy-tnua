@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use bevy::prelude::*;
 use bevy_egui::egui;
-use bevy_egui::egui::plot::{uniform_grid_spacer, Corner, Legend, Plot};
+use bevy_egui::egui::plot::{Corner, Legend, Plot};
 
 #[derive(Component, Debug)]
 pub struct PlotSource {

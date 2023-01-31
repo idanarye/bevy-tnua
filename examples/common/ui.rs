@@ -18,7 +18,10 @@ impl Plugin for ExampleUi {
 pub struct TrackedEntity(pub String);
 
 #[derive(Component)]
-pub struct SpeedControl(pub f32);
+pub struct ControlFactors {
+    pub speed: f32,
+    pub jump_height: f32,
+}
 
 fn ui_system(
     mut egui_context: ResMut<EguiContext>,
@@ -29,7 +32,7 @@ fn ui_system(
         &mut TnuaPlatformerConfig,
         &mut TnuaProximitySensor,
         &mut TnuaPlatformerControls,
-        &mut SpeedControl,
+        &mut ControlFactors,
     )>,
 ) {
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
@@ -40,7 +43,7 @@ fn ui_system(
             mut platformer_config,
             mut proximity_sensor,
             mut platformer_controls,
-            mut speed_control,
+            mut control_factors,
         ) in query.iter_mut()
         {
             egui::CollapsingHeader::new(name)
@@ -75,7 +78,12 @@ fn ui_system(
                                     .text("Float At"),
                             );
                             ui.add(
-                                egui::Slider::new(&mut speed_control.0, 0.0..=30.0).text("Speed"),
+                                egui::Slider::new(&mut control_factors.speed, 0.0..=30.0)
+                                    .text("Speed"),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut control_factors.jump_height, 0.0..=10.0)
+                                    .text("Jump Height"),
                             );
                         });
                         plot_source.show(entity, ui);

@@ -3,11 +3,11 @@ mod common;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
-    TnuaMotor, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
+    TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
     TnuaProximitySensor, TnuaRapier3dPlugin,
 };
 
-use self::common::ui::SpeedControl;
+use self::common::ui::ControlFactors;
 use self::common::ui_plotting::PlotSource;
 
 fn main() {
@@ -103,27 +103,33 @@ fn setup_player(
     cmd.insert(LockedAxes::ROTATION_LOCKED); // todo: fix with torque
     cmd.insert(Velocity::default());
     cmd.insert(Collider::capsule_y(0.5, 0.5));
-    cmd.insert(TnuaProximitySensor {
-        cast_origin: Vec3::ZERO,
-        cast_direction: -Vec3::Y,
-        cast_range: 3.0,
-        velocity: Vec3::ZERO,
-        output: None,
+    cmd.insert(TnuaPlatformerBundle {
+        config: TnuaPlatformerConfig {
+            spring_strengh: 100.0,
+            spring_dampening: 10.0,
+            acceleration: 20.0,
+        },
+        controls: TnuaPlatformerControls::new_floating_at(2.0),
+        motor: Default::default(),
+        proximity_sensor: TnuaProximitySensor {
+            cast_origin: Vec3::ZERO,
+            cast_direction: -Vec3::Y,
+            cast_range: 3.0,
+            velocity: Vec3::ZERO,
+            output: None,
+        },
+        state: Default::default(),
     });
-    cmd.insert(TnuaMotor::default());
-    cmd.insert(TnuaPlatformerConfig {
-        spring_strengh: 100.0,
-        spring_dampening: 10.0,
-        acceleration: 20.0,
-    });
-    cmd.insert(TnuaPlatformerControls::new_floating_at(2.0));
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
-    cmd.insert(SpeedControl(10.0));
+    cmd.insert(ControlFactors {
+        speed: 10.0,
+        jump_height: 4.0,
+    });
 }
 
 fn apply_controls(
-    mut query: Query<(&mut TnuaPlatformerControls, &SpeedControl)>,
+    mut query: Query<(&mut TnuaPlatformerControls, &ControlFactors)>,
     keyboard: Res<Input<KeyCode>>,
 ) {
     let mut direction = Vec3::ZERO;
@@ -141,7 +147,10 @@ fn apply_controls(
         direction += Vec3::X;
     }
 
-    for (mut controls, &SpeedControl(speed)) in query.iter_mut() {
+    let jump = keyboard.pressed(KeyCode::Space);
+
+    for (mut controls, &ControlFactors { speed, jump_height }) in query.iter_mut() {
         controls.move_direction = direction * speed;
+        controls.jump = jump.then(|| jump_height);
     }
 }

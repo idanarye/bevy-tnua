@@ -12,6 +12,15 @@ impl Plugin for TnuaPlatformerPlugin {
     }
 }
 
+#[derive(Bundle)]
+pub struct TnuaPlatformerBundle {
+    pub config: TnuaPlatformerConfig,
+    pub controls: TnuaPlatformerControls,
+    pub motor: TnuaMotor,
+    pub proximity_sensor: TnuaProximitySensor,
+    pub state: TnuaPlatformerState,
+}
+
 #[derive(Component)]
 pub struct TnuaPlatformerConfig {
     pub spring_strengh: f32,
@@ -24,6 +33,20 @@ pub struct TnuaPlatformerControls {
     pub up: Vec3,
     pub float_at: f32,
     pub move_direction: Vec3,
+    pub jump: Option<f32>,
+}
+
+#[derive(Component, Default, Debug)]
+pub struct TnuaPlatformerState {
+    jump_state: JumpState,
+}
+
+#[derive(Default, Debug)]
+enum JumpState {
+    #[default]
+    NoJump,
+    JumpingFrom(Vec3),
+    StoppedJumpingAt(Vec3),
 }
 
 impl TnuaPlatformerControls {
@@ -32,6 +55,7 @@ impl TnuaPlatformerControls {
             up: Vec3::Y,
             float_at,
             move_direction: Vec3::ZERO,
+            jump: None,
         }
     }
 }
@@ -39,13 +63,15 @@ impl TnuaPlatformerControls {
 fn platformer_control_system(
     time: Res<Time>,
     mut query: Query<(
+        &GlobalTransform,
         &TnuaPlatformerControls,
         &TnuaPlatformerConfig,
+        &mut TnuaPlatformerState,
         &TnuaProximitySensor,
         &mut TnuaMotor,
     )>,
 ) {
-    for (controls, config, sensor, mut motor) in query.iter_mut() {
+    for (transform, controls, config, mut platformer_state, sensor, mut motor) in query.iter_mut() {
         let effective_velocity;
         if let Some(sensor_output) = &sensor.output {
             let spring_offset = controls.float_at - sensor_output.proximity;
@@ -82,5 +108,35 @@ fn platformer_control_system(
         // TODO: Do I need maximum force capping?
 
         motor.desired_acceleration += capped_acceperation;
+
+        match platformer_state.jump_state {
+            JumpState::NoJump => {
+                if let (Some(_jump_height), Some(sensor_output)) = (controls.jump, &sensor.output) {
+                    let jumping_from = transform.translation()
+                        + sensor.cast_direction * (sensor_output.proximity - controls.float_at);
+                    motor.desired_acceleration += controls.up * 30.0;
+                    platformer_state.jump_state = JumpState::JumpingFrom(jumping_from);
+                }
+            }
+            JumpState::JumpingFrom(_) => {
+                if let Some(_jump_height) = controls.jump {
+                    // TODO: check that we did not exceed the jump height
+                } else {
+                    platformer_state.jump_state =
+                        JumpState::StoppedJumpingAt(transform.translation());
+                }
+            }
+            JumpState::StoppedJumpingAt(_) => {
+                let upward_velocity = effective_velocity.dot(controls.up);
+                let required_downward_boost = upward_velocity + 1.0;
+                if 0.0 < required_downward_boost {
+                    let capped_acceperation =
+                        required_downward_boost.min(time.delta().as_secs_f32() * 100.0);
+                    motor.desired_acceleration -= controls.up * capped_acceperation;
+                } else {
+                    platformer_state.jump_state = JumpState::NoJump;
+                }
+            }
+        }
     }
 }
