@@ -46,6 +46,16 @@ fn setup_camera(mut commands: Commands) {
         transform: Transform::from_xyz(5.0, 5.0, 5.0),
         ..default()
     });
+
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 4000.0,
+            shadows_enabled: true,
+            ..Default::default()
+        },
+        transform: Transform::default().looking_at(-Vec3::Y, Vec3::Z),
+        ..Default::default()
+    });
 }
 
 fn setup_level(
