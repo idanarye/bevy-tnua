@@ -41,8 +41,10 @@ pub struct TnuaPlatformerConfig {
     pub spring_dampening: f32,
     pub acceleration: f32,
     pub jump_impulse: f32,
-    pub end_of_jump_fall_speed: f32,
-    pub end_of_jump_acceleration: f32,
+    pub jump_height_reached_fall_speed: f32,
+    pub jump_height_reached_acceleration: f32,
+    pub jump_shorted_fall_speed: f32,
+    pub jump_shorted_acceleration: f32,
 }
 
 #[derive(Component)]
@@ -137,9 +139,13 @@ fn platformer_control_system(
                     platformer_state.jump_state = JumpState::JumpingFrom(jumping_from);
                 }
             }
-            JumpState::JumpingFrom(_) => {
-                if let Some(_jump_height) = controls.jump {
-                    // TODO: check that we did not exceed the jump height
+            JumpState::JumpingFrom(jumping_from) => {
+                if let Some(jump_height) = controls.jump {
+                    let current_height = (transform.translation() - jumping_from).dot(controls.up);
+                    if jump_height <= current_height {
+                        platformer_state.jump_state =
+                            JumpState::StoppedJumpingAt(jumping_from + jump_height * controls.up);
+                    }
                 } else {
                     platformer_state.jump_state =
                         JumpState::StoppedJumpingAt(transform.translation());
@@ -147,10 +153,21 @@ fn platformer_control_system(
             }
             JumpState::StoppedJumpingAt(_) => {
                 let upward_velocity = effective_velocity.dot(controls.up);
-                let required_downward_boost = upward_velocity + config.end_of_jump_fall_speed;
+                let (fall_speed, acceleration) = if controls.jump.is_some() {
+                    (
+                        config.jump_height_reached_fall_speed,
+                        config.jump_height_reached_acceleration,
+                    )
+                } else {
+                    (
+                        config.jump_shorted_fall_speed,
+                        config.jump_shorted_acceleration,
+                    )
+                };
+                let required_downward_boost = upward_velocity + fall_speed;
                 if 0.0 < required_downward_boost {
-                    let capped_acceperation = required_downward_boost
-                        .min(time.delta().as_secs_f32() * config.end_of_jump_acceleration);
+                    let capped_acceperation =
+                        required_downward_boost.min(time.delta().as_secs_f32() * acceleration);
                     motor.desired_acceleration -= controls.up * capped_acceperation;
                 } else {
                     platformer_state.jump_state = JumpState::NoJump;

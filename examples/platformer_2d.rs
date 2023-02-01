@@ -102,8 +102,10 @@ fn setup_player(mut commands: Commands) {
             spring_dampening: 10.0,
             acceleration: 20.0,
             jump_impulse: 30.0,
-            end_of_jump_fall_speed: 1.0,
-            end_of_jump_acceleration: 100.0,
+            jump_height_reached_fall_speed: -1.0,
+            jump_height_reached_acceleration: 50.0,
+            jump_shorted_fall_speed: 10.0,
+            jump_shorted_acceleration: 70.0,
         },
     ));
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));

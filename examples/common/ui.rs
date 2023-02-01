@@ -82,17 +82,31 @@ fn ui_system(
                             );
                             ui.add(
                                 egui::Slider::new(
-                                    &mut platformer_config.end_of_jump_fall_speed,
-                                    0.0..=10.0,
+                                    &mut platformer_config.jump_height_reached_fall_speed,
+                                    -10.0..=20.0,
                                 )
-                                .text("End of Jump Fall Speed"),
+                                .text("Jump Height Reached Fall Speed"),
                             );
                             ui.add(
                                 egui::Slider::new(
-                                    &mut platformer_config.end_of_jump_acceleration,
+                                    &mut platformer_config.jump_height_reached_acceleration,
                                     0.0..=400.0,
                                 )
-                                .text("End of Jump Acceleration"),
+                                .text("Jump Height Reached Acceleration"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.jump_shorted_fall_speed,
+                                    -10.0..=20.0,
+                                )
+                                .text("Jump Shorted Fall Speed"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.jump_shorted_acceleration,
+                                    0.0..=400.0,
+                                )
+                                .text("Jump Shorted Acceleration"),
                             );
                             ui.add(
                                 egui::Slider::new(&mut control_factors.speed, 0.0..=30.0)
