@@ -109,6 +109,20 @@ fn ui_system(
                                 .text("Jump Shorted Acceleration"),
                             );
                             ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.exponential_jump_stop_until,
+                                    0.0..=10.0,
+                                )
+                                .text("Exponential Jump Stop Until"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.exponential_jump_stop_factor,
+                                    0.0..=1.0,
+                                )
+                                .text("Exponential Jump Stop Factor"),
+                            );
+                            ui.add(
                                 egui::Slider::new(&mut control_factors.speed, 0.0..=60.0)
                                     .text("Speed"),
                             );

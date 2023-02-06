@@ -106,6 +106,8 @@ fn setup_player(mut commands: Commands) {
             jump_height_reached_acceleration: 50.0,
             jump_shorted_fall_speed: 10.0,
             jump_shorted_acceleration: 70.0,
+            exponential_jump_stop_until: 0.0,
+            exponential_jump_stop_factor: 0.9,
         },
     ));
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
