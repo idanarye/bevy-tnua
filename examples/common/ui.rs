@@ -73,7 +73,7 @@ fn ui_system(
                                 .text("Spring Dampening"),
                             );
                             ui.add(
-                                egui::Slider::new(&mut platformer_config.acceleration, 0.0..=80.0)
+                                egui::Slider::new(&mut platformer_config.acceleration, 0.0..=200.0)
                                     .text("Acceleration"),
                             );
                             ui.add(
@@ -109,7 +109,7 @@ fn ui_system(
                                 .text("Jump Shorted Acceleration"),
                             );
                             ui.add(
-                                egui::Slider::new(&mut control_factors.speed, 0.0..=30.0)
+                                egui::Slider::new(&mut control_factors.speed, 0.0..=60.0)
                                     .text("Speed"),
                             );
                             ui.add(

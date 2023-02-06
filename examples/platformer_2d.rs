@@ -100,7 +100,7 @@ fn setup_player(mut commands: Commands) {
             cling_distance: 1.0,
             spring_strengh: 100.0,
             spring_dampening: 10.0,
-            acceleration: 20.0,
+            acceleration: 60.0,
             jump_impulse: 30.0,
             jump_height_reached_fall_speed: -1.0,
             jump_height_reached_acceleration: 50.0,
@@ -111,7 +111,7 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
     cmd.insert(ControlFactors {
-        speed: 10.0,
+        speed: 40.0,
         jump_height: 4.0,
     });
 }
