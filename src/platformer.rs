@@ -43,13 +43,8 @@ pub struct TnuaPlatformerConfig {
     pub spring_strengh: f32,
     pub spring_dampening: f32,
     pub acceleration: f32,
-    pub jump_impulse: f32,
-    pub jump_height_reached_fall_speed: f32,
-    pub jump_height_reached_acceleration: f32,
-    pub jump_shorted_fall_speed: f32,
-    pub jump_shorted_acceleration: f32,
-    pub exponential_jump_stop_until: f32,
-    pub exponential_jump_stop_factor: f32,
+    pub jump_fall_extra_gravity: f32,
+    pub jump_shorten_extra_gravity: f32,
 }
 
 #[derive(Component)]
@@ -68,8 +63,12 @@ pub struct TnuaPlatformerState {
 enum JumpState {
     #[default]
     NoJump,
-    JumpingFrom(Vec3),
-    StoppedJumpingAt(Vec3),
+    StartingJump {
+        upward_velocity_at_float_height: f32,
+    },
+    MaintainingJump,
+    StoppedMaintainingJump,
+    FallSection,
 }
 
 impl Default for TnuaPlatformerControls {
@@ -94,32 +93,20 @@ fn platformer_control_system(
     )>,
     data_synchronized_from_backend: Res<TnuaDataSynchronizedFromBackend>,
 ) {
-    for (transform, controls, config, mut platformer_state, mut sensor, mut motor) in
+    for (_transform, controls, config, mut platformer_state, mut sensor, mut motor) in
         query.iter_mut()
     {
         sensor.cast_range = config.float_height + config.cling_distance;
 
-        let effective_velocity;
-        if let (Some(sensor_output), JumpState::NoJump) =
-            (&sensor.output, &platformer_state.jump_state)
-        {
-            let spring_offset = config.float_height - sensor_output.proximity;
-            let spring_force = spring_offset * config.spring_strengh /* subtract dumpning */;
-
-            let relative_velocity =
-                sensor_output.relative_velocity.dot(sensor.cast_direction) * sensor.cast_direction;
-
-            let dampening_force = relative_velocity * config.spring_dampening;
-            let spring_force = spring_force - dampening_force;
-            motor.desired_acceleration = time.delta().as_secs_f32() * controls.up * spring_force;
-            effective_velocity = sensor_output.relative_velocity;
+        let effective_velocity = if let Some(sensor_output) = &sensor.output {
+            sensor_output.relative_velocity
         } else {
-            motor.desired_acceleration = Vec3::ZERO;
-            effective_velocity = sensor.velocity;
-        }
+            sensor.velocity
+        };
 
-        let velocity_on_plane =
-            effective_velocity - controls.up * controls.up.dot(effective_velocity);
+        let upward_velocity = controls.up.dot(effective_velocity);
+
+        let velocity_on_plane = effective_velocity - controls.up * upward_velocity;
 
         let desired_velocity = controls.move_direction;
         let exact_acceleration = desired_velocity - velocity_on_plane;
@@ -131,83 +118,87 @@ fn platformer_control_system(
 
         let acceleration = direction_change_factor * config.acceleration;
 
-        let capped_acceperation =
+        let walk_acceleration =
             exact_acceleration.clamp_length_max(time.delta().as_secs_f32() * acceleration);
 
         // TODO: Do I need maximum force capping?
 
-        motor.desired_acceleration += capped_acceperation;
+        let upward_impulse = 'upward_impulse: {
+            for _ in 0..4 {
+                match platformer_state.jump_state {
+                    JumpState::NoJump => {
+                        if let Some(sensor_output) = &sensor.output {
+                            if let Some(jump_height) = controls.jump {
+                                let gravity =
+                                    data_synchronized_from_backend.gravity.dot(-controls.up);
+                                let upward_velocity_at_float_height =
+                                    (2.0 * gravity * jump_height).sqrt();
+                                platformer_state.jump_state = JumpState::StartingJump {
+                                    upward_velocity_at_float_height,
+                                };
+                                continue;
+                            } else {
+                                let spring_offset = config.float_height - sensor_output.proximity;
+                                let spring_force: f32 = spring_offset * config.spring_strengh /* subtract dumpning */;
 
-        match platformer_state.jump_state {
-            JumpState::NoJump => {
-                if let (Some(jump_height), Some(sensor_output)) = (controls.jump, &sensor.output) {
-                    let jumping_from = transform.translation()
-                        + sensor.cast_direction * (sensor_output.proximity - config.float_height);
+                                let relative_velocity =
+                                    sensor_output.relative_velocity.dot(sensor.cast_direction);
 
-                    let gravity = data_synchronized_from_backend.gravity.dot(-controls.up);
-
-                    let jump_impulse = (2.0 * gravity * jump_height).sqrt();
-
-                    motor.desired_acceleration += controls.up * jump_impulse;
-                    platformer_state.jump_state = JumpState::JumpingFrom(jumping_from);
+                                let dampening_force = relative_velocity * config.spring_dampening;
+                                let spring_force = spring_force + dampening_force;
+                                break 'upward_impulse time.delta().as_secs_f32() * spring_force;
+                            }
+                        } else {
+                            break 'upward_impulse 0.0;
+                        }
+                    }
+                    JumpState::StartingJump {
+                        upward_velocity_at_float_height,
+                    } => {
+                        if let Some(sensor_output) = &sensor.output {
+                            let relative_velocity =
+                                sensor_output.relative_velocity.dot(sensor.cast_direction);
+                            // TODO: calculate the appropriate speed according to the current hight
+                            // as read by the sensor.
+                            break 'upward_impulse upward_velocity_at_float_height
+                                + relative_velocity;
+                        } else {
+                            platformer_state.jump_state = JumpState::MaintainingJump;
+                            continue;
+                        }
+                    }
+                    JumpState::MaintainingJump => {
+                        if upward_velocity <= 0.0 {
+                            platformer_state.jump_state = JumpState::FallSection;
+                            continue;
+                        } else if controls.jump.is_none() {
+                            platformer_state.jump_state = JumpState::StoppedMaintainingJump;
+                            continue;
+                        }
+                        break 'upward_impulse 0.0;
+                    }
+                    JumpState::StoppedMaintainingJump => {
+                        if upward_velocity <= 0.0 {
+                            platformer_state.jump_state = JumpState::FallSection;
+                            continue;
+                        }
+                        break 'upward_impulse -(time.delta().as_secs_f32()
+                            * config.jump_shorten_extra_gravity);
+                    }
+                    JumpState::FallSection => {
+                        if sensor.output.is_some() {
+                            platformer_state.jump_state = JumpState::NoJump;
+                            continue;
+                        }
+                        break 'upward_impulse -(time.delta().as_secs_f32()
+                            * config.jump_fall_extra_gravity);
+                    }
                 }
             }
-            JumpState::JumpingFrom(jumping_from) => {
-                if let Some(jump_height) = controls.jump {
-                    let current_height = (transform.translation() - jumping_from).dot(controls.up);
-                    if jump_height <= current_height {
-                        platformer_state.jump_state =
-                            JumpState::StoppedJumpingAt(jumping_from + jump_height * controls.up);
-                    }
-                } else {
-                    platformer_state.jump_state =
-                        JumpState::StoppedJumpingAt(transform.translation());
-                }
-            }
-            JumpState::StoppedJumpingAt(_) => {
-                let upward_velocity = effective_velocity.dot(controls.up);
+            error!("Tnua could not decide on jump state");
+            0.0
+        };
 
-                let downward_boost_capped_exponentially = {
-                    let required_exponential_downward_boost =
-                        upward_velocity - config.exponential_jump_stop_until;
-                    if 0.0 < required_exponential_downward_boost {
-                        required_exponential_downward_boost
-                            * (config
-                                .exponential_jump_stop_factor
-                                .powf(0.1 / time.delta().as_secs_f32()))
-                    } else {
-                        0.0
-                    }
-                };
-                let downward_boost_capped_linearly = {
-                    let (fall_speed, acceleration) = if controls.jump.is_some() {
-                        (
-                            config.jump_height_reached_fall_speed,
-                            config.jump_height_reached_acceleration,
-                        )
-                    } else {
-                        (
-                            config.jump_shorted_fall_speed,
-                            config.jump_shorted_acceleration,
-                        )
-                    };
-                    let required_downward_boost = upward_velocity + fall_speed;
-                    if 0.0 < required_downward_boost {
-                        required_downward_boost.min(time.delta().as_secs_f32() * acceleration)
-                    } else {
-                        0.0
-                    }
-                };
-                let downward_boost =
-                    downward_boost_capped_exponentially.max(downward_boost_capped_linearly);
-                if 0.0 < downward_boost {
-                    if false {
-                        motor.desired_acceleration -= controls.up * downward_boost;
-                    }
-                } else {
-                    platformer_state.jump_state = JumpState::NoJump;
-                }
-            }
-        }
+        motor.desired_acceleration = walk_acceleration + controls.up * upward_impulse;
     }
 }

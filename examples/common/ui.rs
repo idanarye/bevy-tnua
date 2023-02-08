@@ -48,6 +48,15 @@ fn ui_system(
                     ui.horizontal(|ui| {
                         ui.vertical(|ui| {
                             ui.add(
+                                egui::Slider::new(&mut control_factors.speed, 0.0..=60.0)
+                                    .text("Speed"),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut control_factors.jump_height, 0.0..=10.0)
+                                    .text("Jump Height"),
+                            );
+                            control_factors.jump_height = control_factors.jump_height.max(0.1);
+                            ui.add(
                                 egui::Slider::new(&mut platformer_config.float_height, 0.0..=10.0)
                                     .text("Float At"),
                             );
@@ -77,58 +86,18 @@ fn ui_system(
                                     .text("Acceleration"),
                             );
                             ui.add(
-                                egui::Slider::new(&mut platformer_config.jump_impulse, 0.0..=40.0)
-                                    .text("Jump Impulse"),
+                                egui::Slider::new(
+                                    &mut platformer_config.jump_fall_extra_gravity,
+                                    0.0..=50.0,
+                                )
+                                .text("Jump Fall Extra Gravity"),
                             );
                             ui.add(
                                 egui::Slider::new(
-                                    &mut platformer_config.jump_height_reached_fall_speed,
-                                    -10.0..=20.0,
+                                    &mut platformer_config.jump_shorten_extra_gravity,
+                                    0.0..=100.0,
                                 )
-                                .text("Jump Height Reached Fall Speed"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.jump_height_reached_acceleration,
-                                    0.0..=400.0,
-                                )
-                                .text("Jump Height Reached Acceleration"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.jump_shorted_fall_speed,
-                                    -10.0..=20.0,
-                                )
-                                .text("Jump Shorted Fall Speed"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.jump_shorted_acceleration,
-                                    0.0..=400.0,
-                                )
-                                .text("Jump Shorted Acceleration"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.exponential_jump_stop_until,
-                                    0.0..=10.0,
-                                )
-                                .text("Exponential Jump Stop Until"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.exponential_jump_stop_factor,
-                                    0.0..=1.0,
-                                )
-                                .text("Exponential Jump Stop Factor"),
-                            );
-                            ui.add(
-                                egui::Slider::new(&mut control_factors.speed, 0.0..=60.0)
-                                    .text("Speed"),
-                            );
-                            ui.add(
-                                egui::Slider::new(&mut control_factors.jump_height, 0.0..=10.0)
-                                    .text("Jump Height"),
+                                .text("Jump Shorten Extra Gravity"),
                             );
                         });
                         plot_source.show(entity, ui);
