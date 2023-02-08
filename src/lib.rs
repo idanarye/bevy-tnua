@@ -10,8 +10,8 @@ pub use backend_rapier2d::*;
 pub use backend_rapier3d::*;
 pub use platformer::*;
 
-mod components;
-pub use components::*;
+mod data_for_backends;
+pub use data_for_backends::*;
 
 use bevy::prelude::*;
 

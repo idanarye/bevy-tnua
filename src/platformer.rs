@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{tnua_system_set_for_computing_logic, TnuaMotor, TnuaProximitySensor};
+use crate::{
+    tnua_system_set_for_computing_logic, TnuaDataSynchronizedFromBackend, TnuaMotor,
+    TnuaProximitySensor,
+};
 
 pub struct TnuaPlatformerPlugin;
 
@@ -89,6 +92,7 @@ fn platformer_control_system(
         &mut TnuaProximitySensor,
         &mut TnuaMotor,
     )>,
+    data_synchronized_from_backend: Res<TnuaDataSynchronizedFromBackend>,
 ) {
     for (transform, controls, config, mut platformer_state, mut sensor, mut motor) in
         query.iter_mut()
@@ -96,7 +100,9 @@ fn platformer_control_system(
         sensor.cast_range = config.float_height + config.cling_distance;
 
         let effective_velocity;
-        if let Some(sensor_output) = &sensor.output {
+        if let (Some(sensor_output), JumpState::NoJump) =
+            (&sensor.output, &platformer_state.jump_state)
+        {
             let spring_offset = config.float_height - sensor_output.proximity;
             let spring_force = spring_offset * config.spring_strengh /* subtract dumpning */;
 
@@ -134,10 +140,15 @@ fn platformer_control_system(
 
         match platformer_state.jump_state {
             JumpState::NoJump => {
-                if let (Some(_jump_height), Some(sensor_output)) = (controls.jump, &sensor.output) {
+                if let (Some(jump_height), Some(sensor_output)) = (controls.jump, &sensor.output) {
                     let jumping_from = transform.translation()
                         + sensor.cast_direction * (sensor_output.proximity - config.float_height);
-                    motor.desired_acceleration += controls.up * config.jump_impulse;
+
+                    let gravity = data_synchronized_from_backend.gravity.dot(-controls.up);
+
+                    let jump_impulse = (2.0 * gravity * jump_height).sqrt();
+
+                    motor.desired_acceleration += controls.up * jump_impulse;
                     platformer_state.jump_state = JumpState::JumpingFrom(jumping_from);
                 }
             }
@@ -190,7 +201,9 @@ fn platformer_control_system(
                 let downward_boost =
                     downward_boost_capped_exponentially.max(downward_boost_capped_linearly);
                 if 0.0 < downward_boost {
-                    motor.desired_acceleration -= controls.up * downward_boost;
+                    if false {
+                        motor.desired_acceleration -= controls.up * downward_boost;
+                    }
                 } else {
                     platformer_state.jump_state = JumpState::NoJump;
                 }

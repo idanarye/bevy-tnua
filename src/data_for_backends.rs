@@ -1,5 +1,18 @@
 use bevy::prelude::*;
 
+#[derive(Resource)]
+pub struct TnuaDataSynchronizedFromBackend {
+    pub gravity: Vec3,
+}
+
+impl Default for TnuaDataSynchronizedFromBackend {
+    fn default() -> Self {
+        Self {
+            gravity: -9.8 * Vec3::Y,
+        }
+    }
+}
+
 #[derive(Component, Debug)]
 pub struct TnuaProximitySensor {
     pub cast_origin: Vec3,

@@ -2,19 +2,30 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    tnua_system_set_for_applying_motors, tnua_system_set_for_reading_sensor, TnuaMotor,
-    TnuaProximitySensor, TnuaProximitySensorOutput,
+    tnua_system_set_for_applying_motors, tnua_system_set_for_reading_sensor,
+    TnuaDataSynchronizedFromBackend, TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput,
 };
 
 pub struct TnuaRapier2dPlugin;
 
 impl Plugin for TnuaRapier2dPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(TnuaDataSynchronizedFromBackend::default());
+        app.add_system(synchronize_data_from_backend);
         app.add_system_set(
             tnua_system_set_for_reading_sensor().with_system(update_proximity_sensors_system),
         );
         app.add_system_set(tnua_system_set_for_applying_motors().with_system(apply_motors_system));
     }
+}
+
+fn synchronize_data_from_backend(
+    backend_data: Res<RapierConfiguration>,
+    mut data_synchronized_from_backend: ResMut<TnuaDataSynchronizedFromBackend>,
+) {
+    *data_synchronized_from_backend = TnuaDataSynchronizedFromBackend {
+        gravity: backend_data.gravity.extend(0.0),
+    };
 }
 
 fn update_proximity_sensors_system(
