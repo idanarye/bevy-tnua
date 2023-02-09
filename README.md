@@ -17,6 +17,13 @@
 |------|-------------|
 | 0.8  |             |
 
+## Reference Material
+
+The following were used for coding the math and physics of Tnua:
+
+* "Floating capsule" and running mechanics: https://youtu.be/qdskE8PJy6Q
+* Jumping mechanics:https://youtu.be/hG9SzQxaCm8
+
 ## License
 
 Licensed under either of
