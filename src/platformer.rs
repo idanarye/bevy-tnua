@@ -64,7 +64,12 @@ enum JumpState {
     #[default]
     NoJump,
     StartingJump {
-        upward_velocity_at_float_height: f32,
+        /// The potential energy at the top of the jump, when:
+        /// * The potential energy at the bottom of the jump is defined as 0
+        /// * The mass is 1
+        /// Calculating the desired velocity based on energy is easier than using the ballistic
+        /// formulas.
+        desired_energy: f32,
     },
     MaintainingJump,
     StoppedMaintainingJump,
@@ -131,10 +136,10 @@ fn platformer_control_system(
                             if let Some(jump_height) = controls.jump {
                                 let gravity =
                                     data_synchronized_from_backend.gravity.dot(-controls.up);
-                                let upward_velocity_at_float_height =
-                                    (2.0 * gravity * jump_height).sqrt();
+                                //let upward_velocity_at_float_height =
+                                //(2.0 * gravity * jump_height).sqrt();
                                 platformer_state.jump_state = JumpState::StartingJump {
-                                    upward_velocity_at_float_height,
+                                    desired_energy: gravity * jump_height,
                                 };
                                 continue;
                             } else {
@@ -152,16 +157,16 @@ fn platformer_control_system(
                             break 'upward_impulse 0.0;
                         }
                     }
-                    JumpState::StartingJump {
-                        upward_velocity_at_float_height,
-                    } => {
+                    JumpState::StartingJump { desired_energy } => {
                         if let Some(sensor_output) = &sensor.output {
                             let relative_velocity =
-                                sensor_output.relative_velocity.dot(sensor.cast_direction);
-                            // TODO: calculate the appropriate speed according to the current hight
-                            // as read by the sensor.
-                            break 'upward_impulse upward_velocity_at_float_height
-                                + relative_velocity;
+                                -sensor_output.relative_velocity.dot(sensor.cast_direction);
+                            let extra_height = sensor_output.proximity - config.float_height;
+                            let gravity = data_synchronized_from_backend.gravity.dot(-controls.up);
+                            let energy_from_extra_height = extra_height * gravity;
+                            let desired_kinetic_energy = desired_energy - energy_from_extra_height;
+                            let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
+                            break 'upward_impulse desired_upward_velocity - relative_velocity;
                         } else {
                             platformer_state.jump_state = JumpState::MaintainingJump;
                             continue;
