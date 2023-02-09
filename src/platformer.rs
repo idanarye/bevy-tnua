@@ -38,12 +38,43 @@ impl TnuaPlatformerBundle {
 
 #[derive(Component)]
 pub struct TnuaPlatformerConfig {
+    /// The height at which the character will float above ground at rest.
+    ///
+    /// Note that this is the height of the character's center of mass - not the distance from its
+    /// collision mesh.
     pub float_height: f32,
+
+    /// Extra distance above the `float_height` where the spring is still in effect.
+    ///
+    /// When the character is at at most this distance above the `float_height`, the spring force
+    /// will kick in and move it to the float height - even if that means pushing it down. If the
+    /// character is above that distance above the `float_height`, Tnua will consider it to be in
+    /// the air.
     pub cling_distance: f32,
+
+    /// The force that pushes the character to the float height.
+    ///
+    /// The actual force applied is in direct linear relationship to the displacement from the
+    /// `float_height`.
     pub spring_strengh: f32,
+
+    /// A force that slows down the characters vertical spring motion.
+    ///
+    /// The actual dampening is in direct linear relationship to the vertical velocity it tries to
+    /// dampen.
     pub spring_dampening: f32,
+
+    /// The acceleration for horizontal movement.
+    ///
+    /// Note that this is the acceleration for starting the horizontal motion and for reaching the
+    /// top speed. When braking or changing direction the acceleration is greater, up to 2 times
+    /// `acceleration` when doing a 180 turn.
     pub acceleration: f32,
+
+    /// Extra gravity for falling down after reaching the top of the jump.
     pub jump_fall_extra_gravity: f32,
+
+    /// Extra gravity for shortening a jump when the player releases the jump button.
     pub jump_shorten_extra_gravity: f32,
 }
 
@@ -144,7 +175,7 @@ fn platformer_control_system(
                                 continue;
                             } else {
                                 let spring_offset = config.float_height - sensor_output.proximity;
-                                let spring_force: f32 = spring_offset * config.spring_strengh /* subtract dumpning */;
+                                let spring_force: f32 = spring_offset * config.spring_strengh;
 
                                 let relative_velocity =
                                     sensor_output.relative_velocity.dot(sensor.cast_direction);
