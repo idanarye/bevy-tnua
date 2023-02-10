@@ -19,6 +19,9 @@ impl Plugin for TnuaRapier2dPlugin {
     }
 }
 
+#[derive(Component)]
+pub struct TnuaRapier2dSensorShape(pub Collider);
+
 fn synchronize_data_from_backend(
     backend_data: Res<RapierConfiguration>,
     mut data_synchronized_from_backend: ResMut<TnuaDataSynchronizedFromBackend>,
@@ -35,23 +38,62 @@ fn update_proximity_sensors_system(
         &GlobalTransform,
         &Velocity,
         &mut TnuaProximitySensor,
+        Option<&TnuaRapier2dSensorShape>,
     )>,
 ) {
-    for (owner_entity, transform, velocity, mut sensor) in query.iter_mut() {
+    for (owner_entity, transform, velocity, mut sensor, shape) in query.iter_mut() {
         let cast_origin = transform.transform_point(sensor.cast_origin);
-        let cast_direction = transform.to_scale_rotation_translation().1 * sensor.cast_direction;
+        let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
+        let cast_direction = owner_rotation * sensor.cast_direction;
         sensor.velocity = velocity.linvel.extend(0.0);
-        if let Some((entity, toi)) = rapier_context.cast_ray_and_get_normal(
-            cast_origin.truncate(),
-            cast_direction.truncate(),
-            sensor.cast_range,
-            false,
-            QueryFilter::new().exclude_rigid_body(owner_entity),
-        ) {
+
+        struct CastResult {
+            entity: Entity,
+            proximity: f32,
+            normal: Vec2,
+        }
+
+        let cast_result = if let Some(TnuaRapier2dSensorShape(shape)) = shape {
+            let (_, _, rotation_z) = owner_rotation.to_euler(EulerRot::XYZ);
+            rapier_context
+                .cast_shape(
+                    cast_origin.truncate(),
+                    rotation_z,
+                    cast_direction.truncate(),
+                    shape,
+                    sensor.cast_range,
+                    QueryFilter::new().exclude_rigid_body(owner_entity),
+                )
+                .map(|(entity, toi)| CastResult {
+                    entity,
+                    proximity: toi.toi,
+                    normal: toi.normal1,
+                })
+        } else {
+            rapier_context
+                .cast_ray_and_get_normal(
+                    cast_origin.truncate(),
+                    cast_direction.truncate(),
+                    sensor.cast_range,
+                    false,
+                    QueryFilter::new().exclude_rigid_body(owner_entity),
+                )
+                .map(|(entity, toi)| CastResult {
+                    entity,
+                    proximity: toi.toi,
+                    normal: toi.normal,
+                })
+        };
+        if let Some(CastResult {
+            entity,
+            proximity,
+            normal,
+        }) = cast_result
+        {
             sensor.output = Some(TnuaProximitySensorOutput {
                 entity,
-                proximity: toi.toi,
-                normal: toi.normal.extend(0.0),
+                proximity,
+                normal: normal.extend(0.0),
                 // TODO: make it relative to the entity's velocity
                 relative_velocity: velocity.linvel.extend(0.0),
             });

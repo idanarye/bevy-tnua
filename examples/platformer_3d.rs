@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
     TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
-    TnuaRapier3dPlugin,
+    TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
 };
 
 use self::common::ui::ControlFactors;
@@ -124,6 +124,7 @@ fn setup_player(
             jump_shorten_extra_gravity: 40.0,
         },
     ));
+    cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.49)));
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
     cmd.insert(ControlFactors {

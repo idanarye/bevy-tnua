@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
     TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
-    TnuaRapier2dPlugin,
+    TnuaRapier2dPlugin, TnuaRapier2dSensorShape,
 };
 
 use self::common::ui::ControlFactors;
@@ -105,6 +105,7 @@ fn setup_player(mut commands: Commands) {
             jump_shorten_extra_gravity: 40.0,
         },
     ));
+    cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.49, 0.0)));
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
     cmd.insert(ControlFactors {
