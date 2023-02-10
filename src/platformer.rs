@@ -182,7 +182,11 @@ fn platformer_control_system(
 
                                 let dampening_force = relative_velocity * config.spring_dampening;
                                 let spring_force = spring_force + dampening_force;
-                                break 'upward_impulse time.delta().as_secs_f32() * spring_force;
+
+                                let gravity_compensation =
+                                    -data_synchronized_from_backend.gravity.dot(controls.up);
+                                break 'upward_impulse time.delta().as_secs_f32()
+                                    * (spring_force + gravity_compensation);
                             }
                         } else {
                             break 'upward_impulse 0.0;
