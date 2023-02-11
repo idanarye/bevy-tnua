@@ -60,6 +60,7 @@ fn ui_system(
     mut commands: Commands,
 ) {
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
+        ui.label("Controls: Move with the arrow keys. Jump with Spacebar.");
         for (
             entity,
             TrackedEntity(name),
