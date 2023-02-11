@@ -72,10 +72,20 @@ pub struct TnuaPlatformerConfig {
     pub acceleration: f32,
 
     /// Extra gravity for falling down after reaching the top of the jump.
+    ///
+    /// NOTE: This force will be added to the normal gravity.
     pub jump_fall_extra_gravity: f32,
 
     /// Extra gravity for shortening a jump when the player releases the jump button.
+    ///
+    /// NOTE: This force will be added to the normal gravity.
     pub jump_shorten_extra_gravity: f32,
+
+    /// Apply increased gravity when character walks over edeges.
+    ///
+    /// NOTE: When this is `false` the character can run up a slope and "jump" potentially even
+    /// higher than a regular jump, even without pressing the jump button.
+    pub treat_free_fall_as_jump_stop: bool,
 }
 
 #[derive(Component)]
@@ -189,7 +199,13 @@ fn platformer_control_system(
                                     * (spring_force + gravity_compensation);
                             }
                         } else {
-                            break 'upward_impulse 0.0;
+                            #[allow(clippy::collapsible_else_if)]
+                            if config.treat_free_fall_as_jump_stop {
+                                platformer_state.jump_state = JumpState::StoppedMaintainingJump;
+                                continue;
+                            } else {
+                                break 'upward_impulse 0.0;
+                            }
                         }
                     }
                     JumpState::StartingJump { desired_energy } => {

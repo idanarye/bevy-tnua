@@ -103,6 +103,7 @@ fn setup_player(mut commands: Commands) {
             acceleration: 60.0,
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
+            treat_free_fall_as_jump_stop: true,
         },
     ));
     cmd.insert({

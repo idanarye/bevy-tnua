@@ -147,6 +147,10 @@ fn ui_system(
                                 )
                                 .text("Jump Shorten Extra Gravity"),
                             );
+                            ui.checkbox(
+                                &mut platformer_config.treat_free_fall_as_jump_stop,
+                                "Treat Free Fall As Jump Stop",
+                            );
                         });
                         plot_source.show(entity, ui);
                     });
