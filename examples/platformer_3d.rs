@@ -7,7 +7,7 @@ use bevy_tnua::{
     TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
 };
 
-use self::common::ui::ControlFactors;
+use self::common::ui::{CommandAlteringSelectors, ControlFactors};
 use self::common::ui_plotting::PlotSource;
 
 fn main() {
@@ -124,7 +124,28 @@ fn setup_player(
             jump_shorten_extra_gravity: 40.0,
         },
     ));
-    cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.49)));
+    cmd.insert({
+        CommandAlteringSelectors::default().with(
+            "Sensor Shape",
+            &[
+                ("no", |mut cmd| {
+                    cmd.remove::<TnuaRapier3dSensorShape>();
+                }),
+                ("flat (underfit)", |mut cmd| {
+                    cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.49)));
+                }),
+                ("flat (exact)", |mut cmd| {
+                    cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
+                }),
+                ("ball (underfit)", |mut cmd| {
+                    cmd.insert(TnuaRapier3dSensorShape(Collider::ball(0.49)));
+                }),
+                ("ball (exact)", |mut cmd| {
+                    cmd.insert(TnuaRapier3dSensorShape(Collider::ball(0.5)));
+                }),
+            ],
+        )
+    });
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
     cmd.insert(ControlFactors {

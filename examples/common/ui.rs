@@ -1,3 +1,4 @@
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_tnua::TnuaPlatformerConfig;
@@ -23,6 +24,29 @@ pub struct ControlFactors {
     pub jump_height: f32,
 }
 
+#[derive(Component)]
+pub struct CommandAlteringSelectors(Vec<(usize, String, Vec<(String, fn(EntityCommands))>)>);
+
+impl Default for CommandAlteringSelectors {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+impl CommandAlteringSelectors {
+    pub fn with(mut self, caption: &str, options: &[(&str, fn(EntityCommands))]) -> Self {
+        self.0.push((
+            0,
+            caption.to_owned(),
+            options
+                .into_iter()
+                .map(|(name, applier)| (name.to_string(), *applier))
+                .collect(),
+        ));
+        self
+    }
+}
+
 fn ui_system(
     mut egui_context: ResMut<EguiContext>,
     mut query: Query<(
@@ -31,7 +55,9 @@ fn ui_system(
         &PlotSource,
         &mut TnuaPlatformerConfig,
         &mut ControlFactors,
+        Option<&mut CommandAlteringSelectors>,
     )>,
+    mut commands: Commands,
 ) {
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
         for (
@@ -40,6 +66,7 @@ fn ui_system(
             plot_source,
             mut platformer_config,
             mut control_factors,
+            command_altering_selectors,
         ) in query.iter_mut()
         {
             egui::CollapsingHeader::new(name)
@@ -56,6 +83,27 @@ fn ui_system(
                                     .text("Jump Height"),
                             );
                             control_factors.jump_height = control_factors.jump_height.max(0.1);
+
+                            if let Some(mut command_altering_selectors) = command_altering_selectors
+                            {
+                                for (chosen, caption, options) in
+                                    command_altering_selectors.0.iter_mut()
+                                {
+                                    let mut selected_idx: usize = *chosen;
+                                    egui::ComboBox::from_label(caption.as_str())
+                                        .selected_text(&options[*chosen].0)
+                                        .show_ui(ui, |ui| {
+                                            for (idx, (name, _)) in options.iter().enumerate() {
+                                                ui.selectable_value(&mut selected_idx, idx, name);
+                                            }
+                                        });
+                                    if selected_idx != *chosen {
+                                        options[selected_idx].1(commands.entity(entity));
+                                        *chosen = selected_idx;
+                                    }
+                                }
+                            }
+
                             ui.add(
                                 egui::Slider::new(&mut platformer_config.float_height, 0.0..=10.0)
                                     .text("Float At"),
