@@ -73,19 +73,58 @@ pub struct TnuaPlatformerConfig {
 
     /// Extra gravity for falling down after reaching the top of the jump.
     ///
-    /// NOTE: This force will be added to the normal gravity.
+    /// **NOTE**: This force will be added to the normal gravity.
     pub jump_fall_extra_gravity: f32,
 
     /// Extra gravity for shortening a jump when the player releases the jump button.
     ///
-    /// NOTE: This force will be added to the normal gravity.
+    /// **NOTE**: This force will be added to the normal gravity.
     pub jump_shorten_extra_gravity: f32,
 
-    /// Apply increased gravity when character walks over edeges.
+    /// What to do when the character is in the air without jumping (e.g. when stepping off a
+    /// ledge)
     ///
-    /// NOTE: When this is `false` the character can run up a slope and "jump" potentially even
-    /// higher than a regular jump, even without pressing the jump button.
-    pub treat_free_fall_as_jump_stop: bool,
+    /// **NOTE**: Depending on this setting, the character may be able to run up a slope and "jump"
+    /// potentially even higher than a regular jump, even without pressing the jump button. See the
+    /// documentation for the individual enum variants for information regarding how to prevent
+    /// this.
+    pub free_fall_behavior: TnuaFreeFallBehavior,
+}
+
+#[derive(Debug)]
+pub enum TnuaFreeFallBehavior {
+    /// Apply extra gravitiy during free fall.
+    ///
+    /// **NOTE**: This force will be added to the normal gravity.
+    ///
+    /// **NOTE**: If the parameter set to this option is too low, the character may be able to run
+    /// up a slope and "jump" potentially even higher than a regular jump, even without pressing
+    /// the jump button.
+    ExtraGravity(f32),
+
+    /// Treat free fall like jump shortening.
+    ///
+    /// This means that as long as the character has an upward velocity
+    /// [`jump_shorten_extra_gravity`](TnuaPlatformerConfig::jump_shorten_extra_gravity) will be in
+    /// effect, and after the character's vertical velocity turns downward
+    /// [`jump_fall_extra_gravity`](TnuaPlatformerConfig::jump_fall_extra_gravity) will take over.
+    ///
+    /// **NOTE**: If
+    /// [`jump_shorten_extra_gravity`](TnuaPlatformerConfig::jump_shorten_extra_gravity) is too
+    /// low, the character may be able to run up a slope and "jump" potentially even higher than a
+    /// regular jump, even without pressing the jump button.
+    LikeJumpShorten,
+
+    /// Treat free fall like falling after a jump.
+    ///
+    /// This means that ['jump_fall_extra_gravity'](TnuaPlatformerConfig::jump_fall_extra_gravity)
+    /// will take effect immediately when the character starts a free fall, even if they have
+    /// upward velocity.
+    ///
+    /// **NOTE**: If [`jump_fall_extra_gravity`](TnuaPlatformerConfig::jump_fall_extra_gravity) is
+    /// too low, the character may be able to run up a slope and "jump" potentially even higher
+    /// than a regular jump, even without pressing the jump button.
+    LikeJumpFall,
 }
 
 #[derive(Component)]
@@ -104,6 +143,7 @@ pub struct TnuaPlatformerState {
 enum JumpState {
     #[default]
     NoJump,
+    FreeFall,
     StartingJump {
         /// The potential energy at the top of the jump, when:
         /// * The potential energy at the bottom of the jump is defined as 0
@@ -170,7 +210,9 @@ fn platformer_control_system(
         // TODO: Do I need maximum force capping?
 
         let upward_impulse = 'upward_impulse: {
-            for _ in 0..4 {
+            // TODO: Once `std::mem::variant_count` gets stabilized, use that instead. The idea is
+            // to allow jumping through multiple states but failing if we get into loop.
+            for _ in 0..6 {
                 match platformer_state.jump_state {
                     JumpState::NoJump => {
                         if let Some(sensor_output) = &sensor.output {
@@ -199,15 +241,27 @@ fn platformer_control_system(
                                     * (spring_force + gravity_compensation);
                             }
                         } else {
-                            #[allow(clippy::collapsible_else_if)]
-                            if config.treat_free_fall_as_jump_stop {
-                                platformer_state.jump_state = JumpState::StoppedMaintainingJump;
-                                continue;
-                            } else {
-                                break 'upward_impulse 0.0;
-                            }
+                            platformer_state.jump_state = JumpState::FreeFall;
+                            continue;
                         }
                     }
+                    JumpState::FreeFall => match config.free_fall_behavior {
+                        TnuaFreeFallBehavior::ExtraGravity(extra_gravity) => {
+                            if sensor.output.is_some() {
+                                platformer_state.jump_state = JumpState::NoJump;
+                                continue;
+                            }
+                            break 'upward_impulse -(time.delta().as_secs_f32() * extra_gravity);
+                        }
+                        TnuaFreeFallBehavior::LikeJumpShorten => {
+                            platformer_state.jump_state = JumpState::StoppedMaintainingJump;
+                            continue;
+                        }
+                        TnuaFreeFallBehavior::LikeJumpFall => {
+                            platformer_state.jump_state = JumpState::FallSection;
+                            continue;
+                        }
+                    },
                     JumpState::StartingJump { desired_energy } => {
                         if let Some(sensor_output) = &sensor.output {
                             let relative_velocity =

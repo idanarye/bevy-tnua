@@ -3,8 +3,8 @@ mod common;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
-    TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
-    TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
+    TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
+    TnuaPlatformerPlugin, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ControlFactors};
@@ -122,7 +122,7 @@ fn setup_player(
             acceleration: 70.0,
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
-            treat_free_fall_as_jump_stop: true,
+            free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
         },
     ));
     cmd.insert({

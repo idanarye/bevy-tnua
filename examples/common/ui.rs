@@ -1,7 +1,7 @@
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext, EguiPlugin};
-use bevy_tnua::TnuaPlatformerConfig;
+use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerConfig};
 
 use super::ui_plotting::PlotSource;
 
@@ -148,10 +148,38 @@ fn ui_system(
                                 )
                                 .text("Jump Shorten Extra Gravity"),
                             );
-                            ui.checkbox(
-                                &mut platformer_config.treat_free_fall_as_jump_stop,
-                                "Treat Free Fall As Jump Stop",
-                            );
+
+                            let free_fall_options: [(bool, &str, fn() -> TnuaFreeFallBehavior); 3] = [
+                                (
+                                    matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::ExtraGravity(_)),
+                                    "Extra Gravity",
+                                    || TnuaFreeFallBehavior::ExtraGravity(0.0),
+                                ),
+                                (
+                                    matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::LikeJumpShorten),
+                                    "Like Jump Shorten",
+                                    || TnuaFreeFallBehavior::LikeJumpShorten,
+                                ),
+                                (
+                                    matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::LikeJumpFall),
+                                    "Like Jump Fall",
+                                    || TnuaFreeFallBehavior::LikeJumpFall,
+                                ),
+                            ];
+                            egui::ComboBox::from_label("Free Fall Behavior")
+                                .selected_text(free_fall_options.iter().find_map(|(chosen, name, _)| chosen.then_some(*name)).unwrap_or("???"))
+                                .show_ui(ui, |ui| {
+                                    for (chosen, name, make_variant) in free_fall_options {
+                                        if ui.selectable_label(chosen, name).clicked() {
+                                             platformer_config.free_fall_behavior = make_variant();
+                                        }
+                                    }
+                                });
+                            if let TnuaFreeFallBehavior::ExtraGravity(extra_gravity) = &mut platformer_config.free_fall_behavior {
+                                ui.add(
+                                    egui::Slider::new(extra_gravity, 0.0..=100.0).text("Extra Gravity"),
+                                );
+                            }
                         });
                         plot_source.show(entity, ui);
                     });

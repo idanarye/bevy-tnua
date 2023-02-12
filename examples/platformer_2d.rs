@@ -3,8 +3,8 @@ mod common;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
-    TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
-    TnuaRapier2dPlugin, TnuaRapier2dSensorShape,
+    TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
+    TnuaPlatformerPlugin, TnuaRapier2dPlugin, TnuaRapier2dSensorShape,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ControlFactors};
@@ -103,26 +103,26 @@ fn setup_player(mut commands: Commands) {
             acceleration: 60.0,
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
-            treat_free_fall_as_jump_stop: true,
+            free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
         },
     ));
     cmd.insert({
         CommandAlteringSelectors::default().with(
             "Sensor Shape",
             &[
-                ("no", |mut cmd| {
+                ("Point", |mut cmd| {
                     cmd.remove::<TnuaRapier2dSensorShape>();
                 }),
-                ("flat (underfit)", |mut cmd| {
+                ("Flat (underfit)", |mut cmd| {
                     cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.49, 0.0)));
                 }),
-                ("flat (exact)", |mut cmd| {
+                ("Flat (exact)", |mut cmd| {
                     cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
                 }),
-                ("ball (underfit)", |mut cmd| {
+                ("Ball (underfit)", |mut cmd| {
                     cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.49)));
                 }),
-                ("ball (exact)", |mut cmd| {
+                ("Ball (exact)", |mut cmd| {
                     cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.5)));
                 }),
             ],
