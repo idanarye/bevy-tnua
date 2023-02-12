@@ -65,11 +65,12 @@ fn setup_level(mut commands: Commands) {
     cmd.insert(Collider::halfspace(Vec2::Y).unwrap());
 
     for ([width, height], transform) in [
-        ([4.0, 1.0], Transform::from_xyz(3.0, 1.0, 0.0)),
         (
-            [6.0, 0.1],
-            Transform::from_xyz(-3.0, 1.0, 0.0).with_rotation(Quat::from_rotation_z(-0.6)),
+            [20.0, 0.1],
+            Transform::from_xyz(10.0, 10.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
         ),
+        ([4.0, 2.0], Transform::from_xyz(-4.0, 1.0, 0.0)),
+        ([6.0, 1.0], Transform::from_xyz(-10.0, 4.0, 0.0)),
     ] {
         let mut cmd = commands.spawn_empty();
         cmd.insert(SpriteBundle {
@@ -88,7 +89,7 @@ fn setup_level(mut commands: Commands) {
 fn setup_player(mut commands: Commands) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(TransformBundle::from_transform(Transform::from_xyz(
-        0.0, 10.0, 0.0,
+        0.0, 2.0, 0.0,
     )));
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(LockedAxes::ROTATION_LOCKED); // todo: fix with torque

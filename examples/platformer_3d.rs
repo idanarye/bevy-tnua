@@ -37,7 +37,7 @@ fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) 
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 14.0, 30.0)
+        transform: Transform::from_xyz(0.0, 16.0, 40.0)
             .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
         ..Default::default()
     });
@@ -73,11 +73,12 @@ fn setup_level(
 
     let obstacles_material = materials.add(Color::GRAY.into());
     for ([width, height, depth], transform) in [
-        ([4.0, 1.0, 2.0], Transform::from_xyz(3.0, 1.0, 0.0)),
         (
-            [6.0, 0.1, 2.0],
-            Transform::from_xyz(-3.0, 1.0, 0.0).with_rotation(Quat::from_rotation_z(-0.6)),
+            [20.0, 0.1, 2.0],
+            Transform::from_xyz(10.0, 10.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
         ),
+        ([4.0, 2.0, 2.0], Transform::from_xyz(-4.0, 1.0, 0.0)),
+        ([6.0, 1.0, 2.0], Transform::from_xyz(-10.0, 4.0, 0.0)),
     ] {
         let mut cmd = commands.spawn_empty();
         cmd.insert(PbrBundle {
