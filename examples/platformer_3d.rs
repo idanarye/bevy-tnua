@@ -110,6 +110,22 @@ fn setup_player(
         transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..Default::default()
     });
+    cmd.with_children(|commands| {
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Capsule {
+                radius: 0.3,
+                rings: 10,
+                depth: 0.4,
+                latitudes: 10,
+                longitudes: 10,
+                uv_profile: shape::CapsuleUvProfile::Aspect,
+            })),
+            material: materials.add(Color::YELLOW_GREEN.into()),
+            transform: Transform::from_xyz(0.0, 0.4, 0.3)
+                .with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)),
+            ..Default::default()
+        });
+    });
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(LockedAxes::ROTATION_LOCKED); // todo: fix with torque
     cmd.insert(Velocity::default());

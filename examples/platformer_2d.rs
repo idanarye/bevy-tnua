@@ -91,6 +91,18 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(TransformBundle::from_transform(Transform::from_xyz(
         0.0, 2.0, 0.0,
     )));
+    cmd.with_children(|commands| {
+        commands.spawn(SpriteBundle {
+            sprite: Sprite {
+                color: Color::YELLOW,
+                custom_size: Some(Vec2::new(0.4, 0.3)),
+                ..Default::default()
+            },
+            transform: Transform::from_xyz(0.4, 0.6, 1.0),
+            ..Default::default()
+        });
+    });
+    cmd.insert(VisibilityBundle::default());
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(LockedAxes::ROTATION_LOCKED); // todo: fix with torque
     cmd.insert(Velocity::default());
