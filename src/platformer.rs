@@ -38,6 +38,17 @@ impl TnuaPlatformerBundle {
 
 #[derive(Component)]
 pub struct TnuaPlatformerConfig {
+    /// The direction considered as upward.
+    ///
+    /// Typically `Vec3::Y`.
+    pub up: Vec3,
+
+    /// The direction considered as forward.
+    ///
+    /// This is the direcetion the character is facing when no rotation is applied. Typically
+    /// `Vec3::X` for 2D and `Vec3::Z` for 3D.
+    pub forward: Vec3,
+
     /// The height at which the character will float above ground at rest.
     ///
     /// Note that this is the height of the character's center of mass - not the distance from its
@@ -129,7 +140,6 @@ pub enum TnuaFreeFallBehavior {
 
 #[derive(Component)]
 pub struct TnuaPlatformerControls {
-    pub up: Vec3,
     pub move_direction: Vec3,
     pub jump: Option<f32>,
 }
@@ -160,7 +170,6 @@ enum JumpState {
 impl Default for TnuaPlatformerControls {
     fn default() -> Self {
         Self {
-            up: Vec3::Y,
             move_direction: Vec3::ZERO,
             jump: None,
         }
@@ -190,9 +199,9 @@ fn platformer_control_system(
             sensor.velocity
         };
 
-        let upward_velocity = controls.up.dot(effective_velocity);
+        let upward_velocity = config.up.dot(effective_velocity);
 
-        let velocity_on_plane = effective_velocity - controls.up * upward_velocity;
+        let velocity_on_plane = effective_velocity - config.up * upward_velocity;
 
         let desired_velocity = controls.move_direction;
         let exact_acceleration = desired_velocity - velocity_on_plane;
@@ -218,7 +227,7 @@ fn platformer_control_system(
                         if let Some(sensor_output) = &sensor.output {
                             if let Some(jump_height) = controls.jump {
                                 let gravity =
-                                    data_synchronized_from_backend.gravity.dot(-controls.up);
+                                    data_synchronized_from_backend.gravity.dot(-config.up);
                                 //let upward_velocity_at_float_height =
                                 //(2.0 * gravity * jump_height).sqrt();
                                 platformer_state.jump_state = JumpState::StartingJump {
@@ -236,7 +245,7 @@ fn platformer_control_system(
                                 let spring_force = spring_force + dampening_force;
 
                                 let gravity_compensation =
-                                    -data_synchronized_from_backend.gravity.dot(controls.up);
+                                    -data_synchronized_from_backend.gravity.dot(config.up);
                                 break 'upward_impulse time.delta().as_secs_f32()
                                     * (spring_force + gravity_compensation);
                             }
@@ -267,7 +276,7 @@ fn platformer_control_system(
                             let relative_velocity =
                                 -sensor_output.relative_velocity.dot(sensor.cast_direction);
                             let extra_height = sensor_output.proximity - config.float_height;
-                            let gravity = data_synchronized_from_backend.gravity.dot(-controls.up);
+                            let gravity = data_synchronized_from_backend.gravity.dot(-config.up);
                             let energy_from_extra_height = extra_height * gravity;
                             let desired_kinetic_energy = desired_energy - energy_from_extra_height;
                             let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
@@ -309,6 +318,6 @@ fn platformer_control_system(
             0.0
         };
 
-        motor.desired_acceleration = walk_acceleration + controls.up * upward_impulse;
+        motor.desired_acceleration = walk_acceleration + config.up * upward_impulse;
     }
 }

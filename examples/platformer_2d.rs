@@ -109,6 +109,8 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaPlatformerBundle::new_with_config(
         TnuaPlatformerConfig {
+            up: Vec3::Y,
+            forward: Vec3::X,
             float_height: 2.0,
             cling_distance: 1.0,
             spring_strengh: 100.0,
