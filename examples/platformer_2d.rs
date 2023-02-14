@@ -178,7 +178,8 @@ fn apply_controls(
         .any(|key_code| keyboard.pressed(key_code));
 
     for (mut controls, &ControlFactors { speed, jump_height }) in query.iter_mut() {
-        controls.move_direction = direction * speed;
+        controls.desired_velocity = direction * speed;
+        controls.desired_forward = direction.normalize();
         controls.jump = jump.then(|| jump_height);
     }
 }

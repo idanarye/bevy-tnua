@@ -152,7 +152,8 @@ pub enum TnuaFreeFallBehavior {
 
 #[derive(Component)]
 pub struct TnuaPlatformerControls {
-    pub move_direction: Vec3,
+    pub desired_velocity: Vec3,
+    pub desired_forward: Vec3,
     pub jump: Option<f32>,
 }
 
@@ -182,7 +183,8 @@ enum JumpState {
 impl Default for TnuaPlatformerControls {
     fn default() -> Self {
         Self {
-            move_direction: Vec3::ZERO,
+            desired_velocity: Vec3::ZERO,
+            desired_forward: Vec3::ZERO,
             jump: None,
         }
     }
@@ -219,7 +221,7 @@ fn platformer_control_system(
 
         let velocity_on_plane = effective_velocity - config.up * upward_velocity;
 
-        let desired_velocity = controls.move_direction;
+        let desired_velocity = controls.desired_velocity;
         let exact_acceleration = desired_velocity - velocity_on_plane;
 
         let safe_direction_coefficient = desired_velocity
@@ -336,15 +338,32 @@ fn platformer_control_system(
 
         let (_, rotation, _) = transform.to_scale_rotation_translation();
 
-        let tilted_up = rotation.mul_vec3(config.up);
+        let torque_to_fix_tilt = {
+            let tilted_up = rotation.mul_vec3(config.up);
 
-        let rotation_required_to_fix_tilt = Quat::from_rotation_arc(tilted_up, config.up);
+            let rotation_required_to_fix_tilt = Quat::from_rotation_arc(tilted_up, config.up);
 
-        let desired_angvel = (rotation_required_to_fix_tilt.xyz() / frame_duration)
-            .clamp_length_max(config.staying_upward_max_angvel);
-        let angular_velocity_diff = desired_angvel - sensor.angvel;
-        let torque = angular_velocity_diff
-            .clamp_length_max(frame_duration * config.staying_upward_max_angacl);
-        motor.desired_angacl = torque;
+            let desired_angvel = (rotation_required_to_fix_tilt.xyz() / frame_duration)
+                .clamp_length_max(config.staying_upward_max_angvel);
+            let angular_velocity_diff = desired_angvel - sensor.angvel;
+            angular_velocity_diff
+                .clamp_length_max(frame_duration * config.staying_upward_max_angacl)
+        };
+
+        let torque_to_turn = if 0.0 < controls.desired_forward.length_squared() {
+            let current_forward = rotation.mul_vec3(config.forward);
+            let rotation_to_set_forward =
+                Quat::from_rotation_arc(current_forward, controls.desired_forward);
+            let rotation_along_up_axis = rotation_to_set_forward.xyz().dot(config.up);
+            let desired_angvel = (rotation_along_up_axis / frame_duration).min(1000.0);
+
+            let angular_velocity_diff = desired_angvel - sensor.angvel.dot(config.up);
+            let torque = angular_velocity_diff.min(frame_duration * 1000.0);
+            torque * config.up
+        } else {
+            Vec3::ZERO
+        };
+
+        motor.desired_angacl = torque_to_fix_tilt + torque_to_turn;
     }
 }
