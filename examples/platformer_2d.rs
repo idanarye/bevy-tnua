@@ -165,7 +165,9 @@ fn apply_controls(
         direction += Vec3::X;
     }
 
-    let jump = keyboard.pressed(KeyCode::Space) || keyboard.pressed(KeyCode::Up);
+    let jump = [KeyCode::Space, KeyCode::Up]
+        .into_iter()
+        .any(|key_code| keyboard.pressed(key_code));
 
     for (mut controls, &ControlFactors { speed, jump_height }) in query.iter_mut() {
         controls.move_direction = direction * speed;
