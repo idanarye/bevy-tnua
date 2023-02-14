@@ -82,7 +82,7 @@ fn ui_system(
     mut commands: Commands,
 ) {
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
-        ui.label("Controls: Move with the arrow keys. Jump with Spacebar.");
+        ui.label("Controls: Move with the arrow keys. Jump with Spacebar. Turn in place with Alt");
         for (
             entity,
             TrackedEntity(name),
@@ -212,17 +212,25 @@ fn ui_system(
 
                             ui.add(
                                 egui::Slider::new(
-                                    &mut platformer_config.staying_upward_max_angvel,
+                                    &mut platformer_config.tilt_offset_angvel,
                                     0.0..=20.0,
                                 )
                                 .text("Staying Upward Max Angular Velocity"),
                             );
                             ui.add(
                                 egui::Slider::new(
-                                    &mut platformer_config.staying_upward_max_angacl,
+                                    &mut platformer_config.tilt_offset_angacl,
                                     0.0..=2000.0,
                                 )
                                 .text("Staying Upward Max Angular Acceleration"),
+                            );
+
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.turning_angvel,
+                                    0.0..=70.0,
+                                )
+                                .text("Turning Angular Velocity"),
                             );
                         });
                         plot_source.show(entity, ui);

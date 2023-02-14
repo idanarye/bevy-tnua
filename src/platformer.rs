@@ -103,15 +103,18 @@ pub struct TnuaPlatformerConfig {
 
     /// The maximum angular velocity used for keeping the character standing upright.
     ///
-    /// NOTE: The character's rotation can also be locked to prevent it from being rotated, in
-    /// which case this paramter is redundant and can be set to 0.0.
-    pub staying_upward_max_angvel: f32,
+    /// NOTE: The character's rotation can also be locked to prevent it from being tilted, in which
+    /// case this paramter is redundant and can be set to 0.0.
+    pub tilt_offset_angvel: f32,
 
-    /// The maximum angular acceleration used for reaching `staying_upward_max_angvel`.
+    /// The maximum angular acceleration used for reaching `tilt_offset_angvel`.
     ///
-    /// NOTE: The character's rotation can also be locked to prevent it from being rotated, in
-    /// which case this paramter is redundant and can be set to 0.0.
-    pub staying_upward_max_angacl: f32,
+    /// NOTE: The character's rotation can also be locked to prevent it from being tilted, in which
+    /// case this paramter is redundant and can be set to 0.0.
+    pub tilt_offset_angacl: f32,
+
+    /// The maximum angular velocity used for turning the character when the direction changes.
+    pub turning_angvel: f32,
 }
 
 #[derive(Debug)]
@@ -344,26 +347,42 @@ fn platformer_control_system(
             let rotation_required_to_fix_tilt = Quat::from_rotation_arc(tilted_up, config.up);
 
             let desired_angvel = (rotation_required_to_fix_tilt.xyz() / frame_duration)
-                .clamp_length_max(config.staying_upward_max_angvel);
+                .clamp_length_max(config.tilt_offset_angvel);
             let angular_velocity_diff = desired_angvel - sensor.angvel;
-            angular_velocity_diff
-                .clamp_length_max(frame_duration * config.staying_upward_max_angacl)
+            angular_velocity_diff.clamp_length_max(frame_duration * config.tilt_offset_angacl)
         };
 
-        let torque_to_turn = if 0.0 < controls.desired_forward.length_squared() {
-            let current_forward = rotation.mul_vec3(config.forward);
-            let rotation_to_set_forward =
-                Quat::from_rotation_arc(current_forward, controls.desired_forward);
-            let rotation_along_up_axis = rotation_to_set_forward.xyz().dot(config.up);
-            let desired_angvel = (rotation_along_up_axis / frame_duration).min(1000.0);
+        let torque_to_turn = {
+            let desired_angvel = if 0.0 < controls.desired_forward.length_squared() {
+                let sideways = config.up.cross(config.forward);
 
-            let angular_velocity_diff = desired_angvel - sensor.angvel.dot(config.up);
-            let torque = angular_velocity_diff.min(frame_duration * 1000.0);
-            torque * config.up
-        } else {
-            Vec3::ZERO
+                let project =
+                    |vector: Vec3| Vec2::new(vector.dot(config.forward), vector.dot(sideways));
+
+                let current_forward = rotation.mul_vec3(config.forward);
+                let rotation_to_set_forward = Quat::from_rotation_arc_2d(
+                    project(current_forward),
+                    project(controls.desired_forward),
+                );
+                // NOTE: On this 2D plane we projected into, Z is up.
+                let rotation_along_up_axis = rotation_to_set_forward.xyz().z;
+                (rotation_along_up_axis / frame_duration)
+                    .clamp(-config.turning_angvel, config.turning_angvel)
+            } else {
+                0.0
+            };
+
+            // NOTE: This is the regular axis system so we used the configured up.
+            let existing_angvel = sensor.angvel.dot(config.up);
+
+            // This is the torque. Should it be clamped by an acceleration? From experimenting with
+            // this I think it's meaningless and only causes bugs.
+            desired_angvel - existing_angvel
         };
 
-        motor.desired_angacl = torque_to_fix_tilt + torque_to_turn;
+        let existing_turn_torque = torque_to_fix_tilt.dot(config.up);
+        let turn_torque_to_offset = torque_to_turn - existing_turn_torque;
+
+        motor.desired_angacl = torque_to_fix_tilt + turn_torque_to_offset * config.up;
     }
 }

@@ -118,8 +118,9 @@ fn setup_player(mut commands: Commands) {
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
             free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
-            staying_upward_max_angvel: 10.0,
-            staying_upward_max_angacl: 1000.0,
+            tilt_offset_angvel: 10.0,
+            tilt_offset_angacl: 1000.0,
+            turning_angvel: 10.0,
         },
     ));
     cmd.insert({
@@ -177,9 +178,19 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
+    let turn_in_place = [KeyCode::LAlt, KeyCode::RAlt]
+        .into_iter()
+        .any(|key_code| keyboard.pressed(key_code));
+
     for (mut controls, &ControlFactors { speed, jump_height }) in query.iter_mut() {
-        controls.desired_velocity = direction * speed;
-        controls.desired_forward = direction.normalize();
-        controls.jump = jump.then(|| jump_height);
+        *controls = TnuaPlatformerControls {
+            desired_velocity: if turn_in_place {
+                Vec3::ZERO
+            } else {
+                direction * speed
+            },
+            desired_forward: direction.normalize(),
+            jump: jump.then(|| jump_height),
+        };
     }
 }
