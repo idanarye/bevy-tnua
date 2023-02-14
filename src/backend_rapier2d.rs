@@ -109,6 +109,5 @@ fn apply_motors_system(mut query: Query<(&TnuaMotor, &mut Velocity)>) {
             continue;
         }
         velocity.linvel += motor.desired_acceleration.truncate();
-        velocity.linvel += motor.desired_acceleration.truncate();
     }
 }
