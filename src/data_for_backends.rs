@@ -19,6 +19,7 @@ pub struct TnuaProximitySensor {
     pub cast_direction: Vec3,
     pub cast_range: f32,
     pub velocity: Vec3,
+    pub angvel: Vec3,
     pub output: Option<TnuaProximitySensorOutput>,
 }
 
@@ -29,6 +30,7 @@ impl Default for TnuaProximitySensor {
             cast_direction: -Vec3::Y,
             cast_range: 0.0,
             velocity: Vec3::ZERO,
+            angvel: Vec3::ZERO,
             output: None,
         }
     }
@@ -45,4 +47,5 @@ pub struct TnuaProximitySensorOutput {
 #[derive(Component, Default)]
 pub struct TnuaMotor {
     pub desired_acceleration: Vec3,
+    pub desired_angacl: Vec3,
 }

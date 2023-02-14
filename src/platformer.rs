@@ -100,6 +100,18 @@ pub struct TnuaPlatformerConfig {
     /// documentation for the individual enum variants for information regarding how to prevent
     /// this.
     pub free_fall_behavior: TnuaFreeFallBehavior,
+
+    /// The maximum angular velocity used for keeping the character standing upright.
+    ///
+    /// NOTE: The character's rotation can also be locked to prevent it from being rotated, in
+    /// which case this paramter is redundant and can be set to 0.0.
+    pub staying_upward_max_angvel: f32,
+
+    /// The maximum angular acceleration used for reaching `staying_upward_max_angvel`.
+    ///
+    /// NOTE: The character's rotation can also be locked to prevent it from being rotated, in
+    /// which case this paramter is redundant and can be set to 0.0.
+    pub staying_upward_max_angacl: f32,
 }
 
 #[derive(Debug)]
@@ -188,7 +200,11 @@ fn platformer_control_system(
     )>,
     data_synchronized_from_backend: Res<TnuaDataSynchronizedFromBackend>,
 ) {
-    for (_transform, controls, config, mut platformer_state, mut sensor, mut motor) in
+    let frame_duration = time.delta().as_secs_f32();
+    if frame_duration == 0.0 {
+        return;
+    }
+    for (transform, controls, config, mut platformer_state, mut sensor, mut motor) in
         query.iter_mut()
     {
         sensor.cast_range = config.float_height + config.cling_distance;
@@ -213,8 +229,7 @@ fn platformer_control_system(
 
         let acceleration = direction_change_factor * config.acceleration;
 
-        let walk_acceleration =
-            exact_acceleration.clamp_length_max(time.delta().as_secs_f32() * acceleration);
+        let walk_acceleration = exact_acceleration.clamp_length_max(frame_duration * acceleration);
 
         // TODO: Do I need maximum force capping?
 
@@ -246,7 +261,7 @@ fn platformer_control_system(
 
                                 let gravity_compensation =
                                     -data_synchronized_from_backend.gravity.dot(config.up);
-                                break 'upward_impulse time.delta().as_secs_f32()
+                                break 'upward_impulse frame_duration
                                     * (spring_force + gravity_compensation);
                             }
                         } else {
@@ -260,7 +275,7 @@ fn platformer_control_system(
                                 platformer_state.jump_state = JumpState::NoJump;
                                 continue;
                             }
-                            break 'upward_impulse -(time.delta().as_secs_f32() * extra_gravity);
+                            break 'upward_impulse -(frame_duration * extra_gravity);
                         }
                         TnuaFreeFallBehavior::LikeJumpShorten => {
                             platformer_state.jump_state = JumpState::StoppedMaintainingJump;
@@ -301,7 +316,7 @@ fn platformer_control_system(
                             platformer_state.jump_state = JumpState::FallSection;
                             continue;
                         }
-                        break 'upward_impulse -(time.delta().as_secs_f32()
+                        break 'upward_impulse -(frame_duration
                             * config.jump_shorten_extra_gravity);
                     }
                     JumpState::FallSection => {
@@ -309,8 +324,7 @@ fn platformer_control_system(
                             platformer_state.jump_state = JumpState::NoJump;
                             continue;
                         }
-                        break 'upward_impulse -(time.delta().as_secs_f32()
-                            * config.jump_fall_extra_gravity);
+                        break 'upward_impulse -(frame_duration * config.jump_fall_extra_gravity);
                     }
                 }
             }
@@ -319,5 +333,14 @@ fn platformer_control_system(
         };
 
         motor.desired_acceleration = walk_acceleration + config.up * upward_impulse;
+
+        let (_, rotation, _) = transform.to_scale_rotation_translation();
+
+        let desired_angvel =
+            (-rotation.xyz() / frame_duration).clamp_length_max(config.staying_upward_max_angvel);
+        let angular_velocity_diff = desired_angvel - sensor.angvel;
+        let torque = angular_velocity_diff
+            .clamp_length_max(frame_duration * config.staying_upward_max_angacl);
+        motor.desired_angacl = torque;
     }
 }

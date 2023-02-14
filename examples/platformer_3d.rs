@@ -127,7 +127,6 @@ fn setup_player(
         });
     });
     cmd.insert(RigidBody::Dynamic);
-    cmd.insert(LockedAxes::ROTATION_LOCKED); // todo: fix with torque
     cmd.insert(Velocity::default());
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaPlatformerBundle::new_with_config(
@@ -142,6 +141,8 @@ fn setup_player(
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
             free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
+            staying_upward_max_angvel: 10.0,
+            staying_upward_max_angacl: 1000.0,
         },
     ));
     cmd.insert({

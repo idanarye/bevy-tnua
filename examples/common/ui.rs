@@ -180,6 +180,21 @@ fn ui_system(
                                     egui::Slider::new(extra_gravity, 0.0..=100.0).text("Extra Gravity"),
                                 );
                             }
+
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.staying_upward_max_angvel,
+                                    0.0..=20.0,
+                                )
+                                .text("Staying Upward Max Angular Velocity"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.staying_upward_max_angacl,
+                                    0.0..=2000.0,
+                                )
+                                .text("Staying Upward Max Angular Acceleration"),
+                            );
                         });
                         plot_source.show(entity, ui);
                     });

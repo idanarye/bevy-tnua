@@ -46,6 +46,7 @@ fn update_proximity_sensors_system(
         let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
         let cast_direction = owner_rotation * sensor.cast_direction;
         sensor.velocity = velocity.linvel;
+        sensor.angvel = velocity.angvel;
 
         struct CastResult {
             entity: Entity,
@@ -109,5 +110,6 @@ fn apply_motors_system(mut query: Query<(&TnuaMotor, &mut Velocity)>) {
             continue;
         }
         velocity.linvel += motor.desired_acceleration;
+        velocity.angvel += motor.desired_angacl;
     }
 }
