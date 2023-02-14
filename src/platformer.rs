@@ -336,8 +336,12 @@ fn platformer_control_system(
 
         let (_, rotation, _) = transform.to_scale_rotation_translation();
 
-        let desired_angvel =
-            (-rotation.xyz() / frame_duration).clamp_length_max(config.staying_upward_max_angvel);
+        let tilted_up = rotation.mul_vec3(config.up);
+
+        let rotation_required_to_fix_tilt = Quat::from_rotation_arc(tilted_up, config.up);
+
+        let desired_angvel = (rotation_required_to_fix_tilt.xyz() / frame_duration)
+            .clamp_length_max(config.staying_upward_max_angvel);
         let angular_velocity_diff = desired_angvel - sensor.angvel;
         let torque = angular_velocity_diff
             .clamp_length_max(frame_duration * config.staying_upward_max_angacl);
