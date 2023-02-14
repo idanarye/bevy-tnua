@@ -25,7 +25,7 @@ pub struct ControlFactors {
 }
 
 #[derive(Component)]
-pub struct CommandAlteringSelectors(Vec<(usize, String, Vec<(String, fn(EntityCommands))>)>);
+pub struct CommandAlteringSelectors(Vec<CommandAlteringSelector>);
 
 impl Default for CommandAlteringSelectors {
     fn default() -> Self {
@@ -33,16 +33,38 @@ impl Default for CommandAlteringSelectors {
     }
 }
 
+enum CommandAlteringSelector {
+    Combo {
+        chosen: usize,
+        caption: String,
+        options: Vec<(String, fn(EntityCommands))>,
+    },
+    Checkbox {
+        checked: bool,
+        caption: String,
+        applier: fn(EntityCommands, bool),
+    },
+}
+
 impl CommandAlteringSelectors {
-    pub fn with(mut self, caption: &str, options: &[(&str, fn(EntityCommands))]) -> Self {
-        self.0.push((
-            0,
-            caption.to_owned(),
-            options
+    pub fn with_combo(mut self, caption: &str, options: &[(&str, fn(EntityCommands))]) -> Self {
+        self.0.push(CommandAlteringSelector::Combo {
+            chosen: 0,
+            caption: caption.to_owned(),
+            options: options
                 .into_iter()
                 .map(|(name, applier)| (name.to_string(), *applier))
                 .collect(),
-        ));
+        });
+        self
+    }
+
+    pub fn with_checkbox(mut self, caption: &str, applier: fn(EntityCommands, bool)) -> Self {
+        self.0.push(CommandAlteringSelector::Checkbox {
+            checked: false,
+            caption: caption.to_owned(),
+            applier,
+        });
         self
     }
 }
@@ -87,20 +109,27 @@ fn ui_system(
 
                             if let Some(mut command_altering_selectors) = command_altering_selectors
                             {
-                                for (chosen, caption, options) in
-                                    command_altering_selectors.0.iter_mut()
-                                {
-                                    let mut selected_idx: usize = *chosen;
-                                    egui::ComboBox::from_label(caption.as_str())
-                                        .selected_text(&options[*chosen].0)
-                                        .show_ui(ui, |ui| {
-                                            for (idx, (name, _)) in options.iter().enumerate() {
-                                                ui.selectable_value(&mut selected_idx, idx, name);
+                                for selector in command_altering_selectors.0.iter_mut() {
+                                    match selector {
+                                        CommandAlteringSelector::Combo { chosen, caption, options } => {
+                                            let mut selected_idx: usize = *chosen;
+                                            egui::ComboBox::from_label(caption.as_str())
+                                                .selected_text(&options[*chosen].0)
+                                                .show_ui(ui, |ui| {
+                                                    for (idx, (name, _)) in options.iter().enumerate() {
+                                                        ui.selectable_value(&mut selected_idx, idx, name);
+                                                    }
+                                                });
+                                            if selected_idx != *chosen {
+                                                options[selected_idx].1(commands.entity(entity));
+                                                *chosen = selected_idx;
                                             }
-                                        });
-                                    if selected_idx != *chosen {
-                                        options[selected_idx].1(commands.entity(entity));
-                                        *chosen = selected_idx;
+                                        }
+                                        CommandAlteringSelector::Checkbox { checked, caption, applier } => {
+                                            if ui.checkbox(checked, caption.as_str()).clicked() {
+                                                applier(commands.entity(entity), *checked);
+                                            }
+                                        }
                                     }
                                 }
                             }

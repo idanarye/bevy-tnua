@@ -123,26 +123,34 @@ fn setup_player(mut commands: Commands) {
         },
     ));
     cmd.insert({
-        CommandAlteringSelectors::default().with(
-            "Sensor Shape",
-            &[
-                ("Point", |mut cmd| {
-                    cmd.remove::<TnuaRapier2dSensorShape>();
-                }),
-                ("Flat (underfit)", |mut cmd| {
-                    cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.49, 0.0)));
-                }),
-                ("Flat (exact)", |mut cmd| {
-                    cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
-                }),
-                ("Ball (underfit)", |mut cmd| {
-                    cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.49)));
-                }),
-                ("Ball (exact)", |mut cmd| {
-                    cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.5)));
-                }),
-            ],
-        )
+        CommandAlteringSelectors::default()
+            .with_combo(
+                "Sensor Shape",
+                &[
+                    ("Point", |mut cmd| {
+                        cmd.remove::<TnuaRapier2dSensorShape>();
+                    }),
+                    ("Flat (underfit)", |mut cmd| {
+                        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.49, 0.0)));
+                    }),
+                    ("Flat (exact)", |mut cmd| {
+                        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
+                    }),
+                    ("Ball (underfit)", |mut cmd| {
+                        cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.49)));
+                    }),
+                    ("Ball (exact)", |mut cmd| {
+                        cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.5)));
+                    }),
+                ],
+            )
+            .with_checkbox("Lock Tilt", |mut cmd, lock_tilt| {
+                if lock_tilt {
+                    cmd.insert(LockedAxes::ROTATION_LOCKED);
+                } else {
+                    cmd.insert(LockedAxes::empty());
+                }
+            })
     });
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
