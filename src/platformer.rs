@@ -193,6 +193,12 @@ impl Default for TnuaPlatformerControls {
     }
 }
 
+#[derive(Component, Default)]
+pub struct TnuaManualTurningOutput {
+    pub forward: Vec3,
+}
+
+#[allow(clippy::type_complexity)]
 fn platformer_control_system(
     time: Res<Time>,
     mut query: Query<(
@@ -202,6 +208,7 @@ fn platformer_control_system(
         &mut TnuaPlatformerState,
         &mut TnuaProximitySensor,
         &mut TnuaMotor,
+        Option<&mut TnuaManualTurningOutput>,
     )>,
     data_synchronized_from_backend: Res<TnuaDataSynchronizedFromBackend>,
 ) {
@@ -209,8 +216,15 @@ fn platformer_control_system(
     if frame_duration == 0.0 {
         return;
     }
-    for (transform, controls, config, mut platformer_state, mut sensor, mut motor) in
-        query.iter_mut()
+    for (
+        transform,
+        controls,
+        config,
+        mut platformer_state,
+        mut sensor,
+        mut motor,
+        manual_turning_output,
+    ) in query.iter_mut()
     {
         sensor.cast_range = config.float_height + config.cling_distance;
 
@@ -352,17 +366,58 @@ fn platformer_control_system(
             angular_velocity_diff.clamp_length_max(frame_duration * config.tilt_offset_angacl)
         };
 
+        struct ProjectionPlaneForRotation(Vec3, Vec3);
+
+        impl ProjectionPlaneForRotation {
+            fn from_config(config: &TnuaPlatformerConfig) -> Self {
+                Self(config.forward, config.up.cross(config.forward))
+            }
+
+            fn project_and_normalize(&self, vector: Vec3) -> Vec2 {
+                Vec2::new(vector.dot(self.0), vector.dot(self.1)).normalize_or_zero()
+            }
+        }
+
+        if let Some(mut manual_turning_output) = manual_turning_output {
+            if manual_turning_output.forward == Vec3::ZERO {
+                manual_turning_output.forward = if controls.desired_forward == Vec3::ZERO {
+                    config.forward
+                } else {
+                    controls.desired_forward
+                }
+            } else if manual_turning_output.forward != Vec3::ZERO {
+                let projection = ProjectionPlaneForRotation::from_config(config);
+
+                let rotation_to_set_forward = Quat::from_rotation_arc_2d(
+                    projection.project_and_normalize(manual_turning_output.forward),
+                    projection.project_and_normalize(controls.desired_forward),
+                );
+                // NOTE: On this 2D plane we projected into, Z is up.
+                let rotation_along_up_axis = rotation_to_set_forward.xyz().z * std::f32::consts::PI;
+
+                let max_rotation_this_frame = frame_duration * config.turning_angvel;
+                let angvel_along_up_axis =
+                    rotation_along_up_axis.clamp(-max_rotation_this_frame, max_rotation_this_frame);
+                let rotation = Quat::from_axis_angle(config.up, angvel_along_up_axis);
+
+                let new_forward = rotation.mul_vec3(manual_turning_output.forward);
+                if new_forward.distance_squared(controls.desired_forward) < 0.000_1 {
+                    // Because from_rotation_arc_2d is not accurate for small angles
+                    manual_turning_output.forward = controls.desired_forward;
+                } else {
+                    manual_turning_output.forward = new_forward;
+                }
+            }
+        }
+
         let torque_to_turn = {
             let desired_angvel = if 0.0 < controls.desired_forward.length_squared() {
-                let sideways = config.up.cross(config.forward);
-
-                let project =
-                    |vector: Vec3| Vec2::new(vector.dot(config.forward), vector.dot(sideways));
+                let projection = ProjectionPlaneForRotation::from_config(config);
 
                 let current_forward = rotation.mul_vec3(config.forward);
                 let rotation_to_set_forward = Quat::from_rotation_arc_2d(
-                    project(current_forward),
-                    project(controls.desired_forward),
+                    projection.project_and_normalize(current_forward),
+                    projection.project_and_normalize(controls.desired_forward),
                 );
                 // NOTE: On this 2D plane we projected into, Z is up.
                 let rotation_along_up_axis = rotation_to_set_forward.xyz().z;

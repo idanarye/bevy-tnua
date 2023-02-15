@@ -3,8 +3,8 @@ mod common;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
-    TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
-    TnuaPlatformerPlugin, TnuaRapier2dPlugin, TnuaRapier2dSensorShape,
+    TnuaFreeFallBehavior, TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
+    TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier2dPlugin, TnuaRapier2dSensorShape,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ControlFactors};
@@ -22,6 +22,7 @@ fn main() {
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
     app.add_system(apply_controls);
+    app.add_system(apply_manual_turning);
     app.add_system(update_plot_data);
     app.add_startup_system(|mut cfg: ResMut<RapierConfiguration>| {
         cfg.gravity = Vec2::Y * -9.81;
@@ -86,13 +87,19 @@ fn setup_level(mut commands: Commands) {
     }
 }
 
+#[derive(Component)]
+struct TurningVisualizer {
+    x_multiplier: f32,
+}
+
 fn setup_player(mut commands: Commands) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(TransformBundle::from_transform(Transform::from_xyz(
         0.0, 2.0, 0.0,
     )));
     cmd.with_children(|commands| {
-        commands.spawn(SpriteBundle {
+        let mut cmd = commands.spawn_empty();
+        cmd.insert(SpriteBundle {
             sprite: Sprite {
                 color: Color::YELLOW,
                 custom_size: Some(Vec2::new(0.4, 0.3)),
@@ -101,6 +108,7 @@ fn setup_player(mut commands: Commands) {
             transform: Transform::from_xyz(0.4, 0.6, 1.0),
             ..Default::default()
         });
+        cmd.insert(TurningVisualizer { x_multiplier: 0.4 });
     });
     cmd.insert(VisibilityBundle::default());
     cmd.insert(RigidBody::Dynamic);
@@ -123,6 +131,7 @@ fn setup_player(mut commands: Commands) {
             turning_angvel: 10.0,
         },
     ));
+    cmd.insert(TnuaManualTurningOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()
             .with_combo(
@@ -189,8 +198,23 @@ fn apply_controls(
             } else {
                 direction * speed
             },
-            desired_forward: direction.normalize(),
+            desired_forward: direction.normalize_or_zero(),
             jump: jump.then(|| jump_height),
         };
+    }
+}
+
+fn apply_manual_turning(
+    query: Query<(&TnuaManualTurningOutput, &Children)>,
+    mut visual_elements: Query<(&TurningVisualizer, &mut Transform)>,
+) {
+    for (TnuaManualTurningOutput { forward }, children) in query.iter() {
+        for child in children.iter() {
+            if let Ok((&TurningVisualizer { x_multiplier }, mut transform)) =
+                visual_elements.get_mut(*child)
+            {
+                transform.translation.x = x_multiplier * forward.x;
+            }
+        }
     }
 }
