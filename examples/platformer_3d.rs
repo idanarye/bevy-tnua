@@ -6,6 +6,7 @@ use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
     TnuaPlatformerPlugin, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
 };
+use leafwing_input_manager::prelude::*;
 
 use self::common::ui::CommandAlteringSelectors;
 use self::common::ui_plotting::PlotSource;
@@ -14,6 +15,7 @@ fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+    app.add_plugin(InputManagerPlugin::<InputBinding>::default());
     app.add_plugin(RapierDebugRenderPlugin::default());
     app.add_plugin(TnuaRapier3dPlugin);
     app.add_plugin(TnuaPlatformerPlugin);
@@ -24,6 +26,13 @@ fn main() {
     app.add_system(apply_controls);
     app.add_system(update_plot_data);
     app.run();
+}
+
+#[derive(Actionlike, Clone, Debug)]
+enum InputBinding {
+    Run,
+    Jump,
+    TurnInPlace,
 }
 
 fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) {
@@ -148,6 +157,19 @@ fn setup_player(
             turning_angvel: 10.0,
         },
     ));
+    cmd.insert(InputManagerBundle {
+        action_state: Default::default(),
+        input_map: InputMap::default()
+            .insert(VirtualDPad::arrow_keys(), InputBinding::Run)
+            .insert(VirtualDPad::dpad(), InputBinding::Run)
+            .insert(DualAxis::left_stick(), InputBinding::Run)
+            .insert(KeyCode::Space, InputBinding::Jump)
+            .insert(GamepadButtonType::South, InputBinding::Jump)
+            .insert(KeyCode::LAlt, InputBinding::TurnInPlace)
+            .insert(KeyCode::RAlt, InputBinding::TurnInPlace)
+            .insert(GamepadButtonType::LeftTrigger, InputBinding::TurnInPlace)
+            .build(),
+    });
     cmd.insert({
         CommandAlteringSelectors::default()
             .with_combo(
@@ -182,33 +204,22 @@ fn setup_player(
     cmd.insert(PlotSource::default());
 }
 
-fn apply_controls(mut query: Query<&mut TnuaPlatformerControls>, keyboard: Res<Input<KeyCode>>) {
-    let mut direction = Vec3::ZERO;
-
-    if keyboard.pressed(KeyCode::Up) {
-        direction -= Vec3::Z;
-    }
-    if keyboard.pressed(KeyCode::Down) {
-        direction += Vec3::Z;
-    }
-    if keyboard.pressed(KeyCode::Left) {
-        direction -= Vec3::X;
-    }
-    if keyboard.pressed(KeyCode::Right) {
-        direction += Vec3::X;
-    }
-
-    let jump = keyboard.pressed(KeyCode::Space);
-
-    let turn_in_place = [KeyCode::LAlt, KeyCode::RAlt]
-        .into_iter()
-        .any(|key_code| keyboard.pressed(key_code));
-
-    for mut controls in query.iter_mut() {
+fn apply_controls(mut query: Query<(&ActionState<InputBinding>, &mut TnuaPlatformerControls)>) {
+    for (input, mut controls) in query.iter_mut() {
+        let direction = if let Some(axis_pair) = input.clamped_axis_pair(InputBinding::Run) {
+            Vec3::new(axis_pair.x(), 0.0, -axis_pair.y())
+        } else {
+            Vec3::ZERO
+        };
+        let jump = input.clamped_value(InputBinding::Jump);
         *controls = TnuaPlatformerControls {
-            desired_velocity: if turn_in_place { Vec3::ZERO } else { direction },
-            desired_forward: direction.normalize(),
-            jump: jump.then(|| 1.0),
+            desired_velocity: if input.pressed(InputBinding::TurnInPlace) {
+                Vec3::ZERO
+            } else {
+                direction
+            },
+            desired_forward: direction.normalize_or_zero(),
+            jump: if 0.0 < jump { Some(jump) } else { None },
         };
     }
 }

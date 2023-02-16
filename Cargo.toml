@@ -21,12 +21,8 @@ bevy_rapier2d = { version = "^0.20", default-features = false, optional = true, 
 bevy_rapier3d = { version = "^0.20", default-features = false, optional = true, features = ["dim3"]}
 
 [features]
-rapier_2d = [
-    "bevy_rapier2d",
-]
-rapier_3d = [
-    "bevy_rapier3d",
-]
+rapier_2d = ["bevy_rapier2d"]
+rapier_3d = ["bevy_rapier3d"]
 
 [dev-dependencies]
 bevy = { version = "^0.9", default-features = false, features = [
@@ -46,6 +42,7 @@ bevy = { version = "^0.9", default-features = false, features = [
 bevy_rapier2d = { version = "^0.20", features = ["debug-render-2d"]}
 bevy_rapier3d = { version = "^0.20", features = ["debug-render"]}
 bevy_egui = "0.19"
+leafwing-input-manager = "0.8.0"
 
 [[example]]
 name = "platformer_2d"
