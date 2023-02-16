@@ -36,8 +36,33 @@ impl TnuaPlatformerBundle {
     }
 }
 
+/// Movement settings for a platformer-like character controlled by Tnua.
 #[derive(Component)]
 pub struct TnuaPlatformerConfig {
+    /// The speed the character will try to reach when
+    /// [`desired_velocity`](TnuaPlatformerControls::desired_velocity) is set to a unit vector.
+    ///
+    /// If `desired_velocity` is not a unit vector, the character will try to reach a speed of
+    /// `desired_velocity.length() * `full_speed`. Note that this means that if `desired_velocity`
+    /// has a magnitude greater than `1.0`, the character may exceed its full speed.
+    pub full_speed: f32,
+
+    /// The height the character will jump to when [`jump`](TnuaPlatformerControls::jump) is set to
+    /// `Some(`1.0`)`.
+    ///
+    /// If `jump` is set to `Some(X)` where `X` is not `1.0`, the character will try to jump to an
+    /// height of `X * full_jump_height`. Note that this means that if `X` is greater than `1.0`,
+    /// the character may jump higher than its full jump height.
+    ///
+    /// If [`jump_shorten_extra_gravity`](Self::jump_shorten_extra_gravity) is higher than `0.0`,
+    /// the character may stop the jump in the middle if `jump` is set to `None` (usually when the
+    /// player releases the jump button) and the character may not reach its full jump height.
+    ///
+    /// The jump height is calculated from the center of the character at
+    /// [`float_height`](Self::float_height) to the center of the character at the top of the jump.
+    /// It _does not_ mean the height from the ground.
+    pub full_jump_height: f32,
+
     /// The direction considered as upward.
     ///
     /// Typically `Vec3::Y`.
@@ -238,7 +263,7 @@ fn platformer_control_system(
 
         let velocity_on_plane = effective_velocity - config.up * upward_velocity;
 
-        let desired_velocity = controls.desired_velocity;
+        let desired_velocity = controls.desired_velocity * config.full_speed;
         let exact_acceleration = desired_velocity - velocity_on_plane;
 
         let safe_direction_coefficient = desired_velocity
@@ -259,11 +284,10 @@ fn platformer_control_system(
                 match platformer_state.jump_state {
                     JumpState::NoJump => {
                         if let Some(sensor_output) = &sensor.output {
-                            if let Some(jump_height) = controls.jump {
+                            if let Some(jump_multiplier) = controls.jump {
+                                let jump_height = jump_multiplier * config.full_jump_height;
                                 let gravity =
                                     data_synchronized_from_backend.gravity.dot(-config.up);
-                                //let upward_velocity_at_float_height =
-                                //(2.0 * gravity * jump_height).sqrt();
                                 platformer_state.jump_state = JumpState::StartingJump {
                                     desired_energy: gravity * jump_height,
                                 };

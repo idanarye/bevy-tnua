@@ -7,7 +7,7 @@ use bevy_tnua::{
     TnuaPlatformerPlugin, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
 };
 
-use self::common::ui::{CommandAlteringSelectors, ControlFactors};
+use self::common::ui::CommandAlteringSelectors;
 use self::common::ui_plotting::PlotSource;
 
 fn main() {
@@ -131,6 +131,8 @@ fn setup_player(
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaPlatformerBundle::new_with_config(
         TnuaPlatformerConfig {
+            full_speed: 20.0,
+            full_jump_height: 4.0,
             up: Vec3::Y,
             forward: Vec3::Z,
             float_height: 2.0,
@@ -178,16 +180,9 @@ fn setup_player(
     });
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
-    cmd.insert(ControlFactors {
-        speed: 20.0,
-        jump_height: 4.0,
-    });
 }
 
-fn apply_controls(
-    mut query: Query<(&mut TnuaPlatformerControls, &ControlFactors)>,
-    keyboard: Res<Input<KeyCode>>,
-) {
+fn apply_controls(mut query: Query<&mut TnuaPlatformerControls>, keyboard: Res<Input<KeyCode>>) {
     let mut direction = Vec3::ZERO;
 
     if keyboard.pressed(KeyCode::Up) {
@@ -209,15 +204,11 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    for (mut controls, &ControlFactors { speed, jump_height }) in query.iter_mut() {
+    for mut controls in query.iter_mut() {
         *controls = TnuaPlatformerControls {
-            desired_velocity: if turn_in_place {
-                Vec3::ZERO
-            } else {
-                direction * speed
-            },
+            desired_velocity: if turn_in_place { Vec3::ZERO } else { direction },
             desired_forward: direction.normalize(),
-            jump: jump.then(|| jump_height),
+            jump: jump.then(|| 1.0),
         };
     }
 }

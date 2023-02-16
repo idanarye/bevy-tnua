@@ -19,12 +19,6 @@ impl Plugin for ExampleUi {
 pub struct TrackedEntity(pub String);
 
 #[derive(Component)]
-pub struct ControlFactors {
-    pub speed: f32,
-    pub jump_height: f32,
-}
-
-#[derive(Component)]
 pub struct CommandAlteringSelectors(Vec<CommandAlteringSelector>);
 
 impl Default for CommandAlteringSelectors {
@@ -76,7 +70,6 @@ fn ui_system(
         &TrackedEntity,
         &PlotSource,
         &mut TnuaPlatformerConfig,
-        &mut ControlFactors,
         Option<&mut CommandAlteringSelectors>,
     )>,
     mut commands: Commands,
@@ -88,7 +81,6 @@ fn ui_system(
             TrackedEntity(name),
             plot_source,
             mut platformer_config,
-            mut control_factors,
             command_altering_selectors,
         ) in query.iter_mut()
         {
@@ -98,14 +90,14 @@ fn ui_system(
                     ui.horizontal(|ui| {
                         ui.vertical(|ui| {
                             ui.add(
-                                egui::Slider::new(&mut control_factors.speed, 0.0..=60.0)
+                                egui::Slider::new(&mut platformer_config.full_speed, 0.0..=60.0)
                                     .text("Speed"),
                             );
                             ui.add(
-                                egui::Slider::new(&mut control_factors.jump_height, 0.0..=10.0)
+                                egui::Slider::new(&mut platformer_config.full_jump_height, 0.0..=10.0)
                                     .text("Jump Height"),
                             );
-                            control_factors.jump_height = control_factors.jump_height.max(0.1);
+                            platformer_config.full_jump_height = platformer_config.full_jump_height.max(0.1);
 
                             if let Some(mut command_altering_selectors) = command_altering_selectors
                             {
