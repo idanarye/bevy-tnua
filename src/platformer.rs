@@ -337,6 +337,11 @@ fn platformer_control_system(
                             let energy_from_extra_height = extra_height * gravity;
                             let desired_kinetic_energy = desired_energy - energy_from_extra_height;
                             let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
+
+                            if config.float_height < sensor_output.proximity {
+                                platformer_state.jump_state = JumpState::MaintainingJump;
+                            }
+
                             break 'upward_impulse desired_upward_velocity - relative_velocity;
                         } else {
                             platformer_state.jump_state = JumpState::MaintainingJump;
@@ -362,9 +367,11 @@ fn platformer_control_system(
                             * config.jump_shorten_extra_gravity);
                     }
                     JumpState::FallSection => {
-                        if sensor.output.is_some() {
-                            platformer_state.jump_state = JumpState::NoJump;
-                            continue;
+                        if let Some(sensor_output) = &sensor.output {
+                            if sensor_output.proximity <= config.float_height {
+                                platformer_state.jump_state = JumpState::NoJump;
+                                continue;
+                            }
                         }
                         break 'upward_impulse -(frame_duration * config.jump_fall_extra_gravity);
                     }
