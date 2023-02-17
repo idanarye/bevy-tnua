@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    tnua_system_set_for_computing_logic, TnuaDataSynchronizedFromBackend, TnuaMotor,
-    TnuaProximitySensor,
+    tnua_system_set_for_computing_logic, TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker,
 };
 
 pub struct TnuaPlatformerPlugin;
@@ -20,6 +19,7 @@ pub struct TnuaPlatformerBundle {
     pub config: TnuaPlatformerConfig,
     pub controls: TnuaPlatformerControls,
     pub motor: TnuaMotor,
+    pub rigid_body_tracker: TnuaRigidBodyTracker,
     pub proximity_sensor: TnuaProximitySensor,
     pub state: TnuaPlatformerState,
 }
@@ -30,6 +30,7 @@ impl TnuaPlatformerBundle {
             config,
             controls: Default::default(),
             motor: Default::default(),
+            rigid_body_tracker: Default::default(),
             proximity_sensor: Default::default(),
             state: Default::default(),
         }
@@ -231,11 +232,11 @@ fn platformer_control_system(
         &TnuaPlatformerControls,
         &TnuaPlatformerConfig,
         &mut TnuaPlatformerState,
+        &TnuaRigidBodyTracker,
         &mut TnuaProximitySensor,
         &mut TnuaMotor,
         Option<&mut TnuaManualTurningOutput>,
     )>,
-    data_synchronized_from_backend: Res<TnuaDataSynchronizedFromBackend>,
 ) {
     let frame_duration = time.delta().as_secs_f32();
     if frame_duration == 0.0 {
@@ -246,6 +247,7 @@ fn platformer_control_system(
         controls,
         config,
         mut platformer_state,
+        tracker,
         mut sensor,
         mut motor,
         manual_turning_output,
@@ -254,9 +256,9 @@ fn platformer_control_system(
         sensor.cast_range = config.float_height + config.cling_distance;
 
         let effective_velocity = if let Some(sensor_output) = &sensor.output {
-            sensor_output.relative_velocity
+            tracker.velocity - sensor_output.entity_linvel
         } else {
-            sensor.velocity
+            tracker.velocity
         };
 
         let upward_velocity = config.up.dot(effective_velocity);
@@ -286,8 +288,7 @@ fn platformer_control_system(
                         if let Some(sensor_output) = &sensor.output {
                             if let Some(jump_multiplier) = controls.jump {
                                 let jump_height = jump_multiplier * config.full_jump_height;
-                                let gravity =
-                                    data_synchronized_from_backend.gravity.dot(-config.up);
+                                let gravity = tracker.gravity.dot(-config.up);
                                 platformer_state.jump_state = JumpState::StartingJump {
                                     desired_energy: gravity * jump_height,
                                 };
@@ -297,13 +298,12 @@ fn platformer_control_system(
                                 let spring_force: f32 = spring_offset * config.spring_strengh;
 
                                 let relative_velocity =
-                                    sensor_output.relative_velocity.dot(sensor.cast_direction);
+                                    effective_velocity.dot(sensor.cast_direction);
 
                                 let dampening_force = relative_velocity * config.spring_dampening;
                                 let spring_force = spring_force + dampening_force;
 
-                                let gravity_compensation =
-                                    -data_synchronized_from_backend.gravity.dot(config.up);
+                                let gravity_compensation = -tracker.gravity.dot(config.up);
                                 break 'upward_impulse frame_duration
                                     * (spring_force + gravity_compensation);
                             }
@@ -331,10 +331,9 @@ fn platformer_control_system(
                     },
                     JumpState::StartingJump { desired_energy } => {
                         if let Some(sensor_output) = &sensor.output {
-                            let relative_velocity =
-                                -sensor_output.relative_velocity.dot(sensor.cast_direction);
+                            let relative_velocity = -effective_velocity.dot(sensor.cast_direction);
                             let extra_height = sensor_output.proximity - config.float_height;
-                            let gravity = data_synchronized_from_backend.gravity.dot(-config.up);
+                            let gravity = tracker.gravity.dot(-config.up);
                             let energy_from_extra_height = extra_height * gravity;
                             let desired_kinetic_energy = desired_energy - energy_from_extra_height;
                             let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
@@ -386,7 +385,7 @@ fn platformer_control_system(
 
             let desired_angvel = (rotation_required_to_fix_tilt.xyz() / frame_duration)
                 .clamp_length_max(config.tilt_offset_angvel);
-            let angular_velocity_diff = desired_angvel - sensor.angvel;
+            let angular_velocity_diff = desired_angvel - tracker.angvel;
             angular_velocity_diff.clamp_length_max(frame_duration * config.tilt_offset_angacl)
         };
 
@@ -452,7 +451,7 @@ fn platformer_control_system(
             };
 
             // NOTE: This is the regular axis system so we used the configured up.
-            let existing_angvel = sensor.angvel.dot(config.up);
+            let existing_angvel = tracker.angvel.dot(config.up);
 
             // This is the torque. Should it be clamped by an acceleration? From experimenting with
             // this I think it's meaningless and only causes bugs.
