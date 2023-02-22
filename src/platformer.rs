@@ -277,6 +277,30 @@ fn platformer_control_system(
 
         let walk_acceleration = exact_acceleration.clamp_length_max(frame_duration * acceleration);
 
+        let vertical_velocity = if let Some(sensor_output) = &sensor.output {
+            let next_velocity_on_plane = effective_velocity + walk_acceleration
+                - effective_velocity.dot(config.up) * config.up;
+            let slope_direction = sensor_output
+                .normal
+                .cross(next_velocity_on_plane)
+                .cross(sensor_output.normal)
+                .normalize_or_zero();
+            let vertical_per_unit = slope_direction.dot(config.up);
+            // NOTE: next_velocity_on_plane is not normalized, but it gets
+            // balanced with using i`length_squared` instead of `length` to
+            // calculate the vertical velocity.
+            let horizontal_per_unit = slope_direction.dot(next_velocity_on_plane);
+            let vertical_per_horizontal = vertical_per_unit / horizontal_per_unit;
+            if vertical_per_horizontal.is_finite() {
+                // This is where said balancing happens:
+                vertical_per_horizontal * next_velocity_on_plane.length_squared()
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        };
+
         // TODO: Do I need maximum force capping?
 
         let upward_impulse = 'upward_impulse: {
@@ -297,11 +321,10 @@ fn platformer_control_system(
                                 let spring_offset = config.float_height - sensor_output.proximity;
                                 let spring_force: f32 = spring_offset * config.spring_strengh;
 
-                                let relative_velocity =
-                                    effective_velocity.dot(sensor.cast_direction);
+                                let relative_velocity = effective_velocity.dot(config.up) - vertical_velocity;
 
                                 let dampening_force = relative_velocity * config.spring_dampening;
-                                let spring_force = spring_force + dampening_force;
+                                let spring_force = spring_force - dampening_force;
 
                                 let gravity_compensation = -tracker.gravity.dot(config.up);
                                 break 'upward_impulse frame_duration
@@ -331,7 +354,7 @@ fn platformer_control_system(
                     },
                     JumpState::StartingJump { desired_energy } => {
                         if let Some(sensor_output) = &sensor.output {
-                            let relative_velocity = -effective_velocity.dot(sensor.cast_direction);
+                            let relative_velocity = effective_velocity.dot(config.up);
                             let extra_height = sensor_output.proximity - config.float_height;
                             let gravity = tracker.gravity.dot(-config.up);
                             let energy_from_extra_height = extra_height * gravity;
