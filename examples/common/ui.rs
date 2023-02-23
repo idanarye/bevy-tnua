@@ -140,14 +140,14 @@ fn ui_system(
                             ui.add(
                                 egui::Slider::new(
                                     &mut platformer_config.spring_strengh,
-                                    0.0..=400.0,
+                                    0.0..=4000.0,
                                 )
                                 .text("Spring Strengh"),
                             );
                             ui.add(
                                 egui::Slider::new(
                                     &mut platformer_config.spring_dampening,
-                                    0.0..=40.0,
+                                    0.0..=100.0,
                                 )
                                 .text("Spring Dampening"),
                             );
