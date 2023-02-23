@@ -64,9 +64,10 @@ impl PlotSource {
         for (i, (plot_fields, plot_data)) in self.fields.iter().zip(plots_data).enumerate() {
             let plot = Plot::new((entity, i))
                 .legend(Legend::default().position(Corner::LeftBottom))
-                .width(240.0)
-                .include_y(-10.0)
-                .include_y(10.0)
+                .width(180.0)
+                .height(180.0)
+                .include_y(-20.0)
+                .include_y(20.0)
                 .show_axes([false, true]);
             plot.show(ui, |plot_ui| {
                 for (field, curve) in plot_fields.iter().zip(plot_data) {

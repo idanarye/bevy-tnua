@@ -225,7 +225,9 @@ fn ui_system(
                                 .text("Turning Angular Velocity"),
                             );
                         });
-                        plot_source.show(entity, ui);
+                        ui.vertical(|ui| {
+                            plot_source.show(entity, ui);
+                        });
                     });
                 });
         }

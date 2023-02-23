@@ -321,7 +321,8 @@ fn platformer_control_system(
                                 let spring_offset = config.float_height - sensor_output.proximity;
                                 let spring_force: f32 = spring_offset * config.spring_strengh;
 
-                                let relative_velocity = effective_velocity.dot(config.up) - vertical_velocity;
+                                let relative_velocity =
+                                    effective_velocity.dot(config.up) - vertical_velocity;
 
                                 let dampening_force = relative_velocity * config.spring_dampening;
                                 let spring_force = spring_force - dampening_force;
