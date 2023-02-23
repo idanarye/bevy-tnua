@@ -157,6 +157,13 @@ fn ui_system(
                             );
                             ui.add(
                                 egui::Slider::new(
+                                    &mut platformer_config.jump_start_extra_gravity,
+                                    0.0..=100.0,
+                                )
+                                .text("Jump Start Extra Gravity"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
                                     &mut platformer_config.jump_fall_extra_gravity,
                                     0.0..=50.0,
                                 )

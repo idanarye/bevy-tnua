@@ -108,6 +108,14 @@ pub struct TnuaPlatformerConfig {
     /// `acceleration` when doing a 180 turn.
     pub acceleration: f32,
 
+    /// Extra gravity for breaking too fast jump from running up a slope.
+    ///
+    /// When running up a slope, the character gets more jump strength to avoid slamming into the
+    /// slope. This may cause the jump to be too high, so this value is used to brake it.
+    ///
+    /// **NOTE**: This force will be added to the normal gravity.
+    pub jump_start_extra_gravity: f32,
+
     /// Extra gravity for falling down after reaching the top of the jump.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
@@ -204,6 +212,10 @@ enum JumpState {
         /// formulas.
         desired_energy: f32,
     },
+    SlowDownTooFastSlopeJump {
+        desired_energy: f32,
+        zero_potential_energy_at: Vec3,
+    },
     MaintainingJump,
     StoppedMaintainingJump,
     FallSection,
@@ -253,6 +265,7 @@ fn platformer_control_system(
         manual_turning_output,
     ) in query.iter_mut()
     {
+        let (_, rotation, translation) = transform.to_scale_rotation_translation();
         sensor.cast_range = config.float_height + config.cling_distance;
 
         let effective_velocity = if let Some(sensor_output) = &sensor.output {
@@ -306,7 +319,7 @@ fn platformer_control_system(
         let upward_impulse = 'upward_impulse: {
             // TODO: Once `std::mem::variant_count` gets stabilized, use that instead. The idea is
             // to allow jumping through multiple states but failing if we get into loop.
-            for _ in 0..6 {
+            for _ in 0..7 {
                 match platformer_state.jump_state {
                     JumpState::NoJump => {
                         if let Some(sensor_output) = &sensor.output {
@@ -355,7 +368,9 @@ fn platformer_control_system(
                     },
                     JumpState::StartingJump { desired_energy } => {
                         if let Some(sensor_output) = &sensor.output {
-                            let relative_velocity = effective_velocity.dot(config.up);
+                            let relative_velocity = effective_velocity
+                                .dot(sensor_output.normal)
+                                .min(effective_velocity.dot(config.up));
                             let extra_height = sensor_output.proximity - config.float_height;
                             let gravity = tracker.gravity.dot(-config.up);
                             let energy_from_extra_height = extra_height * gravity;
@@ -363,13 +378,45 @@ fn platformer_control_system(
                             let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
 
                             if config.float_height < sensor_output.proximity {
-                                platformer_state.jump_state = JumpState::MaintainingJump;
+                                platformer_state.jump_state = JumpState::SlowDownTooFastSlopeJump {
+                                    desired_energy,
+                                    zero_potential_energy_at: translation
+                                        - extra_height * config.up,
+                                };
                             }
 
                             break 'upward_impulse desired_upward_velocity - relative_velocity;
                         } else {
+                            platformer_state.jump_state = JumpState::SlowDownTooFastSlopeJump {
+                                desired_energy,
+                                zero_potential_energy_at: translation,
+                            };
+                            continue;
+                        }
+                    }
+                    JumpState::SlowDownTooFastSlopeJump {
+                        desired_energy,
+                        zero_potential_energy_at,
+                    } => {
+                        if upward_velocity <= 0.0 {
+                            platformer_state.jump_state = JumpState::FallSection;
+                            continue;
+                        } else if controls.jump.is_none() {
+                            platformer_state.jump_state = JumpState::StoppedMaintainingJump;
+                            continue;
+                        }
+                        let relative_velocity = effective_velocity.dot(config.up);
+                        let extra_height = (translation - zero_potential_energy_at).dot(config.up);
+                        let gravity = tracker.gravity.dot(-config.up);
+                        let energy_from_extra_height = extra_height * gravity;
+                        let desired_kinetic_energy = desired_energy - energy_from_extra_height;
+                        let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
+                        if relative_velocity <= desired_upward_velocity {
                             platformer_state.jump_state = JumpState::MaintainingJump;
                             continue;
+                        } else {
+                            break 'upward_impulse -(frame_duration
+                                * config.jump_start_extra_gravity);
                         }
                     }
                     JumpState::MaintainingJump => {
@@ -406,8 +453,6 @@ fn platformer_control_system(
         };
 
         motor.desired_acceleration = walk_acceleration + config.up * upward_impulse;
-
-        let (_, rotation, _) = transform.to_scale_rotation_translation();
 
         let torque_to_fix_tilt = {
             let tilted_up = rotation.mul_vec3(config.up);

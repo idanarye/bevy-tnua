@@ -116,7 +116,7 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaPlatformerBundle::new_with_config(
         TnuaPlatformerConfig {
-            full_speed: 40.0,
+            full_speed: 20.0,
             full_jump_height: 4.0,
             up: Vec3::Y,
             forward: Vec3::X,
@@ -125,6 +125,7 @@ fn setup_player(mut commands: Commands) {
             spring_strengh: 400.0,
             spring_dampening: 60.0,
             acceleration: 60.0,
+            jump_start_extra_gravity: 10.0,
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
             free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
