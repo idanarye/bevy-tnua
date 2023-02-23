@@ -85,7 +85,7 @@ fn ui_system(
         ) in query.iter_mut()
         {
             egui::CollapsingHeader::new(name)
-                .default_open(true)
+                .default_open(false)
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.vertical(|ui| {
