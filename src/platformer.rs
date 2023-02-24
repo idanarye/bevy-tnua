@@ -268,11 +268,35 @@ fn platformer_control_system(
         let (_, rotation, translation) = transform.to_scale_rotation_translation();
         sensor.cast_range = config.float_height + config.cling_distance;
 
-        let effective_velocity = if let Some(sensor_output) = &sensor.output {
-            tracker.velocity - sensor_output.entity_linvel
+        let effective_velocity: Vec3;
+        struct ClimbVectors {
+            direction: Vec3,
+            sideways: Vec3,
+        }
+        impl ClimbVectors {
+            fn project(&self, vector: Vec3) -> Vec3 {
+                let axis_direction = vector.dot(self.direction) * self.direction;
+                let axis_sideways = vector.dot(self.sideways) * self.sideways;
+                axis_direction + axis_sideways
+            }
+        }
+        let climb_vectors: Option<ClimbVectors>;
+
+        if let Some(sensor_output) = &sensor.output {
+            effective_velocity = tracker.velocity - sensor_output.entity_linvel;
+            let sideways_unnormalized = sensor_output.normal.cross(config.up);
+            if sideways_unnormalized == Vec3::ZERO {
+                climb_vectors = None;
+            } else {
+                climb_vectors = Some(ClimbVectors {
+                    direction: sideways_unnormalized.cross(sensor_output.normal).normalize_or_zero(),
+                    sideways: sideways_unnormalized.normalize_or_zero(),
+                });
+            }
         } else {
-            tracker.velocity
-        };
+            effective_velocity = tracker.velocity;
+            climb_vectors = None;
+        }
 
         let upward_velocity = config.up.dot(effective_velocity);
 
@@ -290,26 +314,14 @@ fn platformer_control_system(
 
         let walk_acceleration = exact_acceleration.clamp_length_max(frame_duration * acceleration);
 
-        let vertical_velocity = if let Some(sensor_output) = &sensor.output {
-            let next_velocity_on_plane = effective_velocity + walk_acceleration
-                - effective_velocity.dot(config.up) * config.up;
-            let slope_direction = sensor_output
-                .normal
-                .cross(next_velocity_on_plane)
-                .cross(sensor_output.normal)
-                .normalize_or_zero();
-            let vertical_per_unit = slope_direction.dot(config.up);
-            // NOTE: next_velocity_on_plane is not normalized, but it gets
-            // balanced with using i`length_squared` instead of `length` to
-            // calculate the vertical velocity.
-            let horizontal_per_unit = slope_direction.dot(next_velocity_on_plane);
-            let vertical_per_horizontal = vertical_per_unit / horizontal_per_unit;
-            if vertical_per_horizontal.is_finite() {
-                // This is where said balancing happens:
-                vertical_per_horizontal * next_velocity_on_plane.length_squared()
-            } else {
-                0.0
-            }
+        let walk_acceleration = if let Some(climb_vectors) = &climb_vectors {
+            climb_vectors.project(walk_acceleration)
+        } else {
+            walk_acceleration
+        };
+
+        let vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
+            effective_velocity.dot(climb_vectors.direction) * climb_vectors.direction.dot(config.up)
         } else {
             0.0
         };
@@ -539,4 +551,11 @@ fn platformer_control_system(
 
         motor.desired_angacl = torque_to_fix_tilt + turn_torque_to_offset * config.up;
     }
+}
+
+#[derive(Default, Debug)]
+#[allow(dead_code)]
+struct ClimbInfo {
+    climb_direction: Vec3,
+    climb_per_unit: f32,
 }
