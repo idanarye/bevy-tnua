@@ -289,7 +289,9 @@ fn platformer_control_system(
                 climb_vectors = None;
             } else {
                 climb_vectors = Some(ClimbVectors {
-                    direction: sideways_unnormalized.cross(sensor_output.normal).normalize_or_zero(),
+                    direction: sideways_unnormalized
+                        .cross(sensor_output.normal)
+                        .normalize_or_zero(),
                     sideways: sideways_unnormalized.normalize_or_zero(),
                 });
             }
