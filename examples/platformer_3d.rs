@@ -140,7 +140,7 @@ fn setup_player(
             spring_strengh: 400.0,
             spring_dampening: 60.0,
             acceleration: 60.0,
-            jump_start_extra_gravity: 10.0,
+            jump_start_extra_gravity: 30.0,
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
             free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,

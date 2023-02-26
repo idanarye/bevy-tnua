@@ -413,7 +413,7 @@ fn platformer_control_system(
                         desired_energy,
                         zero_potential_energy_at,
                     } => {
-                        if upward_velocity <= 0.0 {
+                        if upward_velocity <= vertical_velocity {
                             platformer_state.jump_state = JumpState::FallSection;
                             continue;
                         } else if controls.jump.is_none() {
