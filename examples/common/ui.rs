@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext, EguiPlugin};
@@ -61,6 +63,45 @@ impl CommandAlteringSelectors {
         });
         self
     }
+}
+
+fn slider_or_infinity(
+    ui: &mut egui::Ui,
+    caption: &str,
+    value: &mut f32,
+    range: RangeInclusive<f32>,
+) {
+    #[derive(Clone)]
+    struct CachedValue(f32);
+
+    ui.horizontal(|ui| {
+        let mut infinite = !value.is_finite();
+        let resp = ui.toggle_value(&mut infinite, "\u{221e}");
+        if resp.clicked() {
+            if infinite {
+                ui.memory().data.insert_temp(resp.id, CachedValue(*value));
+                *value = f32::INFINITY
+            } else {
+                if let Some(CachedValue(saved_value)) = ui.memory().data.get_temp(resp.id) {
+                    *value = saved_value;
+                } else {
+                    *value = *range.end();
+                }
+            }
+        }
+        if infinite {
+            let CachedValue(mut saved_value) = ui
+                .memory()
+                .data
+                .get_temp_mut_or(resp.id, CachedValue(*range.end()));
+            ui.add_enabled(
+                false,
+                egui::Slider::new(&mut saved_value, range).text(caption),
+            );
+        } else {
+            ui.add(egui::Slider::new(value, range).text(caption));
+        }
+    });
 }
 
 fn ui_system(
@@ -151,14 +192,8 @@ fn ui_system(
                                 )
                                 .text("Spring Dampening"),
                             );
-                            ui.add(
-                                egui::Slider::new(&mut platformer_config.acceleration, 0.0..=200.0)
-                                    .text("Acceleration"),
-                            );
-                            ui.add(
-                                egui::Slider::new(&mut platformer_config.air_acceleration, 0.0..=200.0)
-                                    .text("Air Acceleration"),
-                            );
+                            slider_or_infinity(ui, "Acceleration", &mut platformer_config.acceleration, 0.0..=200.0);
+                            slider_or_infinity(ui, "Air Acceleration", &mut platformer_config.air_acceleration, 0.0..=200.0);
                             ui.add(
                                 egui::Slider::new(
                                     &mut platformer_config.jump_start_extra_gravity,
@@ -213,28 +248,10 @@ fn ui_system(
                                 );
                             }
 
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.tilt_offset_angvel,
-                                    0.0..=20.0,
-                                )
-                                .text("Staying Upward Max Angular Velocity"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.tilt_offset_angacl,
-                                    0.0..=2000.0,
-                                )
-                                .text("Staying Upward Max Angular Acceleration"),
-                            );
+                            slider_or_infinity(ui, "Staying Upward Max Angular Velocity", &mut platformer_config.tilt_offset_angvel, 0.0..=20.0);
+                            slider_or_infinity(ui, "Staying Upward Max Angular Acceleration", &mut platformer_config.tilt_offset_angacl, 0.0..=2000.0);
 
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.turning_angvel,
-                                    0.0..=70.0,
-                                )
-                                .text("Turning Angular Velocity"),
-                            );
+                            slider_or_infinity(ui, "Turning Angular Velocity", &mut platformer_config.turning_angvel, 0.0..=70.0);
                         });
                         ui.vertical(|ui| {
                             plot_source.show(entity, ui);
