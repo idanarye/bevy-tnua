@@ -384,7 +384,7 @@ fn platformer_control_system(
                     JumpState::StartingJump { desired_energy } => {
                         if let Some(sensor_output) = &sensor.output {
                             let relative_velocity =
-                                effective_velocity.dot(config.up) - vertical_velocity;
+                                effective_velocity.dot(config.up) - vertical_velocity.max(0.0);
                             let extra_height = sensor_output.proximity - config.float_height;
                             let gravity = tracker.gravity.dot(-config.up);
                             let energy_from_extra_height = extra_height * gravity;
@@ -400,7 +400,7 @@ fn platformer_control_system(
                             }
 
                             break 'upward_impulse (desired_upward_velocity - relative_velocity)
-                                * sensor_output.normal;
+                                * config.up;
                         } else {
                             platformer_state.jump_state = JumpState::SlowDownTooFastSlopeJump {
                                 desired_energy,
