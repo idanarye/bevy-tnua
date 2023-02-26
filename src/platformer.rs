@@ -108,6 +108,11 @@ pub struct TnuaPlatformerConfig {
     /// `acceleration` when doing a 180 turn.
     pub acceleration: f32,
 
+    /// The acceleration for horizontal movement while in the air.
+    ///
+    /// Set to 0.0 to completely disable air movement.
+    pub air_acceleration: f32,
+
     /// Extra gravity for breaking too fast jump from running up a slope.
     ///
     /// When running up a slope, the character gets more jump strength to avoid slamming into the
@@ -268,11 +273,11 @@ fn platformer_control_system(
         let (_, rotation, translation) = transform.to_scale_rotation_translation();
         sensor.cast_range = config.float_height + config.cling_distance;
 
-        let effective_velocity: Vec3;
         struct ClimbVectors {
             direction: Vec3,
             sideways: Vec3,
         }
+
         impl ClimbVectors {
             fn project(&self, vector: Vec3) -> Vec3 {
                 let axis_direction = vector.dot(self.direction) * self.direction;
@@ -280,7 +285,10 @@ fn platformer_control_system(
                 axis_direction + axis_sideways
             }
         }
+
+        let effective_velocity: Vec3;
         let climb_vectors: Option<ClimbVectors>;
+        let considered_in_air: bool;
 
         if let Some(sensor_output) = &sensor.output {
             effective_velocity = tracker.velocity - sensor_output.entity_linvel;
@@ -295,9 +303,19 @@ fn platformer_control_system(
                     sideways: sideways_unnormalized.normalize_or_zero(),
                 });
             }
+            considered_in_air = match platformer_state.jump_state {
+                JumpState::NoJump => false,
+                JumpState::FreeFall => true,
+                JumpState::StartingJump { .. } => false,
+                JumpState::SlowDownTooFastSlopeJump { .. } => true,
+                JumpState::MaintainingJump => true,
+                JumpState::StoppedMaintainingJump => true,
+                JumpState::FallSection => true,
+            };
         } else {
             effective_velocity = tracker.velocity;
             climb_vectors = None;
+            considered_in_air = true;
         }
 
         let upward_velocity = config.up.dot(effective_velocity);
@@ -312,7 +330,12 @@ fn platformer_control_system(
             .dot(velocity_on_plane.normalize_or_zero());
         let direction_change_factor = 1.5 - 0.5 * safe_direction_coefficient;
 
-        let acceleration = direction_change_factor * config.acceleration;
+        let relevant_acceleration_limit = if considered_in_air {
+            config.air_acceleration
+        } else {
+            config.acceleration
+        };
+        let acceleration = direction_change_factor * relevant_acceleration_limit;
 
         let walk_acceleration = exact_acceleration.clamp_length_max(frame_duration * acceleration);
 

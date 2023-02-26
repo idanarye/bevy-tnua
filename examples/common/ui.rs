@@ -156,6 +156,10 @@ fn ui_system(
                                     .text("Acceleration"),
                             );
                             ui.add(
+                                egui::Slider::new(&mut platformer_config.air_acceleration, 0.0..=200.0)
+                                    .text("Air Acceleration"),
+                            );
+                            ui.add(
                                 egui::Slider::new(
                                     &mut platformer_config.jump_start_extra_gravity,
                                     0.0..=100.0,
