@@ -1,6 +1,7 @@
 mod common;
 
 use bevy::prelude::*;
+use bevy_egui::EguiContext;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
@@ -184,7 +185,18 @@ fn setup_player(
     cmd.insert(PlotSource::default());
 }
 
-fn apply_controls(mut query: Query<&mut TnuaPlatformerControls>, keyboard: Res<Input<KeyCode>>) {
+fn apply_controls(
+    mut egui_context: ResMut<EguiContext>,
+    keyboard: Res<Input<KeyCode>>,
+    mut query: Query<&mut TnuaPlatformerControls>,
+) {
+    if egui_context.ctx_mut().wants_keyboard_input() {
+        for mut controls in query.iter_mut() {
+            *controls = Default::default();
+        }
+        return;
+    }
+
     let mut direction = Vec3::ZERO;
 
     if keyboard.pressed(KeyCode::Up) {
