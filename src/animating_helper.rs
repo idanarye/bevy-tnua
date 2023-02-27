@@ -1,3 +1,5 @@
+use std::mem::discriminant;
+
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -11,36 +13,47 @@ impl<State> Default for TnuaAnimatingState<State> {
     }
 }
 
-pub enum TnuaAnimatingStateDirective<State, Control> {
+pub enum TnuaAnimatingStateDirective<'a, State> {
     Maintain {
-        state: State,
-        control: Control,
+        state: &'a State,
     },
     Alter {
         old_state: Option<State>,
-        state: State,
-        control: Control,
+        state: &'a State,
     },
 }
 
-impl<State: Clone + PartialEq> TnuaAnimatingState<State> {
-    pub fn update<Control>(
+impl<State> TnuaAnimatingState<State> {
+    pub fn update_by(
         &mut self,
-        dlg: impl FnOnce() -> (State, Control),
-    ) -> TnuaAnimatingStateDirective<State, Control> {
-        let (new_state, control) = dlg();
-        if let Some(old_state) = self.state.as_ref() {
-            if *old_state == new_state {
-                return TnuaAnimatingStateDirective::Maintain {
-                    state: new_state,
-                    control,
-                };
+        new_state: State,
+        comparison: impl FnOnce(&State, &State) -> bool,
+    ) -> TnuaAnimatingStateDirective<State> {
+        let is_same = self
+            .state
+            .as_ref()
+            .map_or(false, |old_state| comparison(old_state, &new_state));
+        let old_state = self.state.replace(new_state);
+        if is_same {
+            TnuaAnimatingStateDirective::Maintain {
+                state: self.state.as_ref().expect("state was just placed there"),
+            }
+        } else {
+            TnuaAnimatingStateDirective::Alter {
+                old_state,
+                state: self.state.as_ref().expect("state was just placed there"),
             }
         }
-        TnuaAnimatingStateDirective::Alter {
-            old_state: self.state.replace(new_state.clone()),
-            state: new_state,
-            control,
-        }
+    }
+
+    pub fn by_value(&mut self, new_state: State) -> TnuaAnimatingStateDirective<State>
+    where
+        State: PartialEq,
+    {
+        self.update_by(new_state, |a, b| a == b)
+    }
+
+    pub fn by_discriminant(&mut self, new_state: State) -> TnuaAnimatingStateDirective<State> {
+        self.update_by(new_state, |a, b| discriminant(a) == discriminant(b))
     }
 }

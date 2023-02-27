@@ -6,9 +6,9 @@ use bevy::utils::HashMap;
 use bevy_egui::EguiContext;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
-    TnuaAnimatingState, TnuaFreeFallBehavior, TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle,
-    TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dPlugin,
-    TnuaRapier3dSensorShape,
+    TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
+    TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
+    TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
 };
 
 use self::common::ui::CommandAlteringSelectors;
@@ -248,10 +248,9 @@ fn animation_patcher_system(
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
 enum AnimationState {
     Standing,
-    Running,
+    Running(f32),
     Jumping,
     Falling,
 }
@@ -260,62 +259,60 @@ fn animate(
     mut animations_handlers_query: Query<(
         &mut TnuaAnimatingState<AnimationState>,
         &TnuaPlatformerAnimatingOutput,
-        &TnuaPlatformerConfig,
         &AnimationsHandler,
     )>,
     mut animation_players_query: Query<&mut AnimationPlayer>,
 ) {
-    for (mut animating_state, animation_output, platformer_config, handler) in
-        animations_handlers_query.iter_mut()
-    {
+    for (mut animating_state, animation_output, handler) in animations_handlers_query.iter_mut() {
         let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue} ;
-        match animating_state.update(|| {
+        match animating_state.by_discriminant({
             if let Some(upward_velocity) = animation_output.jumping_velocity {
                 if 0.0 < upward_velocity {
-                    (AnimationState::Jumping, 2.0)
+                    AnimationState::Jumping
                 } else {
-                    (AnimationState::Falling, 1.0)
+                    AnimationState::Falling
                 }
             } else {
                 let speed = animation_output.running_velocity.length();
                 if 0.01 < speed {
-                    (
-                        AnimationState::Running,
-                        2.0 * speed / platformer_config.full_speed,
-                    )
+                    AnimationState::Running(2.0 * speed / 20.0)
                 } else {
-                    (AnimationState::Standing, 1.0)
+                    AnimationState::Standing
                 }
             }
         }) {
-            bevy_tnua::TnuaAnimatingStateDirective::Maintain { state: _, control } => {
-                player.set_speed(control);
+            TnuaAnimatingStateDirective::Maintain { state } => {
+                if let AnimationState::Running(speed) = state {
+                    player.set_speed(*speed);
+                }
             }
-            bevy_tnua::TnuaAnimatingStateDirective::Alter {
+            TnuaAnimatingStateDirective::Alter {
                 old_state: _,
                 state,
-                control,
-            } => {
-                match state {
-                    AnimationState::Standing => {
-                        player
-                            .start(handler.animations["Standing"].clone_weak())
-                            .repeat();
-                    }
-                    AnimationState::Running => {
-                        player
-                            .start(handler.animations["Running"].clone_weak())
-                            .repeat();
-                    }
-                    AnimationState::Jumping => {
-                        player.start(handler.animations["Jumping"].clone_weak());
-                    }
-                    AnimationState::Falling => {
-                        player.start(handler.animations["Falling"].clone_weak());
-                    }
+            } => match state {
+                AnimationState::Standing => {
+                    player
+                        .start(handler.animations["Standing"].clone_weak())
+                        .set_speed(1.0)
+                        .repeat();
                 }
-                player.set_speed(control);
-            }
+                AnimationState::Running(speed) => {
+                    player
+                        .start(handler.animations["Running"].clone_weak())
+                        .set_speed(*speed)
+                        .repeat();
+                }
+                AnimationState::Jumping => {
+                    player
+                        .start(handler.animations["Jumping"].clone_weak())
+                        .set_speed(2.0);
+                }
+                AnimationState::Falling => {
+                    player
+                        .start(handler.animations["Falling"].clone_weak())
+                        .set_speed(1.0);
+                }
+            },
         }
     }
 }
