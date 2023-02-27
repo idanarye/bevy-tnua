@@ -265,7 +265,7 @@ fn animate(
 ) {
     for (mut animating_state, animation_output, handler) in animations_handlers_query.iter_mut() {
         let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue} ;
-        match animating_state.by_discriminant({
+        match animating_state.update_by_discriminant({
             if let Some(upward_velocity) = animation_output.jumping_velocity {
                 if 0.0 < upward_velocity {
                     AnimationState::Jumping

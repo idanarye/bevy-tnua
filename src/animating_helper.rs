@@ -46,14 +46,17 @@ impl<State> TnuaAnimatingState<State> {
         }
     }
 
-    pub fn by_value(&mut self, new_state: State) -> TnuaAnimatingStateDirective<State>
+    pub fn update_by_value(&mut self, new_state: State) -> TnuaAnimatingStateDirective<State>
     where
         State: PartialEq,
     {
         self.update_by(new_state, |a, b| a == b)
     }
 
-    pub fn by_discriminant(&mut self, new_state: State) -> TnuaAnimatingStateDirective<State> {
+    pub fn update_by_discriminant(
+        &mut self,
+        new_state: State,
+    ) -> TnuaAnimatingStateDirective<State> {
         self.update_by(new_state, |a, b| discriminant(a) == discriminant(b))
     }
 }

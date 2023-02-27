@@ -13,9 +13,9 @@
 
 ## Versions
 
-| bevy | bevy-yoleck |
+| bevy | bevy-tnua |
 |------|-------------|
-| 0.8  |             |
+| 0.9  |             |
 
 ## Reference Material
 
