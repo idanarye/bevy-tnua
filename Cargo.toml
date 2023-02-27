@@ -30,7 +30,7 @@ rapier_3d = [
 
 [dev-dependencies]
 bevy = { version = "^0.9", default-features = false, features = [
-    # "animation",
+     "animation",
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",

@@ -241,6 +241,13 @@ pub struct TnuaManualTurningOutput {
     pub forward: Vec3,
 }
 
+#[derive(Component, Default)]
+pub struct TnuaPlatformerAnimatingOutput {
+    // pub is_airborne: bool,
+    pub running_velocity: Vec3,
+    // pub acceleration: Vec3,
+}
+
 #[allow(clippy::type_complexity)]
 fn platformer_control_system(
     time: Res<Time>,
@@ -253,6 +260,7 @@ fn platformer_control_system(
         &mut TnuaProximitySensor,
         &mut TnuaMotor,
         Option<&mut TnuaManualTurningOutput>,
+        Option<&mut TnuaPlatformerAnimatingOutput>,
     )>,
 ) {
     let frame_duration = time.delta().as_secs_f32();
@@ -268,6 +276,7 @@ fn platformer_control_system(
         mut sensor,
         mut motor,
         manual_turning_output,
+        mut animating_output,
     ) in query.iter_mut()
     {
         let (_, rotation, translation) = transform.to_scale_rotation_translation();
@@ -321,6 +330,10 @@ fn platformer_control_system(
         let upward_velocity = config.up.dot(effective_velocity);
 
         let velocity_on_plane = effective_velocity - config.up * upward_velocity;
+
+        if let Some(animating_output) = animating_output.as_mut() {
+            animating_output.running_velocity = velocity_on_plane;
+        }
 
         let desired_velocity = controls.desired_velocity * config.full_speed;
         let exact_acceleration = desired_velocity - velocity_on_plane;

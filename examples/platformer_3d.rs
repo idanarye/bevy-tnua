@@ -1,11 +1,14 @@
 mod common;
 
+use bevy::gltf::Gltf;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use bevy_egui::EguiContext;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
-    TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
-    TnuaPlatformerPlugin, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
+    TnuaAnimatingState, TnuaFreeFallBehavior, TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle,
+    TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dPlugin,
+    TnuaRapier3dSensorShape,
 };
 
 use self::common::ui::CommandAlteringSelectors;
@@ -23,6 +26,8 @@ fn main() {
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
     app.add_system(apply_controls);
+    app.add_system(animation_patcher_system);
+    app.add_system(animate);
     app.add_system(update_plot_data);
     app.run();
 }
@@ -92,40 +97,15 @@ fn setup_level(
     }
 }
 
-fn setup_player(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
-    cmd.insert(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Capsule {
-            radius: 0.5,
-            rings: 10,
-            depth: 1.0,
-            latitudes: 10,
-            longitudes: 10,
-            uv_profile: shape::CapsuleUvProfile::Aspect,
-        })),
-        material: materials.add(Color::YELLOW.into()),
+    cmd.insert(SceneBundle {
+        scene: asset_server.load("player.glb#Scene0"),
         transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..Default::default()
     });
-    cmd.with_children(|commands| {
-        commands.spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Capsule {
-                radius: 0.3,
-                rings: 10,
-                depth: 0.4,
-                latitudes: 10,
-                longitudes: 10,
-                uv_profile: shape::CapsuleUvProfile::Aspect,
-            })),
-            material: materials.add(Color::YELLOW_GREEN.into()),
-            transform: Transform::from_xyz(0.0, 0.4, 0.3)
-                .with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)),
-            ..Default::default()
-        });
+    cmd.insert(GltfSceneHandler {
+        names_from: asset_server.load("player.glb"),
     });
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Velocity::default());
@@ -151,6 +131,8 @@ fn setup_player(
             turning_angvel: 10.0,
         },
     ));
+    cmd.insert(TnuaAnimatingState::<AnimationState>::default());
+    cmd.insert(TnuaPlatformerAnimatingOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()
             .with_combo(
@@ -224,5 +206,103 @@ fn apply_controls(
             desired_forward: direction.normalize(),
             jump: jump.then(|| 1.0),
         };
+    }
+}
+
+#[derive(Component)]
+struct GltfSceneHandler {
+    names_from: Handle<Gltf>,
+}
+
+#[derive(Component)]
+pub struct AnimationsHandler {
+    pub player_entity: Entity,
+    pub animations: HashMap<String, Handle<AnimationClip>>,
+}
+
+fn animation_patcher_system(
+    animation_players_query: Query<Entity, Added<AnimationPlayer>>,
+    parents_query: Query<&Parent>,
+    scene_handlers_query: Query<&GltfSceneHandler>,
+    gltf_assets: Res<Assets<Gltf>>,
+    mut commands: Commands,
+) {
+    for player_entity in animation_players_query.iter() {
+        let mut entity = player_entity;
+        loop {
+            if let Ok(GltfSceneHandler { names_from }) = scene_handlers_query.get(entity) {
+                let gltf = gltf_assets.get(names_from).unwrap();
+                let mut cmd = commands.entity(entity);
+                cmd.remove::<GltfSceneHandler>();
+                cmd.insert(AnimationsHandler {
+                    player_entity,
+                    animations: gltf.named_animations.clone(),
+                });
+                break;
+            }
+            entity = if let Ok(parent) = parents_query.get(entity) {
+                **parent
+            } else {
+                break;
+            };
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum AnimationState {
+    Standing,
+    Running,
+    // Jumping,
+    // Falling,
+}
+
+fn animate(
+    mut animations_handlers_query: Query<(
+        &mut TnuaAnimatingState<AnimationState>,
+        &TnuaPlatformerAnimatingOutput,
+        &TnuaPlatformerConfig,
+        &AnimationsHandler,
+    )>,
+    mut animation_players_query: Query<&mut AnimationPlayer>,
+) {
+    for (mut animating_state, animation_output, platformer_config, handler) in
+        animations_handlers_query.iter_mut()
+    {
+        let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue} ;
+        match animating_state.update(|| {
+            let speed = animation_output.running_velocity.length();
+            if 0.01 < speed {
+                (
+                    AnimationState::Running,
+                    2.0 * speed / platformer_config.full_speed,
+                )
+            } else {
+                (AnimationState::Standing, 1.0)
+            }
+        }) {
+            bevy_tnua::TnuaAnimatingStateDirective::Maintain { state: _, control } => {
+                player.set_speed(control);
+            }
+            bevy_tnua::TnuaAnimatingStateDirective::Alter {
+                old_state: _,
+                state,
+                control,
+            } => {
+                match state {
+                    AnimationState::Standing => {
+                        player
+                            .start(handler.animations["Standing"].clone_weak())
+                            .repeat();
+                    }
+                    AnimationState::Running => {
+                        player
+                            .start(handler.animations["Running"].clone_weak())
+                            .repeat();
+                    }
+                }
+                player.set_speed(control);
+            }
+        }
     }
 }
