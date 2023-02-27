@@ -18,7 +18,6 @@ fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-    app.add_plugin(RapierDebugRenderPlugin::default());
     app.add_plugin(TnuaRapier3dPlugin);
     app.add_plugin(TnuaPlatformerPlugin);
     app.add_plugin(common::ui::ExampleUi);
@@ -253,8 +252,8 @@ fn animation_patcher_system(
 enum AnimationState {
     Standing,
     Running,
-    // Jumping,
-    // Falling,
+    Jumping,
+    Falling,
 }
 
 fn animate(
@@ -271,14 +270,22 @@ fn animate(
     {
         let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue} ;
         match animating_state.update(|| {
-            let speed = animation_output.running_velocity.length();
-            if 0.01 < speed {
-                (
-                    AnimationState::Running,
-                    2.0 * speed / platformer_config.full_speed,
-                )
+            if let Some(upward_velocity) = animation_output.jumping_velocity {
+                if 0.0 < upward_velocity {
+                    (AnimationState::Jumping, 2.0)
+                } else {
+                    (AnimationState::Falling, 1.0)
+                }
             } else {
-                (AnimationState::Standing, 1.0)
+                let speed = animation_output.running_velocity.length();
+                if 0.01 < speed {
+                    (
+                        AnimationState::Running,
+                        2.0 * speed / platformer_config.full_speed,
+                    )
+                } else {
+                    (AnimationState::Standing, 1.0)
+                }
             }
         }) {
             bevy_tnua::TnuaAnimatingStateDirective::Maintain { state: _, control } => {
@@ -299,6 +306,12 @@ fn animate(
                         player
                             .start(handler.animations["Running"].clone_weak())
                             .repeat();
+                    }
+                    AnimationState::Jumping => {
+                        player.start(handler.animations["Jumping"].clone_weak());
+                    }
+                    AnimationState::Falling => {
+                        player.start(handler.animations["Falling"].clone_weak());
                     }
                 }
                 player.set_speed(control);

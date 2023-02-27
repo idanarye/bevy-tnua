@@ -37,10 +37,10 @@ impl<State: Clone + PartialEq> TnuaAnimatingState<State> {
                 };
             }
         }
-        return TnuaAnimatingStateDirective::Alter {
+        TnuaAnimatingStateDirective::Alter {
             old_state: self.state.replace(new_state.clone()),
             state: new_state,
             control,
-        };
+        }
     }
 }

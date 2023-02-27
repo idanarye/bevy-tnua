@@ -243,9 +243,8 @@ pub struct TnuaManualTurningOutput {
 
 #[derive(Component, Default)]
 pub struct TnuaPlatformerAnimatingOutput {
-    // pub is_airborne: bool,
     pub running_velocity: Vec3,
-    // pub acceleration: Vec3,
+    pub jumping_velocity: Option<f32>,
 }
 
 #[allow(clippy::type_complexity)]
@@ -330,10 +329,6 @@ fn platformer_control_system(
         let upward_velocity = config.up.dot(effective_velocity);
 
         let velocity_on_plane = effective_velocity - config.up * upward_velocity;
-
-        if let Some(animating_output) = animating_output.as_mut() {
-            animating_output.running_velocity = velocity_on_plane;
-        }
 
         let desired_velocity = controls.desired_velocity * config.full_speed;
         let exact_acceleration = desired_velocity - velocity_on_plane;
@@ -592,6 +587,26 @@ fn platformer_control_system(
         let turn_torque_to_offset = torque_to_turn - existing_turn_torque;
 
         motor.desired_angacl = torque_to_fix_tilt + turn_torque_to_offset * config.up;
+
+        if let Some(animating_output) = animating_output.as_mut() {
+            let new_velocity = effective_velocity + motor.desired_acceleration;
+            let new_upward_velocity = config.up.dot(new_velocity);
+            animating_output.running_velocity = new_velocity - config.up * new_upward_velocity;
+            let is_airborne = if sensor.output.is_some() {
+                match platformer_state.jump_state {
+                    JumpState::NoJump => false,
+                    JumpState::FreeFall => true,
+                    JumpState::StartingJump { .. } => true,
+                    JumpState::SlowDownTooFastSlopeJump { .. } => true,
+                    JumpState::MaintainingJump => true,
+                    JumpState::StoppedMaintainingJump => true,
+                    JumpState::FallSection => true,
+                }
+            } else {
+                true
+            };
+            animating_output.jumping_velocity = is_airborne.then_some(new_upward_velocity);
+        }
     }
 }
 
