@@ -127,6 +127,7 @@ fn setup_player(mut commands: Commands) {
             spring_dampening: 10.0,
             acceleration: 60.0,
             air_acceleration: 20.0,
+            coyote_time: 0.15,
             jump_start_extra_gravity: 30.0,
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,

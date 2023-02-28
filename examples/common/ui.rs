@@ -196,6 +196,13 @@ fn ui_system(
                             slider_or_infinity(ui, "Air Acceleration", &mut platformer_config.air_acceleration, 0.0..=200.0);
                             ui.add(
                                 egui::Slider::new(
+                                    &mut platformer_config.coyote_time,
+                                    0.0..=1.0,
+                                )
+                                .text("Coyote Time"),
+                            );
+                            ui.add(
+                                egui::Slider::new(
                                     &mut platformer_config.jump_start_extra_gravity,
                                     0.0..=100.0,
                                 )
