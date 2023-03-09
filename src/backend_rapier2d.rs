@@ -2,20 +2,21 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    tnua_system_set_for_applying_motors, tnua_system_set_for_reading_sensor, TnuaMotor,
-    TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
+    TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaSystemSet,
 };
 
 pub struct TnuaRapier2dPlugin;
 
 impl Plugin for TnuaRapier2dPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set({
-            tnua_system_set_for_reading_sensor()
-                .with_system(update_rigid_body_trackers_system)
-                .with_system(update_proximity_sensors_system)
-        });
-        app.add_system_set(tnua_system_set_for_applying_motors().with_system(apply_motors_system));
+        app.add_systems(
+            (
+                update_rigid_body_trackers_system,
+                update_proximity_sensors_system,
+            )
+                .in_set(TnuaSystemSet::Sensors),
+        );
+        app.add_system(apply_motors_system.in_set(TnuaSystemSet::Motors));
     }
 }
 

@@ -1,7 +1,7 @@
 mod common;
 
 use bevy::prelude::*;
-use bevy_egui::EguiContext;
+use bevy_egui::EguiContexts;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
@@ -173,7 +173,7 @@ fn setup_player(mut commands: Commands) {
 }
 
 fn apply_controls(
-    mut egui_context: ResMut<EguiContext>,
+    mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,
     mut query: Query<&mut TnuaPlatformerControls>,
 ) {

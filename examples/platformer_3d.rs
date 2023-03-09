@@ -3,7 +3,7 @@ mod common;
 use bevy::gltf::Gltf;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
-use bevy_egui::EguiContext;
+use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
     TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
@@ -70,7 +70,10 @@ fn setup_level(
 ) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 128.0 })),
+        mesh: meshes.add(Mesh::from(shape::Plane {
+            size: 128.0,
+            subdivisions: 0,
+        })),
         material: materials.add(Color::WHITE.into()),
         ..Default::default()
     });
@@ -168,7 +171,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn apply_controls(
-    mut egui_context: ResMut<EguiContext>,
+    mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,
     mut query: Query<&mut TnuaPlatformerControls>,
 ) {

@@ -16,9 +16,9 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.9", default-features = false }
-bevy_rapier2d = { version = "^0.20", default-features = false, optional = true, features = ["dim2"]}
-bevy_rapier3d = { version = "^0.20", default-features = false, optional = true, features = ["dim3"]}
+bevy = { version = "^0.10", default-features = false }
+bevy_rapier2d = { version = "^0.21", default-features = false, optional = true, features = ["dim2"]}
+bevy_rapier3d = { version = "^0.21", default-features = false, optional = true, features = ["dim3"]}
 
 [features]
 rapier_2d = [
@@ -29,23 +29,24 @@ rapier_3d = [
 ]
 
 [dev-dependencies]
-bevy = { version = "^0.9", default-features = false, features = [
+bevy = { version = "^0.10", default-features = false, features = [
      "animation",
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
     # "bevy_scene",
     # "bevy_winit",
-    "render",
+    "bevy_render",
+    "bevy_gltf",
     # "png",
     # "hdr",
     # "vorbis",
     "x11",
     # "filesystem_watcher",
 ] }
-bevy_rapier2d = { version = "^0.20", features = ["debug-render-2d"]}
-bevy_rapier3d = { version = "^0.20", features = ["debug-render"]}
-bevy_egui = "0.19"
+bevy_rapier2d = { version = "^0.21", features = ["debug-render-2d"]}
+bevy_rapier3d = { version = "^0.21", features = ["debug-render"]}
+bevy_egui = "0.20"
 
 [[example]]
 name = "platformer_2d"

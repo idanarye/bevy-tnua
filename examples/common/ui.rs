@@ -2,7 +2,7 @@ use std::ops::RangeInclusive;
 
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContext, EguiPlugin};
+use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerConfig};
 
 use super::ui_plotting::PlotSource;
@@ -79,10 +79,12 @@ fn slider_or_infinity(
         let resp = ui.toggle_value(&mut infinite, "\u{221e}");
         if resp.clicked() {
             if infinite {
-                ui.memory().data.insert_temp(resp.id, CachedValue(*value));
+                ui.memory_mut(|memory| memory.data.insert_temp(resp.id, CachedValue(*value)));
                 *value = f32::INFINITY
             } else {
-                if let Some(CachedValue(saved_value)) = ui.memory().data.get_temp(resp.id) {
+                if let Some(CachedValue(saved_value)) =
+                    ui.memory_mut(|memory| memory.data.get_temp(resp.id))
+                {
                     *value = saved_value;
                 } else {
                     *value = *range.end();
@@ -90,13 +92,15 @@ fn slider_or_infinity(
             }
         }
         if infinite {
-            let CachedValue(mut saved_value) = ui
-                .memory()
-                .data
-                .get_temp_mut_or(resp.id, CachedValue(*range.end()));
+            let mut copied_saved_value = ui.memory_mut(|memory| {
+                let CachedValue(saved_value) = memory
+                    .data
+                    .get_temp_mut_or(resp.id, CachedValue(*range.end()));
+                *saved_value
+            });
             ui.add_enabled(
                 false,
-                egui::Slider::new(&mut saved_value, range).text(caption),
+                egui::Slider::new(&mut copied_saved_value, range).text(caption),
             );
         } else {
             ui.add(egui::Slider::new(value, range).text(caption));
@@ -105,7 +109,7 @@ fn slider_or_infinity(
 }
 
 fn ui_system(
-    mut egui_context: ResMut<EguiContext>,
+    mut egui_context: EguiContexts,
     mut query: Query<(
         Entity,
         &TrackedEntity,
