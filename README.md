@@ -4,7 +4,15 @@
 
 # Bevy Tnua
 
+Tnua ("motion" in Hebrew) is a floating character controller, which means that instead of constantly touching the ground the character floats above it, which makes many aspects of the motion control simpler.
+
 ## Features
+
+* Supports both [Rapier2D and Rapier3D](https://rapier.rs/).
+* Jumping. Variable height jumping. Coyote time.
+* Running up/down slopes/stairs.
+* Tilt correction.
+* Animation helpers (not the animation itself, but Tnua has facilities that help deciding which animation to play)
 
 ## Examples:
 
@@ -15,7 +23,7 @@
 
 | bevy | bevy-tnua |
 |------|-------------|
-| 0.9  |             |
+| 0.10 |             |
 
 ## Reference Material
 
@@ -23,6 +31,11 @@ The following were used for coding the math and physics of Tnua:
 
 * "Floating capsule" and running mechanics: https://youtu.be/qdskE8PJy6Q
 * Jumping mechanics:https://youtu.be/hG9SzQxaCm8
+
+## Alternatives
+
+* [bevy_mod_wanderlust](https://github.com/PROMETHIA-27/bevy_mod_wanderlust) - the original inspiration for this mod, and where I got the floating capsule video from. I ended up creating my own plugin because bevy_mod_wanderlust does not support 2D.
+* [Rapier itself has a character controller](https://rapier.rs/docs/user_guides/bevy_plugin/character_controller). It's not a floating character controller, but it's integrated with the physics engine itself and uses that privilege to work out some of the problems the floating model is used to address.
 
 ## License
 
