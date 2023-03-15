@@ -67,6 +67,7 @@ fn setup_level(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(PbrBundle {
@@ -97,6 +98,32 @@ fn setup_level(
         });
         cmd.insert(Collider::cuboid(0.5 * width, 0.5 * height, 0.5 * depth));
     }
+
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("collision-groups-text.glb#Scene0"),
+            transform: Transform::from_xyz(10.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
+            ..Default::default()
+        },
+        Collider::cuboid(2.0, 1.0, 2.0),
+        CollisionGroups {
+            memberships: Group::GROUP_1,
+            filters: Group::GROUP_1,
+        },
+    ));
+
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("solver-groups-text.glb#Scene0"),
+            transform: Transform::from_xyz(15.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
+            ..Default::default()
+        },
+        Collider::cuboid(2.0, 1.0, 2.0),
+        SolverGroups {
+            memberships: Group::GROUP_1,
+            filters: Group::GROUP_1,
+        },
+    ));
 }
 
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -163,6 +190,26 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     cmd.insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z);
                 } else {
                     cmd.insert(LockedAxes::empty());
+                }
+            })
+            .with_checkbox("Use Collision Groups", |mut cmd, use_collision_groups| {
+                if use_collision_groups {
+                    cmd.insert(CollisionGroups {
+                        memberships: Group::GROUP_2,
+                        filters: Group::GROUP_2,
+                    });
+                } else {
+                    cmd.remove::<CollisionGroups>();
+                }
+            })
+            .with_checkbox("Use Solver Groups", |mut cmd, use_solver_groups| {
+                if use_solver_groups {
+                    cmd.insert(SolverGroups {
+                        memberships: Group::GROUP_2,
+                        filters: Group::GROUP_2,
+                    });
+                } else {
+                    cmd.remove::<SolverGroups>();
                 }
             })
     });

@@ -54,7 +54,7 @@ fn setup_camera(mut commands: Commands) {
     });
 }
 
-fn setup_level(mut commands: Commands) {
+fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(SpriteBundle {
         sprite: Sprite {
@@ -86,6 +86,50 @@ fn setup_level(mut commands: Commands) {
         });
         cmd.insert(Collider::cuboid(0.5 * width, 0.5 * height));
     }
+
+    commands.spawn((
+        TransformBundle::from_transform(Transform::from_xyz(10.0, 2.0, 0.0)),
+        Collider::ball(1.0),
+        CollisionGroups {
+            memberships: Group::GROUP_1,
+            filters: Group::GROUP_1,
+        },
+    ));
+    commands.spawn(Text2dBundle {
+        text: Text::from_section(
+            "collision\ngroups",
+            TextStyle {
+                font: asset_server.load("FiraSans-Bold.ttf"),
+                font_size: 72.0,
+                color: Color::WHITE,
+            },
+        )
+        .with_alignment(TextAlignment::Center),
+        transform: Transform::from_xyz(10.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
+        ..Default::default()
+    });
+
+    commands.spawn((
+        TransformBundle::from_transform(Transform::from_xyz(15.0, 2.0, 0.0)),
+        Collider::ball(1.0),
+        SolverGroups {
+            memberships: Group::GROUP_1,
+            filters: Group::GROUP_1,
+        },
+    ));
+    commands.spawn(Text2dBundle {
+        text: Text::from_section(
+            "solver\ngroups",
+            TextStyle {
+                font: asset_server.load("FiraSans-Bold.ttf"),
+                font_size: 72.0,
+                color: Color::WHITE,
+            },
+        )
+        .with_alignment(TextAlignment::Center),
+        transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
+        ..Default::default()
+    });
 }
 
 #[derive(Component)]
@@ -165,6 +209,26 @@ fn setup_player(mut commands: Commands) {
                     cmd.insert(LockedAxes::ROTATION_LOCKED);
                 } else {
                     cmd.insert(LockedAxes::empty());
+                }
+            })
+            .with_checkbox("Use Collision Groups", |mut cmd, use_collision_groups| {
+                if use_collision_groups {
+                    cmd.insert(CollisionGroups {
+                        memberships: Group::GROUP_2,
+                        filters: Group::GROUP_2,
+                    });
+                } else {
+                    cmd.remove::<CollisionGroups>();
+                }
+            })
+            .with_checkbox("Use Solver Groups", |mut cmd, use_solver_groups| {
+                if use_solver_groups {
+                    cmd.insert(SolverGroups {
+                        memberships: Group::GROUP_2,
+                        filters: Group::GROUP_2,
+                    });
+                } else {
+                    cmd.remove::<SolverGroups>();
                 }
             })
     });

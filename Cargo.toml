@@ -38,6 +38,7 @@ bevy = { version = "^0.10", default-features = false, features = [
     # "bevy_winit",
     "bevy_render",
     "bevy_gltf",
+    "bevy_text",
     # "png",
     # "hdr",
     # "vorbis",

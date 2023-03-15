@@ -43,10 +43,15 @@ fn update_proximity_sensors_system(
         &GlobalTransform,
         &mut TnuaProximitySensor,
         Option<&TnuaRapier3dSensorShape>,
+        Option<&CollisionGroups>,
+        Option<&SolverGroups>,
     )>,
     velocity_query: Query<&Velocity>,
+    solver_groups_query: Query<&SolverGroups>,
 ) {
-    for (owner_entity, transform, mut sensor, shape) in query.iter_mut() {
+    for (owner_entity, transform, mut sensor, shape, collision_groups, solver_groups) in
+        query.iter_mut()
+    {
         let cast_origin = transform.transform_point(sensor.cast_origin);
         let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
         let cast_direction = owner_rotation * sensor.cast_direction;
@@ -57,6 +62,31 @@ fn update_proximity_sensors_system(
             normal: Vec3,
         }
 
+        let mut query_filter = QueryFilter::new().exclude_rigid_body(owner_entity);
+
+        query_filter.groups = collision_groups.copied();
+
+        let predicate_for_solver_groups;
+        if let Some(solver_groups) = solver_groups {
+            assert!(
+                query_filter.predicate.is_none(),
+                "predicate already set by something else"
+            );
+            predicate_for_solver_groups = |other_entity: Entity| {
+                if let Ok(other_solver_groups) = solver_groups_query.get(other_entity) {
+                    solver_groups
+                        .memberships
+                        .intersects(other_solver_groups.filters)
+                        && solver_groups
+                            .filters
+                            .intersects(other_solver_groups.memberships)
+                } else {
+                    true
+                }
+            };
+            query_filter.predicate = Some(&predicate_for_solver_groups);
+        }
+
         let cast_result = if let Some(TnuaRapier3dSensorShape(shape)) = shape {
             rapier_context
                 .cast_shape(
@@ -65,7 +95,7 @@ fn update_proximity_sensors_system(
                     cast_direction,
                     shape,
                     sensor.cast_range,
-                    QueryFilter::new().exclude_rigid_body(owner_entity),
+                    query_filter,
                 )
                 .map(|(entity, toi)| CastResult {
                     entity,
@@ -79,7 +109,7 @@ fn update_proximity_sensors_system(
                     cast_direction,
                     sensor.cast_range,
                     false,
-                    QueryFilter::new().exclude_rigid_body(owner_entity),
+                    query_filter,
                 )
                 .map(|(entity, toi)| CastResult {
                     entity,
