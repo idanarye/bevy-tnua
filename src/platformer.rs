@@ -78,7 +78,8 @@ pub struct TnuaPlatformerConfig {
     /// The direction considered as forward.
     ///
     /// This is the direcetion the character is facing when no rotation is applied. Typically
-    /// `Vec3::X` for 2D and `Vec3::Z` for 3D.
+    /// `Vec3::X` for 2D sprites (character turning left) and `-Vec3::Z` for 3D (character model
+    /// faced in camera's forward direction)
     pub forward: Vec3,
 
     /// The height at which the character will float above ground at rest.

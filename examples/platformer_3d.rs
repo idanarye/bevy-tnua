@@ -117,7 +117,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             full_speed: 20.0,
             full_jump_height: 4.0,
             up: Vec3::Y,
-            forward: Vec3::Z,
+            forward: -Vec3::Z,
             float_height: 2.0,
             cling_distance: 1.0,
             spring_strengh: 400.0,
