@@ -240,12 +240,12 @@ pub struct TnuaPlatformerControls {
     /// The direction to go in, in the world space, as a fraction of the
     /// [`full_speed`](TnuaPlatformerConfig::full_speed) (so a lenght of 1 is full speed)
     ///
-    /// Tnua assumes that this vector is orthogonal to the ['up'](TnuaPlatformerConfig::up) vector.
+    /// Tnua assumes that this vector is orthogonal to the [`up`](TnuaPlatformerConfig::up) vector.
     pub desired_velocity: Vec3,
 
     /// If non-zero, Tnua will rotate the character to face in that direction.
     ///
-    /// Tnua assumes that this vector is orthogonal to the ['up'](TnuaPlatformerConfig::up) vector.
+    /// Tnua assumes that this vector is orthogonal to the [`up`](TnuaPlatformerConfig::up) vector.
     pub desired_forward: Vec3,
 
     /// Instructs the character to jump. The number is a fraction of the
@@ -316,9 +316,18 @@ pub struct TnuaManualTurningOutput {
     pub forward: Vec3,
 }
 
+/// If added as component, Tnua will update its fields so that they can used to decide which
+/// animation to play and at which speed.
+///
+/// See [`TnuaAnimatingState`](crate::TnuaAnimatingState) for usage example.
 #[derive(Component, Default)]
 pub struct TnuaPlatformerAnimatingOutput {
+    /// The current running velocity on a plane orthogonal to the [`up`](TnuaPlatformerConfig::up)
+    /// vector.
     pub running_velocity: Vec3,
+
+    /// The current jumping velocity on the [`up`](TnuaPlatformerConfig::up), or `None` if the
+    /// character is not currently jumping.
     pub jumping_velocity: Option<f32>,
 }
 
