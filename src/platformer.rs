@@ -6,6 +6,10 @@ use crate::{TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker, TnuaSystemSet}
 
 pub struct TnuaPlatformerPlugin;
 
+/// The main for supporting platformer-like controls.
+///
+/// It's called "platformer", but it can also be used for other types of games, like shooters. It
+/// won't work very well for vehicle controls though.
 impl Plugin for TnuaPlatformerPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(
@@ -20,6 +24,17 @@ impl Plugin for TnuaPlatformerPlugin {
     }
 }
 
+/// All the Tnua components needed for a platformer-like character controller.
+///
+/// This bundle does not have a default, because [`TnuaPlatformerConfig`] does not have a default.
+/// All the other components can just use their default, which is why
+/// [`TnuaPlatformerBundle::new_with_config`] is provided.
+///
+/// Note that this only contains components defined by Tnua. Rapier controllers need to be added
+/// manually.
+///
+/// Also note that this does not include optional components like [`TnuaManualTurningOutput`] or
+/// [`TnuaPlatformerAnimatingOutput`].
 #[derive(Bundle)]
 pub struct TnuaPlatformerBundle {
     pub config: TnuaPlatformerConfig,
@@ -202,10 +217,47 @@ pub enum TnuaFreeFallBehavior {
     LikeJumpFall,
 }
 
+/// Edit this component in a system to control the character.
+///
+/// Tnua does not write to `TnuaPlatformerControls` - only reads from it - so it should be updated
+/// every frame.
+///
+/// ```no_run
+/// # use bevy::prelude::*;
+/// # use bevy_tnua::{TnuaPlatformerControls};
+/// fn player_control_system(mut query: Query<&mut TnuaPlatformerControls>) {
+///     for mut controls in query.iter_mut() {
+///         *controls = TnuaPlatformerControls {
+///             desired_velocity: Vec3::X, // always go right for some reason
+///             desired_forward: -Vec3::X, // face backwards from walking direction
+///             jump: None, // no jumping
+///         };
+///     }
+/// }
+/// ```
 #[derive(Component)]
 pub struct TnuaPlatformerControls {
+    /// The direction to go in, in the world space, as a fraction of the
+    /// [`full_speed`](TnuaPlatformerConfig::full_speed) (so a lenght of 1 is full speed)
+    ///
+    /// Tnua assumes that this vector is orthogonal to the ['up'](TnuaPlatformerConfig::up) vector.
     pub desired_velocity: Vec3,
+
+    /// If non-zero, Tnua will rotate the character to face in that direction.
+    ///
+    /// Tnua assumes that this vector is orthogonal to the ['up'](TnuaPlatformerConfig::up) vector.
     pub desired_forward: Vec3,
+
+    /// Instructs the character to jump. The number is a fraction of the
+    /// [`full_jump_height`](TnuaPlatformerConfig::full_jump_height) (so a height of 1 is full
+    /// height)
+    ///
+    /// For variable height jumping based on button press length, don't bother calculating the
+    /// number - just set this to `Some(1.0)` and let Tnua handle the variable height with the
+    /// [`jump_shorten_extra_gravity`](TnuaPlatformerConfig::jump_shorten_extra_gravity) setting
+    /// (which should be hight than 0 to support this). Only set it to a number lower or higher
+    /// than 1 if the height is calculated on something like an analog button press strenght or an
+    /// AI that needs to decide exactly how high to jump.
     pub jump: Option<f32>,
 }
 

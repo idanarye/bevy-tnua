@@ -5,8 +5,11 @@
 //! motion control simpler.
 //!
 //! Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions of it:
+//!
 //! * For 2D, enable `features = ["rapier_2d"]` and use [`TnuaRapier2dPlugin`].
 //! * For 3D, enable `features = ["rapier_3d"]` and use [`TnuaRapier3dPlugin`].
+//!
+//! In addition to the physics backend plugin, the [`TnuaPlatformerPlugin`] should also be added.
 //!
 //! A Tnua controlled character must have a dynamic rigid body, a `Velocity` component, and
 //! everything from [`TnuaPlatformerBundle`]:
@@ -58,13 +61,13 @@
 //!     for mut controls in query.iter_mut() {
 //!         *controls = TnuaPlatformerControls {
 //!             desired_velocity: Vec3::X, // always go right for some reason
-//!             desired_forward: -Vec3::X, // walk backwards
+//!             desired_forward: -Vec3::X, // face backwards from walking direction
 //!             jump: None, // no jumping
 //!         };
 //!     }
 //! }
 //! ```
-//! Tnua does not read from [`TnuaPlatformerControls`] - only write to it - so it should be updated
+//! Tnua does not write to [`TnuaPlatformerControls`] - only reads from it - so it should be updated
 //! every frame.
 //!
 //! If the [`TnuaPlatformerAnimatingOutput`] component is added to the entity, Tnua will keep it
