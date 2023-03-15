@@ -314,17 +314,17 @@ fn animate(
     )>,
     mut animation_players_query: Query<&mut AnimationPlayer>,
 ) {
-    for (mut animating_state, animation_output, handler) in animations_handlers_query.iter_mut() {
+    for (mut animating_state, animating_output, handler) in animations_handlers_query.iter_mut() {
         let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue} ;
         match animating_state.update_by_discriminant({
-            if let Some(upward_velocity) = animation_output.jumping_velocity {
+            if let Some(upward_velocity) = animating_output.jumping_velocity {
                 if 0.0 < upward_velocity {
                     AnimationState::Jumping
                 } else {
                     AnimationState::Falling
                 }
             } else {
-                let speed = animation_output.running_velocity.length();
+                let speed = animating_output.running_velocity.length();
                 if 0.01 < speed {
                     AnimationState::Running(2.0 * speed / 20.0)
                 } else {
