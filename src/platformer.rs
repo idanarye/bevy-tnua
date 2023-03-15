@@ -261,6 +261,17 @@ pub struct TnuaPlatformerControls {
     pub jump: Option<f32>,
 }
 
+impl Default for TnuaPlatformerControls {
+    fn default() -> Self {
+        Self {
+            desired_velocity: Vec3::ZERO,
+            desired_forward: Vec3::ZERO,
+            jump: None,
+        }
+    }
+}
+
+#[doc(hidden)]
 #[derive(Component, Default, Debug)]
 pub struct TnuaPlatformerState {
     jump_state: JumpState,
@@ -295,16 +306,11 @@ enum JumpState {
     },
 }
 
-impl Default for TnuaPlatformerControls {
-    fn default() -> Self {
-        Self {
-            desired_velocity: Vec3::ZERO,
-            desired_forward: Vec3::ZERO,
-            jump: None,
-        }
-    }
-}
-
+/// If added as component, Tnua will update its `forward` field instead of rotating the rigid body.
+///
+/// This is useful for controlling the rotation via a system - e.g. when working with 2D and the
+/// physics engine cannot handle the rotation, so it should be done with a sprite animation
+/// instead.
 #[derive(Component, Default)]
 pub struct TnuaManualTurningOutput {
     pub forward: Vec3,
@@ -693,7 +699,7 @@ fn platformer_control_system(
             }
         }
 
-        if let Some(mut manual_turning_output) = manual_turning_output {
+        let turn_torque_to_offset = if let Some(mut manual_turning_output) = manual_turning_output {
             if manual_turning_output.forward == Vec3::ZERO {
                 manual_turning_output.forward = if controls.desired_forward == Vec3::ZERO {
                     config.forward
@@ -723,35 +729,36 @@ fn platformer_control_system(
                     manual_turning_output.forward = new_forward;
                 }
             }
-        }
+            0.0
+        } else {
+            let torque_to_turn = {
+                let desired_angvel = if 0.0 < controls.desired_forward.length_squared() {
+                    let projection = ProjectionPlaneForRotation::from_config(config);
 
-        let torque_to_turn = {
-            let desired_angvel = if 0.0 < controls.desired_forward.length_squared() {
-                let projection = ProjectionPlaneForRotation::from_config(config);
+                    let current_forward = rotation.mul_vec3(config.forward);
+                    let rotation_to_set_forward = Quat::from_rotation_arc_2d(
+                        projection.project_and_normalize(current_forward),
+                        projection.project_and_normalize(controls.desired_forward),
+                    );
+                    // NOTE: On this 2D plane we projected into, Z is up.
+                    let rotation_along_up_axis = rotation_to_set_forward.xyz().z;
+                    (rotation_along_up_axis / frame_duration)
+                        .clamp(-config.turning_angvel, config.turning_angvel)
+                } else {
+                    0.0
+                };
 
-                let current_forward = rotation.mul_vec3(config.forward);
-                let rotation_to_set_forward = Quat::from_rotation_arc_2d(
-                    projection.project_and_normalize(current_forward),
-                    projection.project_and_normalize(controls.desired_forward),
-                );
-                // NOTE: On this 2D plane we projected into, Z is up.
-                let rotation_along_up_axis = rotation_to_set_forward.xyz().z;
-                (rotation_along_up_axis / frame_duration)
-                    .clamp(-config.turning_angvel, config.turning_angvel)
-            } else {
-                0.0
+                // NOTE: This is the regular axis system so we used the configured up.
+                let existing_angvel = tracker.angvel.dot(config.up);
+
+                // This is the torque. Should it be clamped by an acceleration? From experimenting with
+                // this I think it's meaningless and only causes bugs.
+                desired_angvel - existing_angvel
             };
 
-            // NOTE: This is the regular axis system so we used the configured up.
-            let existing_angvel = tracker.angvel.dot(config.up);
-
-            // This is the torque. Should it be clamped by an acceleration? From experimenting with
-            // this I think it's meaningless and only causes bugs.
-            desired_angvel - existing_angvel
+            let existing_turn_torque = torque_to_fix_tilt.dot(config.up);
+            torque_to_turn - existing_turn_torque
         };
-
-        let existing_turn_torque = torque_to_fix_tilt.dot(config.up);
-        let turn_torque_to_offset = torque_to_turn - existing_turn_torque;
 
         motor.desired_angacl = torque_to_fix_tilt + turn_torque_to_offset * config.up;
 
