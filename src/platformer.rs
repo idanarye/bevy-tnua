@@ -791,10 +791,3 @@ fn platformer_control_system(
         }
     }
 }
-
-#[derive(Default, Debug)]
-#[allow(dead_code)]
-struct ClimbInfo {
-    climb_direction: Vec3,
-    climb_per_unit: f32,
-}
