@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use crate::{
-    TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaSystemSet,
+    TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaProximitySensorOutput,
+    TnuaRigidBodyTracker,
 };
 
 /// Add this plugin to use bevy_rapier3d as a physics backend.
@@ -18,9 +19,9 @@ impl Plugin for TnuaRapier3dPlugin {
                 update_rigid_body_trackers_system,
                 update_proximity_sensors_system,
             )
-                .in_set(TnuaSystemSet::Sensors),
+                .in_set(TnuaPipelineStages::Sensors),
         );
-        app.add_system(apply_motors_system.in_set(TnuaSystemSet::Motors));
+        app.add_system(apply_motors_system.in_set(TnuaPipelineStages::Motors));
     }
 }
 

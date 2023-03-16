@@ -2,7 +2,9 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::{TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker, TnuaSystemSet};
+use crate::{
+    TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker, TnuaSystemSet,
+};
 
 pub struct TnuaPlatformerPlugin;
 
@@ -14,13 +16,14 @@ impl Plugin for TnuaPlatformerPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(
             (
-                TnuaSystemSet::Sensors,
-                TnuaSystemSet::Logic,
-                TnuaSystemSet::Motors,
+                TnuaPipelineStages::Sensors,
+                TnuaPipelineStages::Logic,
+                TnuaPipelineStages::Motors,
             )
-                .chain(),
+                .chain()
+                .in_set(TnuaSystemSet),
         );
-        app.add_system(platformer_control_system.in_set(TnuaSystemSet::Logic));
+        app.add_system(platformer_control_system.in_set(TnuaPipelineStages::Logic));
     }
 }
 

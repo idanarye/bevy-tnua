@@ -9,9 +9,10 @@ use bevy_tnua::{
     TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
     TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
     TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
+    TnuaSystemSet,
 };
 
-use self::common::ui::CommandAlteringSelectors;
+use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
 use self::common::ui_plotting::PlotSource;
 use self::common::MovingPlatform;
 
@@ -34,6 +35,7 @@ fn main() {
             velocity.linvel = linvel;
         },
     ));
+    app.configure_set(TnuaSystemSet.run_if(|tnua_active: Res<ExampleUiTnuaActive>| tnua_active.0));
     app.run();
 }
 

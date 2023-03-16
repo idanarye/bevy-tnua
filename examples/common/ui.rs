@@ -12,10 +12,15 @@ pub struct ExampleUi;
 impl Plugin for ExampleUi {
     fn build(&self, app: &mut App) {
         app.add_plugin(EguiPlugin);
+        app.insert_resource(ExampleUiTnuaActive(true));
         app.add_system(ui_system);
         app.add_system(super::ui_plotting::plot_source_rolling_update);
     }
 }
+
+// NOTE: The examples are responsible for taking this into account
+#[derive(Resource)]
+pub struct ExampleUiTnuaActive(pub bool);
 
 #[derive(Component)]
 pub struct TrackedEntity(pub String);
@@ -110,6 +115,7 @@ fn slider_or_infinity(
 
 fn ui_system(
     mut egui_context: EguiContexts,
+    mut tnua_active: ResMut<ExampleUiTnuaActive>,
     mut query: Query<(
         Entity,
         &TrackedEntity,
@@ -121,6 +127,7 @@ fn ui_system(
 ) {
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
         ui.label("Controls: Move with the arrow keys. Jump with Spacebar. Turn in place with Alt");
+        ui.checkbox(&mut tnua_active.0, "Tnua Enabled (does not affect the physics backend itself)");
         for (
             entity,
             TrackedEntity(name),

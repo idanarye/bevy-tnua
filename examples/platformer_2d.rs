@@ -6,9 +6,10 @@ use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
     TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier2dPlugin, TnuaRapier2dSensorShape,
+    TnuaSystemSet,
 };
 
-use self::common::ui::CommandAlteringSelectors;
+use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
 use self::common::ui_plotting::PlotSource;
 use self::common::MovingPlatform;
 
@@ -34,6 +35,7 @@ fn main() {
     app.add_startup_system(|mut cfg: ResMut<RapierConfiguration>| {
         cfg.gravity = Vec2::Y * -9.81;
     });
+    app.configure_set(TnuaSystemSet.run_if(|tnua_active: Res<ExampleUiTnuaActive>| tnua_active.0));
     app.run();
 }
 

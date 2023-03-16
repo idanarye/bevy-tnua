@@ -92,9 +92,19 @@ pub use data_for_backends::*;
 
 use bevy::prelude::*;
 
+/// Umbrella system set for [`TnuaPipelineStages`].
+///
+/// To disable Tnua in specific state, put a run condition on this system set.
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
-pub enum TnuaSystemSet {
+pub struct TnuaSystemSet;
+
+/// The various stages of the Tnua pipeline.
+#[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
+pub enum TnuaPipelineStages {
+    /// Data is read from the physics backend.
     Sensors,
+    /// Tnua decieds how the entity should be manipulated.
     Logic,
+    /// Forces are applied in the physiscs backend.
     Motors,
 }
