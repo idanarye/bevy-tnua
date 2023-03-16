@@ -6,13 +6,23 @@
 
 Tnua ("motion" in Hebrew) is a floating character controller, which means that instead of constantly touching the ground the character floats above it, which makes many aspects of the motion control simpler.
 
-## Features
+## Features (implemented and future)
 
-* Supports both [Rapier2D and Rapier3D](https://rapier.rs/).
-* Jumping. Variable height jumping. Coyote time.
-* Running up/down slopes/stairs.
-* Tilt correction.
-* Animation helpers (not the animation itself, but Tnua has facilities that help deciding which animation to play)
+* [x] Supports both 2D and 3D versions of [Rapier](https://rapier.rs/)
+* [x] Jumping
+* [x] Variable height jumping
+* [x] Coyote time
+* [x] Running up/down slopes/stairs
+* [x] Tilt correction
+* [x] Moving platforms
+* [x] Rotating platforms
+* [x] Animation helpers (not the animation itself, but Tnua has facilities that help deciding which animation to play)
+* [ ] Jump/fall-through platforms
+* [ ] Wall clinging/running
+* [ ] Ledge grabbing
+* [ ] Air actions (double jump, float, etc.)
+* [ ] Slippery ground
+* [ ] Slope affected movement
 
 ## Examples:
 
@@ -21,9 +31,9 @@ Tnua ("motion" in Hebrew) is a floating character controller, which means that i
 
 ## Versions
 
-| bevy | bevy-tnua |
-|------|-------------|
-| 0.10 |             |
+| bevy | bevy-tnua   | bevy_rapier |
+|------|-------------|-------------|
+| 0.10 |             | 0.21        |
 
 ## Reference Material
 

@@ -156,6 +156,26 @@ fn setup_level(
             ],
         ));
     }
+
+    // spawn spinning platform
+    {
+        let mut cmd = commands.spawn_empty();
+
+        cmd.insert(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cylinder {
+                radius: 3.0,
+                height: 1.0,
+                resolution: 10,
+                segments: 10,
+            })),
+            material: materials.add(Color::BLUE.into()),
+            transform: Transform::from_xyz(-2.0, 2.0, 10.0),
+            ..Default::default()
+        });
+        cmd.insert(Collider::cylinder(0.5, 3.0));
+        cmd.insert(Velocity::angular(Vec3::Y));
+        cmd.insert(RigidBody::KinematicVelocityBased);
+    }
 }
 
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {

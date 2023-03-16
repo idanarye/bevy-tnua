@@ -51,7 +51,7 @@ fn update_proximity_sensors_system(
         Option<&CollisionGroups>,
         Option<&SolverGroups>,
     )>,
-    velocity_query: Query<&Velocity>,
+    other_object_query: Query<(&GlobalTransform, &Velocity)>,
     solver_groups_query: Query<&SolverGroups>,
 ) {
     for (owner_entity, transform, mut sensor, shape, collision_groups, solver_groups) in
@@ -64,6 +64,7 @@ fn update_proximity_sensors_system(
         struct CastResult {
             entity: Entity,
             proximity: f32,
+            intersection_point: Vec3,
             normal: Vec3,
         }
 
@@ -105,6 +106,7 @@ fn update_proximity_sensors_system(
                 .map(|(entity, toi)| CastResult {
                     entity,
                     proximity: toi.toi,
+                    intersection_point: toi.witness1,
                     normal: toi.normal1,
                 })
         } else {
@@ -119,6 +121,7 @@ fn update_proximity_sensors_system(
                 .map(|(entity, toi)| CastResult {
                     entity,
                     proximity: toi.toi,
+                    intersection_point: toi.point,
                     normal: toi.normal,
                 })
         };
@@ -126,20 +129,26 @@ fn update_proximity_sensors_system(
         if let Some(CastResult {
             entity,
             proximity,
+            intersection_point,
             normal,
         }) = cast_result
         {
             let entity_linvel;
             let entity_angvel;
-            if let Ok(entity_velocity) = velocity_query.get(entity) {
-                // TODO: When there is angular velocity, the linear velocity needs
-                // to be calculated for the point in the rigid body where the
-                // casted ray/shape hits.
-                entity_linvel = entity_velocity.linvel;
+            if let Ok((entity_transform, entity_velocity)) = other_object_query.get(entity) {
                 entity_angvel = entity_velocity.angvel;
+                entity_linvel = entity_velocity.linvel
+                    + if 0.0 < entity_angvel.length_squared() {
+                        let relative_point = intersection_point - entity_transform.translation();
+                        // NOTE: no need to project relative_point on the rotation plane, it will not
+                        // affect the cross product.
+                        entity_angvel.cross(relative_point)
+                    } else {
+                        Vec3::ZERO
+                    };
             } else {
-                entity_linvel = Vec3::ZERO;
                 entity_angvel = Vec3::ZERO;
+                entity_linvel = Vec3::ZERO;
             }
             sensor.output = Some(TnuaProximitySensorOutput {
                 entity,
