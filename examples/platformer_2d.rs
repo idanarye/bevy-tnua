@@ -10,6 +10,7 @@ use bevy_tnua::{
 
 use self::common::ui::CommandAlteringSelectors;
 use self::common::ui_plotting::PlotSource;
+use self::common::MovingPlatform;
 
 fn main() {
     let mut app = App::new();
@@ -25,6 +26,11 @@ fn main() {
     app.add_system(apply_controls);
     app.add_system(apply_manual_turning);
     app.add_system(update_plot_data);
+    app.add_system(MovingPlatform::make_system(
+        |velocity: &mut Velocity, linvel: Vec3| {
+            velocity.linvel = linvel.truncate();
+        },
+    ));
     app.add_startup_system(|mut cfg: ResMut<RapierConfiguration>| {
         cfg.gravity = Vec2::Y * -9.81;
     });
@@ -130,6 +136,32 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
         ..Default::default()
     });
+
+    // spawn moving platform
+    {
+        let mut cmd = commands.spawn_empty();
+        cmd.insert(SpriteBundle {
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(4.0, 1.0)),
+                color: Color::BLUE,
+                ..Default::default()
+            },
+            transform: Transform::from_xyz(-4.0, 6.0, 0.0),
+            ..Default::default()
+        });
+        cmd.insert(Collider::cuboid(2.0, 0.5));
+        cmd.insert(Velocity::default());
+        cmd.insert(RigidBody::KinematicVelocityBased);
+        cmd.insert(MovingPlatform::new(
+            4.0,
+            &[
+                Vec3::new(-4.0, 6.0, 0.0),
+                Vec3::new(-8.0, 6.0, 0.0),
+                Vec3::new(-8.0, 10.0, 0.0),
+                Vec3::new(-4.0, 10.0, 0.0),
+            ],
+        ));
+    }
 }
 
 #[derive(Component)]

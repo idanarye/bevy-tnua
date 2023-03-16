@@ -13,6 +13,7 @@ use bevy_tnua::{
 
 use self::common::ui::CommandAlteringSelectors;
 use self::common::ui_plotting::PlotSource;
+use self::common::MovingPlatform;
 
 fn main() {
     let mut app = App::new();
@@ -28,6 +29,11 @@ fn main() {
     app.add_system(animation_patcher_system);
     app.add_system(animate);
     app.add_system(update_plot_data);
+    app.add_system(MovingPlatform::make_system(
+        |velocity: &mut Velocity, linvel: Vec3| {
+            velocity.linvel = linvel;
+        },
+    ));
     app.run();
 }
 
@@ -124,6 +130,32 @@ fn setup_level(
             filters: Group::GROUP_1,
         },
     ));
+
+    // spawn moving platform
+    {
+        let mut cmd = commands.spawn_empty();
+
+        cmd.insert(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(4.0, 1.0, 4.0))),
+            material: materials.add(Color::BLUE.into()),
+            transform: Transform::from_xyz(-4.0, 6.0, 0.0),
+            ..Default::default()
+        });
+        cmd.insert(Collider::cuboid(2.0, 0.5, 2.0));
+        cmd.insert(Velocity::default());
+        cmd.insert(RigidBody::KinematicVelocityBased);
+        cmd.insert(MovingPlatform::new(
+            4.0,
+            &[
+                Vec3::new(-4.0, 6.0, 0.0),
+                Vec3::new(-8.0, 6.0, 0.0),
+                Vec3::new(-8.0, 10.0, 0.0),
+                Vec3::new(-8.0, 10.0, -4.0),
+                Vec3::new(-4.0, 10.0, -4.0),
+                Vec3::new(-4.0, 10.0, 0.0),
+            ],
+        ));
+    }
 }
 
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
