@@ -5,6 +5,10 @@ use crate::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaSystemSet,
 };
 
+/// Add this plugin to use bevy_rapier2d as a physics backend.
+///
+/// This plugin should be used in addition to
+/// [`TnuaPlatformerPlugin`](crate::TnuaPlatformerPlugin).
 pub struct TnuaRapier2dPlugin;
 
 impl Plugin for TnuaRapier2dPlugin {
@@ -20,6 +24,7 @@ impl Plugin for TnuaRapier2dPlugin {
     }
 }
 
+/// Add this component to make [`TnuaProximitySensor`] cast a shape instead of a ray.
 #[derive(Component)]
 pub struct TnuaRapier2dSensorShape(pub Collider);
 
