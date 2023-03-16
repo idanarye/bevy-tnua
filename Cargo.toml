@@ -1,5 +1,6 @@
 [package]
 name = "bevy-tnua"
+description = "A floating character controller for bevy_rapier"
 version = "0.1.0"
 edition = "2021"
 authors = ["IdanArye <idanarye@gmail.com>"]

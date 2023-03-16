@@ -2,13 +2,16 @@
 [![Latest Version](https://img.shields.io/crates/v/bevy-tnua.svg)](https://crates.io/crates/bevy-tnua)
 [![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://idanarye.github.io/bevy-tnua/)
 
-# Bevy Tnua
+# Tnua - A Character Controller for [bevy_rapier](https://github.com/dimforge/bevy_rapier).
 
 Tnua ("motion" in Hebrew) is a floating character controller, which means that instead of constantly touching the ground the character floats above it, which makes many aspects of the motion control simpler.
+
+Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions of it:
 
 ## Features (implemented and future)
 
 * [x] Supports both 2D and 3D versions of [Rapier](https://rapier.rs/)
+* [x] Running
 * [x] Jumping
 * [x] Variable height jumping
 * [x] Coyote time
@@ -31,9 +34,9 @@ Tnua ("motion" in Hebrew) is a floating character controller, which means that i
 
 ## Versions
 
-| bevy | bevy-tnua   | bevy_rapier |
-|------|-------------|-------------|
-| 0.10 |             | 0.21        |
+| bevy | bevy-tnua | bevy_rapier |
+|------|-----------|-------------|
+| 0.10 | 0.1       | 0.21        |
 
 ## Reference Material
 

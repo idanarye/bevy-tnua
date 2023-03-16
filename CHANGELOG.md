@@ -6,4 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 0.1.0 - 2023-03-16
 ### Added
+- Running
+- Jumping
+- Variable height jumping
+- Coyote time
+- Running up/down slopes/stairs
+- Tilt correction
+- Moving platforms
+- Rotating platforms
+- Animation helpers (not the animation itself, but Tnua has facilities that help deciding which animation to play)
