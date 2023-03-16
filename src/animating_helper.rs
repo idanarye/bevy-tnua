@@ -83,9 +83,7 @@ impl<State> Default for TnuaAnimatingState<State> {
 
 pub enum TnuaAnimatingStateDirective<'a, State> {
     /// The animation to play remains the same - possibly with different parameters.
-    Maintain {
-        state: &'a State,
-    },
+    Maintain { state: &'a State },
     /// A different animation needs to be played.
     ///
     /// Also returned (with `old_state: None`) if this is the first animation to be played.
