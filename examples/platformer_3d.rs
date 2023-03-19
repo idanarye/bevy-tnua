@@ -210,8 +210,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
             free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
-            tilt_offset_angvel: 10.0,
-            tilt_offset_angacl: 1000.0,
+            tilt_offset_angvel: 5.0,
+            tilt_offset_angacl: 500.0,
             turning_angvel: 10.0,
         },
     ));
@@ -221,6 +221,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         CommandAlteringSelectors::default()
             .with_combo(
                 "Sensor Shape",
+                1,
                 &[
                     ("no", |mut cmd| {
                         cmd.remove::<TnuaRapier3dSensorShape>();
@@ -239,24 +240,28 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     }),
                 ],
             )
-            .with_checkbox("Lock Tilt", |mut cmd, lock_tilt| {
+            .with_checkbox("Lock Tilt", true, |mut cmd, lock_tilt| {
                 if lock_tilt {
                     cmd.insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z);
                 } else {
                     cmd.insert(LockedAxes::empty());
                 }
             })
-            .with_checkbox("Use Collision Groups", |mut cmd, use_collision_groups| {
-                if use_collision_groups {
-                    cmd.insert(CollisionGroups {
-                        memberships: Group::GROUP_2,
-                        filters: Group::GROUP_2,
-                    });
-                } else {
-                    cmd.remove::<CollisionGroups>();
-                }
-            })
-            .with_checkbox("Use Solver Groups", |mut cmd, use_solver_groups| {
+            .with_checkbox(
+                "Use Collision Groups",
+                false,
+                |mut cmd, use_collision_groups| {
+                    if use_collision_groups {
+                        cmd.insert(CollisionGroups {
+                            memberships: Group::GROUP_2,
+                            filters: Group::GROUP_2,
+                        });
+                    } else {
+                        cmd.remove::<CollisionGroups>();
+                    }
+                },
+            )
+            .with_checkbox("Use Solver Groups", false, |mut cmd, use_solver_groups| {
                 if use_solver_groups {
                     cmd.insert(SolverGroups {
                         memberships: Group::GROUP_2,

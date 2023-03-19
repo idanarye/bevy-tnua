@@ -48,9 +48,21 @@
 //!     },
 //! ));
 //! ```
-//! Typically though it'd also include a `Collider`. Tnua will apply forces to keep the character
-//! upright, but `LockedAxes` can also be used to prevent tilting entirely (without it the tilting
-//! will be visible)
+//! Typically though it'd also include a `Collider`.
+//!
+//! ## Optional But Recommended
+//!
+//! * Tnua, by default, casts a single ray to the ground. This can be a problem when the character
+//!   stands on a ledge, because the ray may be past the ledge while the character's collider
+//!   isn't. To avoid that, use [`TnuaRapier2dSensorShape`] or [`TnuaRapier3dSensorShape`]
+//!   (depending on the physics backend) to replace the ray with a shape that resembles the
+//!   collider. It is better to use a shape a little bit smaller than the collider, so that when
+//!   the character presses against a wall Tnua won't think it should be lifted up when the casted
+//!   shape hits that wall.
+//! * Tnua will apply forces to keep the character upright, but `LockedAxes` can also be used to
+//!   prevent tilting entirely (without it the tilting will be visible)
+//!
+//! ## Controlling the Character
 //!
 //! To control the character, update the [`TnuaPlatformerControls`] in a system:
 //!
@@ -69,6 +81,8 @@
 //! ```
 //! Tnua does not write to [`TnuaPlatformerControls`] - only reads from it - so it should be updated
 //! every frame.
+//!
+//! ## Motion Based Animation
 //!
 //! If the [`TnuaPlatformerAnimatingOutput`] component is added to the entity, Tnua will keep it
 //! updated with data that can be used to decide which animation to play.

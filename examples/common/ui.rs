@@ -39,16 +39,23 @@ enum CommandAlteringSelector {
         chosen: usize,
         caption: String,
         options: Vec<(String, fn(EntityCommands))>,
+        set_to: Option<usize>,
     },
     Checkbox {
         checked: bool,
         caption: String,
         applier: fn(EntityCommands, bool),
+        set_to: Option<bool>,
     },
 }
 
 impl CommandAlteringSelectors {
-    pub fn with_combo(mut self, caption: &str, options: &[(&str, fn(EntityCommands))]) -> Self {
+    pub fn with_combo(
+        mut self,
+        caption: &str,
+        initial: usize,
+        options: &[(&str, fn(EntityCommands))],
+    ) -> Self {
         self.0.push(CommandAlteringSelector::Combo {
             chosen: 0,
             caption: caption.to_owned(),
@@ -56,15 +63,22 @@ impl CommandAlteringSelectors {
                 .into_iter()
                 .map(|(name, applier)| (name.to_string(), *applier))
                 .collect(),
+            set_to: Some(initial),
         });
         self
     }
 
-    pub fn with_checkbox(mut self, caption: &str, applier: fn(EntityCommands, bool)) -> Self {
+    pub fn with_checkbox(
+        mut self,
+        caption: &str,
+        initial: bool,
+        applier: fn(EntityCommands, bool),
+    ) -> Self {
         self.0.push(CommandAlteringSelector::Checkbox {
             checked: false,
             caption: caption.to_owned(),
             applier,
+            set_to: Some(initial),
         });
         self
     }
@@ -125,6 +139,36 @@ fn ui_system(
     )>,
     mut commands: Commands,
 ) {
+    for (entity, _, _, _, command_altering_selectors) in query.iter_mut() {
+        if let Some(mut command_altering_selectors) = command_altering_selectors {
+            for selector in command_altering_selectors.0.iter_mut() {
+                match selector {
+                    CommandAlteringSelector::Combo {
+                        chosen,
+                        caption: _,
+                        options,
+                        set_to,
+                    } => {
+                        if let Some(set_to) = set_to.take() {
+                            *chosen = set_to;
+                            options[set_to].1(commands.entity(entity));
+                        }
+                    }
+                    CommandAlteringSelector::Checkbox {
+                        checked,
+                        caption: _,
+                        applier,
+                        set_to,
+                    } => {
+                        if let Some(set_to) = set_to.take() {
+                            *checked = set_to;
+                            applier(commands.entity(entity), set_to);
+                        }
+                    }
+                }
+            }
+        }
+    }
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
         ui.label("Controls: Move with the arrow keys. Jump with Spacebar. Turn in place with Alt");
         ui.checkbox(&mut tnua_active.0, "Tnua Enabled (does not affect the physics backend itself)");
@@ -155,7 +199,7 @@ fn ui_system(
                             {
                                 for selector in command_altering_selectors.0.iter_mut() {
                                     match selector {
-                                        CommandAlteringSelector::Combo { chosen, caption, options } => {
+                                        CommandAlteringSelector::Combo { chosen, caption, options, set_to: _ } => {
                                             let mut selected_idx: usize = *chosen;
                                             egui::ComboBox::from_label(caption.as_str())
                                                 .selected_text(&options[*chosen].0)
@@ -169,7 +213,7 @@ fn ui_system(
                                                 *chosen = selected_idx;
                                             }
                                         }
-                                        CommandAlteringSelector::Checkbox { checked, caption, applier } => {
+                                        CommandAlteringSelector::Checkbox { checked, caption, applier, set_to: _ } => {
                                             if ui.checkbox(checked, caption.as_str()).clicked() {
                                                 applier(commands.entity(entity), *checked);
                                             }
