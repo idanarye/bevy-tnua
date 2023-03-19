@@ -34,7 +34,7 @@
 //!         float_height: 2.0,
 //!         cling_distance: 1.0,
 //!         spring_strengh: 400.0,
-//!         spring_dampening: 60.0,
+//!         spring_dampening: 1.2,
 //!         acceleration: 60.0,
 //!         air_acceleration: 20.0,
 //!         coyote_time: 0.15,
