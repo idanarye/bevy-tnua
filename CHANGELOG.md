@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- [**BREAKING**] `spring_dampening` now gets divided by the frame duration, to
+  avoid weird effects from unstable framerate. This means that the proper
+  numbers for it should be greatly reduced -  for example in the 3D example it
+  was reduced from 60.0 to 1.2.
+
 
 ## 0.1.0 - 2023-03-16
 ### Added

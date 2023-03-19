@@ -124,6 +124,9 @@ pub struct TnuaPlatformerConfig {
     ///
     /// The actual dampening is in direct linear relationship to the vertical velocity it tries to
     /// dampen.
+    ///
+    /// Note that as this approaches 2.0, the character starts to shake violently and eventually
+    /// get launched upward at great speed.
     pub spring_dampening: f32,
 
     /// The acceleration for horizontal movement.
@@ -510,7 +513,8 @@ fn platformer_control_system(
                                 let relative_velocity =
                                     effective_velocity.dot(config.up) - vertical_velocity;
 
-                                let dampening_force = relative_velocity * config.spring_dampening;
+                                let dampening_force =
+                                    relative_velocity * config.spring_dampening / frame_duration;
                                 let spring_force = spring_force - dampening_force;
 
                                 let gravity_compensation = -tracker.gravity.dot(config.up);

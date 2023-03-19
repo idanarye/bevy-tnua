@@ -199,7 +199,7 @@ fn ui_system(
                             ui.add(
                                 egui::Slider::new(
                                     &mut platformer_config.spring_dampening,
-                                    0.0..=100.0,
+                                    0.0..=1.9,
                                 )
                                 .text("Spring Dampening"),
                             );

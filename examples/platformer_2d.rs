@@ -202,7 +202,7 @@ fn setup_player(mut commands: Commands) {
             float_height: 2.0,
             cling_distance: 1.0,
             spring_strengh: 40.0,
-            spring_dampening: 10.0,
+            spring_dampening: 0.4,
             acceleration: 60.0,
             air_acceleration: 20.0,
             coyote_time: 0.15,
