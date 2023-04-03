@@ -8,24 +8,18 @@ Tnua ("motion" in Hebrew) is a floating character controller, which means that i
 
 Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions of it:
 
-## Features (implemented and future)
+## Features
 
-* [x] Supports both 2D and 3D versions of [Rapier](https://rapier.rs/)
-* [x] Running
-* [x] Jumping
-* [x] Variable height jumping
-* [x] Coyote time
-* [x] Running up/down slopes/stairs
-* [x] Tilt correction
-* [x] Moving platforms
-* [x] Rotating platforms
-* [x] Animation helpers (not the animation itself, but Tnua has facilities that help deciding which animation to play)
-* [ ] Jump/fall-through platforms
-* [ ] Wall clinging/running
-* [ ] Ledge grabbing
-* [ ] Air actions (double jump, float, etc.)
-* [ ] Slippery ground
-* [ ] Slope affected movement
+* Supports both 2D and 3D versions of [Rapier](https://rapier.rs/)
+* Running
+* Jumping
+* Variable height jumping
+* Coyote time
+* Running up/down slopes/stairs
+* Tilt correction
+* Moving platforms
+* Rotating platforms
+* Animation helpers (not the animation itself, but Tnua has facilities that help deciding which animation to play)
 
 ## Examples:
 
