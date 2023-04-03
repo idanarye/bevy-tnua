@@ -54,6 +54,7 @@ fn update_proximity_sensors_system(
     )>,
     other_object_query_query: Query<(&GlobalTransform, &Velocity)>,
     solver_groups_query: Query<&SolverGroups>,
+    sensor_collider_query: Query<(), With<Sensor>>,
 ) {
     for (owner_entity, transform, mut sensor, shape, collision_groups, solver_groups) in
         query.iter_mut()
@@ -73,26 +74,26 @@ fn update_proximity_sensors_system(
 
         query_filter.groups = collision_groups.copied();
 
-        let predicate_for_solver_groups;
-        if let Some(solver_groups) = solver_groups {
-            assert!(
-                query_filter.predicate.is_none(),
-                "predicate already set by something else"
-            );
-            predicate_for_solver_groups = |other_entity: Entity| {
+        let predicate = |other_entity: Entity| {
+            if sensor_collider_query.contains(other_entity) {
+                return false;
+            }
+            if let Some(solver_groups) = solver_groups {
                 if let Ok(other_solver_groups) = solver_groups_query.get(other_entity) {
-                    solver_groups
+                    if !(solver_groups
                         .memberships
                         .intersects(other_solver_groups.filters)
                         && solver_groups
                             .filters
-                            .intersects(other_solver_groups.memberships)
-                } else {
-                    true
+                            .intersects(other_solver_groups.memberships))
+                    {
+                        return false;
+                    }
                 }
-            };
-            query_filter.predicate = Some(&predicate_for_solver_groups);
-        }
+            }
+            true
+        };
+        query_filter.predicate = Some(&predicate);
 
         let cast_result = if let Some(TnuaRapier2dSensorShape(shape)) = shape {
             let (_, _, rotation_z) = owner_rotation.to_euler(EulerRot::XYZ);

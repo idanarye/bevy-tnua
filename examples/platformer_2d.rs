@@ -139,6 +139,25 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..Default::default()
     });
 
+    commands.spawn((
+        TransformBundle::from_transform(Transform::from_xyz(20.0, 2.0, 0.0)),
+        Collider::ball(1.0),
+        Sensor,
+    ));
+    commands.spawn(Text2dBundle {
+        text: Text::from_section(
+            "sensor",
+            TextStyle {
+                font: asset_server.load("FiraSans-Bold.ttf"),
+                font_size: 72.0,
+                color: Color::WHITE,
+            },
+        )
+        .with_alignment(TextAlignment::Center),
+        transform: Transform::from_xyz(20.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
+        ..Default::default()
+    });
+
     // spawn moving platform
     {
         let mut cmd = commands.spawn_empty();

@@ -133,6 +133,16 @@ fn setup_level(
         },
     ));
 
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("sensor-text.glb#Scene0"),
+            transform: Transform::from_xyz(20.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
+            ..Default::default()
+        },
+        Collider::cuboid(2.0, 1.0, 2.0),
+        Sensor,
+    ));
+
     // spawn moving platform
     {
         let mut cmd = commands.spawn_empty();
