@@ -14,6 +14,9 @@ pub struct TnuaPlatformerPlugin;
 /// won't work very well for vehicle controls though.
 impl Plugin for TnuaPlatformerPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<TnuaPlatformerConfig>();
+        app.register_type::<TnuaFreeFallBehavior>();
+
         app.configure_sets(
             (
                 TnuaPipelineStages::Sensors,
@@ -62,7 +65,7 @@ impl TnuaPlatformerBundle {
 }
 
 /// Movement settings for a platformer-like character controlled by Tnua.
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct TnuaPlatformerConfig {
     /// The speed the character will try to reach when
     /// [`desired_velocity`](TnuaPlatformerControls::desired_velocity) is set to a unit vector.
@@ -187,7 +190,7 @@ pub struct TnuaPlatformerConfig {
     pub turning_angvel: f32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Reflect)]
 pub enum TnuaFreeFallBehavior {
     /// Apply extra gravitiy during free fall.
     ///
