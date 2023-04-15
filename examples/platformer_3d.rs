@@ -313,6 +313,8 @@ fn apply_controls(
         direction += Vec3::X;
     }
 
+    direction = direction.clamp_length_max(1.0);
+
     let jump = keyboard.pressed(KeyCode::Space);
 
     let turn_in_place = [KeyCode::LAlt, KeyCode::RAlt]
