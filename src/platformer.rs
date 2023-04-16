@@ -284,6 +284,7 @@ impl Default for TnuaPlatformerControls {
 #[derive(Component, Default, Debug)]
 pub struct TnuaPlatformerState {
     jump_state: JumpState,
+    standing_on: Option<StandingOnState>,
 }
 
 #[derive(Default, Debug)]
@@ -313,6 +314,12 @@ enum JumpState {
     FallSection {
         coyote_time: Timer,
     },
+}
+
+#[derive(Debug)]
+struct StandingOnState {
+    entity: Entity,
+    entity_linvel: Vec3,
 }
 
 /// If added as component, Tnua will update its `forward` field instead of rotating the rigid body.
@@ -409,6 +416,7 @@ fn platformer_control_system(
         let effective_velocity: Vec3;
         let climb_vectors: Option<ClimbVectors>;
         let considered_in_air: bool;
+        let impulse_to_offset: Vec3;
 
         if let Some(sensor_output) = &sensor.output {
             effective_velocity = tracker.velocity - sensor_output.entity_linvel;
@@ -432,11 +440,25 @@ fn platformer_control_system(
                 JumpState::StoppedMaintainingJump { .. } => true,
                 JumpState::FallSection { .. } => true,
             };
+            if considered_in_air {
+                impulse_to_offset = Vec3::ZERO;
+            } else if let Some(standing_on_state) = &platformer_state.standing_on {
+                if standing_on_state.entity != sensor_output.entity {
+                    impulse_to_offset = Vec3::ZERO;
+                } else {
+                    impulse_to_offset =
+                        sensor_output.entity_linvel - standing_on_state.entity_linvel;
+                }
+            } else {
+                impulse_to_offset = Vec3::ZERO;
+            }
         } else {
             effective_velocity = tracker.velocity;
             climb_vectors = None;
             considered_in_air = true;
+            impulse_to_offset = Vec3::ZERO;
         }
+        let effective_velocity = effective_velocity + impulse_to_offset;
 
         let upward_velocity = config.up.dot(effective_velocity);
 
@@ -693,7 +715,7 @@ fn platformer_control_system(
             Vec3::ZERO
         };
 
-        motor.desired_acceleration = walk_acceleration + upward_impulse;
+        motor.desired_acceleration = walk_acceleration + upward_impulse + impulse_to_offset;
 
         let torque_to_fix_tilt = {
             let tilted_up = rotation.mul_vec3(config.up);
@@ -781,22 +803,33 @@ fn platformer_control_system(
 
         motor.desired_angacl = torque_to_fix_tilt + turn_torque_to_offset * config.up;
 
+        let is_airborne = match &platformer_state.jump_state {
+            JumpState::NoJump => false,
+            JumpState::SlowDownTooFastSlopeJump { .. } => true,
+            JumpState::MaintainingJump => true,
+            JumpState::FreeFall { coyote_time }
+            | JumpState::StartingJump {
+                desired_energy: _,
+                coyote_time,
+            }
+            | JumpState::StoppedMaintainingJump { coyote_time }
+            | JumpState::FallSection { coyote_time } => coyote_time.finished(),
+        };
+
+        if is_airborne {
+            platformer_state.standing_on = None;
+        } else if let Some(sensor_output) = &sensor.output {
+            platformer_state.standing_on = Some(StandingOnState {
+                entity: sensor_output.entity,
+                entity_linvel: sensor_output.entity_linvel,
+            });
+        }
+        // NOTE: In cases like Coyote time the `standing_on` will not change.
+
         if let Some(animating_output) = animating_output.as_mut() {
-            let new_velocity = effective_velocity + motor.desired_acceleration;
+            let new_velocity = effective_velocity + motor.desired_acceleration - impulse_to_offset;
             let new_upward_velocity = config.up.dot(new_velocity);
             animating_output.running_velocity = new_velocity - config.up * new_upward_velocity;
-            let is_airborne = match &platformer_state.jump_state {
-                JumpState::NoJump => false,
-                JumpState::SlowDownTooFastSlopeJump { .. } => true,
-                JumpState::MaintainingJump => true,
-                JumpState::FreeFall { coyote_time }
-                | JumpState::StartingJump {
-                    desired_energy: _,
-                    coyote_time,
-                }
-                | JumpState::StoppedMaintainingJump { coyote_time }
-                | JumpState::FallSection { coyote_time } => coyote_time.finished(),
-            };
             animating_output.jumping_velocity = is_airborne.then_some(new_upward_velocity);
         }
     }
