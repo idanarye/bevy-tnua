@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Apply additional impulse when moving platform changes velocity to prevent
   https://github.com/idanarye/bevy-tnua/issues/13.
+- Fix ray(/shape)cast hitting a wall when the character squeezes into it.
 
 ## 0.2.2 - 2023-04-15
 ### Added

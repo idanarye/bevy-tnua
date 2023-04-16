@@ -91,6 +91,23 @@ fn update_proximity_sensors_system(
                     }
                 }
             }
+            if let Some(contact) = rapier_context.contact_pair(owner_entity, other_entity) {
+                let same_order = owner_entity == contact.collider1();
+                for manifold in contact.manifolds() {
+                    if 0 < manifold.num_points() {
+                        let manifold_normal = if same_order {
+                            manifold.local_n2()
+                        } else {
+                            manifold.local_n1()
+                        };
+                        if sensor.intersection_match_prevention_cutoff
+                            < manifold_normal.dot(cast_direction)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
             true
         };
         query_filter.predicate = Some(&predicate);
