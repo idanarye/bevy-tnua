@@ -278,6 +278,22 @@ fn ui_system(
                                 .text("Jump Shorten Extra Gravity"),
                             );
 
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.jump_peak_prevention_at_upward_velocity,
+                                    0.0..=20.0,
+                                )
+                                .text("Jump Peak Prevention At Upward Velocity"),
+                            );
+
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.jump_peak_prevention_extra_gravity,
+                                    0.0..=100.0,
+                                )
+                                .text("Jump Peak Prevention Extra Gravity"),
+                            );
+
                             let free_fall_options: [(bool, &str, fn() -> TnuaFreeFallBehavior); 3] = [
                                 (
                                     matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::ExtraGravity(_)),

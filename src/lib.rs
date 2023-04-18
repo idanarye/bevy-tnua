@@ -41,6 +41,8 @@
 //!         jump_start_extra_gravity: 30.0,
 //!         jump_fall_extra_gravity: 20.0,
 //!         jump_shorten_extra_gravity: 40.0,
+//!         jump_peak_prevention_at_upward_velocity: 0.0,
+//!         jump_peak_prevention_extra_gravity: 20.0,
 //!         free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
 //!         tilt_offset_angvel: 10.0,
 //!         tilt_offset_angacl: 1000.0,

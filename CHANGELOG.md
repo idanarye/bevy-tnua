@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   https://github.com/idanarye/bevy-tnua/issues/13.
 - Fix ray(/shape)cast hitting a wall when the character squeezes into it.
 
+### Added
+- `jump_peak_prevention_at_upward_velocity` and
+  `jump_peak_prevention_extra_gravity` settings for shortening the time a
+  character floats at the peak of the jump.
+
 ## 0.2.2 - 2023-04-15
 ### Added
 - Bevy `Reflect`ion for `TnuaPlatformerConfig` (and `TnuaFreeFallBehavior`)
