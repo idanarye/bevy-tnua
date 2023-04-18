@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use bevy_rapier2d::rapier;
+use bevy_rapier2d::rapier::prelude::InteractionGroups;
 
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaProximitySensorOutput,
@@ -42,6 +44,15 @@ fn update_rigid_body_trackers_system(
     }
 }
 
+fn get_collider(
+    rapier_context: &RapierContext,
+    entity: Entity,
+) -> Option<&rapier::geometry::Collider> {
+    let collider_handle = rapier_context.entity2collider().get(&entity)?;
+    rapier_context.colliders.get(*collider_handle)
+    //if let Some(owner_collider) = rapier_context.entity2collider().get(&owner_entity).and_then(|handle| rapier_context.colliders.get(*handle)) {
+}
+
 fn update_proximity_sensors_system(
     rapier_context: Res<RapierContext>,
     mut query: Query<(
@@ -49,16 +60,10 @@ fn update_proximity_sensors_system(
         &GlobalTransform,
         &mut TnuaProximitySensor,
         Option<&TnuaRapier2dSensorShape>,
-        Option<&CollisionGroups>,
-        Option<&SolverGroups>,
     )>,
     other_object_query_query: Query<(&GlobalTransform, &Velocity)>,
-    solver_groups_query: Query<&SolverGroups>,
-    sensor_collider_query: Query<(), With<Sensor>>,
 ) {
-    for (owner_entity, transform, mut sensor, shape, collision_groups, solver_groups) in
-        query.iter_mut()
-    {
+    for (owner_entity, transform, mut sensor, shape) in query.iter_mut() {
         let cast_origin = transform.transform_point(sensor.cast_origin);
         let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
         let cast_direction = owner_rotation * sensor.cast_direction;
@@ -71,24 +76,26 @@ fn update_proximity_sensors_system(
         }
 
         let mut query_filter = QueryFilter::new().exclude_rigid_body(owner_entity);
+        let owner_solver_groups: InteractionGroups;
 
-        query_filter.groups = collision_groups.copied();
+        if let Some(owner_collider) = get_collider(&rapier_context, owner_entity) {
+            let collision_groups = owner_collider.collision_groups();
+            query_filter.groups = Some(CollisionGroups {
+                memberships: Group::from_bits_truncate(collision_groups.memberships.bits()),
+                filters: Group::from_bits_truncate(collision_groups.filter.bits()),
+            });
+            owner_solver_groups = owner_collider.solver_groups();
+        } else {
+            owner_solver_groups = InteractionGroups::all();
+        }
 
         let predicate = |other_entity: Entity| {
-            if sensor_collider_query.contains(other_entity) {
-                return false;
-            }
-            if let Some(solver_groups) = solver_groups {
-                if let Ok(other_solver_groups) = solver_groups_query.get(other_entity) {
-                    if !(solver_groups
-                        .memberships
-                        .intersects(other_solver_groups.filters)
-                        && solver_groups
-                            .filters
-                            .intersects(other_solver_groups.memberships))
-                    {
-                        return false;
-                    }
+            if let Some(other_collider) = get_collider(&rapier_context, other_entity) {
+                if !other_collider.solver_groups().test(owner_solver_groups) {
+                    return false;
+                }
+                if other_collider.is_sensor() {
+                    return false;
                 }
             }
             if let Some(contact) = rapier_context.contact_pair(owner_entity, other_entity) {
