@@ -61,3 +61,4 @@ required-features = ["rapier_3d"]
 [package.metadata.docs.rs]
 
 all-features = true
+features = ["bevy_rapier2d/async-collider", "bevy_rapier3d/headless"]
