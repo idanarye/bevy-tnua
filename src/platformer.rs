@@ -165,6 +165,21 @@ pub struct TnuaPlatformerConfig {
     /// **NOTE**: This force will be added to the normal gravity.
     pub jump_shorten_extra_gravity: f32,
 
+    /// Used to decrease the time the character spends "floating" at the peak of the jump.
+    ///
+    /// When the character's upward velocity is above this value,
+    /// [`jump_peak_prevention_extra_gravity`](Self::jump_peak_prevention_extra_gravity) will be
+    /// added to the gravity in order to shorten the float time.
+    ///
+    /// This extra gravity is taken into account when calculating the initial jump speed, so the
+    /// character is still supposed to reach its [`full_jump_height`](Self::full_jump_height).
+    pub jump_peak_prevention_at_upward_velocity: f32,
+
+    /// Extra gravity for decreasing the time the character spends at the peak of the jump.
+    ///
+    /// **NOTE**: This force will be added to the normal gravity.
+    pub jump_peak_prevention_extra_gravity: f32,
+
     /// What to do when the character is in the air without jumping (e.g. when stepping off a
     /// ledge)
     ///
@@ -506,7 +521,21 @@ fn platformer_control_system(
                 if let Some(jump_multiplier) = controls.jump {
                     let jump_height = jump_multiplier * config.full_jump_height;
                     let gravity = tracker.gravity.dot(-config.up);
-                    Some(gravity * jump_height)
+
+                    let kinetic_energy_at_peak_prevention =
+                        0.5 * config.jump_peak_prevention_at_upward_velocity.powi(2);
+                    let gravity_at_peak_prevention =
+                        gravity + config.jump_peak_prevention_extra_gravity;
+                    let peak_prevention_height =
+                        kinetic_energy_at_peak_prevention / gravity_at_peak_prevention;
+
+                    if jump_height <= peak_prevention_height {
+                        // It's all peak prevention
+                        return Some(gravity_at_peak_prevention * jump_height);
+                    }
+                    let height_until_peak_prevention = jump_height - peak_prevention_height;
+
+                    Some(gravity * height_until_peak_prevention + kinetic_energy_at_peak_prevention)
                 } else {
                     None
                 }
@@ -657,11 +686,18 @@ fn platformer_control_system(
                         }
                     }
                     JumpState::MaintainingJump => {
-                        if upward_velocity <= vertical_velocity {
+                        let relevant_upwrad_velocity = upward_velocity - vertical_velocity;
+                        if relevant_upwrad_velocity <= 0.0 {
                             platformer_state.jump_state = JumpState::FallSection {
                                 coyote_time: make_finished_timer(),
                             };
                             continue;
+                        } else if relevant_upwrad_velocity
+                            < config.jump_peak_prevention_at_upward_velocity
+                        {
+                            break 'upward_impulse -(frame_duration
+                                * config.jump_peak_prevention_extra_gravity)
+                                * config.up;
                         } else if controls.jump.is_none() {
                             platformer_state.jump_state = JumpState::StoppedMaintainingJump {
                                 coyote_time: make_finished_timer(),
