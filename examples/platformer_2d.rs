@@ -212,8 +212,8 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Velocity::default());
     cmd.insert(Collider::capsule_y(0.5, 0.5));
-    cmd.insert(TnuaPlatformerBundle::new_with_config(
-        TnuaPlatformerConfig {
+    cmd.insert(TnuaPlatformerBundle {
+        config: TnuaPlatformerConfig {
             full_speed: 40.0,
             full_jump_height: 4.0,
             up: Vec3::Y,
@@ -235,7 +235,8 @@ fn setup_player(mut commands: Commands) {
             tilt_offset_angacl: 500.0,
             turning_angvel: 10.0,
         },
-    ));
+        ..Default::default()
+    });
     cmd.insert(TnuaManualTurningOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()

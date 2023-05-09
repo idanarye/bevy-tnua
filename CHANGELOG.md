@@ -5,6 +5,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- [**BREAKING**] Removed `TnuaPlatformerBundle::new_with_config`. Users should
+  use this instead:
+  ```rust
+  cmd.insert(TnuaPlatformerBundle {
+      config: TnuaPlatformerConfig {
+          // ...
+      },
+      ..Default::default()
+  });
+  ```
+
 ### Fixed
 - Apply additional impulse when moving platform changes velocity to prevent
   https://github.com/idanarye/bevy-tnua/issues/13.

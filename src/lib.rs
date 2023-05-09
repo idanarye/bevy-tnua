@@ -25,8 +25,8 @@
 //! # let mut cmd = commands.spawn_empty();
 //! cmd.insert(RigidBody::Dynamic);
 //! cmd.insert(Velocity::default());
-//! cmd.insert(TnuaPlatformerBundle::new_with_config(
-//!     TnuaPlatformerConfig {
+//! cmd.insert(TnuaPlatformerBundle {
+//!     config: TnuaPlatformerConfig {
 //!         full_speed: 20.0,
 //!         full_jump_height: 4.0,
 //!         up: Vec3::Y,
@@ -48,7 +48,8 @@
 //!         tilt_offset_angacl: 1000.0,
 //!         turning_angvel: 10.0,
 //!     },
-//! ));
+//!     ..Default::default()
+//! });
 //! ```
 //! Typically though it'd also include a `Collider`.
 //!

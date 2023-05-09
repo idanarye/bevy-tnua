@@ -32,15 +32,18 @@ impl Plugin for TnuaPlatformerPlugin {
 
 /// All the Tnua components needed for a platformer-like character controller.
 ///
-/// This bundle does not have a default, because [`TnuaPlatformerConfig`] does not have a default.
-/// All the other components can just use their default, which is why
-/// [`TnuaPlatformerBundle::new_with_config`] is provided.
+/// Note that:
 ///
-/// Note that this only contains components defined by Tnua. Rapier controllers need to be added
-/// manually.
+/// * While this bundle has a default which provides a workable setting for
+///   [`TnuaPlatformerConfig`], this is only done so that this bundle can be created with the
+///   `..Default::default()` syntax. Users are expected to use provide their own
+///   [`TnuaPlatformerConfig`], customized for the specific game they are making.
 ///
-/// Also note that this does not include optional components like [`TnuaManualTurningOutput`] or
-/// [`TnuaPlatformerAnimatingOutput`].
+/// * This bundle only contains components defined by Tnua. Rapier controllers need to be added
+///   manually.
+///
+/// * That this does not include optional components like [`TnuaManualTurningOutput`] or
+///   [`TnuaPlatformerAnimatingOutput`].
 #[derive(Bundle)]
 pub struct TnuaPlatformerBundle {
     pub config: TnuaPlatformerConfig,
@@ -51,10 +54,31 @@ pub struct TnuaPlatformerBundle {
     pub state: TnuaPlatformerState,
 }
 
-impl TnuaPlatformerBundle {
-    pub fn new_with_config(config: TnuaPlatformerConfig) -> Self {
+impl Default for TnuaPlatformerBundle {
+    fn default() -> Self {
         Self {
-            config,
+            config: TnuaPlatformerConfig {
+                full_speed: 20.0,
+                full_jump_height: 4.0,
+                up: Vec3::Y,
+                forward: -Vec3::Z,
+                float_height: 2.0,
+                cling_distance: 1.0,
+                spring_strengh: 400.0,
+                spring_dampening: 1.2,
+                acceleration: 60.0,
+                air_acceleration: 20.0,
+                coyote_time: 0.15,
+                jump_start_extra_gravity: 30.0,
+                jump_fall_extra_gravity: 20.0,
+                jump_shorten_extra_gravity: 40.0,
+                jump_peak_prevention_at_upward_velocity: 0.0,
+                jump_peak_prevention_extra_gravity: 20.0,
+                free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
+                tilt_offset_angvel: 5.0,
+                tilt_offset_angacl: 500.0,
+                turning_angvel: 10.0,
+            },
             controls: Default::default(),
             motor: Default::default(),
             rigid_body_tracker: Default::default(),
