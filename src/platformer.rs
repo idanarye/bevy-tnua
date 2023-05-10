@@ -69,6 +69,8 @@ impl Default for TnuaPlatformerBundle {
                 acceleration: 60.0,
                 air_acceleration: 20.0,
                 coyote_time: 0.15,
+                jump_input_buffer_time: 0.2,
+                held_jump_cooldown: None,
                 jump_start_extra_gravity: 30.0,
                 jump_fall_extra_gravity: 20.0,
                 jump_shorten_extra_gravity: 40.0,
@@ -170,6 +172,25 @@ pub struct TnuaPlatformerConfig {
 
     /// The time, in seconds, the character can still jump after losing their footing.
     pub coyote_time: f32,
+
+    /// A duration, in seconds, where a player can press a jump button before a jump becomes
+    /// possible (typically when a character is still in the air and about the land) and the jump
+    /// command would still get registered and be executed once the jump is possible.
+    pub jump_input_buffer_time: f32,
+
+    /// A duration, in seconds, after which the character would jump if the jump button was already
+    /// pressed when the jump became available.
+    ///
+    /// The duration is measured from the moment the jump became available - not from the moment
+    /// the jump button was pressed.
+    ///
+    /// When set to `None`, the character will not jump no matter how long the player holds the
+    /// jump button.
+    ///
+    /// If the jump button is held but the jump input is still buffered (see
+    /// [`jump_input_buffer_time`](Self::jump_input_buffer_time)), this setting will have no effect
+    /// because the character will simply jump immediately.
+    pub held_jump_cooldown: Option<f32>,
 
     /// Extra gravity for breaking too fast jump from running up a slope.
     ///
@@ -322,8 +343,18 @@ impl Default for TnuaPlatformerControls {
 #[doc(hidden)]
 #[derive(Component, Default, Debug)]
 pub struct TnuaPlatformerState {
+    jump_command_state: JumpCommandState,
     jump_state: JumpState,
     standing_on: Option<StandingOnState>,
+}
+
+#[derive(Default, Debug)]
+enum JumpCommandState {
+    #[default]
+    Unissued,
+    Consumed,
+    Buffered(Timer),
+    Cooldown(Timer),
 }
 
 #[derive(Default, Debug)]
@@ -540,8 +571,15 @@ fn platformer_control_system(
             result
         }
 
+        let jump_command_can_be_fired = match &mut platformer_state.jump_command_state {
+            JumpCommandState::Unissued => true,
+            JumpCommandState::Consumed => false,
+            JumpCommandState::Buffered(timer) => !timer.tick(time.delta()).finished(),
+            JumpCommandState::Cooldown(timer) => timer.tick(time.delta()).finished(),
+        };
+
         let should_jump_calc_energy = |can_jump: bool| {
-            if can_jump {
+            if can_jump && jump_command_can_be_fired {
                 if let Some(jump_multiplier) = controls.jump {
                     let jump_height = jump_multiplier * config.full_jump_height;
                     let gravity = tracker.gravity.dot(-config.up);
@@ -776,6 +814,58 @@ fn platformer_control_system(
         };
 
         motor.desired_acceleration = walk_acceleration + upward_impulse + impulse_to_offset;
+
+        if controls.jump.is_some() {
+            if jump_command_can_be_fired {
+                match platformer_state.jump_state {
+                    JumpState::StartingJump { .. } | JumpState::MaintainingJump => {
+                        platformer_state.jump_command_state = JumpCommandState::Consumed
+                    }
+                    JumpState::NoJump
+                    | JumpState::FreeFall { .. }
+                    | JumpState::SlowDownTooFastSlopeJump { .. }
+                    | JumpState::StoppedMaintainingJump { .. }
+                    | JumpState::FallSection { .. } => {
+                        if !matches!(
+                            platformer_state.jump_command_state,
+                            JumpCommandState::Buffered(_)
+                        ) {
+                            platformer_state.jump_command_state = JumpCommandState::Buffered(
+                                Timer::from_seconds(config.jump_input_buffer_time, TimerMode::Once),
+                            );
+                        }
+                    }
+                };
+            } else if matches!(
+                platformer_state.jump_command_state,
+                JumpCommandState::Consumed
+            ) {
+                let make_cooldown = || {
+                    if let Some(cooldown) = config.held_jump_cooldown {
+                        JumpCommandState::Cooldown(Timer::from_seconds(cooldown, TimerMode::Once))
+                    } else {
+                        JumpCommandState::Consumed
+                    }
+                };
+                platformer_state.jump_command_state = match &platformer_state.jump_state {
+                    JumpState::NoJump => make_cooldown(),
+                    JumpState::FreeFall { coyote_time }
+                    | JumpState::StoppedMaintainingJump { coyote_time }
+                    | JumpState::FallSection { coyote_time } => {
+                        if coyote_time.finished() {
+                            JumpCommandState::Consumed
+                        } else {
+                            make_cooldown()
+                        }
+                    }
+                    JumpState::StartingJump { .. }
+                    | JumpState::SlowDownTooFastSlopeJump { .. }
+                    | JumpState::MaintainingJump => JumpCommandState::Consumed,
+                };
+            }
+        } else {
+            platformer_state.jump_command_state = JumpCommandState::Unissued;
+        }
 
         let torque_to_fix_tilt = {
             let tilted_up = rotation.mul_vec3(config.up);

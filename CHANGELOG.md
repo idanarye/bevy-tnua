@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
       ..Default::default()
   });
   ```
+- The character no longer automatically jumps repeatedly when the jump button
+  is held. This behavior, though, can be replicated by setting
+  `held_jump_cooldown` to `Some(0.0)`.
 
 ### Fixed
 - Apply additional impulse when moving platform changes velocity to prevent
@@ -26,6 +29,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `jump_peak_prevention_at_upward_velocity` and
   `jump_peak_prevention_extra_gravity` settings for shortening the time a
   character floats at the peak of the jump.
+- `jump_input_buffer_time` setting for jump input buffering - pressing the jump
+  button before the character can actually jump.
+- `held_jump_cooldown` setting for automatically jumping when the jump button
+  is held.
 
 ## 0.2.2 - 2023-04-15
 ### Added

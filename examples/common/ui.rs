@@ -127,6 +127,49 @@ fn slider_or_infinity(
     });
 }
 
+fn slider_or_none(
+    ui: &mut egui::Ui,
+    caption: &str,
+    value: &mut Option<f32>,
+    range: RangeInclusive<f32>,
+) {
+    #[derive(Clone)]
+    struct CachedValue(f32);
+
+    ui.horizontal(|ui| {
+        let mut is_none = value.is_none();
+        let resp = ui.toggle_value(&mut is_none, "\u{d8}");
+        if resp.clicked() {
+            if is_none {
+                ui.memory_mut(|memory| memory.data.insert_temp(resp.id, CachedValue(value.expect("checkbox was clicked, and is_none is now true, so previously it was false, which means value should not be None"))));
+                *value = None;
+            } else {
+                if let Some(CachedValue(saved_value)) =
+                    ui.memory_mut(|memory| memory.data.get_temp(resp.id))
+                {
+                    *value = Some(saved_value);
+                } else {
+                    *value = Some(*range.start());
+                }
+            }
+        }
+        if let Some(value) = value.as_mut() {
+            ui.add(egui::Slider::new(value, range).text(caption));
+        } else {
+            let mut copied_saved_value = ui.memory_mut(|memory| {
+                let CachedValue(saved_value) = memory
+                    .data
+                    .get_temp_mut_or(resp.id, CachedValue(*range.start()));
+                *saved_value
+            });
+            ui.add_enabled(
+                false,
+                egui::Slider::new(&mut copied_saved_value, range).text(caption),
+            );
+        }
+    });
+}
+
 fn ui_system(
     mut egui_context: EguiContexts,
     mut tnua_active: ResMut<ExampleUiTnuaActive>,
@@ -256,6 +299,8 @@ fn ui_system(
                                 )
                                 .text("Coyote Time"),
                             );
+                            ui.add(egui::Slider::new(&mut platformer_config.jump_input_buffer_time, 0.0..=1.0).text("Jump Input Buffer Time"));
+                            slider_or_none(ui, "Held Jump Cooldown", &mut platformer_config.held_jump_cooldown, 0.0..=2.0);
                             ui.add(
                                 egui::Slider::new(
                                     &mut platformer_config.jump_start_extra_gravity,
