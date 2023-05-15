@@ -227,6 +227,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             tilt_offset_angvel: 5.0,
             tilt_offset_angacl: 500.0,
             turning_angvel: 10.0,
+            height_change_impulse_for_duration: 0.02,
+            height_change_impulse_limit: 40.0,
         },
         ..Default::default()
     });
@@ -326,11 +328,16 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
+    let crouch = [KeyCode::LControl, KeyCode::RControl]
+        .into_iter()
+        .any(|key_code| keyboard.pressed(key_code));
+
     for mut controls in query.iter_mut() {
         *controls = TnuaPlatformerControls {
             desired_velocity: if turn_in_place { Vec3::ZERO } else { direction },
             desired_forward: direction.normalize(),
             jump: jump.then(|| 1.0),
+            float_height_offset: if crouch { -0.9 } else { 0.0 },
         };
     }
 }
@@ -380,6 +387,8 @@ enum AnimationState {
     Running(f32),
     Jumping,
     Falling,
+    Crouching,
+    Crawling(f32),
 }
 
 fn animate(
@@ -401,15 +410,24 @@ fn animate(
                 }
             } else {
                 let speed = animating_output.running_velocity.length();
+                let is_crouching = animating_output.standing_offset < -0.3;
                 if 0.01 < speed {
-                    AnimationState::Running(2.0 * speed / 20.0)
+                    if is_crouching {
+                        AnimationState::Crawling(0.2 * speed)
+                    } else {
+                        AnimationState::Running(0.1 * speed)
+                    }
                 } else {
-                    AnimationState::Standing
+                    if is_crouching {
+                        AnimationState::Crouching
+                    } else {
+                        AnimationState::Standing
+                    }
                 }
             }
         }) {
             TnuaAnimatingStateDirective::Maintain { state } => {
-                if let AnimationState::Running(speed) = state {
+                if let AnimationState::Running(speed) | AnimationState::Crawling(speed) = state {
                     player.set_speed(*speed);
                 }
             }
@@ -438,6 +456,18 @@ fn animate(
                     player
                         .start(handler.animations["Falling"].clone_weak())
                         .set_speed(1.0);
+                }
+                AnimationState::Crouching => {
+                    player
+                        .start(handler.animations["Crouching"].clone_weak())
+                        .set_speed(1.0)
+                        .repeat();
+                }
+                AnimationState::Crawling(speed) => {
+                    player
+                        .start(handler.animations["Crawling"].clone_weak())
+                        .set_speed(*speed)
+                        .repeat();
                 }
             },
         }

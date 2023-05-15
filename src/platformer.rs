@@ -80,6 +80,8 @@ impl Default for TnuaPlatformerBundle {
                 tilt_offset_angvel: 5.0,
                 tilt_offset_angacl: 500.0,
                 turning_angvel: 10.0,
+                height_change_impulse_for_duration: 0.02,
+                height_change_impulse_limit: 40.0,
             },
             controls: Default::default(),
             motor: Default::default(),
@@ -248,6 +250,20 @@ pub struct TnuaPlatformerConfig {
 
     /// The maximum angular velocity used for turning the character when the direction changes.
     pub turning_angvel: f32,
+
+    /// A duration, in seconds, that it should take for the character to change its floating height
+    /// when the [`float_height_offset`](TnuaPlatformerControls::float_height_offset) control
+    /// field is changed.
+    ///
+    /// Set this to more than the expected duration of a single frame, so that the character will
+    /// some distance for the [`spring_dampening`](Self::spring_dampening) force to reduce its
+    /// vertical velocity.
+    pub height_change_impulse_for_duration: f32,
+
+    /// The maximum impulse to apply when
+    /// [`float_height_offset`](TnuaPlatformerControls::float_height_offset) control field is
+    /// changed.
+    pub height_change_impulse_limit: f32,
 }
 
 #[derive(Debug, Reflect)]
@@ -300,6 +316,7 @@ pub enum TnuaFreeFallBehavior {
 ///             desired_velocity: Vec3::X, // always go right for some reason
 ///             desired_forward: -Vec3::X, // face backwards from walking direction
 ///             jump: None, // no jumping
+///             float_height_offset: 0.0, // not crouching,
 ///         };
 ///     }
 /// }
@@ -328,6 +345,22 @@ pub struct TnuaPlatformerControls {
     /// than 1 if the height is calculated on something like an analog button press strenght or an
     /// AI that needs to decide exactly how high to jump.
     pub jump: Option<f32>,
+
+    /// An offset from the regular float height. Setting this to a negative number will make the
+    /// character crouch.
+    ///
+    /// Prefer this over manipulating [`float_height`](TnuaPlatformerConfig::float_height) during
+    /// gameplay, because:
+    /// * Changing `float_height_offset` will make the transition between float heights faster by
+    ///   applying a one shot boost impulse (can be configured with the
+    ///   [`height_change_impulse_for_duration`](TnuaPlatformerConfig::height_change_impulse_for_duration)
+    ///   and [`height_change_impulse_limit`](TnuaPlatformerConfig::height_change_impulse_limit)
+    ///   settings) when `float_height_offset` changes.
+    /// * When `float_height_offset` is negative, the raycast will still reach the same lenght as
+    ///   it would for the base float height. This means that
+    ///   [`cling_distance`](TnuaPlatformerConfig::cling_distance) does not need to be big enough
+    ///   to cover the crouch offset.
+    pub float_height_offset: f32,
 }
 
 impl Default for TnuaPlatformerControls {
@@ -336,6 +369,7 @@ impl Default for TnuaPlatformerControls {
             desired_velocity: Vec3::ZERO,
             desired_forward: Vec3::ZERO,
             jump: None,
+            float_height_offset: 0.0,
         }
     }
 }
@@ -346,6 +380,7 @@ pub struct TnuaPlatformerState {
     jump_command_state: JumpCommandState,
     jump_state: JumpState,
     standing_on: Option<StandingOnState>,
+    prev_float_height_offset: f32,
 }
 
 #[derive(Default, Debug)]
@@ -415,6 +450,16 @@ pub struct TnuaPlatformerAnimatingOutput {
     /// The current jumping velocity on the [`up`](TnuaPlatformerConfig::up), or `None` if the
     /// character is not currently jumping.
     pub jumping_velocity: Option<f32>,
+
+    /// When the character is standing, this is the offset from the configured
+    /// [`float_height`](TnuaPlatformerConfig::float_height).
+    ///
+    /// Note that this value does not take the
+    /// [`float_height_offset`](TnuaPlatformerControls::float_height_offset) control field into
+    /// account. This means that the value of `standing_offset` should be close to that of
+    /// `float_height_offset` (after the transition time, of course), and can be used to determine
+    /// if the character is standing or crouching.
+    pub standing_offset: f32,
 }
 
 #[allow(clippy::type_complexity)]
@@ -468,7 +513,8 @@ fn platformer_control_system(
         }
 
         let (_, rotation, translation) = transform.to_scale_rotation_translation();
-        sensor.cast_range = config.float_height + config.cling_distance;
+        sensor.cast_range =
+            config.float_height + config.cling_distance + controls.float_height_offset.max(0.0);
 
         struct ClimbVectors {
             direction: Vec3,
@@ -606,6 +652,7 @@ fn platformer_control_system(
             }
         };
 
+        let mut standing_offset = 0.0;
         let upward_impulse: Vec3 = 'upward_impulse: {
             // TODO: Once `std::mem::variant_count` gets stabilized, use that instead. The idea is
             // to allow jumping through multiple states but failing if we get into loop.
@@ -624,7 +671,23 @@ fn platformer_control_system(
                                 continue;
                             } else {
                                 let spring_offset = config.float_height - sensor_output.proximity;
+                                standing_offset = -spring_offset;
+                                let spring_offset = spring_offset + controls.float_height_offset;
                                 let spring_force: f32 = spring_offset * config.spring_strengh;
+                                let offset_change_impulse: f32 = if 0.01
+                                    <= (controls.float_height_offset
+                                        - platformer_state.prev_float_height_offset)
+                                        .abs()
+                                {
+                                    let velocity_to_get_to_new_float_height =
+                                        spring_offset / config.height_change_impulse_for_duration;
+                                    velocity_to_get_to_new_float_height.clamp(
+                                        -config.height_change_impulse_limit,
+                                        config.height_change_impulse_limit,
+                                    )
+                                } else {
+                                    0.0
+                                };
 
                                 let relative_velocity =
                                     effective_velocity.dot(config.up) - vertical_velocity;
@@ -634,9 +697,18 @@ fn platformer_control_system(
                                 let spring_force = spring_force - dampening_force;
 
                                 let gravity_compensation = -tracker.gravity.dot(config.up);
-                                break 'upward_impulse frame_duration
-                                    * (spring_force + gravity_compensation)
-                                    * config.up;
+
+                                let spring_impulse =
+                                    frame_duration * (spring_force + gravity_compensation);
+
+                                let impulse_to_use =
+                                    if spring_impulse.abs() < offset_change_impulse.abs() {
+                                        offset_change_impulse
+                                    } else {
+                                        spring_impulse
+                                    };
+
+                                break 'upward_impulse impulse_to_use * config.up;
                             }
                         } else {
                             platformer_state.jump_state = JumpState::FreeFall {
@@ -812,6 +884,7 @@ fn platformer_control_system(
             error!("Tnua could not decide on jump state");
             Vec3::ZERO
         };
+        platformer_state.prev_float_height_offset = controls.float_height_offset;
 
         motor.desired_acceleration = walk_acceleration + upward_impulse + impulse_to_offset;
 
@@ -981,6 +1054,7 @@ fn platformer_control_system(
             let new_upward_velocity = config.up.dot(new_velocity);
             animating_output.running_velocity = new_velocity - config.up * new_upward_velocity;
             animating_output.jumping_velocity = is_airborne.then_some(new_upward_velocity);
+            animating_output.standing_offset = standing_offset;
         }
     }
 }

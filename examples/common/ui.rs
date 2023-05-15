@@ -213,7 +213,14 @@ fn ui_system(
         }
     }
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
-        ui.label("Controls: Move with the arrow keys. Jump with Spacebar. Turn in place with Alt");
+        egui::CollapsingHeader::new("Controls:")
+            .default_open(false)
+            .show(ui, |ui| {
+                ui.label("Move with the arrow keys");
+                ui.label("Jump with Spacebar (Also with the up arrow also works in 2D)");
+                ui.label("Crouch with Ctrl (Also with the down arrow key in 2D)");
+                ui.label("Turn in place with Alt");
+            });
         ui.checkbox(&mut tnua_active.0, "Tnua Enabled (does not affect the physics backend itself)");
         for (
             entity,
@@ -375,6 +382,15 @@ fn ui_system(
                             slider_or_infinity(ui, "Staying Upward Max Angular Acceleration", &mut platformer_config.tilt_offset_angacl, 0.0..=2000.0);
 
                             slider_or_infinity(ui, "Turning Angular Velocity", &mut platformer_config.turning_angvel, 0.0..=70.0);
+
+                            ui.add(
+                                egui::Slider::new(
+                                    &mut platformer_config.height_change_impulse_for_duration,
+                                    0.001..=0.2,
+                                ).text("Height Change Impulse for Duration"),
+                            );
+
+                            slider_or_infinity(ui, "Height Change Impulse", &mut platformer_config.height_change_impulse_limit, 0.0..=40.0);
                         });
                         ui.vertical(|ui| {
                             plot_source.show(entity, ui);

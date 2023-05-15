@@ -49,6 +49,8 @@
 //!         tilt_offset_angvel: 10.0,
 //!         tilt_offset_angacl: 1000.0,
 //!         turning_angvel: 10.0,
+//!         height_change_impulse_for_duration: 0.02,
+//!         height_change_impulse_limit: 10.0,
 //!     },
 //!     ..Default::default()
 //! });
@@ -80,6 +82,7 @@
 //!             desired_velocity: Vec3::X, // always go right for some reason
 //!             desired_forward: -Vec3::X, // face backwards from walking direction
 //!             jump: None, // no jumping
+//!             float_height_offset: 0.0, // not crouching
 //!         };
 //!     }
 //! }
