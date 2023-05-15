@@ -13,8 +13,10 @@ Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions
 * Supports both 2D and 3D versions of [Rapier](https://rapier.rs/)
 * Running
 * Jumping
+* Crouching
 * Variable height jumping
 * Coyote time
+* Jump buffer
 * Running up/down slopes/stairs
 * Tilt correction
 * Moving platforms

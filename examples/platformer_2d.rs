@@ -81,6 +81,7 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         ),
         ([4.0, 2.0], Transform::from_xyz(-4.0, 1.0, 0.0)),
         ([6.0, 1.0], Transform::from_xyz(-10.0, 4.0, 0.0)),
+        ([6.0, 1.0], Transform::from_xyz(-20.0, 2.6, 0.0)),
     ] {
         let mut cmd = commands.spawn_empty();
         cmd.insert(SpriteBundle {
@@ -236,7 +237,7 @@ fn setup_player(mut commands: Commands) {
             tilt_offset_angvel: 5.0,
             tilt_offset_angacl: 500.0,
             turning_angvel: 10.0,
-            height_change_impulse_for_duration: 0.02,
+            height_change_impulse_for_duration: 0.04,
             height_change_impulse_limit: 40.0,
         },
         ..Default::default()
