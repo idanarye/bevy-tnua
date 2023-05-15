@@ -335,9 +335,15 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
+    let speed_factor = if crouch { 0.2 } else { 1.0 };
+
     for mut controls in query.iter_mut() {
         *controls = TnuaPlatformerControls {
-            desired_velocity: if turn_in_place { Vec3::ZERO } else { direction },
+            desired_velocity: if turn_in_place {
+                Vec3::ZERO
+            } else {
+                speed_factor * direction
+            },
             desired_forward: direction.normalize_or_zero(),
             jump: jump.then(|| 1.0),
             float_height_offset: if crouch { -0.9 } else { 0.0 },
