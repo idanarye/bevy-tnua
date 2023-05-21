@@ -101,6 +101,7 @@ mod backend_rapier2d;
 #[cfg(feature = "rapier_3d")]
 mod backend_rapier3d;
 mod platformer;
+mod subservient_sensors;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 
 #[cfg(feature = "rapier_2d")]
@@ -125,6 +126,8 @@ pub struct TnuaSystemSet;
 pub enum TnuaPipelineStages {
     /// Data is read from the physics backend.
     Sensors,
+    /// Data is propagated through the subservient sensors.
+    SubservientSensors,
     /// Tnua decieds how the entity should be manipulated.
     Logic,
     /// Forces are applied in the physiscs backend.

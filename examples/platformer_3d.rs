@@ -7,9 +7,9 @@ use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
     TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
-    TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
-    TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
-    TnuaSystemSet,
+    TnuaKeepCrouchingBelowObstacles, TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle,
+    TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dPlugin,
+    TnuaRapier3dSensorShape, TnuaSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
@@ -233,6 +233,9 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         ..Default::default()
     });
+    cmd.insert(TnuaKeepCrouchingBelowObstacles::new(1.5, |cmd| {
+        cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
+    }));
     cmd.insert(TnuaAnimatingState::<AnimationState>::default());
     cmd.insert(TnuaPlatformerAnimatingOutput::default());
     cmd.insert({
@@ -297,10 +300,13 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn apply_controls(
     mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,
-    mut query: Query<&mut TnuaPlatformerControls>,
+    mut query: Query<(
+        &mut TnuaPlatformerControls,
+        &TnuaKeepCrouchingBelowObstacles,
+    )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
-        for mut controls in query.iter_mut() {
+        for (mut controls, _) in query.iter_mut() {
             *controls = Default::default();
         }
         return;
@@ -333,9 +339,13 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    let speed_factor = if crouch { 0.2 } else { 1.0 };
+    for (mut controls, keep_crouching) in query.iter_mut() {
+        let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
+            0.2
+        } else {
+            1.0
+        };
 
-    for mut controls in query.iter_mut() {
         *controls = TnuaPlatformerControls {
             desired_velocity: if turn_in_place {
                 Vec3::ZERO

@@ -1,7 +1,9 @@
 use std::time::Duration;
 
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
+use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker, TnuaSystemSet,
 };
@@ -20,6 +22,7 @@ impl Plugin for TnuaPlatformerPlugin {
         app.configure_sets(
             (
                 TnuaPipelineStages::Sensors,
+                TnuaPipelineStages::SubservientSensors,
                 TnuaPipelineStages::Logic,
                 TnuaPipelineStages::Motors,
             )
@@ -27,6 +30,9 @@ impl Plugin for TnuaPlatformerPlugin {
                 .in_set(TnuaSystemSet),
         );
         app.add_system(platformer_control_system.in_set(TnuaPipelineStages::Logic));
+        app.add_system(
+            handle_keep_crouching_below_obstacles.in_set(TnuaPipelineStages::SubservientSensors),
+        );
     }
 }
 
@@ -349,6 +355,9 @@ pub struct TnuaPlatformerControls {
     /// An offset from the regular float height. Setting this to a negative number will make the
     /// character crouch.
     ///
+    /// To prevent the character from standing up while under a low ceiling, use
+    /// [`TnuaKeepCrouchingBelowObstacles`].
+    ///
     /// Prefer this over manipulating [`float_height`](TnuaPlatformerConfig::float_height) during
     /// gameplay, because:
     /// * Changing `float_height_offset` will make the transition between float heights faster by
@@ -461,7 +470,6 @@ pub struct TnuaPlatformerAnimatingOutput {
     /// if the character is standing or crouching.
     pub standing_offset: f32,
 }
-
 #[allow(clippy::type_complexity)]
 fn platformer_control_system(
     time: Res<Time>,
@@ -472,6 +480,7 @@ fn platformer_control_system(
         &mut TnuaPlatformerState,
         &TnuaRigidBodyTracker,
         &mut TnuaProximitySensor,
+        Option<&TnuaKeepCrouchingBelowObstacles>,
         &mut TnuaMotor,
         Option<&mut TnuaManualTurningOutput>,
         Option<&mut TnuaPlatformerAnimatingOutput>,
@@ -488,6 +497,7 @@ fn platformer_control_system(
         mut platformer_state,
         tracker,
         mut sensor,
+        keep_crouching,
         mut motor,
         manual_turning_output,
         mut animating_output,
@@ -513,8 +523,17 @@ fn platformer_control_system(
         }
 
         let (_, rotation, translation) = transform.to_scale_rotation_translation();
+
+        let float_height_offset = if let Some(keep_crouching) = keep_crouching {
+            controls
+                .float_height_offset
+                .min(keep_crouching.force_crouching_to_height)
+        } else {
+            controls.float_height_offset
+        };
+
         sensor.cast_range =
-            config.float_height + config.cling_distance + controls.float_height_offset.max(0.0);
+            config.float_height + config.cling_distance + float_height_offset.max(0.0);
 
         struct ClimbVectors {
             direction: Vec3,
@@ -672,10 +691,10 @@ fn platformer_control_system(
                             } else {
                                 let spring_offset = config.float_height - sensor_output.proximity;
                                 standing_offset = -spring_offset;
-                                let spring_offset = spring_offset + controls.float_height_offset;
+                                let spring_offset = spring_offset + float_height_offset;
                                 let spring_force: f32 = spring_offset * config.spring_strengh;
                                 let offset_change_impulse: f32 = if 0.01
-                                    <= (controls.float_height_offset
+                                    <= (float_height_offset
                                         - platformer_state.prev_float_height_offset)
                                         .abs()
                                 {
@@ -884,7 +903,7 @@ fn platformer_control_system(
             error!("Tnua could not decide on jump state");
             Vec3::ZERO
         };
-        platformer_state.prev_float_height_offset = controls.float_height_offset;
+        platformer_state.prev_float_height_offset = float_height_offset;
 
         motor.desired_acceleration = walk_acceleration + upward_impulse + impulse_to_offset;
 
@@ -1055,6 +1074,88 @@ fn platformer_control_system(
             animating_output.running_velocity = new_velocity - config.up * new_upward_velocity;
             animating_output.jumping_velocity = is_airborne.then_some(new_upward_velocity);
             animating_output.standing_offset = standing_offset;
+        }
+    }
+}
+
+/// Prevent the character from standing up if the player releases the crouch button while under an
+/// obstacle.
+///
+/// This will create a child entity with a proximity sensor pointed upward. When that sensor senses
+/// a ceiling, it will prevent the height offset from increasing - even if the
+/// [`float_height_offset`](TnuaPlatformerControls::float_height_offset) control field raises.
+#[derive(Component)]
+pub struct TnuaKeepCrouchingBelowObstacles {
+    sensor_entity: Option<Entity>,
+    detection_height: f32,
+    modify_sensor: Box<dyn Send + Sync + Fn(&mut EntityCommands)>,
+    /// The current crouch state of the character. Read it to determine if the character is
+    /// crawling and thus its speed needs to be reduced.
+    pub force_crouching_to_height: f32,
+}
+
+impl TnuaKeepCrouchingBelowObstacles {
+    /// Create a new [`TnuaKeepCrouchingBelowObstacles`].
+    ///
+    /// # Arguments
+    ///
+    /// * `detection_height`: The distance, from the character's origin, to cast a ray that looks
+    ///   for for a ceiling. Set this to be exactly enough to detect a ceiling that'd prevent
+    ///   standing up when the player is crouched.
+    /// * `modify_sensor`: A closure that operates on the sensor entity when created. Use it to add
+    ///   a sensor shape, so that the character will not stand up under the edge of the ceiling and
+    ///   may still get stuck trying to stand up.
+    pub fn new(
+        detection_height: f32,
+        modify_sensor: impl 'static + Send + Sync + Fn(&mut EntityCommands),
+    ) -> Self {
+        Self {
+            sensor_entity: None,
+            detection_height,
+            modify_sensor: Box::new(modify_sensor),
+            force_crouching_to_height: f32::INFINITY,
+        }
+    }
+}
+
+fn handle_keep_crouching_below_obstacles(
+    mut query: Query<(
+        Entity,
+        &mut TnuaKeepCrouchingBelowObstacles,
+        &TnuaPlatformerControls,
+    )>,
+    sensors_query: Query<&TnuaProximitySensor, With<TnuaSubservientSensor>>,
+    mut commands: Commands,
+) {
+    for (owner_entity, mut keep_crouching, controls) in query.iter_mut() {
+        if let Some(subservient_sensor) = keep_crouching
+            .sensor_entity
+            .and_then(|entity| sensors_query.get(entity).ok())
+        {
+            if subservient_sensor.output.is_some() {
+                keep_crouching.force_crouching_to_height = keep_crouching
+                    .force_crouching_to_height
+                    .min(controls.float_height_offset);
+            } else {
+                keep_crouching.force_crouching_to_height = f32::INFINITY;
+            }
+        } else {
+            let mut cmd = commands.spawn((
+                TransformBundle {
+                    ..Default::default()
+                },
+                TnuaSubservientSensor { owner_entity },
+                TnuaProximitySensor {
+                    cast_direction: Vec3::Y,
+                    cast_range: keep_crouching.detection_height,
+                    ..Default::default()
+                },
+            ));
+            cmd.set_parent(owner_entity);
+            (keep_crouching.modify_sensor)(&mut cmd);
+            let sensor_entity = cmd.id();
+            keep_crouching.sensor_entity = Some(sensor_entity);
+            keep_crouching.force_crouching_to_height = f32::INFINITY;
         }
     }
 }

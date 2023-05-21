@@ -3,6 +3,7 @@ use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier;
 use bevy_rapier3d::rapier::prelude::InteractionGroups;
 
+use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaProximitySensorOutput,
     TnuaRigidBodyTracker,
@@ -60,10 +61,11 @@ fn update_proximity_sensors_system(
         &GlobalTransform,
         &mut TnuaProximitySensor,
         Option<&TnuaRapier3dSensorShape>,
+        Option<&TnuaSubservientSensor>,
     )>,
     other_object_query: Query<(&GlobalTransform, &Velocity)>,
 ) {
-    for (owner_entity, transform, mut sensor, shape) in query.iter_mut() {
+    for (owner_entity, transform, mut sensor, shape, subservient) in query.iter_mut() {
         let cast_origin = transform.transform_point(sensor.cast_origin);
         let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
         let cast_direction = owner_rotation * sensor.cast_direction;
@@ -74,6 +76,12 @@ fn update_proximity_sensors_system(
             intersection_point: Vec3,
             normal: Vec3,
         }
+
+        let owner_entity = if let Some(subservient) = subservient {
+            subservient.owner_entity
+        } else {
+            owner_entity
+        };
 
         let mut query_filter = QueryFilter::new().exclude_rigid_body(owner_entity);
         let owner_solver_groups: InteractionGroups;

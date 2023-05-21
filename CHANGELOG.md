@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     getting back up.
   - `standing_offset` field to `TnuaPlatformerAnimatingOutput` to assist in
     applying crouching/crawling animation.
+  - `TnuaKeepCrouchingBelowObstacles` component for preventing the character
+    from standing up under a too-low ceiling.
 
 ## 0.3.0 - 2023-05-13
 ### Changed
