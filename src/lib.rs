@@ -102,6 +102,7 @@ mod backend_rapier2d;
 mod backend_rapier3d;
 mod platformer;
 mod subservient_sensors;
+mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 
 #[cfg(feature = "rapier_2d")]

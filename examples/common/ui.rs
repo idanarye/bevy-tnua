@@ -317,6 +317,14 @@ fn ui_system(
                             );
                             ui.add(
                                 egui::Slider::new(
+                                    &mut platformer_config.jump_takeoff_extra_gravity,
+                                    0.0..=100.0,
+                                )
+                                .text("Jump Takeoff Extra Gravity"),
+                            );
+                            slider_or_infinity(ui, "Jump Takeoff Above Velocity", &mut platformer_config.jump_takeoff_above_velocity, 0.0..=20.0);
+                            ui.add(
+                                egui::Slider::new(
                                     &mut platformer_config.jump_fall_extra_gravity,
                                     0.0..=50.0,
                                 )

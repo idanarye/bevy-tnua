@@ -220,6 +220,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             jump_input_buffer_time: 0.2,
             held_jump_cooldown: None,
             jump_start_extra_gravity: 30.0,
+            jump_takeoff_extra_gravity: 30.0,
+            jump_takeoff_above_velocity: 3.0,
             jump_fall_extra_gravity: 20.0,
             jump_shorten_extra_gravity: 40.0,
             jump_peak_prevention_at_upward_velocity: 0.0,

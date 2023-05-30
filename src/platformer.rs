@@ -4,6 +4,7 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
 use crate::subservient_sensors::TnuaSubservientSensor;
+use crate::util::SegmentedJumpInitialVelocityCalculator;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker, TnuaSystemSet,
 };
@@ -78,6 +79,8 @@ impl Default for TnuaPlatformerBundle {
                 jump_input_buffer_time: 0.2,
                 held_jump_cooldown: None,
                 jump_start_extra_gravity: 30.0,
+                jump_takeoff_extra_gravity: 30.0,
+                jump_takeoff_above_velocity: 3.0,
                 jump_fall_extra_gravity: 20.0,
                 jump_shorten_extra_gravity: 40.0,
                 jump_peak_prevention_at_upward_velocity: 0.0,
@@ -207,6 +210,9 @@ pub struct TnuaPlatformerConfig {
     ///
     /// **NOTE**: This force will be added to the normal gravity.
     pub jump_start_extra_gravity: f32,
+
+    pub jump_takeoff_extra_gravity: f32,
+    pub jump_takeoff_above_velocity: f32,
 
     /// Extra gravity for falling down after reaching the top of the jump.
     ///
@@ -647,22 +653,25 @@ fn platformer_control_system(
             if can_jump && jump_command_can_be_fired {
                 if let Some(jump_multiplier) = controls.jump {
                     let jump_height = jump_multiplier * config.full_jump_height;
+                    let mut calculator = SegmentedJumpInitialVelocityCalculator::new(jump_height);
+
                     let gravity = tracker.gravity.dot(-config.up);
 
-                    let kinetic_energy_at_peak_prevention =
-                        0.5 * config.jump_peak_prevention_at_upward_velocity.powi(2);
-                    let gravity_at_peak_prevention =
-                        gravity + config.jump_peak_prevention_extra_gravity;
-                    let peak_prevention_height =
-                        kinetic_energy_at_peak_prevention / gravity_at_peak_prevention;
-
-                    if jump_height <= peak_prevention_height {
-                        // It's all peak prevention
-                        return Some(gravity_at_peak_prevention * jump_height);
-                    }
-                    let height_until_peak_prevention = jump_height - peak_prevention_height;
-
-                    Some(gravity * height_until_peak_prevention + kinetic_energy_at_peak_prevention)
+                    let kinetic_energy = calculator
+                        // Jump peak prevention segment
+                        .add_segment(
+                            gravity + config.jump_peak_prevention_extra_gravity,
+                            config.jump_peak_prevention_at_upward_velocity,
+                        )
+                        // Regular gravity segment
+                        .add_segment(gravity, config.jump_takeoff_above_velocity)
+                        // Jump takeoff segment
+                        .add_segment(
+                            gravity + config.jump_takeoff_extra_gravity,
+                            f32::NEG_INFINITY,
+                        )
+                        .kinetic_energy();
+                    Some(kinetic_energy)
                 } else {
                     None
                 }
@@ -833,9 +842,11 @@ fn platformer_control_system(
                             platformer_state.jump_state = JumpState::MaintainingJump;
                             continue;
                         } else {
-                            break 'upward_impulse -(frame_duration
-                                * config.jump_start_extra_gravity)
-                                * config.up;
+                            let mut extra_gravity = config.jump_start_extra_gravity;
+                            if config.jump_takeoff_above_velocity <= relative_velocity {
+                                extra_gravity += config.jump_takeoff_extra_gravity;
+                            }
+                            break 'upward_impulse -(frame_duration * extra_gravity) * config.up;
                         }
                     }
                     JumpState::MaintainingJump => {
@@ -845,6 +856,10 @@ fn platformer_control_system(
                                 coyote_time: make_finished_timer(),
                             };
                             continue;
+                        } else if config.jump_takeoff_above_velocity <= relevant_upwrad_velocity {
+                            break 'upward_impulse -(frame_duration
+                                * config.jump_takeoff_extra_gravity)
+                                * config.up;
                         } else if relevant_upwrad_velocity
                             < config.jump_peak_prevention_at_upward_velocity
                         {
