@@ -668,7 +668,7 @@ fn platformer_control_system(
                         // Jump takeoff segment
                         .add_segment(
                             gravity + config.jump_takeoff_extra_gravity,
-                            f32::NEG_INFINITY,
+                            f32::INFINITY,
                         )
                         .kinetic_energy();
                     Some(kinetic_energy)
