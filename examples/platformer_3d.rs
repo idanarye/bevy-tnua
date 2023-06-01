@@ -8,8 +8,8 @@ use bevy_rapier3d::prelude::*;
 use bevy_tnua::{
     TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
     TnuaKeepCrouchingBelowObstacles, TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle,
-    TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dPlugin,
-    TnuaRapier3dSensorShape, TnuaSystemSet,
+    TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dIOBundle,
+    TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
@@ -202,8 +202,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         names_from: asset_server.load("player.glb"),
     });
     cmd.insert(RigidBody::Dynamic);
-    cmd.insert(Velocity::default());
     cmd.insert(Collider::capsule_y(0.5, 0.5));
+    cmd.insert(TnuaRapier3dIOBundle::default());
     cmd.insert(TnuaPlatformerBundle {
         config: TnuaPlatformerConfig {
             full_speed: 20.0,

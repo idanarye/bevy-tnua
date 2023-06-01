@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use bevy::prelude::*;
 
 /// Newtonian state of the rigid body.
@@ -91,6 +93,57 @@ pub struct TnuaProximitySensorOutput {
     pub entity_angvel: Vec3,
 }
 
+/// Represents a change to velocity (linear or angular)
+pub struct TnuaVelChange {
+    // The part of the velocity change that gets multiplied by the frame duration.
+    //
+    // In Rapier, this is applied using `ExternalForce` so that the simulation will apply in
+    // smoothly over time and won't be sensitive to frame rate.
+    pub acceleration: Vec3,
+    // The part of the velocity change that gets added to the velocity as-is.
+    //
+    // In Rapier, this is added directly to the `Velocity` component.
+    pub boost: Vec3,
+}
+
+impl TnuaVelChange {
+    pub const ZERO: Self = Self {
+        acceleration: Vec3::ZERO,
+        boost: Vec3::ZERO,
+    };
+
+    pub fn acceleration(acceleration: Vec3) -> Self {
+        Self {
+            acceleration,
+            boost: Vec3::ZERO,
+        }
+    }
+
+    pub fn boost(boost: Vec3) -> Self {
+        Self {
+            acceleration: Vec3::ZERO,
+            boost,
+        }
+    }
+}
+
+impl Default for TnuaVelChange {
+    fn default() -> Self {
+        Self::ZERO
+    }
+}
+
+impl Add<TnuaVelChange> for TnuaVelChange {
+    type Output = TnuaVelChange;
+
+    fn add(self, rhs: TnuaVelChange) -> Self::Output {
+        Self::Output {
+            acceleration: self.acceleration + rhs.acceleration,
+            boost: self.boost + rhs.boost,
+        }
+    }
+}
+
 /// Instructions on how to move forces to the rigid body.
 ///
 /// The physics backend is responsible for reading this component during
@@ -101,12 +154,11 @@ pub struct TnuaProximitySensorOutput {
 /// applied directly to the velocity.
 #[derive(Component, Default)]
 pub struct TnuaMotor {
-    /// How much velocity to add to the rigid body in the current frame. Does not get multiplied by
-    /// the frame's duration - Tnua already does that multiplication.
-    pub desired_acceleration: Vec3,
+    /// How much velocity to add to the rigid body in the current frame.
+    pub lin: TnuaVelChange,
+
     /// How much angular velocity to add to the rigid body in the current frame, given as the
     /// rotation axis multiplied by the rotation speed in radians per second. Can be extracted from
-    /// a quaternion using [`Quat::xyz`]. Does not get multiplied by the frame's duration - Tnua
-    /// already does that multiplication.
-    pub desired_angacl: Vec3,
+    /// a quaternion using [`Quat::xyz`].
+    pub ang: TnuaVelChange,
 }

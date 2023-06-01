@@ -28,6 +28,14 @@ impl Plugin for TnuaRapier2dPlugin {
     }
 }
 
+/// `bevy_rapier_2d`-specific components required for Tnua to work.
+#[derive(Bundle, Default)]
+pub struct TnuaRapier2dIOBundle {
+    pub velocity: Velocity,
+    pub external_force: ExternalForce,
+    pub read_mass_properties: ReadMassProperties,
+}
+
 /// Add this component to make [`TnuaProximitySensor`] cast a shape instead of a ray.
 #[derive(Component)]
 pub struct TnuaRapier2dSensorShape(pub Collider);
@@ -202,12 +210,26 @@ fn update_proximity_sensors_system(
     );
 }
 
-fn apply_motors_system(mut query: Query<(&TnuaMotor, &mut Velocity)>) {
-    for (motor, mut velocity) in query.iter_mut() {
-        if !motor.desired_acceleration.is_finite() {
-            continue;
+fn apply_motors_system(
+    mut query: Query<(
+        &TnuaMotor,
+        &mut Velocity,
+        &ReadMassProperties,
+        &mut ExternalForce,
+    )>,
+) {
+    for (motor, mut velocity, mass_properties, mut external_force) in query.iter_mut() {
+        if motor.lin.boost.is_finite() {
+            velocity.linvel += motor.lin.boost.truncate();
         }
-        velocity.linvel += motor.desired_acceleration.truncate();
-        velocity.angvel += motor.desired_angacl.z;
+        if motor.lin.acceleration.is_finite() {
+            external_force.force = motor.lin.acceleration.truncate() * mass_properties.0.mass;
+        }
+        if motor.ang.boost.is_finite() {
+            velocity.angvel += motor.ang.boost.z;
+        }
+        if motor.ang.acceleration.is_finite() {
+            external_force.torque = motor.ang.acceleration.z * mass_properties.0.principal_inertia;
+        }
     }
 }

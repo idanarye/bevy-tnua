@@ -11,20 +11,21 @@
 //!
 //! In addition to the physics backend plugin, the [`TnuaPlatformerPlugin`] should also be added.
 //!
-//! A Tnua controlled character must have a dynamic rigid body, a `Velocity` component, and
+//! A Tnua controlled character must have a dynamic rigid body, everything from
+//! [`TnuaRapier2dIOBundle`]/[`TnuaRapier3dIOBundle`] (depending on the physics backend), and
 //! everything from [`TnuaPlatformerBundle`]:
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # // Not importing from Rapier because there are two versions and the default features does not
 //! # // enable either:
-//! # type Velocity = ();
+//! # type TnuaRapier3dIOBundle = ();
 //! # #[derive(Component)]
 //! # enum RigidBody { Dynamic }
 //! # use bevy_tnua::{TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaFreeFallBehavior};
 //! # let mut commands: Commands = panic!();
 //! # let mut cmd = commands.spawn_empty();
 //! cmd.insert(RigidBody::Dynamic);
-//! cmd.insert(Velocity::default());
+//! cmd.insert(TnuaRapier3dIOBundle::default());
 //! cmd.insert(TnuaPlatformerBundle {
 //!     config: TnuaPlatformerConfig {
 //!         full_speed: 20.0,

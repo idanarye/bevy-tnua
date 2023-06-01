@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- [**BREAKING**] Tnua now requires additional Rapier components -
+  `ExternalForce` and `ReadMassProperties`. For convenience,
+  `TnuaRapier2dIOBundle`/`TnuaRapier3dIOBundle` were added. It contains these
+  new components, plus `Velocity` (which was already required)
+- [**BREAKING**] `TnuaMotor` now has `boost` and `acceleration` for both linear
+  and angular components of the motor.
 
 ## 0.4.0 - 2023-05-21
 ### Added

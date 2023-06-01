@@ -7,6 +7,7 @@ use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::util::SegmentedJumpInitialVelocityCalculator;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker, TnuaSystemSet,
+    TnuaVelChange,
 };
 
 pub struct TnuaPlatformerPlugin;
@@ -666,10 +667,7 @@ fn platformer_control_system(
                         // Regular gravity segment
                         .add_segment(gravity, config.jump_takeoff_above_velocity)
                         // Jump takeoff segment
-                        .add_segment(
-                            gravity + config.jump_takeoff_extra_gravity,
-                            f32::INFINITY,
-                        )
+                        .add_segment(gravity + config.jump_takeoff_extra_gravity, f32::INFINITY)
                         .kinetic_energy();
                     Some(kinetic_energy)
                 } else {
@@ -681,7 +679,7 @@ fn platformer_control_system(
         };
 
         let mut standing_offset = 0.0;
-        let upward_impulse: Vec3 = 'upward_impulse: {
+        let upward_impulse: TnuaVelChange = 'upward_impulse: {
             // TODO: Once `std::mem::variant_count` gets stabilized, use that instead. The idea is
             // to allow jumping through multiple states but failing if we get into loop.
             for _ in 0..7 {
@@ -736,7 +734,12 @@ fn platformer_control_system(
                                         spring_impulse
                                     };
 
-                                break 'upward_impulse impulse_to_use * config.up;
+                                // TODO: maybe this needs to be an acceleration rather than an
+                                // impulse? The problem is the comparison between `spring_impulse`
+                                // and `offset_change_impulse`...
+                                break 'upward_impulse TnuaVelChange::boost(
+                                    impulse_to_use * config.up,
+                                );
                             }
                         } else {
                             platformer_state.jump_state = JumpState::FreeFall {
@@ -761,7 +764,9 @@ fn platformer_control_system(
                                 };
                                 continue;
                             }
-                            break 'upward_impulse -(frame_duration * extra_gravity) * config.up;
+                            break 'upward_impulse TnuaVelChange::acceleration(
+                                -extra_gravity * config.up,
+                            );
                         }
                         TnuaFreeFallBehavior::LikeJumpShorten => {
                             platformer_state.jump_state = JumpState::StoppedMaintainingJump {
@@ -797,8 +802,9 @@ fn platformer_control_system(
                                 };
                             }
 
-                            break 'upward_impulse (desired_upward_velocity - relative_velocity)
-                                * config.up;
+                            break 'upward_impulse TnuaVelChange::boost(
+                                (desired_upward_velocity - relative_velocity) * config.up,
+                            );
                         } else if !coyote_time.finished() {
                             let relative_velocity =
                                 effective_velocity.dot(config.up) - vertical_velocity.max(0.0);
@@ -807,8 +813,9 @@ fn platformer_control_system(
                                 desired_energy: *desired_energy,
                                 zero_potential_energy_at: translation,
                             };
-                            break 'upward_impulse (desired_upward_velocity - relative_velocity)
-                                * config.up;
+                            break 'upward_impulse TnuaVelChange::boost(
+                                (desired_upward_velocity - relative_velocity) * config.up,
+                            );
                         } else {
                             platformer_state.jump_state = JumpState::SlowDownTooFastSlopeJump {
                                 desired_energy: *desired_energy,
@@ -846,7 +853,9 @@ fn platformer_control_system(
                             if config.jump_takeoff_above_velocity <= relative_velocity {
                                 extra_gravity += config.jump_takeoff_extra_gravity;
                             }
-                            break 'upward_impulse -(frame_duration * extra_gravity) * config.up;
+                            break 'upward_impulse TnuaVelChange::acceleration(
+                                -extra_gravity * config.up,
+                            );
                         }
                     }
                     JumpState::MaintainingJump => {
@@ -857,22 +866,22 @@ fn platformer_control_system(
                             };
                             continue;
                         } else if config.jump_takeoff_above_velocity <= relevant_upwrad_velocity {
-                            break 'upward_impulse -(frame_duration
-                                * config.jump_takeoff_extra_gravity)
-                                * config.up;
+                            break 'upward_impulse TnuaVelChange::acceleration(
+                                -config.jump_takeoff_extra_gravity * config.up,
+                            );
                         } else if relevant_upwrad_velocity
                             < config.jump_peak_prevention_at_upward_velocity
                         {
-                            break 'upward_impulse -(frame_duration
-                                * config.jump_peak_prevention_extra_gravity)
-                                * config.up;
+                            break 'upward_impulse TnuaVelChange::acceleration(
+                                -config.jump_peak_prevention_extra_gravity * config.up,
+                            );
                         } else if controls.jump.is_none() {
                             platformer_state.jump_state = JumpState::StoppedMaintainingJump {
                                 coyote_time: make_finished_timer(),
                             };
                             continue;
                         }
-                        break 'upward_impulse Vec3::ZERO;
+                        break 'upward_impulse TnuaVelChange::ZERO;
                     }
                     JumpState::StoppedMaintainingJump { coyote_time } => {
                         if upward_velocity <= 0.0 {
@@ -890,9 +899,9 @@ fn platformer_control_system(
                             };
                             continue;
                         }
-                        break 'upward_impulse -(frame_duration
-                            * config.jump_shorten_extra_gravity)
-                            * config.up;
+                        break 'upward_impulse TnuaVelChange::acceleration(
+                            -config.jump_shorten_extra_gravity * config.up,
+                        );
                     }
                     JumpState::FallSection { coyote_time } => {
                         if let Some(sensor_output) = &sensor.output {
@@ -910,17 +919,18 @@ fn platformer_control_system(
                             };
                             continue;
                         }
-                        break 'upward_impulse -(frame_duration * config.jump_fall_extra_gravity)
-                            * config.up;
+                        break 'upward_impulse TnuaVelChange::acceleration(
+                            -config.jump_fall_extra_gravity * config.up,
+                        );
                     }
                 }
             }
             error!("Tnua could not decide on jump state");
-            Vec3::ZERO
+            TnuaVelChange::ZERO
         };
         platformer_state.prev_float_height_offset = float_height_offset;
 
-        motor.desired_acceleration = walk_acceleration + upward_impulse + impulse_to_offset;
+        motor.lin = TnuaVelChange::boost(walk_acceleration + impulse_to_offset) + upward_impulse;
 
         if controls.jump.is_some() {
             if jump_command_can_be_fired {
@@ -1058,7 +1068,7 @@ fn platformer_control_system(
             torque_to_turn - existing_turn_torque
         };
 
-        motor.desired_angacl = torque_to_fix_tilt + turn_torque_to_offset * config.up;
+        motor.ang = TnuaVelChange::boost(torque_to_fix_tilt + turn_torque_to_offset * config.up);
 
         let is_airborne = match &platformer_state.jump_state {
             JumpState::NoJump => false,
@@ -1084,7 +1094,7 @@ fn platformer_control_system(
         // NOTE: In cases like Coyote time the `standing_on` will not change.
 
         if let Some(animating_output) = animating_output.as_mut() {
-            let new_velocity = effective_velocity + motor.desired_acceleration - impulse_to_offset;
+            let new_velocity = effective_velocity + motor.lin.boost - impulse_to_offset;
             let new_upward_velocity = config.up.dot(new_velocity);
             animating_output.running_velocity = new_velocity - config.up * new_upward_velocity;
             animating_output.jumping_velocity = is_airborne.then_some(new_upward_velocity);

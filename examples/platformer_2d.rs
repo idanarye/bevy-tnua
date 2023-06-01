@@ -6,7 +6,7 @@ use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaKeepCrouchingBelowObstacles, TnuaManualTurningOutput,
     TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
-    TnuaRapier2dPlugin, TnuaRapier2dSensorShape, TnuaSystemSet,
+    TnuaRapier2dIOBundle, TnuaRapier2dPlugin, TnuaRapier2dSensorShape, TnuaSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
@@ -211,8 +211,8 @@ fn setup_player(mut commands: Commands) {
     });
     cmd.insert(VisibilityBundle::default());
     cmd.insert(RigidBody::Dynamic);
-    cmd.insert(Velocity::default());
     cmd.insert(Collider::capsule_y(0.5, 0.5));
+    cmd.insert(TnuaRapier2dIOBundle::default());
     cmd.insert(TnuaPlatformerBundle {
         config: TnuaPlatformerConfig {
             full_speed: 40.0,
