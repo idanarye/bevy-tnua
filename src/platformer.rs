@@ -79,7 +79,7 @@ impl Default for TnuaPlatformerBundle {
                 coyote_time: 0.15,
                 jump_input_buffer_time: 0.2,
                 held_jump_cooldown: None,
-                jump_start_extra_gravity: 30.0,
+                upslope_jump_extra_gravity: 30.0,
                 jump_takeoff_extra_gravity: 30.0,
                 jump_takeoff_above_velocity: 3.0,
                 jump_fall_extra_gravity: 20.0,
@@ -210,7 +210,7 @@ pub struct TnuaPlatformerConfig {
     /// slope. This may cause the jump to be too high, so this value is used to brake it.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub jump_start_extra_gravity: f32,
+    pub upslope_jump_extra_gravity: f32,
 
     /// Extra gravity for fast takeoff.
     ///
@@ -860,7 +860,7 @@ fn platformer_control_system(
                             platformer_state.jump_state = JumpState::MaintainingJump;
                             continue;
                         } else {
-                            let mut extra_gravity = config.jump_start_extra_gravity;
+                            let mut extra_gravity = config.upslope_jump_extra_gravity;
                             if config.jump_takeoff_above_velocity <= relative_velocity {
                                 extra_gravity += config.jump_takeoff_extra_gravity;
                             }

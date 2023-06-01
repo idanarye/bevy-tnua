@@ -310,10 +310,10 @@ fn ui_system(
                             slider_or_none(ui, "Held Jump Cooldown", &mut platformer_config.held_jump_cooldown, 0.0..=2.0);
                             ui.add(
                                 egui::Slider::new(
-                                    &mut platformer_config.jump_start_extra_gravity,
+                                    &mut platformer_config.upslope_jump_extra_gravity,
                                     0.0..=100.0,
                                 )
-                                .text("Jump Start Extra Gravity"),
+                                .text("Upslope Jump Extra Gravity"),
                             );
                             ui.add(
                                 egui::Slider::new(

@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   `ExternalForce` and `ReadMassProperties`. For convenience,
   `TnuaRapier2dIOBundle`/`TnuaRapier3dIOBundle` were added. It contains these
   new components, plus `Velocity` (which was already required)
-- [**BREAKING**] `TnuaMotor` now has `boost` and `acceleration` for both linear
-  and angular components of the motor.
+- `TnuaMotor` now has `boost` and `acceleration` for both linear and angular
+  components of the motor.
+- Rename `jump_start_extra_gravity` to `upslope_jump_extra_gravity`.
 
 ### Added
 - Settings to add extra gravity during jump takeoff.
