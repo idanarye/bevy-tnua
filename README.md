@@ -32,14 +32,17 @@ Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions
 
 | bevy | bevy-tnua | bevy_rapier |
 |------|-----------|-------------|
-| 0.10 | 0.1, 0.2  | 0.21        |
+| 0.10 | 0.1 - 0.5 | 0.21        |
 
 ## Reference Material
 
 The following were used for coding the math and physics of Tnua:
 
-* "Floating capsule" and running mechanics: https://youtu.be/qdskE8PJy6Q
-* Jumping mechanics:https://youtu.be/hG9SzQxaCm8
+* "Floating capsule" and running mechanics:
+  * https://youtu.be/qdskE8PJy6Q
+* Jumping mechanics:
+  * https://youtu.be/hG9SzQxaCm8
+  * https://youtu.be/eeLPL3Y9jjA
 
 ## Alternatives
 
