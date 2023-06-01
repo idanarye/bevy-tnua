@@ -212,7 +212,18 @@ pub struct TnuaPlatformerConfig {
     /// **NOTE**: This force will be added to the normal gravity.
     pub jump_start_extra_gravity: f32,
 
+    /// Extra gravity for fast takeoff.
+    ///
+    /// Without this, jumps feel painfully slow. Adding this will apply extra gravity until the
+    /// vertical velocity reaches below
+    /// [`jump_takeoff_above_velocity`](Self::jump_takeoff_above_velocity), and increase the
+    /// initial jump boost in order to compensate. This will make the jump feel more snappy.
     pub jump_takeoff_extra_gravity: f32,
+
+    /// The range of upward velocity during
+    /// [`jump_takeoff_extra_gravity`](Self::jump_takeoff_extra_gravity) is applied.
+    ///
+    /// To disable, set this to [`f32::INFINITY`] rather than zero.
     pub jump_takeoff_above_velocity: f32,
 
     /// Extra gravity for falling down after reaching the top of the jump.

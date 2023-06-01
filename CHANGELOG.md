@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - [**BREAKING**] `TnuaMotor` now has `boost` and `acceleration` for both linear
   and angular components of the motor.
 
+### Added
+- Settings to add extra gravity during jump takeoff.
+
 ## 0.4.0 - 2023-05-21
 ### Added
 - `float_height_offset` control for crouching. Also add:
