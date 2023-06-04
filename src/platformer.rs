@@ -7,7 +7,7 @@ use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::util::SegmentedJumpInitialVelocityCalculator;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker, TnuaSystemSet,
-    TnuaVelChange,
+    TnuaUserControlsSystemSet, TnuaVelChange,
 };
 
 pub struct TnuaPlatformerPlugin;
@@ -25,6 +25,7 @@ impl Plugin for TnuaPlatformerPlugin {
             (
                 TnuaPipelineStages::Sensors,
                 TnuaPipelineStages::SubservientSensors,
+                TnuaUserControlsSystemSet,
                 TnuaPipelineStages::Logic,
                 TnuaPipelineStages::Motors,
             )

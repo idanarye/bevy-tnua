@@ -137,3 +137,7 @@ pub enum TnuaPipelineStages {
     /// Forces are applied in the physiscs backend.
     Motors,
 }
+
+/// The users controls should be added in this system set
+#[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
+pub struct TnuaUserControlsSystemSet;

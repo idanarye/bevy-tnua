@@ -4,9 +4,10 @@ use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
-    TnuaFreeFallBehavior, TnuaKeepCrouchingBelowObstacles, TnuaManualTurningOutput,
-    TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
-    TnuaRapier2dIOBundle, TnuaRapier2dPlugin, TnuaRapier2dSensorShape, TnuaSystemSet,
+    TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles,
+    TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
+    TnuaPlatformerPlugin, TnuaProximitySensor, TnuaRapier2dIOBundle, TnuaRapier2dPlugin,
+    TnuaRapier2dSensorShape, TnuaSystemSet, TnuaUserControlsSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
@@ -24,7 +25,7 @@ fn main() {
     app.add_startup_system(setup_camera);
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
-    app.add_system(apply_controls);
+    app.add_system(apply_controls.in_set(TnuaUserControlsSystemSet));
     app.add_system(apply_manual_turning);
     app.add_system(update_plot_data);
     app.add_system(MovingPlatform::make_system(
@@ -94,6 +95,26 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..Default::default()
         });
         cmd.insert(Collider::cuboid(0.5 * width, 0.5 * height));
+    }
+
+    // Fall-through platforms
+    for y in [5.0, 8.0] {
+        let mut cmd = commands.spawn_empty();
+        cmd.insert(SpriteBundle {
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(6.0, 1.0)),
+                color: Color::PINK,
+                ..Default::default()
+            },
+            transform: Transform::from_xyz(-20.0, y, -1.0),
+            ..Default::default()
+        });
+        cmd.insert(Collider::cuboid(3.0, 0.5));
+        cmd.insert(SolverGroups {
+            memberships: Group::empty(),
+            filters: Group::empty(),
+        });
+        cmd.insert(TnuaGhostPlatform);
     }
 
     commands.spawn((
@@ -247,6 +268,7 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(TnuaKeepCrouchingBelowObstacles::new(1.5, |cmd| {
         cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
     }));
+    cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaManualTurningOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()
@@ -313,10 +335,12 @@ fn apply_controls(
     mut query: Query<(
         &mut TnuaPlatformerControls,
         &TnuaKeepCrouchingBelowObstacles,
+        &mut TnuaProximitySensor,
+        &TnuaGhostSensor,
     )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
-        for (mut controls, _) in query.iter_mut() {
+        for (mut controls, ..) in query.iter_mut() {
             *controls = Default::default();
         }
         return;
@@ -343,7 +367,12 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    for (mut controls, keep_crouching) in query.iter_mut() {
+    for (mut controls, keep_crouching, mut sensor, ghost_sensor) in query.iter_mut() {
+        if let Some(ghost_platform) = ghost_sensor.0.first() {
+            if 1.0 <= ghost_platform.proximity {
+                sensor.output = Some(ghost_platform.clone());
+            }
+        }
         let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
             0.2
         } else {

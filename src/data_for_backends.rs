@@ -76,7 +76,7 @@ impl Default for TnuaProximitySensor {
 }
 
 /// Information from [`TnuaProximitySensor`] that have detected another collider.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TnuaProximitySensorOutput {
     /// The entity of the collider detected by the ray.
     pub entity: Entity,
@@ -162,3 +162,9 @@ pub struct TnuaMotor {
     /// a quaternion using [`Quat::xyz`].
     pub ang: TnuaVelChange,
 }
+
+#[derive(Component, Default, Debug)]
+pub struct TnuaGhostSensor(pub Vec<TnuaProximitySensorOutput>);
+
+#[derive(Component, Default, Debug)]
+pub struct TnuaGhostPlatform;
