@@ -6,6 +6,7 @@ use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerConfig};
 
 use super::ui_plotting::PlotSource;
+use super::FallingThroughControlScheme;
 
 pub struct ExampleUi;
 
@@ -178,11 +179,12 @@ fn ui_system(
         &TrackedEntity,
         &PlotSource,
         &mut TnuaPlatformerConfig,
+        &mut FallingThroughControlScheme,
         Option<&mut CommandAlteringSelectors>,
     )>,
     mut commands: Commands,
 ) {
-    for (entity, _, _, _, command_altering_selectors) in query.iter_mut() {
+    for (entity, .., command_altering_selectors) in query.iter_mut() {
         if let Some(mut command_altering_selectors) = command_altering_selectors {
             for selector in command_altering_selectors.0.iter_mut() {
                 match selector {
@@ -218,7 +220,7 @@ fn ui_system(
             .show(ui, |ui| {
                 ui.label("Move with the arrow keys");
                 ui.label("Jump with Spacebar (Also with the up arrow also works in 2D)");
-                ui.label("Crouch with Ctrl (Also with the down arrow key in 2D)");
+                ui.label("Crouch or fall through pink platforms with Ctrl (Also with the down arrow key in 2D)");
                 ui.label("Turn in place with Alt");
             });
         ui.checkbox(&mut tnua_active.0, "Tnua Enabled (does not affect the physics backend itself)");
@@ -227,6 +229,7 @@ fn ui_system(
             TrackedEntity(name),
             plot_source,
             mut platformer_config,
+            mut falling_through_control_scheme,
             command_altering_selectors,
         ) in query.iter_mut()
         {
@@ -399,6 +402,8 @@ fn ui_system(
                             );
 
                             slider_or_infinity(ui, "Height Change Impulse", &mut platformer_config.height_change_impulse_limit, 0.0..=40.0);
+
+                            falling_through_control_scheme.edit_with_ui(ui);
                         });
                         ui.vertical(|ui| {
                             plot_source.show(entity, ui);

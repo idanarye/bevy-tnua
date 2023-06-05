@@ -13,7 +13,7 @@ use bevy_tnua::{
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
 use self::common::ui_plotting::PlotSource;
-use self::common::MovingPlatform;
+use self::common::{FallingThroughControlScheme, MovingPlatform};
 
 fn main() {
     let mut app = App::new();
@@ -271,6 +271,7 @@ fn setup_player(mut commands: Commands) {
     }));
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
+    cmd.insert(FallingThroughControlScheme::SingleFall);
     cmd.insert(TnuaManualTurningOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()
@@ -340,6 +341,7 @@ fn apply_controls(
         &mut TnuaProximitySensor,
         &TnuaGhostSensor,
         &mut TnuaSimpleFallThroughPlatformsHelper,
+        &FallingThroughControlScheme,
     )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
@@ -366,20 +368,31 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    let crouch = [KeyCode::Down, KeyCode::LControl, KeyCode::RControl]
+    let (crouch, crouch_just_pressed) = match [KeyCode::Down, KeyCode::LControl, KeyCode::RControl]
         .into_iter()
-        .any(|key_code| keyboard.pressed(key_code));
-
-    for (mut controls, keep_crouching, mut sensor, ghost_sensor, mut fall_through_helper) in
-        query.iter_mut()
+        .find(|key_code| keyboard.pressed(*key_code))
     {
-        let mut fall_through_helper = fall_through_helper.with(sensor.as_mut(), ghost_sensor, 1.0);
-        let crouch = if crouch {
-            !fall_through_helper.try_falling()
-        } else {
-            fall_through_helper.dont_fall();
-            false
-        };
+        None => (false, false),
+        Some(key_code) => (true, keyboard.just_pressed(key_code)),
+    };
+
+    for (
+        mut controls,
+        keep_crouching,
+        mut sensor,
+        ghost_sensor,
+        mut fall_through_helper,
+        falling_through_control_scheme,
+    ) in query.iter_mut()
+    {
+        let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
+            crouch,
+            crouch_just_pressed,
+            fall_through_helper.as_mut(),
+            sensor.as_mut(),
+            ghost_sensor,
+            1.0,
+        );
         let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
             0.2
         } else {
