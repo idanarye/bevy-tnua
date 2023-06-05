@@ -1,6 +1,6 @@
 //! Various helpers to make Tnua's advanced features easier to use.
 //!
-//! See <https://github.com/idanarye/bevy-tnua/wiki/Advanced-Features-Guide>
+//! See <https://github.com/idanarye/bevy-tnua/wiki>
 //!
 //! Tnua exposes its mid-level data for user systems to allow as much flexibility and
 //! customizability as it can provide. This, however, means that some of the advanced features can
