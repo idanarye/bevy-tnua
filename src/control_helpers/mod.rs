@@ -1,3 +1,11 @@
+//! Various helpers to make Tnua's advanced features easier to use.
+//!
+//! See <https://github.com/idanarye/bevy-tnua/wiki/Advanced-Features-Guide>
+//!
+//! Tnua exposes its mid-level data for user systems to allow as much flexibility and
+//! customizability as it can provide. This, however, means that some of the advanced features can
+//! be complex to use. This module provides helpers that allow using these features in an easier
+//! although less flexible way.
 mod simple_fall_through_platforms;
 
 pub use simple_fall_through_platforms::*;

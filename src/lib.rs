@@ -74,7 +74,9 @@
 //!
 //! ## Controlling the Character
 //!
-//! To control the character, update the [`TnuaPlatformerControls`] in a system:
+//! To control the character, update the [`TnuaPlatformerControls`] in a system. For some of the
+//! advanced features to work, this system needs to be placed inside the
+//! [`TnuaUserControlsSystemSet`] system set.
 //!
 //! ```no_run
 //! # use bevy::prelude::*;
@@ -139,6 +141,6 @@ pub enum TnuaPipelineStages {
     Motors,
 }
 
-/// The users controls should be added in this system set
+/// The user controls should be applied in this system set.
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
 pub struct TnuaUserControlsSystemSet;

@@ -56,7 +56,7 @@ impl FallingThroughControlScheme {
                 let mut fall_through_helper =
                     fall_through_helper.with(proximity_sensor, ghost_sensor, min_proximity);
                 if crouch {
-                    !fall_through_helper.try_falling_one_step_at_a_time(crouch_just_pressed)
+                    !fall_through_helper.try_falling(crouch_just_pressed)
                 } else {
                     fall_through_helper.dont_fall();
                     false
@@ -66,7 +66,7 @@ impl FallingThroughControlScheme {
                 let mut fall_through_helper =
                     fall_through_helper.with(proximity_sensor, ghost_sensor, min_proximity);
                 if crouch {
-                    !fall_through_helper.try_falling()
+                    !fall_through_helper.try_falling(true)
                 } else {
                     fall_through_helper.dont_fall();
                     false

@@ -163,8 +163,28 @@ pub struct TnuaMotor {
     pub ang: TnuaVelChange,
 }
 
+/// An addon for [`TnuaProximitySensor`] that allows it to detect [`TnuaGhostPlatform`] colliders.
+///
+/// Tnua will register all the ghost platforms encountered by the proximity sensor inside this
+/// component, so that other systems may pick one to override the [sensor
+/// output](TnuaProximitySensor::output)
+///
+/// See <https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms>
+///
+/// See
+/// [`TnuaSimpleFallThroughPlatformsHelper`](crate::control_helpers::TnuaSimpleFallThroughPlatformsHelper).
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostSensor(pub Vec<TnuaProximitySensorOutput>);
 
+/// A marker for jump/fall-through platforms.
+///
+/// Ghost platforms must also have their solver groups (**not** collision groups) set to exclude
+/// the character's collider. In order to sense them the player character's sensor must also use
+/// [`TnuaGhostSensor`].
+///
+/// See <https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms>
+///
+/// See
+/// [`TnuaSimpleFallThroughPlatformsHelper`](crate::control_helpers::TnuaSimpleFallThroughPlatformsHelper).
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostPlatform;
