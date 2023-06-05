@@ -4,9 +4,9 @@ use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier;
 use bevy_rapier3d::rapier::prelude::InteractionGroups;
 
+use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::TnuaGhostPlatform;
 use crate::TnuaGhostSensor;
-use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaProximitySensorOutput,
     TnuaRigidBodyTracker,
@@ -203,7 +203,8 @@ fn update_proximity_sensors_system(
                 {
                     let entity_linvel;
                     let entity_angvel;
-                    if let Ok((entity_transform, entity_velocity)) = other_object_query.get(entity) {
+                    if let Ok((entity_transform, entity_velocity)) = other_object_query.get(entity)
+                    {
                         entity_angvel = entity_velocity.angvel;
                         entity_linvel = entity_velocity.linvel
                             + if 0.0 < entity_angvel.length_squared() {

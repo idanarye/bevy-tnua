@@ -103,6 +103,7 @@ mod animating_helper;
 mod backend_rapier2d;
 #[cfg(feature = "rapier_3d")]
 mod backend_rapier3d;
+pub mod control_helpers;
 mod platformer;
 mod subservient_sensors;
 mod util;

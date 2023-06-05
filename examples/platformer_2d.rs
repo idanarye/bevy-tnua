@@ -3,6 +3,7 @@ mod common;
 use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 use bevy_rapier2d::prelude::*;
+use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles,
     TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
@@ -269,6 +270,7 @@ fn setup_player(mut commands: Commands) {
         cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
     }));
     cmd.insert(TnuaGhostSensor::default());
+    cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
     cmd.insert(TnuaManualTurningOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()
@@ -337,6 +339,7 @@ fn apply_controls(
         &TnuaKeepCrouchingBelowObstacles,
         &mut TnuaProximitySensor,
         &TnuaGhostSensor,
+        &mut TnuaSimpleFallThroughPlatformsHelper,
     )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
@@ -367,17 +370,16 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    for (mut controls, keep_crouching, mut sensor, ghost_sensor) in query.iter_mut() {
-        let mut crouch = crouch;
-        if let Some(ghost_platform) = ghost_sensor.0.first() {
-            if 1.0 <= ghost_platform.proximity {
-                if crouch {
-                    crouch = false;
-                } else {
-                    sensor.output = Some(ghost_platform.clone());
-                }
-            }
-        }
+    for (mut controls, keep_crouching, mut sensor, ghost_sensor, mut fall_through_helper) in
+        query.iter_mut()
+    {
+        let mut fall_through_helper = fall_through_helper.with(sensor.as_mut(), ghost_sensor, 1.0);
+        let crouch = if crouch {
+            !fall_through_helper.try_falling()
+        } else {
+            fall_through_helper.dont_fall();
+            false
+        };
         let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
             0.2
         } else {

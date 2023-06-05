@@ -5,11 +5,13 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
+use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::{
-    TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
-    TnuaKeepCrouchingBelowObstacles, TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle,
-    TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaRapier3dIOBundle,
-    TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaSystemSet, TnuaGhostPlatform, TnuaGhostSensor, TnuaUserControlsSystemSet, TnuaProximitySensor,
+    TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior, TnuaGhostPlatform,
+    TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles, TnuaPlatformerAnimatingOutput,
+    TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
+    TnuaProximitySensor, TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
+    TnuaSystemSet, TnuaUserControlsSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
@@ -213,7 +215,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(SceneBundle {
         scene: asset_server.load("player.glb#Scene0"),
-        transform: Transform::from_xyz(0.0, 10.0, 0.0),
+        //transform: Transform::from_xyz(0.0, 10.0, 0.0),
+        transform: Transform::from_xyz(0.0, 10.0, -5.0),
         ..Default::default()
     });
     cmd.insert(GltfSceneHandler {
@@ -257,6 +260,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
     }));
     cmd.insert(TnuaGhostSensor::default());
+    cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
     cmd.insert(TnuaAnimatingState::<AnimationState>::default());
     cmd.insert(TnuaPlatformerAnimatingOutput::default());
     cmd.insert({
@@ -326,6 +330,7 @@ fn apply_controls(
         &TnuaKeepCrouchingBelowObstacles,
         &mut TnuaProximitySensor,
         &TnuaGhostSensor,
+        &mut TnuaSimpleFallThroughPlatformsHelper,
     )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
@@ -362,17 +367,16 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    for (mut controls, keep_crouching, mut sensor, ghost_sensor) in query.iter_mut() {
-        let mut crouch = crouch;
-        if let Some(ghost_platform) = ghost_sensor.0.first() {
-            if 1.0 <= ghost_platform.proximity {
-                if crouch {
-                    crouch = false;
-                } else {
-                    sensor.output = Some(ghost_platform.clone());
-                }
-            }
-        }
+    for (mut controls, keep_crouching, mut sensor, ghost_sensor, mut fall_through_helper) in
+        query.iter_mut()
+    {
+        let mut fall_through_helper = fall_through_helper.with(sensor.as_mut(), ghost_sensor, 1.0);
+        let crouch = if crouch {
+            !fall_through_helper.try_falling()
+        } else {
+            fall_through_helper.dont_fall();
+            false
+        };
         let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
             0.2
         } else {
