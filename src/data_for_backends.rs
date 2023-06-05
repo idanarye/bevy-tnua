@@ -176,6 +176,12 @@ pub struct TnuaMotor {
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostSensor(pub Vec<TnuaProximitySensorOutput>);
 
+impl TnuaGhostSensor {
+    pub fn iter(&self) -> impl Iterator<Item = &TnuaProximitySensorOutput> {
+        self.0.iter()
+    }
+}
+
 /// A marker for jump/fall-through platforms.
 ///
 /// Ghost platforms must also have their solver groups (**not** collision groups) set to exclude

@@ -41,7 +41,7 @@ impl FallingThroughControlScheme {
     ) -> bool {
         match self {
             FallingThroughControlScheme::WithoutHelper => {
-                if let Some(ghost_platform) = ghost_sensor.0.first() {
+                for ghost_platform in ghost_sensor.iter() {
                     if 1.0 <= ghost_platform.proximity {
                         if crouch {
                             return false;

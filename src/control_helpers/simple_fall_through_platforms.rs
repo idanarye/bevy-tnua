@@ -56,7 +56,7 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
     pub fn dont_fall(&mut self) {
         let mut already_falling_through_not_yet_seen =
             self.parent.currently_falling_through.clone();
-        for ghost_platform in self.ghost_sensor.0.iter() {
+        for ghost_platform in self.ghost_sensor.iter() {
             if self.min_proximity <= ghost_platform.proximity
                 && !already_falling_through_not_yet_seen.remove(&ghost_platform.entity)
             {
@@ -84,7 +84,7 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
     /// character should be crouching (since these buttons are usually the same)
     pub fn try_falling(&mut self, just_pressed: bool) -> bool {
         if !just_pressed && !self.parent.currently_falling_through.is_empty() {
-            for ghost_platform in self.ghost_sensor.0.iter() {
+            for ghost_platform in self.ghost_sensor.iter() {
                 if self.min_proximity <= ghost_platform.proximity
                     && !self
                         .parent
@@ -98,7 +98,7 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
             return true;
         }
         self.parent.currently_falling_through.clear();
-        for ghost_platform in self.ghost_sensor.0.iter() {
+        for ghost_platform in self.ghost_sensor.iter() {
             if self.min_proximity <= ghost_platform.proximity {
                 self.parent
                     .currently_falling_through
