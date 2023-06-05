@@ -3,9 +3,11 @@ use bevy_egui::egui;
 use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 
-#[derive(Component, Debug, PartialEq)]
+#[derive(Component, Debug, PartialEq, Default)]
 pub enum FallingThroughControlScheme {
+    JumpThroughOnly,
     WithoutHelper,
+    #[default]
     SingleFall,
     KeepFalling,
 }
@@ -16,6 +18,7 @@ impl FallingThroughControlScheme {
             .selected_text(format!("{:?}", self))
             .show_ui(ui, |ui| {
                 for variant in [
+                    FallingThroughControlScheme::JumpThroughOnly,
                     FallingThroughControlScheme::WithoutHelper,
                     FallingThroughControlScheme::SingleFall,
                     FallingThroughControlScheme::KeepFalling,
@@ -40,9 +43,18 @@ impl FallingThroughControlScheme {
         min_proximity: f32,
     ) -> bool {
         match self {
+            FallingThroughControlScheme::JumpThroughOnly => {
+                for ghost_platform in ghost_sensor.iter() {
+                    if min_proximity <= ghost_platform.proximity {
+                        proximity_sensor.output = Some(ghost_platform.clone());
+                        break;
+                    }
+                }
+                crouch
+            }
             FallingThroughControlScheme::WithoutHelper => {
                 for ghost_platform in ghost_sensor.iter() {
-                    if 1.0 <= ghost_platform.proximity {
+                    if min_proximity <= ghost_platform.proximity {
                         if crouch {
                             return false;
                         } else {

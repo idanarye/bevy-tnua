@@ -260,7 +260,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     }));
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
-    cmd.insert(FallingThroughControlScheme::SingleFall);
+    cmd.insert(FallingThroughControlScheme::default());
     cmd.insert(TnuaAnimatingState::<AnimationState>::default());
     cmd.insert(TnuaPlatformerAnimatingOutput::default());
     cmd.insert({

@@ -271,7 +271,7 @@ fn setup_player(mut commands: Commands) {
     }));
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
-    cmd.insert(FallingThroughControlScheme::SingleFall);
+    cmd.insert(FallingThroughControlScheme::default());
     cmd.insert(TnuaManualTurningOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()
