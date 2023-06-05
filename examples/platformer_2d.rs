@@ -368,9 +368,14 @@ fn apply_controls(
         .any(|key_code| keyboard.pressed(key_code));
 
     for (mut controls, keep_crouching, mut sensor, ghost_sensor) in query.iter_mut() {
+        let mut crouch = crouch;
         if let Some(ghost_platform) = ghost_sensor.0.first() {
             if 1.0 <= ghost_platform.proximity {
-                sensor.output = Some(ghost_platform.clone());
+                if crouch {
+                    crouch = false;
+                } else {
+                    sensor.output = Some(ghost_platform.clone());
+                }
             }
         }
         let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
