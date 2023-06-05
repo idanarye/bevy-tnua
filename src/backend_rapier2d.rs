@@ -115,7 +115,7 @@ fn update_proximity_sensors_system(
 
             let has_ghost_sensor = ghost_sensor.is_some();
 
-            let do_cast = |offset: f32,
+            let do_cast = |cast_range_skip: f32,
                            already_visited_ghost_entities: &HashSet<Entity>|
              -> Option<CastResult> {
                 let predicate = |other_entity: Entity| {
@@ -153,7 +153,8 @@ fn update_proximity_sensors_system(
                     true
                 };
                 let query_filter = query_filter.clone().predicate(&predicate);
-                let cast_origin = cast_origin + offset * cast_direction;
+                let cast_origin = cast_origin + cast_range_skip * cast_direction;
+                let cast_range = sensor.cast_range - cast_range_skip;
                 if let Some(TnuaRapier2dSensorShape(shape)) = shape {
                     let (_, _, rotation_z) = owner_rotation.to_euler(EulerRot::XYZ);
                     rapier_context
@@ -162,12 +163,12 @@ fn update_proximity_sensors_system(
                             rotation_z,
                             cast_direction.truncate(),
                             shape,
-                            sensor.cast_range,
+                            cast_range,
                             query_filter,
                         )
                         .map(|(entity, toi)| CastResult {
                             entity,
-                            proximity: toi.toi - offset,
+                            proximity: toi.toi + cast_range_skip,
                             intersection_point: toi.witness1,
                             normal: toi.normal1,
                         })
@@ -176,19 +177,20 @@ fn update_proximity_sensors_system(
                         .cast_ray_and_get_normal(
                             cast_origin.truncate(),
                             cast_direction.truncate(),
-                            sensor.cast_range,
+                            cast_range,
                             false,
                             query_filter,
                         )
                         .map(|(entity, toi)| CastResult {
                             entity,
-                            proximity: toi.toi - offset,
+                            proximity: toi.toi + cast_range_skip,
                             intersection_point: toi.point,
                             normal: toi.normal,
                         })
                 }
             };
 
+            let mut cast_range_skip = 0.0;
             if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                 ghost_sensor.0.clear();
             }
@@ -198,7 +200,7 @@ fn update_proximity_sensors_system(
                     proximity,
                     intersection_point,
                     normal,
-                }) = do_cast(0.0, &already_visited_ghost_entities)
+                }) = do_cast(cast_range_skip, &already_visited_ghost_entities)
                 {
                     let entity_linvel;
                     let entity_angvel;
@@ -228,6 +230,7 @@ fn update_proximity_sensors_system(
                         entity_angvel,
                     };
                     if ghost_platforms_query.contains(entity) {
+                        cast_range_skip = proximity;
                         already_visited_ghost_entities.insert(entity);
                         if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                             ghost_sensor.0.push(sensor_output);
