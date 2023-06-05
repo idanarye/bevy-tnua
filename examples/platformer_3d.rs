@@ -112,12 +112,12 @@ fn setup_level(
 
     // Fall-through platforms
     let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8).into());
-    for y in [5.0, 8.0] {
+    for y in [2.0, 4.5] {
         let mut cmd = commands.spawn_empty();
         cmd.insert(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Box::new(6.0, 0.5, 2.0))),
             material: fall_through_obstacles_material.clone(),
-            transform: Transform::from_xyz(0.0, y, -5.0),
+            transform: Transform::from_xyz(6.0, y, 10.0),
             ..Default::default()
         });
         cmd.insert(Collider::cuboid(3.0, 0.25, 1.0));
@@ -215,8 +215,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(SceneBundle {
         scene: asset_server.load("player.glb#Scene0"),
-        //transform: Transform::from_xyz(0.0, 10.0, 0.0),
-        transform: Transform::from_xyz(0.0, 10.0, -5.0),
+        transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..Default::default()
     });
     cmd.insert(GltfSceneHandler {
