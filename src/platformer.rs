@@ -84,7 +84,7 @@ impl Default for TnuaPlatformerBundle {
                 jump_takeoff_extra_gravity: 30.0,
                 jump_takeoff_above_velocity: 2.0,
                 jump_fall_extra_gravity: 20.0,
-                jump_shorten_extra_gravity: 40.0,
+                jump_shorten_extra_gravity: 60.0,
                 jump_peak_prevention_at_upward_velocity: 1.0,
                 jump_peak_prevention_extra_gravity: 20.0,
                 free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
@@ -877,10 +877,6 @@ fn platformer_control_system(
                                 coyote_time: make_finished_timer(),
                             };
                             continue;
-                        } else if config.jump_takeoff_above_velocity <= relevant_upwrad_velocity {
-                            break 'upward_impulse TnuaVelChange::acceleration(
-                                -config.jump_takeoff_extra_gravity * config.up,
-                            );
                         } else if relevant_upwrad_velocity
                             < config.jump_peak_prevention_at_upward_velocity
                         {
@@ -892,6 +888,10 @@ fn platformer_control_system(
                                 coyote_time: make_finished_timer(),
                             };
                             continue;
+                        } else if config.jump_takeoff_above_velocity <= relevant_upwrad_velocity {
+                            break 'upward_impulse TnuaVelChange::acceleration(
+                                -config.jump_takeoff_extra_gravity * config.up,
+                            );
                         }
                         break 'upward_impulse TnuaVelChange::ZERO;
                     }
@@ -911,8 +911,15 @@ fn platformer_control_system(
                             };
                             continue;
                         }
+                        let extra_gravity = config.jump_shorten_extra_gravity;
+                        let extra_gravity = if config.jump_takeoff_above_velocity <= upward_velocity
+                        {
+                            extra_gravity + config.jump_takeoff_extra_gravity
+                        } else {
+                            extra_gravity
+                        };
                         break 'upward_impulse TnuaVelChange::acceleration(
-                            -config.jump_shorten_extra_gravity * config.up,
+                            -extra_gravity * config.up,
                         );
                     }
                     JumpState::FallSection { coyote_time } => {

@@ -45,7 +45,7 @@
 //!         jump_takeoff_extra_gravity: 30.0,
 //!         jump_takeoff_above_velocity: 2.0,
 //!         jump_fall_extra_gravity: 20.0,
-//!         jump_shorten_extra_gravity: 40.0,
+//!         jump_shorten_extra_gravity: 60.0,
 //!         jump_peak_prevention_at_upward_velocity: 1.0,
 //!         jump_peak_prevention_extra_gravity: 20.0,
 //!         free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,

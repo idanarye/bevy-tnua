@@ -99,18 +99,18 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 
     // Fall-through platforms
-    for y in [5.0, 8.0] {
+    for y in [5.0, 7.5] {
         let mut cmd = commands.spawn_empty();
         cmd.insert(SpriteBundle {
             sprite: Sprite {
-                custom_size: Some(Vec2::new(6.0, 1.0)),
+                custom_size: Some(Vec2::new(6.0, 0.5)),
                 color: Color::PINK,
                 ..Default::default()
             },
             transform: Transform::from_xyz(-20.0, y, -1.0),
             ..Default::default()
         });
-        cmd.insert(Collider::cuboid(3.0, 0.5));
+        cmd.insert(Collider::cuboid(3.0, 0.25));
         cmd.insert(SolverGroups {
             memberships: Group::empty(),
             filters: Group::empty(),
@@ -254,7 +254,7 @@ fn setup_player(mut commands: Commands) {
             jump_takeoff_extra_gravity: 30.0,
             jump_takeoff_above_velocity: 2.0,
             jump_fall_extra_gravity: 20.0,
-            jump_shorten_extra_gravity: 40.0,
+            jump_shorten_extra_gravity: 60.0,
             jump_peak_prevention_at_upward_velocity: 1.0,
             jump_peak_prevention_extra_gravity: 20.0,
             free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
