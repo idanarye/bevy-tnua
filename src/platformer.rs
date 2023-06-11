@@ -7,7 +7,7 @@ use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::util::SegmentedJumpInitialVelocityCalculator;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker, TnuaSystemSet,
-    TnuaUserControlsSystemSet, TnuaVelChange,
+    TnuaToggle, TnuaUserControlsSystemSet, TnuaVelChange,
 };
 
 pub struct TnuaPlatformerPlugin;
@@ -503,6 +503,7 @@ fn platformer_control_system(
         &mut TnuaMotor,
         Option<&mut TnuaManualTurningOutput>,
         Option<&mut TnuaPlatformerAnimatingOutput>,
+        Option<&TnuaToggle>,
     )>,
 ) {
     let frame_duration = time.delta().as_secs_f32();
@@ -520,8 +521,14 @@ fn platformer_control_system(
         mut motor,
         manual_turning_output,
         mut animating_output,
+        tnua_toggle,
     ) in query.iter_mut()
     {
+        match tnua_toggle.copied().unwrap_or_default() {
+            TnuaToggle::Disabled => continue,
+            TnuaToggle::SenseOnly => {}
+            TnuaToggle::Enabled => {}
+        }
         match &mut platformer_state.jump_state {
             JumpState::NoJump
             | JumpState::MaintainingJump
