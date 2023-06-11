@@ -13,15 +13,15 @@ pub struct ExampleUi;
 impl Plugin for ExampleUi {
     fn build(&self, app: &mut App) {
         app.add_plugin(EguiPlugin);
-        app.insert_resource(ExampleUiTnuaActive(true));
+        app.insert_resource(ExampleUiPhysicsBackendActive(true));
         app.add_system(ui_system);
         app.add_system(super::ui_plotting::plot_source_rolling_update);
     }
 }
 
-// NOTE: The examples are responsible for taking this into account
+// NOTE: The examples are responsible for updating the physics backend
 #[derive(Resource)]
-pub struct ExampleUiTnuaActive(pub bool);
+pub struct ExampleUiPhysicsBackendActive(pub bool);
 
 #[derive(Component)]
 pub struct TrackedEntity(pub String);
@@ -173,7 +173,7 @@ fn slider_or_none(
 
 fn ui_system(
     mut egui_context: EguiContexts,
-    mut tnua_active: ResMut<ExampleUiTnuaActive>,
+    mut physics_backend_active: ResMut<ExampleUiPhysicsBackendActive>,
     mut query: Query<(
         Entity,
         &TrackedEntity,
@@ -223,7 +223,7 @@ fn ui_system(
                 ui.label("Crouch or fall through pink platforms with Ctrl (Also with the down arrow key in 2D)");
                 ui.label("Turn in place with Alt");
             });
-        ui.checkbox(&mut tnua_active.0, "Tnua Enabled (does not affect the physics backend itself)");
+        ui.checkbox(&mut physics_backend_active.0, "Physics Backend Enabled");
         for (
             entity,
             TrackedEntity(name),

@@ -124,7 +124,8 @@ use bevy::prelude::*;
 
 /// Umbrella system set for [`TnuaPipelineStages`].
 ///
-/// To disable Tnua in specific state, put a run condition on this system set.
+/// The physics backends' plugins are responsible for preventing this entire system set from
+/// running when the physics backend itself is paused.
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
 pub struct TnuaSystemSet;
 

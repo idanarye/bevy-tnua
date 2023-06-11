@@ -8,10 +8,10 @@ use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles,
     TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
     TnuaPlatformerPlugin, TnuaProximitySensor, TnuaRapier2dIOBundle, TnuaRapier2dPlugin,
-    TnuaRapier2dSensorShape, TnuaSystemSet, TnuaUserControlsSystemSet,
+    TnuaRapier2dSensorShape, TnuaUserControlsSystemSet,
 };
 
-use self::common::ui::{CommandAlteringSelectors, ExampleUiTnuaActive};
+use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use self::common::ui_plotting::PlotSource;
 use self::common::{FallingThroughControlScheme, MovingPlatform};
 
@@ -37,8 +37,15 @@ fn main() {
     app.add_startup_system(|mut cfg: ResMut<RapierConfiguration>| {
         cfg.gravity = Vec2::Y * -9.81;
     });
-    app.configure_set(TnuaSystemSet.run_if(|tnua_active: Res<ExampleUiTnuaActive>| tnua_active.0));
+    app.add_system(update_rapier_physics_active);
     app.run();
+}
+
+fn update_rapier_physics_active(
+    mut rapier_config: ResMut<RapierConfiguration>,
+    setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
+) {
+    rapier_config.physics_pipeline_active = setting_from_ui.0;
 }
 
 fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) {

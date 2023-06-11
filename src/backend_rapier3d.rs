@@ -7,6 +7,7 @@ use bevy_rapier3d::rapier::prelude::InteractionGroups;
 use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::TnuaGhostPlatform;
 use crate::TnuaGhostSensor;
+use crate::TnuaSystemSet;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaProximitySensorOutput,
     TnuaRigidBodyTracker,
@@ -20,6 +21,11 @@ pub struct TnuaRapier3dPlugin;
 
 impl Plugin for TnuaRapier3dPlugin {
     fn build(&self, app: &mut App) {
+        app.configure_set(
+            TnuaSystemSet.run_if(|rapier_config: Res<RapierConfiguration>| {
+                rapier_config.physics_pipeline_active
+            }),
+        );
         app.add_systems(
             (
                 update_rigid_body_trackers_system,
