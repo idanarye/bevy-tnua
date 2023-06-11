@@ -11,7 +11,7 @@ use bevy_tnua::{
     TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles, TnuaPlatformerAnimatingOutput,
     TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
     TnuaProximitySensor, TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
-    TnuaUserControlsSystemSet,
+    TnuaToggle, TnuaUserControlsSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
@@ -262,6 +262,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         ..Default::default()
     });
+    cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaKeepCrouchingBelowObstacles::new(1.5, |cmd| {
         cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
     }));

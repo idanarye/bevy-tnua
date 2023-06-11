@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Physics backend plugins are now in charge of preventing `TnuaSystemSet` from
   running while the physiscs backend is paused. Users no longer need to do it.
 
+### Added
+- `TnuaToggle` for temporarily disabling Tnua for specific entities.
+
 ## 0.6.1 - 2023-06-04
 ### Fixed
 - Fix jump shortening not working with takeoff gravity

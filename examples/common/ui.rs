@@ -3,7 +3,7 @@ use std::ops::RangeInclusive;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
-use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerConfig};
+use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerConfig, TnuaToggle};
 
 use super::ui_plotting::PlotSource;
 use super::FallingThroughControlScheme;
@@ -178,6 +178,7 @@ fn ui_system(
         Entity,
         &TrackedEntity,
         &PlotSource,
+        &mut TnuaToggle,
         &mut TnuaPlatformerConfig,
         &mut FallingThroughControlScheme,
         Option<&mut CommandAlteringSelectors>,
@@ -228,6 +229,7 @@ fn ui_system(
             entity,
             TrackedEntity(name),
             plot_source,
+            mut tnua_toggle,
             mut platformer_config,
             mut falling_through_control_scheme,
             command_altering_selectors,
@@ -238,6 +240,18 @@ fn ui_system(
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.vertical(|ui| {
+                            egui::ComboBox::from_label("Toggle Tnua")
+                                .selected_text(format!("{:?}", tnua_toggle.as_ref()))
+                                .show_ui(ui, |ui| {
+                                    for option in [
+                                        TnuaToggle::Disabled,
+                                        TnuaToggle::SenseOnly,
+                                        TnuaToggle::Enabled,
+                                    ] {
+                                        let label = format!("{:?}", option);
+                                        ui.selectable_value(tnua_toggle.as_mut(), option, label);
+                                    }
+                                });
                             ui.add(
                                 egui::Slider::new(&mut platformer_config.full_speed, 0.0..=60.0)
                                     .text("Speed"),

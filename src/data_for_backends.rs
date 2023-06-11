@@ -2,6 +2,23 @@ use std::ops::Add;
 
 use bevy::prelude::*;
 
+/// Allows disabling Tnua for a specific entity.
+///
+/// This can be used to let some other system  temporarily take control over a character.
+///
+/// This component is not mandatory - if omitted, Tnua will just assume it is enabled for that
+/// entity.
+#[derive(Component, Default, Debug, PartialEq, Eq, Clone, Copy)]
+pub enum TnuaToggle {
+    /// Do not update the sensors, and do not apply forces from the motor.
+    Disabled,
+    /// Update the sensors, but do not apply forces from the motor.
+    SenseOnly,
+    #[default]
+    /// The backend behaves normally - it updates the sensors and applies forces from the motor.
+    Enabled,
+}
+
 /// Newtonian state of the rigid body.
 ///
 /// Tnua takes the position and rotation of the rigid body from its `GlobalTransform`, but things

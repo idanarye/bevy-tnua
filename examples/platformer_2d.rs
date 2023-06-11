@@ -8,7 +8,7 @@ use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles,
     TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
     TnuaPlatformerPlugin, TnuaProximitySensor, TnuaRapier2dIOBundle, TnuaRapier2dPlugin,
-    TnuaRapier2dSensorShape, TnuaUserControlsSystemSet,
+    TnuaRapier2dSensorShape, TnuaToggle, TnuaUserControlsSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
@@ -273,6 +273,7 @@ fn setup_player(mut commands: Commands) {
         },
         ..Default::default()
     });
+    cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaKeepCrouchingBelowObstacles::new(1.5, |cmd| {
         cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
     }));

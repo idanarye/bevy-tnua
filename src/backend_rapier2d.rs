@@ -8,6 +8,7 @@ use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::TnuaGhostPlatform;
 use crate::TnuaGhostSensor;
 use crate::TnuaSystemSet;
+use crate::TnuaToggle;
 use crate::{
     TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaProximitySensorOutput,
     TnuaRigidBodyTracker,
@@ -51,9 +52,14 @@ pub struct TnuaRapier2dSensorShape(pub Collider);
 
 fn update_rigid_body_trackers_system(
     rapier_config: Res<RapierConfiguration>,
-    mut query: Query<(&Velocity, &mut TnuaRigidBodyTracker)>,
+    mut query: Query<(&Velocity, &mut TnuaRigidBodyTracker, Option<&TnuaToggle>)>,
 ) {
-    for (velocity, mut tracker) in query.iter_mut() {
+    for (velocity, mut tracker, tnua_toggle) in query.iter_mut() {
+        match tnua_toggle.copied().unwrap_or_default() {
+            TnuaToggle::Disabled => continue,
+            TnuaToggle::SenseOnly => {}
+            TnuaToggle::Enabled => {}
+        }
         *tracker = TnuaRigidBodyTracker {
             velocity: velocity.linvel.extend(0.0),
             angvel: Vec3::new(0.0, 0.0, velocity.angvel),
@@ -80,12 +86,26 @@ fn update_proximity_sensors_system(
         Option<&TnuaRapier2dSensorShape>,
         Option<&mut TnuaGhostSensor>,
         Option<&TnuaSubservientSensor>,
+        Option<&TnuaToggle>,
     )>,
     ghost_platforms_query: Query<With<TnuaGhostPlatform>>,
     other_object_query_query: Query<(&GlobalTransform, &Velocity)>,
 ) {
     query.par_iter_mut().for_each_mut(
-        |(owner_entity, transform, mut sensor, shape, mut ghost_sensor, subservient)| {
+        |(
+            owner_entity,
+            transform,
+            mut sensor,
+            shape,
+            mut ghost_sensor,
+            subservient,
+            tnua_toggle,
+        )| {
+            match tnua_toggle.copied().unwrap_or_default() {
+                TnuaToggle::Disabled => return,
+                TnuaToggle::SenseOnly => {}
+                TnuaToggle::Enabled => {}
+            }
             let cast_origin = transform.transform_point(sensor.cast_origin);
             let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
             let cast_direction = owner_rotation * sensor.cast_direction;
@@ -258,9 +278,18 @@ fn apply_motors_system(
         &mut Velocity,
         &ReadMassProperties,
         &mut ExternalForce,
+        Option<&TnuaToggle>,
     )>,
 ) {
-    for (motor, mut velocity, mass_properties, mut external_force) in query.iter_mut() {
+    for (motor, mut velocity, mass_properties, mut external_force, tnua_toggle) in query.iter_mut()
+    {
+        match tnua_toggle.copied().unwrap_or_default() {
+            TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
+                *external_force = Default::default();
+                return;
+            }
+            TnuaToggle::Enabled => {}
+        }
         if motor.lin.boost.is_finite() {
             velocity.linvel += motor.lin.boost.truncate();
         }
