@@ -10,6 +10,7 @@ use bevy_tnua::{
     TnuaPlatformerPlugin, TnuaProximitySensor, TnuaRapier2dIOBundle, TnuaRapier2dPlugin,
     TnuaRapier2dSensorShape, TnuaToggle, TnuaUserControlsSystemSet,
 };
+use dolly::rig::CameraRig;
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use self::common::ui_plotting::PlotSource;
@@ -26,6 +27,8 @@ fn main() {
     app.add_startup_system(setup_camera);
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
+    app.add_system(update_dolly_camera_drivers);
+    app.add_system(update_from_dolly_camera);
     app.add_system(apply_controls.in_set(TnuaUserControlsSystemSet));
     app.add_system(apply_manual_turning);
     app.add_system(update_plot_data);
@@ -57,18 +60,49 @@ fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) 
     }
 }
 
+#[derive(Component)]
+struct DollyCamera(CameraRig);
+
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle {
+    let mut cmd = commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(0.0, 14.0, 30.0)
             .with_scale((0.05 * Vec2::ONE).extend(1.0))
             .looking_at(Vec3::new(0.0, 14.0, 0.0), Vec3::Y),
         ..Default::default()
     });
+    cmd.insert(DollyCamera(
+        CameraRig::builder()
+            .with(dolly::drivers::Position::new(Vec3::new(0.0, 0.0, 30.0)))
+            .with(dolly::drivers::Smooth::new_position(2.0))
+            .with(dolly::drivers::Arm::new(Vec3::Z * 30.0))
+            .build(),
+    ));
 
     commands.spawn(PointLightBundle {
         transform: Transform::from_xyz(5.0, 5.0, 5.0),
         ..default()
     });
+}
+
+fn update_dolly_camera_drivers(
+    player_query: Query<&GlobalTransform, With<IsPlayer>>,
+    mut dolly_query: Query<&mut DollyCamera>,
+) {
+    let Ok(player_transform) = player_query.get_single() else { return };
+    for mut dolly_camera in dolly_query.iter_mut() {
+        dolly_camera
+            .0
+            .driver_mut::<dolly::drivers::Position>()
+            .position = player_transform.translation();
+    }
+}
+
+fn update_from_dolly_camera(time: Res<Time>, mut query: Query<(&mut DollyCamera, &mut Transform)>) {
+    for (mut dolly_camera, mut transform) in query.iter_mut() {
+        let new_transform = dolly_camera.0.update(time.delta_seconds());
+        transform.translation = new_transform.position;
+        transform.rotation = new_transform.rotation;
+    }
 }
 
 fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -220,8 +254,12 @@ struct TurningVisualizer {
     x_multiplier: f32,
 }
 
+#[derive(Component)]
+struct IsPlayer;
+
 fn setup_player(mut commands: Commands) {
     let mut cmd = commands.spawn_empty();
+    cmd.insert(IsPlayer);
     cmd.insert(TransformBundle::from_transform(Transform::from_xyz(
         0.0, 2.0, 0.0,
     )));

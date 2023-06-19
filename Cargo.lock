@@ -296,6 +296,7 @@ dependencies = [
  "bevy_egui",
  "bevy_rapier2d",
  "bevy_rapier3d",
+ "dolly",
 ]
 
 [[package]]
@@ -1326,6 +1327,15 @@ name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd0c93bb4b0c6d9b77f4435b0ae98c24d17f1c45b2ff844c6151a07256ca923b"
+
+[[package]]
+name = "dolly"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e665b3cde013704f0209ede562f00846dcb1fe269c2ec2f9b15fa2687d86685f"
+dependencies = [
+ "glam",
+]
 
 [[package]]
 name = "downcast-rs"

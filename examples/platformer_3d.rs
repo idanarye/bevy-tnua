@@ -13,6 +13,7 @@ use bevy_tnua::{
     TnuaProximitySensor, TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
     TnuaToggle, TnuaUserControlsSystemSet,
 };
+use dolly::rig::CameraRig;
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use self::common::ui_plotting::PlotSource;
@@ -28,6 +29,8 @@ fn main() {
     app.add_startup_system(setup_camera);
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_player);
+    app.add_system(update_dolly_camera_drivers);
+    app.add_system(update_from_dolly_camera);
     app.add_system(apply_controls.in_set(TnuaUserControlsSystemSet));
     app.add_system(animation_patcher_system);
     app.add_system(animate);
@@ -57,12 +60,30 @@ fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) 
     }
 }
 
+#[derive(Component)]
+struct IsPlayerCamera;
+
+#[derive(Component)]
+struct DollyCamera(CameraRig);
+
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
+    let mut cmd = commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 16.0, 40.0)
             .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
         ..Default::default()
     });
+    cmd.insert(IsPlayerCamera);
+    cmd.insert(DollyCamera(
+        CameraRig::builder()
+            .with(dolly::drivers::Position::new(Vec3::ZERO))
+            .with(dolly::drivers::Smooth::new_position(2.0).predictive(true))
+            .with(dolly::drivers::Rotation::new(Quat::default()))
+            // .with(dolly::drivers::Smooth::new_rotation(24.0))
+            .with(dolly::drivers::Arm::new(Vec3::new(0.0, 6.0, 30.0)))
+            .with(dolly::drivers::Smooth::new_position(4.0))
+            .with(dolly::drivers::LookAt::new(Vec3::new(0.0, 10.0, 0.0)).tracking_smoothness(2.0).tracking_predictive(true))
+            .build(),
+    ));
 
     commands.spawn(PointLightBundle {
         transform: Transform::from_xyz(5.0, 5.0, 5.0),
@@ -78,6 +99,31 @@ fn setup_camera(mut commands: Commands) {
         transform: Transform::default().looking_at(-Vec3::Y, Vec3::Z),
         ..Default::default()
     });
+}
+
+fn update_dolly_camera_drivers(
+    player_query: Query<&GlobalTransform, With<IsPlayer>>,
+    mut dolly_query: Query<&mut DollyCamera>,
+) {
+    let Ok(player_transform) = player_query.get_single() else { return };
+    let (_, player_rotation, _player_translation) = player_transform.to_scale_rotation_translation();
+    for mut dolly_camera in dolly_query.iter_mut() {
+        dolly_camera
+            .0
+            .driver_mut::<dolly::drivers::Position>()
+            .position = player_transform.translation();
+        // dolly_camera.0.driver_mut::<dolly::drivers::Rotation>().rotation = player_rotation;
+        // // dolly_camera.0.driver_mut::<dolly::drivers::Arm>().offset = player_rotation.mul_vec3(Vec3::new(0.0, 6.0, 30.0));
+        dolly_camera.0.driver_mut::<dolly::drivers::LookAt>().target = player_transform.transform_point(Vec3::Z * -0.5);
+    }
+}
+
+fn update_from_dolly_camera(time: Res<Time>, mut query: Query<(&mut DollyCamera, &mut Transform)>) {
+    for (mut dolly_camera, mut transform) in query.iter_mut() {
+        let new_transform = dolly_camera.0.update(time.delta_seconds());
+        transform.translation = new_transform.position;
+        transform.rotation = new_transform.rotation;
+    }
 }
 
 fn setup_level(
@@ -218,8 +264,12 @@ fn setup_level(
     }
 }
 
+#[derive(Component)]
+struct IsPlayer;
+
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
+    cmd.insert(IsPlayer);
     cmd.insert(SceneBundle {
         scene: asset_server.load("player.glb#Scene0"),
         transform: Transform::from_xyz(0.0, 10.0, 0.0),
@@ -333,6 +383,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn apply_controls(
     mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,
+    camera_query: Query<&GlobalTransform, With<IsPlayerCamera>>,
     mut query: Query<(
         &mut TnuaPlatformerControls,
         &TnuaKeepCrouchingBelowObstacles,
@@ -349,19 +400,24 @@ fn apply_controls(
         return;
     }
 
+    let Ok(camera_transform) = camera_query.get_single() else { return };
+
+    let camera_forawrd = Vec3::Y.cross(camera_transform.right()).normalize_or_zero();
+    let camera_right = camera_forawrd.cross(Vec3::Y).normalize_or_zero();
+
     let mut direction = Vec3::ZERO;
 
     if keyboard.pressed(KeyCode::Up) {
-        direction -= Vec3::Z;
+        direction += camera_forawrd;
     }
     if keyboard.pressed(KeyCode::Down) {
-        direction += Vec3::Z;
+        direction -= camera_forawrd;
     }
     if keyboard.pressed(KeyCode::Left) {
-        direction -= Vec3::X;
+        direction -= camera_right;
     }
     if keyboard.pressed(KeyCode::Right) {
-        direction += Vec3::X;
+        direction += camera_right;
     }
 
     direction = direction.clamp_length_max(1.0);
