@@ -621,9 +621,7 @@ fn platformer_control_system(
         }
         let effective_velocity = effective_velocity + impulse_to_offset;
 
-        let upward_velocity = config.up.dot(effective_velocity);
-
-        let velocity_on_plane = effective_velocity - config.up * upward_velocity;
+        let velocity_on_plane = effective_velocity.reject_from(config.up);
 
         let desired_velocity = controls.desired_velocity * config.full_speed;
         let exact_acceleration = desired_velocity - velocity_on_plane;
@@ -847,6 +845,7 @@ fn platformer_control_system(
                         desired_energy,
                         zero_potential_energy_at,
                     } => {
+                        let upward_velocity = config.up.dot(effective_velocity);
                         if upward_velocity <= vertical_velocity {
                             platformer_state.jump_state = JumpState::FallSection {
                                 coyote_time: make_finished_timer(),
@@ -878,6 +877,7 @@ fn platformer_control_system(
                         }
                     }
                     JumpState::MaintainingJump => {
+                        let upward_velocity = config.up.dot(effective_velocity);
                         let relevant_upwrad_velocity = upward_velocity - vertical_velocity;
                         if relevant_upwrad_velocity <= 0.0 {
                             platformer_state.jump_state = JumpState::FallSection {
@@ -903,6 +903,7 @@ fn platformer_control_system(
                         break 'upward_impulse TnuaVelChange::ZERO;
                     }
                     JumpState::StoppedMaintainingJump { coyote_time } => {
+                        let upward_velocity = config.up.dot(effective_velocity);
                         if upward_velocity <= 0.0 {
                             platformer_state.jump_state = JumpState::FallSection {
                                 coyote_time: coyote_time.clone(),
@@ -1121,9 +1122,8 @@ fn platformer_control_system(
 
         if let Some(animating_output) = animating_output.as_mut() {
             let new_velocity = effective_velocity + motor.lin.boost - impulse_to_offset;
-            let new_upward_velocity = config.up.dot(new_velocity);
-            animating_output.running_velocity = new_velocity - config.up * new_upward_velocity;
-            animating_output.jumping_velocity = is_airborne.then_some(new_upward_velocity);
+            animating_output.running_velocity = new_velocity.reject_from(config.up);
+            animating_output.jumping_velocity = is_airborne.then_some(config.up.dot(new_velocity));
             animating_output.standing_offset = standing_offset;
         }
     }
