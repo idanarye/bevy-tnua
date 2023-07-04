@@ -474,7 +474,7 @@ fn animate(
     mut animation_players_query: Query<&mut AnimationPlayer>,
 ) {
     for (mut animating_state, animating_output, handler) in animations_handlers_query.iter_mut() {
-        let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue} ;
+        let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue } ;
         match animating_state.update_by_discriminant({
             if let Some(upward_velocity) = animating_output.jumping_velocity {
                 if 0.0 < upward_velocity {
