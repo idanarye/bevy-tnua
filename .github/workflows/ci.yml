@@ -116,7 +116,7 @@ jobs:
         run: |-
           echo FEATURES_FOR_DOCS=$(
             cargo metadata --no-deps --format-version=1 \
-            | jq '.packages[].meta data.docs.rs.features[]' -r \
+            | jq '.packages[].metadata.docs.rs.features[]' -r \
             | sort -u \
             | xargs -L1 echo --feature
           ) >> "$GITHUB_OUTPUT"
