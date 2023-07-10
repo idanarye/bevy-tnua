@@ -157,13 +157,12 @@ jobs:
         run: |-
           cargo doc --verbose --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }} &&
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html &&
-          RUSTFLAGS=--cfg=web_sys_unstable_apis \
           cargo build --examples --release --features "$(
               cargo metadata --no-deps --format-version 1 \
                   | jq '.packages[].targets[] | select(.kind == ["example"]) | .["required-features"][]' -r \
                   | uniq \
                   | tr '\n' ' '
-          )" --target wasm32-unknown-unknown &&
+          )" --target wasm32-unknown-unknown --features bevy/webgl2 &&
           for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
               wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --target web
               cat > target/doc/demos/${demowasm%.*}.html <<EOF
