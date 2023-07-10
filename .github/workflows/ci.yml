@@ -114,7 +114,6 @@ jobs:
       - name: Get features for docs
         id: get-features-for-docs
         run: |-
-          echo TEST=MY-TEST >> "$GITHUB_OUTPUT"
           echo "FEATURES_FOR_DOCS=$(
             cargo metadata --no-deps --format-version=1 \
             | jq '.packages[].metadata.docs.rs.features[]' -r \
