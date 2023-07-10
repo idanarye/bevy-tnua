@@ -18,7 +18,7 @@ impl MovingPlatform {
 
     pub fn make_system<V: Component>(
         mut updater: impl 'static + Send + Sync + FnMut(&mut V, Vec3),
-    ) -> bevy::app::SystemAppConfig {
+    ) -> bevy::ecs::schedule::SystemConfigs {
         (move |time: Res<Time>,
                mut query: Query<(&mut MovingPlatform, &GlobalTransform, &mut V)>| {
             for (mut moving_platform, transform, mut velocity) in query.iter_mut() {
@@ -36,6 +36,6 @@ impl MovingPlatform {
                 }
             }
         })
-        .into_app_config()
+        .into_configs()
     }
 }

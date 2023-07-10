@@ -22,6 +22,7 @@ impl Plugin for TnuaPlatformerPlugin {
         app.register_type::<TnuaFreeFallBehavior>();
 
         app.configure_sets(
+            Update,
             (
                 TnuaPipelineStages::Sensors,
                 TnuaPipelineStages::SubservientSensors,
@@ -32,8 +33,12 @@ impl Plugin for TnuaPlatformerPlugin {
                 .chain()
                 .in_set(TnuaSystemSet),
         );
-        app.add_system(platformer_control_system.in_set(TnuaPipelineStages::Logic));
-        app.add_system(
+        app.add_systems(
+            Update,
+            platformer_control_system.in_set(TnuaPipelineStages::Logic),
+        );
+        app.add_systems(
+            Update,
             handle_keep_crouching_below_obstacles.in_set(TnuaPipelineStages::SubservientSensors),
         );
     }

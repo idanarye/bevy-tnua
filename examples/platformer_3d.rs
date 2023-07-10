@@ -21,23 +21,24 @@ use self::common::{FallingThroughControlScheme, MovingPlatform};
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
-    app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-    app.add_plugin(TnuaRapier3dPlugin);
-    app.add_plugin(TnuaPlatformerPlugin);
-    app.add_plugin(common::ui::ExampleUi);
-    app.add_startup_system(setup_camera);
-    app.add_startup_system(setup_level);
-    app.add_startup_system(setup_player);
-    app.add_system(apply_controls.in_set(TnuaUserControlsSystemSet));
-    app.add_system(animation_patcher_system);
-    app.add_system(animate);
-    app.add_system(update_plot_data);
-    app.add_system(MovingPlatform::make_system(
-        |velocity: &mut Velocity, linvel: Vec3| {
+    app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+    app.add_plugins(TnuaRapier3dPlugin);
+    app.add_plugins(TnuaPlatformerPlugin);
+    app.add_plugins(common::ui::ExampleUi);
+    app.add_systems(Startup, setup_camera);
+    app.add_systems(Startup, setup_level);
+    app.add_systems(Startup, setup_player);
+    app.add_systems(Update, apply_controls.in_set(TnuaUserControlsSystemSet));
+    app.add_systems(Update, animation_patcher_system);
+    app.add_systems(Update, animate);
+    app.add_systems(Update, update_plot_data);
+    app.add_systems(
+        Update,
+        MovingPlatform::make_system(|velocity: &mut Velocity, linvel: Vec3| {
             velocity.linvel = linvel;
-        },
-    ));
-    app.add_system(update_rapier_physics_active);
+        }),
+    );
+    app.add_systems(Update, update_rapier_physics_active);
     app.run();
 }
 
@@ -368,11 +369,11 @@ fn apply_controls(
 
     let jump = keyboard.pressed(KeyCode::Space);
 
-    let turn_in_place = [KeyCode::LAlt, KeyCode::RAlt]
+    let turn_in_place = [KeyCode::AltLeft, KeyCode::AltRight]
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    let (crouch, crouch_just_pressed) = match [KeyCode::LControl, KeyCode::RControl]
+    let (crouch, crouch_just_pressed) = match [KeyCode::ControlLeft, KeyCode::ControlRight]
         .into_iter()
         .find(|key_code| keyboard.pressed(*key_code))
     {

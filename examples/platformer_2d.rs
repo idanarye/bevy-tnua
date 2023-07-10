@@ -18,26 +18,27 @@ use self::common::{FallingThroughControlScheme, MovingPlatform};
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
-    app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-    app.add_plugin(RapierDebugRenderPlugin::default());
-    app.add_plugin(TnuaRapier2dPlugin);
-    app.add_plugin(TnuaPlatformerPlugin);
-    app.add_plugin(common::ui::ExampleUi);
-    app.add_startup_system(setup_camera);
-    app.add_startup_system(setup_level);
-    app.add_startup_system(setup_player);
-    app.add_system(apply_controls.in_set(TnuaUserControlsSystemSet));
-    app.add_system(apply_manual_turning);
-    app.add_system(update_plot_data);
-    app.add_system(MovingPlatform::make_system(
-        |velocity: &mut Velocity, linvel: Vec3| {
+    app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+    app.add_plugins(RapierDebugRenderPlugin::default());
+    app.add_plugins(TnuaRapier2dPlugin);
+    app.add_plugins(TnuaPlatformerPlugin);
+    app.add_plugins(common::ui::ExampleUi);
+    app.add_systems(Startup, setup_camera);
+    app.add_systems(Startup, setup_level);
+    app.add_systems(Startup, setup_player);
+    app.add_systems(Update, apply_controls.in_set(TnuaUserControlsSystemSet));
+    app.add_systems(Update, apply_manual_turning);
+    app.add_systems(Update, update_plot_data);
+    app.add_systems(
+        Update,
+        MovingPlatform::make_system(|velocity: &mut Velocity, linvel: Vec3| {
             velocity.linvel = linvel.truncate();
-        },
-    ));
-    app.add_startup_system(|mut cfg: ResMut<RapierConfiguration>| {
+        }),
+    );
+    app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
         cfg.gravity = Vec2::Y * -9.81;
     });
-    app.add_system(update_rapier_physics_active);
+    app.add_systems(Update, update_rapier_physics_active);
     app.run();
 }
 
@@ -372,17 +373,18 @@ fn apply_controls(
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    let turn_in_place = [KeyCode::LAlt, KeyCode::RAlt]
+    let turn_in_place = [KeyCode::AltLeft, KeyCode::AltRight]
         .into_iter()
         .any(|key_code| keyboard.pressed(key_code));
 
-    let (crouch, crouch_just_pressed) = match [KeyCode::Down, KeyCode::LControl, KeyCode::RControl]
-        .into_iter()
-        .find(|key_code| keyboard.pressed(*key_code))
-    {
-        None => (false, false),
-        Some(key_code) => (true, keyboard.just_pressed(key_code)),
-    };
+    let (crouch, crouch_just_pressed) =
+        match [KeyCode::Down, KeyCode::ControlLeft, KeyCode::ControlRight]
+            .into_iter()
+            .find(|key_code| keyboard.pressed(*key_code))
+        {
+            None => (false, false),
+            Some(key_code) => (true, keyboard.just_pressed(key_code)),
+        };
 
     for (
         mut controls,

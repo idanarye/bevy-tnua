@@ -17,9 +17,9 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.10", default-features = false }
-bevy_rapier2d = { version = "^0.21", default-features = false, optional = true, features = ["dim2"]}
-bevy_rapier3d = { version = "^0.21", default-features = false, optional = true, features = ["dim3"]}
+bevy = { version = "^0.11", default-features = false }
+bevy_rapier2d = { version = "^0.22", default-features = false, optional = true, features = ["dim2"]}
+bevy_rapier3d = { version = "^0.22", default-features = false, optional = true, features = ["dim3"]}
 
 [features]
 rapier_2d = [
@@ -30,7 +30,7 @@ rapier_3d = [
 ]
 
 [dev-dependencies]
-bevy = { version = "^0.10", default-features = false, features = [
+bevy = { version = "^0.11", default-features = false, features = [
      "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -39,6 +39,9 @@ bevy = { version = "^0.10", default-features = false, features = [
     # "bevy_winit",
     "bevy_render",
     "bevy_gltf",
+    "ktx2",
+    "zstd",
+    "tonemapping_luts",
     "bevy_text",
     # "png",
     # "hdr",
@@ -46,9 +49,10 @@ bevy = { version = "^0.10", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-bevy_rapier2d = { version = "^0.21", features = ["debug-render-2d"]}
-bevy_rapier3d = { version = "^0.21", features = ["debug-render"]}
-bevy_egui = "0.20"
+bevy_rapier2d = { version = "^0.22", features = ["debug-render-2d"]}
+bevy_rapier3d = { version = "^0.22", features = ["debug-render"]}
+#bevy_egui = "0.20"
+bevy_egui = { git = "https://github.com/Vrixyz/bevy_egui.git", branch = "bevy-main" }
 
 [[example]]
 name = "platformer_2d"

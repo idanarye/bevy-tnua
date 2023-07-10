@@ -12,10 +12,10 @@ pub struct ExampleUi;
 
 impl Plugin for ExampleUi {
     fn build(&self, app: &mut App) {
-        app.add_plugin(EguiPlugin);
+        app.add_plugins(EguiPlugin);
         app.insert_resource(ExampleUiPhysicsBackendActive(true));
-        app.add_system(ui_system);
-        app.add_system(super::ui_plotting::plot_source_rolling_update);
+        app.add_systems(Update, ui_system);
+        app.add_systems(Update, super::ui_plotting::plot_source_rolling_update);
     }
 }
 

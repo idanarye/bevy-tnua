@@ -23,18 +23,23 @@ pub struct TnuaRapier2dPlugin;
 impl Plugin for TnuaRapier2dPlugin {
     fn build(&self, app: &mut App) {
         app.configure_set(
+            Update,
             TnuaSystemSet.run_if(|rapier_config: Res<RapierConfiguration>| {
                 rapier_config.physics_pipeline_active
             }),
         );
         app.add_systems(
+            Update,
             (
                 update_rigid_body_trackers_system,
                 update_proximity_sensors_system,
             )
                 .in_set(TnuaPipelineStages::Sensors),
         );
-        app.add_system(apply_motors_system.in_set(TnuaPipelineStages::Motors));
+        app.add_systems(
+            Update,
+            apply_motors_system.in_set(TnuaPipelineStages::Motors),
+        );
     }
 }
 
