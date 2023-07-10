@@ -369,17 +369,11 @@ fn apply_controls(
 
     let jump = keyboard.pressed(KeyCode::Space);
 
-    let turn_in_place = [KeyCode::AltLeft, KeyCode::AltRight]
-        .into_iter()
-        .any(|key_code| keyboard.pressed(key_code));
+    let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
-    let (crouch, crouch_just_pressed) = match [KeyCode::ControlLeft, KeyCode::ControlRight]
-        .into_iter()
-        .find(|key_code| keyboard.pressed(*key_code))
-    {
-        None => (false, false),
-        Some(key_code) => (true, keyboard.just_pressed(key_code)),
-    };
+    let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
+    let crouch = keyboard.any_pressed(crouch_buttons);
+    let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
 
     for (
         mut controls,
