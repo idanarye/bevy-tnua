@@ -111,11 +111,20 @@ jobs:
         with:
           command: test
           args: --doc --all-features
+      - name: Get features for docs
+        id: get-features-for-docs
+        run: |-
+          echo FEATURES_FOR_DOCS=$(
+            cargo metadata --no-deps --format-version=1 |
+            jq '.packages[].meta data.docs.rs.features[]' -r |
+            sort -u |
+            xargs -L1 echo --feature
+          ) >> "$GITHUB_OUTPUT"
       - name: Check docs
         uses: actions-rs/cargo@v1
         with:
           command: doc
-          args: --no-deps --all-features --features bevy_rapier2d/headless --features bevy_rapier3d/headless
+          args: --no-deps --all-features ${{ steps.get-features-for-docs.output.FEATURES_FOR_DOCS }}
   docs-and-demos-ghpages:
     name: Update Docs and Demos in GitHub Pages
     runs-on: ubuntu-latest
@@ -137,13 +146,12 @@ jobs:
         run: |-
           cargo doc --verbose --all-features --features bevy_rapier2d/headless --features bevy_rapier3d/headless &&
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html &&
-          required_features=$(
+          cargo build --examples --release --features "$(
               cargo metadata --no-deps --format-version 1 \
                   | jq '.packages[].targets[] | select(.kind == ["example"]) | .["required-features"][]' -r \
                   | uniq \
                   | tr '\n' ' '
-          )
-          cargo build --examples --release --features "$required_features" --target wasm32-unknown-unknown &&
+          )" --target wasm32-unknown-unknown &&
           for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
               wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --target web
               cat > target/doc/demos/${demowasm%.*}.html <<EOF
