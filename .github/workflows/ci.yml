@@ -115,10 +115,10 @@ jobs:
         id: get-features-for-docs
         run: |-
           echo FEATURES_FOR_DOCS=$(
-            cargo metadata --no-deps --format-version=1 |
-            jq '.packages[].meta data.docs.rs.features[]' -r |
-            sort -u |
-            xargs -L1 echo --feature
+            cargo metadata --no-deps --format-version=1 \
+            | jq '.packages[].meta data.docs.rs.features[]' -r \
+            | sort -u \
+            | xargs -L1 echo --feature
           ) >> "$GITHUB_OUTPUT"
       - name: Check docs
         uses: actions-rs/cargo@v1
