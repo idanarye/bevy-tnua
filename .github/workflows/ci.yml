@@ -118,7 +118,8 @@ jobs:
             cargo metadata --no-deps --format-version=1 \
             | jq '.packages[].metadata.docs.rs.features[]' -r \
             | sort -u \
-            | xargs -L1 echo --feature
+            | xargs -L1 echo --feature \
+            | paste -sd ' '
           )" >> "$GITHUB_OUTPUT"
       - name: Check docs
         uses: actions-rs/cargo@v1
