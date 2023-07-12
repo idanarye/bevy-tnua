@@ -33,6 +33,7 @@ impl FallingThroughControlScheme {
             });
     }
 
+    #[allow(dead_code)]
     pub fn perform_and_check_if_still_crouching(
         &self,
         crouch: bool,

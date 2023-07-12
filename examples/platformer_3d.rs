@@ -6,11 +6,11 @@ use bevy::utils::HashMap;
 use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
+use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
 use bevy_tnua::{
-    TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior, TnuaGhostPlatform,
-    TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles, TnuaPlatformerAnimatingOutput,
-    TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls, TnuaPlatformerPlugin,
-    TnuaProximitySensor, TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
+    tnua_basis, TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor,
+    TnuaKeepCrouchingBelowObstacles, TnuaMotor, TnuaPlatformerConfig, TnuaProximitySensor,
+    TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaRigidBodyTracker,
     TnuaToggle, TnuaUserControlsSystemSet,
 };
 
@@ -23,7 +23,7 @@ fn main() {
     app.add_plugins(DefaultPlugins);
     app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugins(TnuaRapier3dPlugin);
-    app.add_plugins(TnuaPlatformerPlugin);
+    app.add_plugins(TnuaPlatformerPlugin2);
     app.add_plugins(common::ui::ExampleUi);
     app.add_systems(Startup, setup_camera);
     app.add_systems(Startup, setup_level);
@@ -97,6 +97,10 @@ fn setup_level(
         ..Default::default()
     });
     cmd.insert(Collider::halfspace(Vec3::Y).unwrap());
+
+    if true {
+        return;
+    }
 
     let obstacles_material = materials.add(Color::GRAY.into());
     for ([width, height, depth], transform) in [
@@ -223,7 +227,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(SceneBundle {
         scene: asset_server.load("player.glb#Scene0"),
-        transform: Transform::from_xyz(0.0, 10.0, 0.0),
+        transform: Transform::from_xyz(0.0, 3.0, 0.0),
         ..Default::default()
     });
     cmd.insert(GltfSceneHandler {
@@ -232,37 +236,40 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaRapier3dIOBundle::default());
-    cmd.insert(TnuaPlatformerBundle {
-        config: TnuaPlatformerConfig {
-            full_speed: 20.0,
-            full_jump_height: 4.0,
-            up: Vec3::Y,
-            forward: -Vec3::Z,
-            float_height: 2.0,
-            cling_distance: 1.0,
-            spring_strengh: 400.0,
-            spring_dampening: 1.2,
-            acceleration: 60.0,
-            air_acceleration: 20.0,
-            coyote_time: 0.15,
-            jump_input_buffer_time: 0.2,
-            held_jump_cooldown: None,
-            upslope_jump_extra_gravity: 30.0,
-            jump_takeoff_extra_gravity: 30.0,
-            jump_takeoff_above_velocity: 2.0,
-            jump_fall_extra_gravity: 20.0,
-            jump_shorten_extra_gravity: 60.0,
-            jump_peak_prevention_at_upward_velocity: 1.0,
-            jump_peak_prevention_extra_gravity: 20.0,
-            free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
-            tilt_offset_angvel: 5.0,
-            tilt_offset_angacl: 500.0,
-            turning_angvel: 10.0,
-            height_change_impulse_for_duration: 0.02,
-            height_change_impulse_limit: 40.0,
-        },
-        ..Default::default()
+    cmd.insert(TnuaController::default());
+    cmd.insert(TnuaPlatformerConfig {
+        full_speed: 20.0,
+        full_jump_height: 4.0,
+        up: Vec3::Y,
+        forward: -Vec3::Z,
+        float_height: 2.0,
+        cling_distance: 1.0,
+        spring_strengh: 400.0,
+        spring_dampening: 1.2,
+        acceleration: 60.0,
+        air_acceleration: 20.0,
+        coyote_time: 0.15,
+        jump_input_buffer_time: 0.2,
+        held_jump_cooldown: None,
+        upslope_jump_extra_gravity: 30.0,
+        jump_takeoff_extra_gravity: 30.0,
+        jump_takeoff_above_velocity: 2.0,
+        jump_fall_extra_gravity: 20.0,
+        jump_shorten_extra_gravity: 60.0,
+        jump_peak_prevention_at_upward_velocity: 1.0,
+        jump_peak_prevention_extra_gravity: 20.0,
+        free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
+        tilt_offset_angvel: 5.0,
+        tilt_offset_angacl: 500.0,
+        turning_angvel: 10.0,
+        height_change_impulse_for_duration: 0.02,
+        height_change_impulse_limit: 40.0,
     });
+    cmd.insert((
+        TnuaMotor::default(),
+        TnuaRigidBodyTracker::default(),
+        TnuaProximitySensor::default(),
+    ));
     cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaKeepCrouchingBelowObstacles::new(1.5, |cmd| {
         cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
@@ -270,8 +277,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
     cmd.insert(FallingThroughControlScheme::default());
-    cmd.insert(TnuaAnimatingState::<AnimationState>::default());
-    cmd.insert(TnuaPlatformerAnimatingOutput::default());
+    // cmd.insert(TnuaAnimatingState::<AnimationState>::default());
+    // cmd.insert(TnuaPlatformerAnimatingOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()
             .with_combo(
@@ -335,7 +342,8 @@ fn apply_controls(
     mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,
     mut query: Query<(
-        &mut TnuaPlatformerControls,
+        &TnuaPlatformerConfig,
+        &mut TnuaController,
         &TnuaKeepCrouchingBelowObstacles,
         &mut TnuaProximitySensor,
         &TnuaGhostSensor,
@@ -344,9 +352,9 @@ fn apply_controls(
     )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
-        for (mut controls, ..) in query.iter_mut() {
-            *controls = Default::default();
-        }
+        // for (mut controls, ..) in query.iter_mut() {
+        // *controls = Default::default();
+        // }
         return;
     }
 
@@ -367,47 +375,51 @@ fn apply_controls(
 
     direction = direction.clamp_length_max(1.0);
 
-    let jump = keyboard.pressed(KeyCode::Space);
+    // let jump = keyboard.pressed(KeyCode::Space);
 
-    let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
+    // let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
-    let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
-    let crouch = keyboard.any_pressed(crouch_buttons);
-    let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
+    // let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
+    // let crouch = keyboard.any_pressed(crouch_buttons);
+    // let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
 
     for (
-        mut controls,
-        keep_crouching,
-        mut sensor,
-        ghost_sensor,
-        mut fall_through_helper,
-        falling_through_control_scheme,
+        config,
+        mut controller,
+        _keep_crouching,
+        mut _sensor,
+        _ghost_sensor,
+        mut _fall_through_helper,
+        _falling_through_control_scheme,
     ) in query.iter_mut()
     {
-        let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
-            crouch,
-            crouch_just_pressed,
-            fall_through_helper.as_mut(),
-            sensor.as_mut(),
-            ghost_sensor,
-            1.0,
-        );
-        let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
-            0.2
-        } else {
-            1.0
-        };
+        controller.basis(tnua_basis::Movement {
+            desired_velocity: direction * config.full_speed,
+        });
+        // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
+        // crouch,
+        // crouch_just_pressed,
+        // fall_through_helper.as_mut(),
+        // sensor.as_mut(),
+        // ghost_sensor,
+        // 1.0,
+        // );
+        // let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
+        // 0.2
+        // } else {
+        // 1.0
+        // };
 
-        *controls = TnuaPlatformerControls {
-            desired_velocity: if turn_in_place {
-                Vec3::ZERO
-            } else {
-                speed_factor * direction
-            },
-            desired_forward: direction.normalize(),
-            jump: jump.then(|| 1.0),
-            float_height_offset: if crouch { -0.9 } else { 0.0 },
-        };
+        // *controls = TnuaPlatformerControls {
+        // desired_velocity: if turn_in_place {
+        // Vec3::ZERO
+        // } else {
+        // speed_factor * direction
+        // },
+        // desired_forward: direction.normalize(),
+        // jump: jump.then(|| 1.0),
+        // float_height_offset: if crouch { -0.9 } else { 0.0 },
+        // };
     }
 }
 
@@ -451,94 +463,93 @@ fn animation_patcher_system(
     }
 }
 
-enum AnimationState {
-    Standing,
-    Running(f32),
-    Jumping,
-    Falling,
-    Crouching,
-    Crawling(f32),
-}
+// enum AnimationState {
+// Standing,
+// Running(f32),
+// Jumping,
+// Falling,
+// Crouching,
+// Crawling(f32),
+// }
 
-fn animate(
-    mut animations_handlers_query: Query<(
-        &mut TnuaAnimatingState<AnimationState>,
-        &TnuaPlatformerAnimatingOutput,
-        &AnimationsHandler,
-    )>,
-    mut animation_players_query: Query<&mut AnimationPlayer>,
+fn animate(// mut animations_handlers_query: Query<(
+        // &mut TnuaAnimatingState<AnimationState>,
+        // &TnuaPlatformerAnimatingOutput,
+        // &AnimationsHandler,
+    // )>,
+    // mut animation_players_query: Query<&mut AnimationPlayer>,
 ) {
-    for (mut animating_state, animating_output, handler) in animations_handlers_query.iter_mut() {
-        let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue } ;
-        match animating_state.update_by_discriminant({
-            if let Some(upward_velocity) = animating_output.jumping_velocity {
-                if 0.0 < upward_velocity {
-                    AnimationState::Jumping
-                } else {
-                    AnimationState::Falling
-                }
-            } else {
-                let speed = animating_output.running_velocity.length();
-                let is_crouching = animating_output.standing_offset < -0.3;
-                if 0.01 < speed {
-                    if is_crouching {
-                        AnimationState::Crawling(0.3 * speed)
-                    } else {
-                        AnimationState::Running(0.1 * speed)
-                    }
-                } else {
-                    if is_crouching {
-                        AnimationState::Crouching
-                    } else {
-                        AnimationState::Standing
-                    }
-                }
-            }
-        }) {
-            TnuaAnimatingStateDirective::Maintain { state } => {
-                if let AnimationState::Running(speed) | AnimationState::Crawling(speed) = state {
-                    player.set_speed(*speed);
-                }
-            }
-            TnuaAnimatingStateDirective::Alter {
-                old_state: _,
-                state,
-            } => match state {
-                AnimationState::Standing => {
-                    player
-                        .start(handler.animations["Standing"].clone_weak())
-                        .set_speed(1.0)
-                        .repeat();
-                }
-                AnimationState::Running(speed) => {
-                    player
-                        .start(handler.animations["Running"].clone_weak())
-                        .set_speed(*speed)
-                        .repeat();
-                }
-                AnimationState::Jumping => {
-                    player
-                        .start(handler.animations["Jumping"].clone_weak())
-                        .set_speed(2.0);
-                }
-                AnimationState::Falling => {
-                    player
-                        .start(handler.animations["Falling"].clone_weak())
-                        .set_speed(1.0);
-                }
-                AnimationState::Crouching => {
-                    player
-                        .start(handler.animations["Crouching"].clone_weak())
-                        .set_speed(1.0)
-                        .repeat();
-                }
-                AnimationState::Crawling(speed) => {
-                    player
-                        .start(handler.animations["Crawling"].clone_weak())
-                        .set_speed(*speed)
-                        .repeat();
-                }
-            },
-        }
-    }
+    // for (mut animating_state, animating_output, handler) in animations_handlers_query.iter_mut() {
+    // let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue } ;
+    // match animating_state.update_by_discriminant({
+    // if let Some(upward_velocity) = animating_output.jumping_velocity {
+    // if 0.0 < upward_velocity {
+    // AnimationState::Jumping
+    // } else {
+    // AnimationState::Falling
+    // }
+    // } else {
+    // let speed = animating_output.running_velocity.length();
+    // let is_crouching = animating_output.standing_offset < -0.3;
+    // if 0.01 < speed {
+    // if is_crouching {
+    // AnimationState::Crawling(0.3 * speed)
+    // } else {
+    // AnimationState::Running(0.1 * speed)
+    // }
+    // } else {
+    // if is_crouching {
+    // AnimationState::Crouching
+    // } else {
+    // AnimationState::Standing
+    // }
+    // }
+    // }
+    // }) {
+    // TnuaAnimatingStateDirective::Maintain { state } => {
+    // if let AnimationState::Running(speed) | AnimationState::Crawling(speed) = state {
+    // player.set_speed(*speed);
+    // }
+    // }
+    // TnuaAnimatingStateDirective::Alter {
+    // old_state: _,
+    // state,
+    // } => match state {
+    // AnimationState::Standing => {
+    // player
+    // .start(handler.animations["Standing"].clone_weak())
+    // .set_speed(1.0)
+    // .repeat();
+    // }
+    // AnimationState::Running(speed) => {
+    // player
+    // .start(handler.animations["Running"].clone_weak())
+    // .set_speed(*speed)
+    // .repeat();
+    // }
+    // AnimationState::Jumping => {
+    // player
+    // .start(handler.animations["Jumping"].clone_weak())
+    // .set_speed(2.0);
+    // }
+    // AnimationState::Falling => {
+    // player
+    // .start(handler.animations["Falling"].clone_weak())
+    // .set_speed(1.0);
+    // }
+    // AnimationState::Crouching => {
+    // player
+    // .start(handler.animations["Crouching"].clone_weak())
+    // .set_speed(1.0)
+    // .repeat();
+    // }
+    // AnimationState::Crawling(speed) => {
+    // player
+    // .start(handler.animations["Crawling"].clone_weak())
+    // .set_speed(*speed)
+    // .repeat();
+    // }
+    // },
+    // }
+    // }
 }
