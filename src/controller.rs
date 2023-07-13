@@ -32,21 +32,21 @@ impl Plugin for TnuaPlatformerPlugin2 {
 
 #[derive(Component, Default)]
 pub struct TnuaController {
-    current_basis: Option<Box<dyn DynamicBasis>>,
+    current_basis: Option<(&'static str, Box<dyn DynamicBasis>)>,
 }
 
 impl TnuaController {
-    pub fn basis<B: TnuaBasis>(&mut self, basis: B) -> &mut Self {
-        if let Some(existing_basis) = self
-            .current_basis
-            .as_mut()
-            .and_then(|b| b.as_mut_any().downcast_mut::<BoxableBasis<B>>())
+    pub fn basis<B: TnuaBasis>(&mut self, name: &'static str, basis: B) -> &mut Self {
+        if let Some((existing_name, existing_basis)) =
+            self.current_basis.as_mut().and_then(|(n, b)| {
+                let b = b.as_mut_any().downcast_mut::<BoxableBasis<B>>()?;
+                Some((n, b))
+            })
         {
-            info!("replacing");
+            *existing_name = name;
             existing_basis.input = basis;
         } else {
-            info!("setting");
-            self.current_basis = Some(Box::new(BoxableBasis::new(basis)));
+            self.current_basis = Some((name, Box::new(BoxableBasis::new(basis))));
         }
         self
     }
@@ -59,7 +59,7 @@ fn apply_controller_system(time: Res<Time>, mut query: Query<(&mut TnuaControlle
         return;
     }
     for (mut controller,) in query.iter_mut() {
-        if let Some(basis) = controller.current_basis.as_mut() {
+        if let Some((_, basis)) = controller.current_basis.as_mut() {
             basis.apply();
         }
     }

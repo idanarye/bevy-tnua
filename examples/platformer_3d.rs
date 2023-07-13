@@ -393,9 +393,12 @@ fn apply_controls(
         _falling_through_control_scheme,
     ) in query.iter_mut()
     {
-        controller.basis(tnua_basis::Movement {
-            desired_velocity: direction * config.full_speed,
-        });
+        controller.basis(
+            "move",
+            tnua_basis::Movement {
+                desired_velocity: direction * config.full_speed,
+            },
+        );
         // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
         // crouch,
         // crouch_just_pressed,
