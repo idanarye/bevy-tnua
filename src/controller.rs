@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
-use crate::basis_trait::{BoxableBasis, DynamicBasis};
-use crate::{TnuaBasis, TnuaPipelineStages, TnuaSystemSet, TnuaUserControlsSystemSet};
+use crate::basis_trait::{BoxableBasis, DynamicBasis, TnuaBasisContext};
+use crate::{
+    TnuaBasis, TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker,
+    TnuaSystemSet, TnuaUserControlsSystemSet,
+};
 
 pub struct TnuaPlatformerPlugin2;
 
@@ -53,14 +56,31 @@ impl TnuaController {
 }
 
 #[allow(clippy::type_complexity)]
-fn apply_controller_system(time: Res<Time>, mut query: Query<(&mut TnuaController,)>) {
+fn apply_controller_system(
+    time: Res<Time>,
+    mut query: Query<(
+        &mut TnuaController,
+        &TnuaRigidBodyTracker,
+        &mut TnuaProximitySensor,
+        &mut TnuaMotor,
+    )>,
+) {
     let frame_duration = time.delta().as_secs_f32();
     if frame_duration == 0.0 {
         return;
     }
-    for (mut controller,) in query.iter_mut() {
+    for (mut controller, tracker, mut sensor, mut motor) in query.iter_mut() {
         if let Some((_, basis)) = controller.current_basis.as_mut() {
-            basis.apply();
+            basis.apply(
+                TnuaBasisContext {
+                    frame_duration: time.delta(),
+                    tracker,
+                    proximity_sensor: sensor.as_ref(),
+                },
+                motor.as_mut(),
+            );
+            let sensor_cast_range = basis.proximity_sensor_cast_range();
+            sensor.cast_range = sensor_cast_range;
         }
     }
 }
