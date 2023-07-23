@@ -397,8 +397,15 @@ fn apply_controls(
             "move",
             tnua_basis::Movement {
                 desired_velocity: direction * config.full_speed,
-                float_height: 2.0,
-                cling_distance: 1.0,
+                float_height: config.float_height,
+                cling_distance: config.cling_distance,
+                up: Vec3::Y,
+                spring_strengh: config.spring_strengh,
+                spring_dampening: config.spring_dampening,
+                height_change_impulse_for_duration: config.height_change_impulse_for_duration,
+                height_change_impulse_limit: config.height_change_impulse_limit,
+                acceleration: config.acceleration,
+                air_acceleration: config.air_acceleration,
             },
         );
         // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
