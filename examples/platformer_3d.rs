@@ -227,7 +227,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(SceneBundle {
         scene: asset_server.load("player.glb#Scene0"),
-        transform: Transform::from_xyz(0.0, 3.0, 0.0),
+        transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..Default::default()
     });
     cmd.insert(GltfSceneHandler {
@@ -406,6 +406,12 @@ fn apply_controls(
                 height_change_impulse_limit: config.height_change_impulse_limit,
                 acceleration: config.acceleration,
                 air_acceleration: config.air_acceleration,
+                coyote_time: config.coyote_time,
+                free_fall_extra_gravity: match config.free_fall_behavior {
+                    TnuaFreeFallBehavior::ExtraGravity(extra_gravity) => extra_gravity,
+                    TnuaFreeFallBehavior::LikeJumpShorten => config.jump_shorten_extra_gravity,
+                    TnuaFreeFallBehavior::LikeJumpFall => config.jump_fall_extra_gravity,
+                },
             },
         );
         // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
