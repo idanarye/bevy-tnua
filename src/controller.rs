@@ -73,7 +73,7 @@ fn apply_controller_system(
         if let Some((_, basis)) = controller.current_basis.as_mut() {
             basis.apply(
                 TnuaBasisContext {
-                    frame_duration: time.delta(),
+                    frame_duration,
                     tracker,
                     proximity_sensor: sensor.as_ref(),
                 },

@@ -394,8 +394,8 @@ fn apply_controls(
     ) in query.iter_mut()
     {
         controller.basis(
-            "move",
-            tnua_basis::Movement {
+            "walk",
+            tnua_basis::Walk {
                 desired_velocity: direction * config.full_speed,
                 float_height: config.float_height,
                 cling_distance: config.cling_distance,

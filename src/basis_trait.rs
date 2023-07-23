@@ -1,12 +1,11 @@
 // use bevy::prelude::*;
 
 use std::any::Any;
-use std::time::Duration;
 
 use crate::{TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker};
 
 pub struct TnuaBasisContext<'a> {
-    pub frame_duration: Duration,
+    pub frame_duration: f32,
     pub tracker: &'a TnuaRigidBodyTracker,
     pub proximity_sensor: &'a TnuaProximitySensor,
 }

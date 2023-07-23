@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{TnuaBasis, TnuaVelChange};
 
-pub struct Movement {
+pub struct Walk {
     pub desired_velocity: Vec3,
     pub float_height: f32,
     pub cling_distance: f32,
@@ -15,8 +15,8 @@ pub struct Movement {
     pub air_acceleration: f32,
 }
 
-impl TnuaBasis for Movement {
-    type State = MovementState;
+impl TnuaBasis for Walk {
+    type State = WalkState;
 
     fn apply(
         &self,
@@ -54,7 +54,7 @@ impl TnuaBasis for Movement {
         let acceleration = direction_change_factor * relevant_acceleration_limit;
 
         let walk_acceleration =
-            exact_acceleration.clamp_length_max(ctx.frame_duration.as_secs_f32() * acceleration);
+            exact_acceleration.clamp_length_max(ctx.frame_duration * acceleration);
 
         // TODO: amend walk_acceleration based on climb vectors
 
@@ -85,14 +85,14 @@ impl TnuaBasis for Movement {
                             let relative_velocity =
                                 effective_velocity.dot(self.up) - vertical_velocity;
 
-                            let dampening_force = relative_velocity * self.spring_dampening
-                                / ctx.frame_duration.as_secs_f32();
+                            let dampening_force =
+                                relative_velocity * self.spring_dampening / ctx.frame_duration;
                             let spring_force = spring_force - dampening_force;
 
                             let gravity_compensation = -ctx.tracker.gravity.dot(self.up);
 
-                            let spring_impulse = ctx.frame_duration.as_secs_f32()
-                                * (spring_force + gravity_compensation);
+                            let spring_impulse =
+                                ctx.frame_duration * (spring_force + gravity_compensation);
 
                             let impulse_to_use =
                                 if spring_impulse.abs() < offset_change_impulse.abs() {
@@ -112,10 +112,6 @@ impl TnuaBasis for Movement {
             error!("Tnua could not decide on jump state");
             TnuaVelChange::ZERO
         };
-        info!(
-            "{:?} {:?}",
-            upward_impulse.acceleration, upward_impulse.boost
-        );
         // motor.lin = upward_impulse; // todo: include the walking velocity
         motor.lin = TnuaVelChange::boost(walk_acceleration + impulse_to_offset) + upward_impulse;
     }
@@ -128,7 +124,7 @@ impl TnuaBasis for Movement {
 }
 
 #[derive(Default)]
-pub struct MovementState {
+pub struct WalkState {
     airborne_state: AirborneState,
     pub standing_offset: f32,
 }
