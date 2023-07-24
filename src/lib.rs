@@ -110,6 +110,7 @@ pub mod control_helpers;
 pub mod controller;
 mod platformer;
 mod subservient_sensors;
+pub mod tnua_action;
 pub mod tnua_basis;
 mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};

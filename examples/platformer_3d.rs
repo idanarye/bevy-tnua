@@ -8,7 +8,7 @@ use bevy_rapier3d::prelude::*;
 use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
 use bevy_tnua::{
-    tnua_basis, TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor,
+    tnua_action, tnua_basis, TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor,
     TnuaKeepCrouchingBelowObstacles, TnuaMotor, TnuaPlatformerConfig, TnuaProximitySensor,
     TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaRigidBodyTracker,
     TnuaToggle, TnuaUserControlsSystemSet,
@@ -375,7 +375,7 @@ fn apply_controls(
 
     direction = direction.clamp_length_max(1.0);
 
-    // let jump = keyboard.pressed(KeyCode::Space);
+    let jump = keyboard.pressed(KeyCode::Space);
 
     // let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
@@ -414,6 +414,15 @@ fn apply_controls(
                 },
             },
         );
+
+        if jump {
+            controller.action(
+                "jump",
+                tnua_action::Jump {
+                    height: config.full_jump_height,
+                },
+            );
+        }
         // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
         // crouch,
         // crouch_just_pressed,

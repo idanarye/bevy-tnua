@@ -1,6 +1,10 @@
 use bevy::prelude::*;
+use bevy::utils::{Entry, HashMap};
 
-use crate::basis_action_traits::{BoxableBasis, DynamicBasis, TnuaBasisContext};
+use crate::basis_action_traits::{
+    BoxableAction, BoxableBasis, DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext,
+    TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasisContext,
+};
 use crate::{
     TnuaBasis, TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker,
     TnuaSystemSet, TnuaUserControlsSystemSet,
@@ -36,6 +40,9 @@ impl Plugin for TnuaPlatformerPlugin2 {
 #[derive(Component, Default)]
 pub struct TnuaController {
     current_basis: Option<(&'static str, Box<dyn DynamicBasis>)>,
+    actions_being_fed: HashMap<&'static str, bool>,
+    current_action: Option<(&'static str, Box<dyn DynamicAction>)>,
+    contender_action: Option<(&'static str, Box<dyn DynamicAction>)>,
 }
 
 impl TnuaController {
@@ -50,6 +57,46 @@ impl TnuaController {
             existing_basis.input = basis;
         } else {
             self.current_basis = Some((name, Box::new(BoxableBasis::new(basis))));
+        }
+        self
+    }
+
+    pub fn action<A: TnuaAction>(&mut self, name: &'static str, action: A) -> &mut Self {
+        match self.actions_being_fed.entry(name) {
+            Entry::Occupied(mut entry) => {
+                *entry.get_mut() = true;
+                if let Some((current_name, current_action)) = self.current_action.as_mut() {
+                    if *current_name == name {
+                        let Some(current_action) = current_action.as_mut_any().downcast_mut::<BoxableAction<A>>() else {
+                            panic!("Multiple action types registered with same name {name:?}");
+                        };
+                        current_action.input = action;
+                    } else {
+                        // different action is running - will not override because button was
+                        // already pressed.
+                    }
+                } else {
+                    // different action is running - will not set because button was already
+                    // pressed.
+                }
+            }
+            Entry::Vacant(entry) => {
+                entry.insert(true);
+                if let Some(contender_action) = self.contender_action.as_mut().and_then(|(contender_name, contender_action)| {
+                    if *contender_name == name {
+                        let Some(contender_action) = contender_action.as_mut_any().downcast_mut::<BoxableAction<A>>() else {
+                            panic!("Multiple action types registered with same name {name:?}");
+                        };
+                        Some(contender_action)
+                    } else {
+                        None
+                    }
+                }) {
+                    contender_action.input = action;
+                } else {
+                    self.contender_action = Some((name, Box::new(BoxableAction::new(action))));
+                }
+            }
         }
         self
     }
@@ -70,6 +117,8 @@ fn apply_controller_system(
         return;
     }
     for (mut controller, tracker, mut sensor, mut motor) in query.iter_mut() {
+        let controller = controller.as_mut();
+
         if let Some((_, basis)) = controller.current_basis.as_mut() {
             basis.apply(
                 TnuaBasisContext {
@@ -81,6 +130,83 @@ fn apply_controller_system(
             );
             let sensor_cast_range = basis.proximity_sensor_cast_range();
             sensor.cast_range = sensor_cast_range;
+
+            if let Some((name, current_action)) = controller.current_action.as_mut() {
+                let lifecycle_status = if controller.contender_action.is_some() {
+                    TnuaActionLifecycleStatus::CancelledInto
+                } else if controller
+                    .actions_being_fed
+                    .get(name)
+                    .copied()
+                    .unwrap_or(false)
+                {
+                    TnuaActionLifecycleStatus::StillFed
+                } else {
+                    TnuaActionLifecycleStatus::NoLongerFed
+                };
+
+                let directive = current_action.apply(
+                    TnuaActionContext {
+                        frame_duration,
+                        tracker,
+                        proximity_sensor: sensor.as_ref(),
+                    },
+                    lifecycle_status,
+                    motor.as_mut(),
+                );
+                match directive {
+                    TnuaActionLifecycleDirective::StillActive => {}
+                    TnuaActionLifecycleDirective::Finished => {
+                        controller.current_action =
+                            if let Some((contender_name, mut contender_action)) =
+                                controller.contender_action.take()
+                            {
+                                let contender_directive = contender_action.apply(
+                                    TnuaActionContext {
+                                        frame_duration,
+                                        tracker,
+                                        proximity_sensor: sensor.as_ref(),
+                                    },
+                                    TnuaActionLifecycleStatus::CancelledFrom,
+                                    motor.as_mut(),
+                                );
+                                match contender_directive {
+                                    TnuaActionLifecycleDirective::StillActive => {
+                                        Some((contender_name, contender_action))
+                                    }
+                                    TnuaActionLifecycleDirective::Finished => None,
+                                }
+                            } else {
+                                None
+                            };
+                    }
+                }
+            } else if let Some((contender_name, mut contender_action)) =
+                controller.contender_action.take()
+            {
+                contender_action.apply(
+                    TnuaActionContext {
+                        frame_duration,
+                        tracker,
+                        proximity_sensor: sensor.as_ref(),
+                    },
+                    TnuaActionLifecycleStatus::Initiated,
+                    motor.as_mut(),
+                );
+                controller.current_action = Some((contender_name, contender_action));
+            }
         }
+
+        // Cycle actions_being_fed
+        controller
+            .actions_being_fed
+            .retain(|_, triggered_this_frame| {
+                if *triggered_this_frame {
+                    *triggered_this_frame = false;
+                    true
+                } else {
+                    false
+                }
+            });
     }
 }
