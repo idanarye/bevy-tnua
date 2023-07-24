@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::basis_trait::{BoxableBasis, DynamicBasis, TnuaBasisContext};
+use crate::basis_action_traits::{BoxableBasis, DynamicBasis, TnuaBasisContext};
 use crate::{
     TnuaBasis, TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker,
     TnuaSystemSet, TnuaUserControlsSystemSet,

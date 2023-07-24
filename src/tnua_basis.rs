@@ -25,7 +25,7 @@ impl TnuaBasis for Walk {
     fn apply(
         &self,
         state: &mut Self::State,
-        ctx: crate::basis_trait::TnuaBasisContext,
+        ctx: crate::basis_action_traits::TnuaBasisContext,
         motor: &mut crate::TnuaMotor,
     ) {
         match &mut state.airborne_state {
