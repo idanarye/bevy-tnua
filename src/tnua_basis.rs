@@ -152,6 +152,17 @@ impl TnuaBasis for Walk {
         // or converted into an action?
         self.float_height + self.cling_distance
     }
+
+    fn up_direction(&self, _state: &Self::State) -> Vec3 {
+        self.up
+    }
+
+    fn displacement(&self, state: &Self::State) -> Option<Vec3> {
+        match state.airborne_state {
+            AirborneState::NoJump => Some(self.up * state.standing_offset),
+            AirborneState::FreeFall { .. } => None,
+        }
+    }
 }
 
 #[derive(Default)]

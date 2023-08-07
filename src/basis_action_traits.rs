@@ -1,4 +1,4 @@
-// use bevy::prelude::*;
+use bevy::prelude::*;
 
 use std::any::Any;
 
@@ -17,12 +17,18 @@ pub trait TnuaBasis: 'static + Send + Sync {
     fn proximity_sensor_cast_range(&self) -> f32 {
         0.0
     }
+
+    fn up_direction(&self, _state: &Self::State) -> Vec3;
+    fn displacement(&self, _state: &Self::State) -> Option<Vec3>;
 }
 
-pub(crate) trait DynamicBasis: Send + Sync + Any + 'static {
+pub trait DynamicBasis: Send + Sync + Any + 'static {
     fn apply(&mut self, ctx: TnuaBasisContext, motor: &mut TnuaMotor);
     fn proximity_sensor_cast_range(&self) -> f32;
     fn as_mut_any(&mut self) -> &mut dyn Any;
+
+    fn up_direction(&self) -> Vec3;
+    fn displacement(&self) -> Option<Vec3>;
 }
 
 pub(crate) struct BoxableBasis<B: TnuaBasis> {
@@ -51,12 +57,21 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
     fn as_mut_any(&mut self) -> &mut dyn Any {
         self
     }
+
+    fn up_direction(&self) -> Vec3 {
+        self.input.up_direction(&self.state)
+    }
+
+    fn displacement(&self) -> Option<Vec3> {
+        self.input.displacement(&self.state)
+    }
 }
 
 pub struct TnuaActionContext<'a> {
     pub frame_duration: f32,
     pub tracker: &'a TnuaRigidBodyTracker,
     pub proximity_sensor: &'a TnuaProximitySensor,
+    pub basis: &'a dyn DynamicBasis,
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
@@ -72,14 +87,35 @@ pub enum TnuaActionLifecycleStatus {
     /// This action was fed up until the previous frame, and now a different action tries to override it
     CancelledInto,
 }
+
 impl TnuaActionLifecycleStatus {
-    pub(crate) fn directive_simple(&self) -> TnuaActionLifecycleDirective {
+    pub fn directive_simple(&self) -> TnuaActionLifecycleDirective {
         match self {
             TnuaActionLifecycleStatus::Initiated => TnuaActionLifecycleDirective::StillActive,
             TnuaActionLifecycleStatus::CancelledFrom => TnuaActionLifecycleDirective::StillActive,
             TnuaActionLifecycleStatus::StillFed => TnuaActionLifecycleDirective::StillActive,
             TnuaActionLifecycleStatus::NoLongerFed => TnuaActionLifecycleDirective::Finished,
             TnuaActionLifecycleStatus::CancelledInto => TnuaActionLifecycleDirective::Finished,
+        }
+    }
+
+    pub fn just_started(&self) -> bool {
+        match self {
+            TnuaActionLifecycleStatus::Initiated => true,
+            TnuaActionLifecycleStatus::CancelledFrom => true,
+            TnuaActionLifecycleStatus::StillFed => false,
+            TnuaActionLifecycleStatus::NoLongerFed => false,
+            TnuaActionLifecycleStatus::CancelledInto => false,
+        }
+    }
+
+    pub fn is_active(&self) -> bool {
+        match self {
+            TnuaActionLifecycleStatus::Initiated => true,
+            TnuaActionLifecycleStatus::CancelledFrom => true,
+            TnuaActionLifecycleStatus::StillFed => true,
+            TnuaActionLifecycleStatus::NoLongerFed => false,
+            TnuaActionLifecycleStatus::CancelledInto => false,
         }
     }
 }

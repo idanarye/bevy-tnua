@@ -119,6 +119,7 @@ pub struct TnuaProximitySensorOutput {
 }
 
 /// Represents a change to velocity (linear or angular)
+#[derive(Debug)]
 pub struct TnuaVelChange {
     // The part of the velocity change that gets multiplied by the frame duration.
     //
@@ -150,6 +151,11 @@ impl TnuaVelChange {
             boost,
         }
     }
+
+    pub fn cancel_on_axis(&mut self, axis: Vec3) {
+        self.acceleration = self.acceleration.reject_from(axis);
+        self.boost = self.boost.reject_from(axis);
+    }
 }
 
 impl Default for TnuaVelChange {
@@ -177,7 +183,7 @@ impl Add<TnuaVelChange> for TnuaVelChange {
 ///
 /// This documentation uses the term "forces", but in fact these numbers ignore mass and are
 /// applied directly to the velocity.
-#[derive(Component, Default)]
+#[derive(Component, Default, Debug)]
 pub struct TnuaMotor {
     /// How much velocity to add to the rigid body in the current frame.
     pub lin: TnuaVelChange,
