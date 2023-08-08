@@ -420,6 +420,13 @@ fn apply_controls(
                 "jump",
                 tnua_action::Jump {
                     height: config.full_jump_height,
+                    takeoff_extra_gravity: config.jump_takeoff_extra_gravity,
+                    takeoff_above_velocity: config.jump_takeoff_above_velocity,
+                    peak_prevention_at_upward_velocity: config
+                        .jump_peak_prevention_at_upward_velocity,
+                    peak_prevention_extra_gravity: config.jump_peak_prevention_extra_gravity,
+                    shorten_extra_gravity: config.jump_shorten_extra_gravity,
+                    fall_extra_gravity: config.jump_fall_extra_gravity,
                 },
             );
         }

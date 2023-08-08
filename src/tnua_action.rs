@@ -7,6 +7,12 @@ use crate::util::SegmentedJumpInitialVelocityCalculator;
 
 pub struct Jump {
     pub height: f32,
+    pub takeoff_extra_gravity: f32,
+    pub takeoff_above_velocity: f32,
+    pub peak_prevention_at_upward_velocity: f32,
+    pub peak_prevention_extra_gravity: f32,
+    pub shorten_extra_gravity: f32,
+    pub fall_extra_gravity: f32,
 }
 
 impl TnuaAction for Jump {
@@ -28,9 +34,13 @@ impl TnuaAction for Jump {
         if lifecycle_status.just_started() {
             let mut calculator = SegmentedJumpInitialVelocityCalculator::new(self.height);
             let gravity = ctx.tracker.gravity.dot(-up);
-            // TODO: add all the actual segments
             let kinetic_energy = calculator
-                .add_segment(gravity, f32::INFINITY)
+                .add_segment(
+                    gravity + self.peak_prevention_extra_gravity,
+                    self.peak_prevention_at_upward_velocity,
+                )
+                .add_segment(gravity, self.takeoff_above_velocity)
+                .add_segment(gravity + self.takeoff_extra_gravity, f32::INFINITY)
                 .kinetic_energy();
             if lifecycle_status == TnuaActionLifecycleStatus::Initiated {}
             *state = JumpState::StartingJump {
@@ -61,23 +71,61 @@ impl TnuaAction for Jump {
                 lifecycle_status.directive_simple()
             }
             JumpState::MaintainingJump => {
-                if effective_velocity.dot(up) < 0.0 {
+                let relevant_upward_velocity = effective_velocity.dot(up);
+                if relevant_upward_velocity < 0.0 {
                     *state = JumpState::FallSection;
+                    motor.lin.cancel_on_axis(up);
                 } else {
                     motor.lin.cancel_on_axis(up);
+                    if relevant_upward_velocity < self.peak_prevention_at_upward_velocity {
+                        motor.lin.acceleration -= self.peak_prevention_extra_gravity * up;
+                    } else if self.takeoff_above_velocity <= relevant_upward_velocity {
+                        motor.lin.acceleration -= self.takeoff_extra_gravity * up;
+                    }
                 }
-                lifecycle_status.directive_simple()
+                match lifecycle_status {
+                    TnuaActionLifecycleStatus::Initiated
+                    | TnuaActionLifecycleStatus::CancelledFrom
+                    | TnuaActionLifecycleStatus::StillFed => {
+                        TnuaActionLifecycleDirective::StillActive
+                    }
+                    TnuaActionLifecycleStatus::CancelledInto => {
+                        TnuaActionLifecycleDirective::Finished
+                    }
+                    TnuaActionLifecycleStatus::NoLongerFed => {
+                        *state = JumpState::StoppedMaintainingJump;
+                        TnuaActionLifecycleDirective::StillActive
+                    }
+                }
+            }
+            JumpState::StoppedMaintainingJump => {
+                if matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto) {
+                    TnuaActionLifecycleDirective::Finished
+                } else {
+                    let landed = ctx
+                        .basis
+                        .displacement()
+                        .map_or(false, |displacement| displacement.dot(up) <= 0.0);
+                    if landed {
+                        TnuaActionLifecycleDirective::Finished
+                    } else {
+                        motor.lin.cancel_on_axis(up);
+                        motor.lin.acceleration -= self.shorten_extra_gravity * up;
+                        TnuaActionLifecycleDirective::StillActive
+                    }
+                }
             }
             JumpState::FallSection => {
                 let landed = ctx
                     .basis
                     .displacement()
                     .map_or(false, |displacement| displacement.dot(up) <= 0.0);
-                if landed {
+                if landed || matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto) {
                     TnuaActionLifecycleDirective::Finished
                 } else {
                     motor.lin.cancel_on_axis(up);
-                    lifecycle_status.directive_simple()
+                    motor.lin.acceleration -= self.fall_extra_gravity * up;
+                    TnuaActionLifecycleDirective::StillActive
                 }
             }
         }
@@ -102,6 +150,6 @@ pub enum JumpState {
     // zero_potential_energy_at: Vec3,
     // },
     MaintainingJump,
-    // StoppedMaintainingJump,
+    StoppedMaintainingJump,
     FallSection,
 }
