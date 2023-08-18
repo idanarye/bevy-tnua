@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 0.9.0 - 2023-08-17
+### Changed
+- `TnuaKeepCrouchingBelowObstacles` now also prevent jumping while crouched
+  below an obstacle (fixes https://github.com/idanarye/bevy-tnua/issues/27)
+
 ## 0.8.0 - 2023-07-11
 ### Changed
 - Upgrade Bevy to 0.11.

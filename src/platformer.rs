@@ -673,31 +673,35 @@ fn platformer_control_system(
         };
 
         let should_jump_calc_energy = |can_jump: bool| {
-            if can_jump && jump_command_can_be_fired {
-                if let Some(jump_multiplier) = controls.jump {
-                    let jump_height = jump_multiplier * config.full_jump_height;
-                    let mut calculator = SegmentedJumpInitialVelocityCalculator::new(jump_height);
-
-                    let gravity = tracker.gravity.dot(-config.up);
-
-                    let kinetic_energy = calculator
-                        // Jump peak prevention segment
-                        .add_segment(
-                            gravity + config.jump_peak_prevention_extra_gravity,
-                            config.jump_peak_prevention_at_upward_velocity,
-                        )
-                        // Regular gravity segment
-                        .add_segment(gravity, config.jump_takeoff_above_velocity)
-                        // Jump takeoff segment
-                        .add_segment(gravity + config.jump_takeoff_extra_gravity, f32::INFINITY)
-                        .kinetic_energy();
-                    Some(kinetic_energy)
-                } else {
-                    None
-                }
-            } else {
-                None
+            if !can_jump {
+                return None;
             }
+            if !jump_command_can_be_fired {
+                return None;
+            }
+            if let Some(keep_crouching) = keep_crouching {
+                if keep_crouching.force_crouching_to_height < 0.0 {
+                    return None;
+                }
+            }
+            let jump_multiplier = controls.jump?;
+            let jump_height = jump_multiplier * config.full_jump_height;
+            let mut calculator = SegmentedJumpInitialVelocityCalculator::new(jump_height);
+
+            let gravity = tracker.gravity.dot(-config.up);
+
+            let kinetic_energy = calculator
+                // Jump peak prevention segment
+                .add_segment(
+                    gravity + config.jump_peak_prevention_extra_gravity,
+                    config.jump_peak_prevention_at_upward_velocity,
+                )
+                // Regular gravity segment
+                .add_segment(gravity, config.jump_takeoff_above_velocity)
+                // Jump takeoff segment
+                .add_segment(gravity + config.jump_takeoff_extra_gravity, f32::INFINITY)
+                .kinetic_energy();
+            Some(kinetic_energy)
         };
 
         let mut standing_offset = 0.0;
@@ -810,6 +814,19 @@ fn platformer_control_system(
                         if let Some(sensor_output) = &sensor.output {
                             let relative_velocity =
                                 effective_velocity.dot(config.up) - vertical_velocity.max(0.0);
+                            if relative_velocity <= 0.0
+                                && keep_crouching.map_or(false, |keep_crouching| {
+                                    keep_crouching.force_crouching_to_height < 0.0
+                                })
+                            {
+                                warn!(
+                                    "Character stuck (vertical velocity is zero) - aborting jump"
+                                );
+                                platformer_state.jump_state = JumpState::FreeFall {
+                                    coyote_time: coyote_time.clone(),
+                                };
+                                continue;
+                            }
                             let extra_height = sensor_output.proximity - config.float_height;
                             let gravity = tracker.gravity.dot(-config.up);
                             let energy_from_extra_height = extra_height * gravity;
