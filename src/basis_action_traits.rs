@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 
 use std::any::Any;
 
@@ -126,6 +127,13 @@ pub enum TnuaActionLifecycleDirective {
     Finished,
 }
 
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+pub enum TnuaActionInitiationDirective {
+    Reject,
+    Delay,
+    Allow,
+}
+
 pub trait TnuaAction: 'static + Send + Sync {
     type State: Default + Send + Sync;
 
@@ -140,9 +148,24 @@ pub trait TnuaAction: 'static + Send + Sync {
     fn proximity_sensor_cast_range(&self) -> f32 {
         0.0
     }
+
+    fn initiation_decision(
+        &self,
+        ctx: TnuaActionContext,
+        being_fed_for: &Stopwatch,
+    ) -> TnuaActionInitiationDirective {
+        if 0.2 < being_fed_for.elapsed().as_secs_f32() {
+            TnuaActionInitiationDirective::Reject
+        } else if ctx.proximity_sensor.output.is_some() {
+            TnuaActionInitiationDirective::Allow
+        } else {
+            TnuaActionInitiationDirective::Delay
+        }
+    }
 }
 
 pub(crate) trait DynamicAction: Send + Sync + Any + 'static {
+    fn as_mut_any(&mut self) -> &mut dyn Any;
     fn apply(
         &mut self,
         ctx: TnuaActionContext,
@@ -150,7 +173,11 @@ pub(crate) trait DynamicAction: Send + Sync + Any + 'static {
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective;
     fn proximity_sensor_cast_range(&self) -> f32;
-    fn as_mut_any(&mut self) -> &mut dyn Any;
+    fn initiation_decision(
+        &self,
+        ctx: TnuaActionContext,
+        being_fed_for: &Stopwatch,
+    ) -> TnuaActionInitiationDirective;
 }
 
 pub(crate) struct BoxableAction<A: TnuaAction> {
@@ -168,6 +195,10 @@ impl<A: TnuaAction> BoxableAction<A> {
 }
 
 impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
+    fn as_mut_any(&mut self) -> &mut dyn Any {
+        self
+    }
+
     fn apply(
         &mut self,
         ctx: TnuaActionContext,
@@ -182,7 +213,11 @@ impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
         self.input.proximity_sensor_cast_range()
     }
 
-    fn as_mut_any(&mut self) -> &mut dyn Any {
-        self
+    fn initiation_decision(
+        &self,
+        ctx: TnuaActionContext,
+        being_fed_for: &Stopwatch,
+    ) -> TnuaActionInitiationDirective {
+        self.input.initiation_decision(ctx, being_fed_for)
     }
 }

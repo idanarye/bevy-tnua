@@ -1,9 +1,11 @@
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 use bevy::utils::{Entry, HashMap};
 
 use crate::basis_action_traits::{
     BoxableAction, BoxableBasis, DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext,
-    TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasisContext,
+    TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus,
+    TnuaBasisContext,
 };
 use crate::{
     TnuaBasis, TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker,
@@ -42,7 +44,7 @@ pub struct TnuaController {
     current_basis: Option<(&'static str, Box<dyn DynamicBasis>)>,
     actions_being_fed: HashMap<&'static str, bool>,
     current_action: Option<(&'static str, Box<dyn DynamicAction>)>,
-    contender_action: Option<(&'static str, Box<dyn DynamicAction>)>,
+    contender_action: Option<(&'static str, Box<dyn DynamicAction>, Stopwatch)>,
 }
 
 impl TnuaController {
@@ -82,7 +84,7 @@ impl TnuaController {
             }
             Entry::Vacant(entry) => {
                 entry.insert(true);
-                if let Some(contender_action) = self.contender_action.as_mut().and_then(|(contender_name, contender_action)| {
+                if let Some(contender_action) = self.contender_action.as_mut().and_then(|(contender_name, contender_action, _)| {
                     if *contender_name == name {
                         let Some(contender_action) = contender_action.as_mut_any().downcast_mut::<BoxableAction<A>>() else {
                             panic!("Multiple action types registered with same name {name:?}");
@@ -94,7 +96,7 @@ impl TnuaController {
                 }) {
                     contender_action.input = action;
                 } else {
-                    self.contender_action = Some((name, Box::new(BoxableAction::new(action))));
+                    self.contender_action = Some((name, Box::new(BoxableAction::new(action)), Stopwatch::new()));
                 }
             }
         }
@@ -131,8 +133,37 @@ fn apply_controller_system(
             let sensor_cast_range = basis.proximity_sensor_cast_range();
             sensor.cast_range = sensor_cast_range;
 
+            // To streamline TnuaActionContext creation
+            let proximity_sensor = sensor.as_ref();
+            let basis = basis.as_ref();
+
+            let has_valid_contender = if let Some((_, contender_action, being_fed_for)) =
+                &mut controller.contender_action
+            {
+                let initiation_decision = contender_action.initiation_decision(
+                    TnuaActionContext {
+                        frame_duration,
+                        tracker,
+                        proximity_sensor,
+                        basis,
+                    },
+                    being_fed_for,
+                );
+                being_fed_for.tick(time.delta());
+                match initiation_decision {
+                    TnuaActionInitiationDirective::Reject => {
+                        controller.contender_action = None;
+                        false
+                    }
+                    TnuaActionInitiationDirective::Delay => false,
+                    TnuaActionInitiationDirective::Allow => true,
+                }
+            } else {
+                false
+            };
+
             if let Some((name, current_action)) = controller.current_action.as_mut() {
-                let lifecycle_status = if controller.contender_action.is_some() {
+                let lifecycle_status = if has_valid_contender {
                     TnuaActionLifecycleStatus::CancelledInto
                 } else if controller
                     .actions_being_fed
@@ -149,8 +180,8 @@ fn apply_controller_system(
                     TnuaActionContext {
                         frame_duration,
                         tracker,
-                        proximity_sensor: sensor.as_ref(),
-                        basis: basis.as_ref(),
+                        proximity_sensor,
+                        basis,
                     },
                     lifecycle_status,
                     motor.as_mut(),
@@ -158,40 +189,40 @@ fn apply_controller_system(
                 match directive {
                     TnuaActionLifecycleDirective::StillActive => {}
                     TnuaActionLifecycleDirective::Finished => {
-                        controller.current_action =
-                            if let Some((contender_name, mut contender_action)) =
-                                controller.contender_action.take()
-                            {
-                                let contender_directive = contender_action.apply(
-                                    TnuaActionContext {
-                                        frame_duration,
-                                        tracker,
-                                        proximity_sensor: sensor.as_ref(),
-                                        basis: basis.as_ref(),
-                                    },
-                                    TnuaActionLifecycleStatus::CancelledFrom,
-                                    motor.as_mut(),
-                                );
-                                match contender_directive {
-                                    TnuaActionLifecycleDirective::StillActive => {
-                                        Some((contender_name, contender_action))
-                                    }
-                                    TnuaActionLifecycleDirective::Finished => None,
+                        controller.current_action = if has_valid_contender {
+                            let (contender_name, mut contender_action, _) = controller.contender_action.take().expect("has_valid_contender can only be true if contender_action is Some");
+                            let contender_directive = contender_action.apply(
+                                TnuaActionContext {
+                                    frame_duration,
+                                    tracker,
+                                    proximity_sensor,
+                                    basis,
+                                },
+                                TnuaActionLifecycleStatus::CancelledFrom,
+                                motor.as_mut(),
+                            );
+                            match contender_directive {
+                                TnuaActionLifecycleDirective::StillActive => {
+                                    Some((contender_name, contender_action))
                                 }
-                            } else {
-                                None
-                            };
+                                TnuaActionLifecycleDirective::Finished => None,
+                            }
+                        } else {
+                            None
+                        };
                     }
                 }
-            } else if let Some((contender_name, mut contender_action)) =
-                controller.contender_action.take()
-            {
+            } else if has_valid_contender {
+                let (contender_name, mut contender_action, _) = controller
+                    .contender_action
+                    .take()
+                    .expect("has_valid_contender can only be true if contender_action is Some");
                 contender_action.apply(
                     TnuaActionContext {
                         frame_duration,
                         tracker,
-                        proximity_sensor: sensor.as_ref(),
-                        basis: basis.as_ref(),
+                        proximity_sensor,
+                        basis,
                     },
                     TnuaActionLifecycleStatus::Initiated,
                     motor.as_mut(),

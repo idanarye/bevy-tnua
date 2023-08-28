@@ -72,7 +72,7 @@ impl TnuaAction for Jump {
             }
             JumpState::MaintainingJump => {
                 let relevant_upward_velocity = effective_velocity.dot(up);
-                if relevant_upward_velocity < 0.0 {
+                if relevant_upward_velocity <= 0.0 {
                     *state = JumpState::FallSection;
                     motor.lin.cancel_on_axis(up);
                 } else {
