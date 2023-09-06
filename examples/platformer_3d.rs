@@ -9,9 +9,9 @@ use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
 use bevy_tnua::{
     tnua_action, tnua_basis, TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor,
-    TnuaKeepCrouchingBelowObstacles, TnuaMotor, TnuaPlatformerConfig, TnuaProximitySensor,
-    TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaRigidBodyTracker,
-    TnuaToggle, TnuaUserControlsSystemSet,
+    TnuaKeepCrouchingBelowObstacles, TnuaMotor, TnuaPipelineStages, TnuaPlatformerConfig,
+    TnuaProximitySensor, TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
+    TnuaRigidBodyTracker, TnuaToggle, TnuaUserControlsSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
@@ -36,7 +36,8 @@ fn main() {
         Update,
         MovingPlatform::make_system(|velocity: &mut Velocity, linvel: Vec3| {
             velocity.linvel = linvel;
-        }),
+        })
+        .before(TnuaPipelineStages::Sensors),
     );
     app.add_systems(Update, update_rapier_physics_active);
     app.run();
@@ -514,7 +515,9 @@ fn animate(// mut animations_handlers_query: Query<(
     // mut animation_players_query: Query<&mut AnimationPlayer>,
 ) {
     // for (mut animating_state, animating_output, handler) in animations_handlers_query.iter_mut() {
-    // let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else { continue } ;
+    // let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else {
+    // continue;
+    //};
     // match animating_state.update_by_discriminant({
     // if let Some(upward_velocity) = animating_output.jumping_velocity {
     // if 0.0 < upward_velocity {
