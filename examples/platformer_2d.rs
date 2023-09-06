@@ -6,9 +6,9 @@ use bevy_rapier2d::prelude::*;
 use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles,
-    TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaPlatformerControls,
-    TnuaPlatformerPlugin, TnuaProximitySensor, TnuaRapier2dIOBundle, TnuaRapier2dPlugin,
-    TnuaRapier2dSensorShape, TnuaToggle, TnuaUserControlsSystemSet,
+    TnuaManualTurningOutput, TnuaPipelineStages, TnuaPlatformerBundle, TnuaPlatformerConfig,
+    TnuaPlatformerControls, TnuaPlatformerPlugin, TnuaProximitySensor, TnuaRapier2dIOBundle,
+    TnuaRapier2dPlugin, TnuaRapier2dSensorShape, TnuaToggle, TnuaUserControlsSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
@@ -33,7 +33,8 @@ fn main() {
         Update,
         MovingPlatform::make_system(|velocity: &mut Velocity, linvel: Vec3| {
             velocity.linvel = linvel.truncate();
-        }),
+        })
+        .before(TnuaPipelineStages::Sensors),
     );
     app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
         cfg.gravity = Vec2::Y * -9.81;
