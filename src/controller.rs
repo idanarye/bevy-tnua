@@ -69,7 +69,10 @@ impl TnuaController {
                 *entry.get_mut() = true;
                 if let Some((current_name, current_action)) = self.current_action.as_mut() {
                     if *current_name == name {
-                        let Some(current_action) = current_action.as_mut_any().downcast_mut::<BoxableAction<A>>() else {
+                        let Some(current_action) = current_action
+                            .as_mut_any()
+                            .downcast_mut::<BoxableAction<A>>()
+                        else {
                             panic!("Multiple action types registered with same name {name:?}");
                         };
                         current_action.input = action;
@@ -84,19 +87,25 @@ impl TnuaController {
             }
             Entry::Vacant(entry) => {
                 entry.insert(true);
-                if let Some(contender_action) = self.contender_action.as_mut().and_then(|(contender_name, contender_action, _)| {
-                    if *contender_name == name {
-                        let Some(contender_action) = contender_action.as_mut_any().downcast_mut::<BoxableAction<A>>() else {
-                            panic!("Multiple action types registered with same name {name:?}");
-                        };
-                        Some(contender_action)
-                    } else {
-                        None
-                    }
-                }) {
+                if let Some(contender_action) = self.contender_action.as_mut().and_then(
+                    |(contender_name, contender_action, _)| {
+                        if *contender_name == name {
+                            let Some(contender_action) = contender_action
+                                .as_mut_any()
+                                .downcast_mut::<BoxableAction<A>>()
+                            else {
+                                panic!("Multiple action types registered with same name {name:?}");
+                            };
+                            Some(contender_action)
+                        } else {
+                            None
+                        }
+                    },
+                ) {
                     contender_action.input = action;
                 } else {
-                    self.contender_action = Some((name, Box::new(BoxableAction::new(action)), Stopwatch::new()));
+                    self.contender_action =
+                        Some((name, Box::new(BoxableAction::new(action)), Stopwatch::new()));
                 }
             }
         }

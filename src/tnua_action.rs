@@ -42,7 +42,6 @@ impl TnuaAction for Jump {
                 .add_segment(gravity, self.takeoff_above_velocity)
                 .add_segment(gravity + self.takeoff_extra_gravity, f32::INFINITY)
                 .kinetic_energy();
-            if lifecycle_status == TnuaActionLifecycleStatus::Initiated {}
             *state = JumpState::StartingJump {
                 desired_energy: kinetic_energy,
             };
