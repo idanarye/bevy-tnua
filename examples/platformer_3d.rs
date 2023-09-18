@@ -99,10 +99,6 @@ fn setup_level(
     });
     cmd.insert(Collider::halfspace(Vec3::Y).unwrap());
 
-    if true {
-        return;
-    }
-
     let obstacles_material = materials.add(Color::GRAY.into());
     for ([width, height, depth], transform) in [
         (
@@ -121,6 +117,10 @@ fn setup_level(
             ..Default::default()
         });
         cmd.insert(Collider::cuboid(0.5 * width, 0.5 * height, 0.5 * depth));
+    }
+
+    if true {
+        return;
     }
 
     // Fall-through platforms

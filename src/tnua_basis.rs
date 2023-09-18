@@ -40,10 +40,46 @@ impl TnuaBasis for Walk {
         let prev_float_height_offset = 0.0; // maybe this should be prev_float_height instead of an
                                             // offset?
 
-        // TODO: properly calculate these:
-        let effective_velocity = ctx.tracker.velocity;
-        let considered_in_air = false;
-        let impulse_to_offset = Vec3::ZERO;
+        let effective_velocity: Vec3;
+        let climb_vectors: Option<ClimbVectors>;
+        let considered_in_air: bool;
+        let impulse_to_offset: Vec3;
+
+        if let Some(sensor_output) = &ctx.proximity_sensor.output {
+            effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
+            let sideways_unnormalized = sensor_output.normal.cross(self.up);
+            if sideways_unnormalized == Vec3::ZERO {
+                climb_vectors = None;
+            } else {
+                climb_vectors = Some(ClimbVectors {
+                    direction: sideways_unnormalized
+                        .cross(sensor_output.normal)
+                        .normalize_or_zero(),
+                    sideways: sideways_unnormalized.normalize_or_zero(),
+                });
+            }
+            considered_in_air = match state.airborne_state {
+                AirborneState::NoJump => false,
+                AirborneState::FreeFall { .. } => true,
+            };
+            if considered_in_air {
+                impulse_to_offset = Vec3::ZERO;
+            } else if let Some(standing_on_state) = &state.standing_on {
+                if standing_on_state.entity != sensor_output.entity {
+                    impulse_to_offset = Vec3::ZERO;
+                } else {
+                    impulse_to_offset =
+                        sensor_output.entity_linvel - standing_on_state.entity_linvel;
+                }
+            } else {
+                impulse_to_offset = Vec3::ZERO;
+            }
+        } else {
+            effective_velocity = ctx.tracker.velocity;
+            climb_vectors = None;
+            considered_in_air = true;
+            impulse_to_offset = Vec3::ZERO;
+        }
 
         let velocity_on_plane = effective_velocity.reject_from(self.up);
 
@@ -64,10 +100,17 @@ impl TnuaBasis for Walk {
 
         let walk_acceleration =
             exact_acceleration.clamp_length_max(ctx.frame_duration * acceleration);
+        let walk_acceleration = if let Some(climb_vectors) = &climb_vectors {
+            climb_vectors.project(walk_acceleration)
+        } else {
+            walk_acceleration
+        };
 
-        // TODO: amend walk_acceleration based on climb vectors
-
-        let vertical_velocity = 0.0; // TODO: calculate using climb vectors
+        let vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
+            effective_velocity.dot(climb_vectors.direction) * climb_vectors.direction.dot(self.up)
+        } else {
+            0.0
+        };
 
         let upward_impulse: TnuaVelChange = 'upward_impulse: {
             for _ in 0..2 {
@@ -165,10 +208,17 @@ impl TnuaBasis for Walk {
     }
 }
 
+#[derive(Debug)]
+struct StandingOnState {
+    entity: Entity,
+    entity_linvel: Vec3,
+}
+
 #[derive(Default)]
 pub struct WalkState {
     airborne_state: AirborneState,
     pub standing_offset: f32,
+    standing_on: Option<StandingOnState>,
 }
 
 // TODO: does this need to be an `enum`? Without all the jump-specific fields, maybe it can be an
@@ -181,4 +231,17 @@ enum AirborneState {
         // Maybe move the coyote time setting to the jump, and make this a Stopwatch?
         coyote_time: Timer,
     },
+}
+
+struct ClimbVectors {
+    direction: Vec3,
+    sideways: Vec3,
+}
+
+impl ClimbVectors {
+    fn project(&self, vector: Vec3) -> Vec3 {
+        let axis_direction = vector.dot(self.direction) * self.direction;
+        let axis_sideways = vector.dot(self.sideways) * self.sideways;
+        axis_direction + axis_sideways
+    }
 }
