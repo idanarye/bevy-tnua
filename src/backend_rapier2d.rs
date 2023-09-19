@@ -57,15 +57,21 @@ pub struct TnuaRapier2dSensorShape(pub Collider);
 
 fn update_rigid_body_trackers_system(
     rapier_config: Res<RapierConfiguration>,
-    mut query: Query<(&Velocity, &mut TnuaRigidBodyTracker, Option<&TnuaToggle>)>,
+    mut query: Query<(
+        &GlobalTransform,
+        &Velocity,
+        &mut TnuaRigidBodyTracker,
+        Option<&TnuaToggle>,
+    )>,
 ) {
-    for (velocity, mut tracker, tnua_toggle) in query.iter_mut() {
+    for (transform, velocity, mut tracker, tnua_toggle) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
             TnuaToggle::Enabled => {}
         }
         *tracker = TnuaRigidBodyTracker {
+            translation: transform.translation(),
             velocity: velocity.linvel.extend(0.0),
             angvel: Vec3::new(0.0, 0.0, velocity.angvel),
             gravity: rapier_config.gravity.extend(0.0),

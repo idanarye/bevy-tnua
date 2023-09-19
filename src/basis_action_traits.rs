@@ -19,8 +19,11 @@ pub trait TnuaBasis: 'static + Send + Sync {
         0.0
     }
 
-    fn up_direction(&self, _state: &Self::State) -> Vec3;
-    fn displacement(&self, _state: &Self::State) -> Option<Vec3>;
+    fn up_direction(&self, state: &Self::State) -> Vec3;
+    fn displacement(&self, state: &Self::State) -> Option<Vec3>;
+
+    fn effective_velocity(&self, state: &Self::State) -> Vec3;
+    fn vertical_velocity(&self, state: &Self::State) -> f32;
 }
 
 pub trait DynamicBasis: Send + Sync + Any + 'static {
@@ -30,6 +33,9 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
 
     fn up_direction(&self) -> Vec3;
     fn displacement(&self) -> Option<Vec3>;
+
+    fn effective_velocity(&self) -> Vec3;
+    fn vertical_velocity(&self) -> f32;
 }
 
 pub(crate) struct BoxableBasis<B: TnuaBasis> {
@@ -65,6 +71,14 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
 
     fn displacement(&self) -> Option<Vec3> {
         self.input.displacement(&self.state)
+    }
+
+    fn effective_velocity(&self) -> Vec3 {
+        self.input.effective_velocity(&self.state)
+    }
+
+    fn vertical_velocity(&self) -> f32 {
+        self.input.vertical_velocity(&self.state)
     }
 }
 

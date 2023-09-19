@@ -40,13 +40,12 @@ impl TnuaBasis for Walk {
         let prev_float_height_offset = 0.0; // maybe this should be prev_float_height instead of an
                                             // offset?
 
-        let effective_velocity: Vec3;
         let climb_vectors: Option<ClimbVectors>;
         let considered_in_air: bool;
         let impulse_to_offset: Vec3;
 
         if let Some(sensor_output) = &ctx.proximity_sensor.output {
-            effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
+            state.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
             let sideways_unnormalized = sensor_output.normal.cross(self.up);
             if sideways_unnormalized == Vec3::ZERO {
                 climb_vectors = None;
@@ -75,13 +74,14 @@ impl TnuaBasis for Walk {
                 impulse_to_offset = Vec3::ZERO;
             }
         } else {
-            effective_velocity = ctx.tracker.velocity;
+            state.effective_velocity = ctx.tracker.velocity;
             climb_vectors = None;
             considered_in_air = true;
             impulse_to_offset = Vec3::ZERO;
         }
+        state.effective_velocity += impulse_to_offset;
 
-        let velocity_on_plane = effective_velocity.reject_from(self.up);
+        let velocity_on_plane = state.effective_velocity.reject_from(self.up);
 
         let exact_acceleration = self.desired_velocity - velocity_on_plane;
 
@@ -106,8 +106,9 @@ impl TnuaBasis for Walk {
             walk_acceleration
         };
 
-        let vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
-            effective_velocity.dot(climb_vectors.direction) * climb_vectors.direction.dot(self.up)
+        state.vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
+            state.effective_velocity.dot(climb_vectors.direction)
+                * climb_vectors.direction.dot(self.up)
         } else {
             0.0
         };
@@ -135,7 +136,7 @@ impl TnuaBasis for Walk {
                                 };
 
                             let relative_velocity =
-                                effective_velocity.dot(self.up) - vertical_velocity;
+                                state.effective_velocity.dot(self.up) - state.vertical_velocity;
 
                             let dampening_force =
                                 relative_velocity * self.spring_dampening / ctx.frame_duration;
@@ -174,7 +175,7 @@ impl TnuaBasis for Walk {
                                 continue;
                             }
                         }
-                        if vertical_velocity <= 0.0 {
+                        if state.vertical_velocity <= 0.0 {
                             break 'upward_impulse TnuaVelChange::acceleration(
                                 -self.free_fall_extra_gravity * self.up,
                             );
@@ -206,6 +207,14 @@ impl TnuaBasis for Walk {
             AirborneState::FreeFall { .. } => None,
         }
     }
+
+    fn effective_velocity(&self, state: &Self::State) -> Vec3 {
+        state.effective_velocity
+    }
+
+    fn vertical_velocity(&self, state: &Self::State) -> f32 {
+        state.vertical_velocity
+    }
 }
 
 #[derive(Debug)]
@@ -219,6 +228,8 @@ pub struct WalkState {
     airborne_state: AirborneState,
     pub standing_offset: f32,
     standing_on: Option<StandingOnState>,
+    effective_velocity: Vec3,
+    vertical_velocity: f32,
 }
 
 // TODO: does this need to be an `enum`? Without all the jump-specific fields, maybe it can be an

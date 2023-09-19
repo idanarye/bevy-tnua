@@ -35,6 +35,7 @@ pub enum TnuaToggle {
 /// [`TnuaPipelineStages::Sensors`](crate::TnuaPipelineStages::Sensors).
 #[derive(Component, Debug)]
 pub struct TnuaRigidBodyTracker {
+    pub translation: Vec3,
     pub velocity: Vec3,
     /// Angular velocity as the rotation axis multiplied by the rotation speed in radians per
     /// second. Can be extracted from a quaternion using [`Quat::xyz`].
@@ -45,6 +46,7 @@ pub struct TnuaRigidBodyTracker {
 impl Default for TnuaRigidBodyTracker {
     fn default() -> Self {
         Self {
+            translation: Vec3::ZERO,
             velocity: Vec3::ZERO,
             angvel: Vec3::ZERO,
             gravity: Vec3::ZERO,

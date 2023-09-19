@@ -61,6 +61,10 @@ required-features = ["rapier_2d"]
 name = "platformer_3d"
 required-features = ["rapier_3d"]
 
+[[example]]
+name = "basis_action_3d"
+required-features = ["rapier_3d"]
+
 [package.metadata.docs.rs]
 
 all-features = true
