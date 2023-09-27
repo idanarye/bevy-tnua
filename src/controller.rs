@@ -48,7 +48,7 @@ pub struct TnuaController {
 }
 
 impl TnuaController {
-    pub fn basis<B: TnuaBasis>(&mut self, name: &'static str, basis: B) -> &mut Self {
+    pub fn named_basis<B: TnuaBasis>(&mut self, name: &'static str, basis: B) -> &mut Self {
         if let Some((existing_name, existing_basis)) =
             self.current_basis.as_mut().and_then(|(n, b)| {
                 let b = b.as_mut_any().downcast_mut::<BoxableBasis<B>>()?;
@@ -61,6 +61,10 @@ impl TnuaController {
             self.current_basis = Some((name, Box::new(BoxableBasis::new(basis))));
         }
         self
+    }
+
+    pub fn basis<B: TnuaBasis>(&mut self, basis: B) -> &mut Self {
+        self.named_basis(B::NAME, basis)
     }
 
     pub fn basis_name(&self) -> &'static str {
@@ -77,7 +81,7 @@ impl TnuaController {
         Some((&boxable_basis.input, &boxable_basis.state))
     }
 
-    pub fn action<A: TnuaAction>(&mut self, name: &'static str, action: A) -> &mut Self {
+    pub fn named_action<A: TnuaAction>(&mut self, name: &'static str, action: A) -> &mut Self {
         match self.actions_being_fed.entry(name) {
             Entry::Occupied(mut entry) => {
                 *entry.get_mut() = true;
@@ -124,6 +128,10 @@ impl TnuaController {
             }
         }
         self
+    }
+
+    pub fn action<A: TnuaAction>(&mut self, action: A) -> &mut Self {
+        self.named_action(A::NAME, action)
     }
 
     pub fn action_name(&self) -> &'static str {

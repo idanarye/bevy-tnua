@@ -20,6 +20,7 @@ pub struct Walk {
 }
 
 impl TnuaBasis for Walk {
+    const NAME: &'static str = "Walk";
     type State = WalkState;
 
     fn apply(

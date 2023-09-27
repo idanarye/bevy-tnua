@@ -8,9 +8,9 @@ use bevy_rapier3d::prelude::*;
 use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
 use bevy_tnua::{
-    tnua_action, tnua_basis, TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
-    TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles, TnuaMotor,
-    TnuaPipelineStages, TnuaPlatformerConfig, TnuaProximitySensor, TnuaRapier3dIOBundle,
+    tnua_action, tnua_basis, TnuaAction, TnuaAnimatingState, TnuaAnimatingStateDirective,
+    TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles,
+    TnuaMotor, TnuaPipelineStages, TnuaPlatformerConfig, TnuaProximitySensor, TnuaRapier3dIOBundle,
     TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaRigidBodyTracker, TnuaToggle,
     TnuaUserControlsSystemSet,
 };
@@ -395,43 +395,36 @@ fn apply_controls(
         _falling_through_control_scheme,
     ) in query.iter_mut()
     {
-        controller.basis(
-            "walk",
-            tnua_basis::Walk {
-                desired_velocity: direction * config.full_speed,
-                float_height: config.float_height,
-                cling_distance: config.cling_distance,
-                up: Vec3::Y,
-                spring_strengh: config.spring_strengh,
-                spring_dampening: config.spring_dampening,
-                height_change_impulse_for_duration: config.height_change_impulse_for_duration,
-                height_change_impulse_limit: config.height_change_impulse_limit,
-                acceleration: config.acceleration,
-                air_acceleration: config.air_acceleration,
-                coyote_time: config.coyote_time,
-                free_fall_extra_gravity: match config.free_fall_behavior {
-                    TnuaFreeFallBehavior::ExtraGravity(extra_gravity) => extra_gravity,
-                    TnuaFreeFallBehavior::LikeJumpShorten => config.jump_shorten_extra_gravity,
-                    TnuaFreeFallBehavior::LikeJumpFall => config.jump_fall_extra_gravity,
-                },
+        controller.basis(tnua_basis::Walk {
+            desired_velocity: direction * config.full_speed,
+            float_height: config.float_height,
+            cling_distance: config.cling_distance,
+            up: Vec3::Y,
+            spring_strengh: config.spring_strengh,
+            spring_dampening: config.spring_dampening,
+            height_change_impulse_for_duration: config.height_change_impulse_for_duration,
+            height_change_impulse_limit: config.height_change_impulse_limit,
+            acceleration: config.acceleration,
+            air_acceleration: config.air_acceleration,
+            coyote_time: config.coyote_time,
+            free_fall_extra_gravity: match config.free_fall_behavior {
+                TnuaFreeFallBehavior::ExtraGravity(extra_gravity) => extra_gravity,
+                TnuaFreeFallBehavior::LikeJumpShorten => config.jump_shorten_extra_gravity,
+                TnuaFreeFallBehavior::LikeJumpFall => config.jump_fall_extra_gravity,
             },
-        );
+        });
 
         if jump {
-            controller.action(
-                "jump",
-                tnua_action::Jump {
-                    height: config.full_jump_height,
-                    upslope_extra_gravity: config.upslope_jump_extra_gravity,
-                    takeoff_extra_gravity: config.jump_takeoff_extra_gravity,
-                    takeoff_above_velocity: config.jump_takeoff_above_velocity,
-                    peak_prevention_at_upward_velocity: config
-                        .jump_peak_prevention_at_upward_velocity,
-                    peak_prevention_extra_gravity: config.jump_peak_prevention_extra_gravity,
-                    shorten_extra_gravity: config.jump_shorten_extra_gravity,
-                    fall_extra_gravity: config.jump_fall_extra_gravity,
-                },
-            );
+            controller.action(tnua_action::Jump {
+                height: config.full_jump_height,
+                upslope_extra_gravity: config.upslope_jump_extra_gravity,
+                takeoff_extra_gravity: config.jump_takeoff_extra_gravity,
+                takeoff_above_velocity: config.jump_takeoff_above_velocity,
+                peak_prevention_at_upward_velocity: config.jump_peak_prevention_at_upward_velocity,
+                peak_prevention_extra_gravity: config.jump_peak_prevention_extra_gravity,
+                shorten_extra_gravity: config.jump_shorten_extra_gravity,
+                fall_extra_gravity: config.jump_fall_extra_gravity,
+            });
         }
         // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
         // crouch,
@@ -524,7 +517,7 @@ fn animate(
         };
         match animating_state.update_by_discriminant('animation: {
             match controller.action_name() {
-                "jump" => {
+                tnua_action::Jump::NAME => {
                     let (_, jump_state) = controller
                         .action_and_state::<tnua_action::Jump>()
                         .expect("action name mismatch");

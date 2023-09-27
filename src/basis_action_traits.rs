@@ -12,6 +12,7 @@ pub struct TnuaBasisContext<'a> {
 }
 
 pub trait TnuaBasis: 'static + Send + Sync {
+    const NAME: &'static str;
     type State: Default + Send + Sync;
 
     fn apply(&self, state: &mut Self::State, ctx: TnuaBasisContext, motor: &mut TnuaMotor);
@@ -154,6 +155,7 @@ pub enum TnuaActionInitiationDirective {
 }
 
 pub trait TnuaAction: 'static + Send + Sync {
+    const NAME: &'static str;
     type State: Default + Send + Sync;
 
     fn apply(

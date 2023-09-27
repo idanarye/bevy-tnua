@@ -17,6 +17,7 @@ pub struct Jump {
 }
 
 impl TnuaAction for Jump {
+    const NAME: &'static str = "Jump";
     type State = JumpState;
 
     fn apply(

@@ -114,7 +114,7 @@ pub mod tnua_action;
 pub mod tnua_basis;
 mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
-pub use basis_action_traits::TnuaBasis;
+pub use basis_action_traits::{TnuaAction, TnuaBasis};
 
 #[cfg(feature = "rapier_2d")]
 pub use backend_rapier2d::*;
