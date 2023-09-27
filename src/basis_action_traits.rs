@@ -29,6 +29,7 @@ pub trait TnuaBasis: 'static + Send + Sync {
 pub trait DynamicBasis: Send + Sync + Any + 'static {
     fn apply(&mut self, ctx: TnuaBasisContext, motor: &mut TnuaMotor);
     fn proximity_sensor_cast_range(&self) -> f32;
+    fn as_any(&self) -> &dyn Any;
     fn as_mut_any(&mut self) -> &mut dyn Any;
 
     fn up_direction(&self) -> Vec3;
@@ -59,6 +60,10 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
 
     fn proximity_sensor_cast_range(&self) -> f32 {
         self.input.proximity_sensor_cast_range()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 
     fn as_mut_any(&mut self) -> &mut dyn Any {
@@ -179,6 +184,7 @@ pub trait TnuaAction: 'static + Send + Sync {
 }
 
 pub(crate) trait DynamicAction: Send + Sync + Any + 'static {
+    fn as_any(&self) -> &dyn Any;
     fn as_mut_any(&mut self) -> &mut dyn Any;
     fn apply(
         &mut self,
@@ -209,6 +215,10 @@ impl<A: TnuaAction> BoxableAction<A> {
 }
 
 impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn as_mut_any(&mut self) -> &mut dyn Any {
         self
     }

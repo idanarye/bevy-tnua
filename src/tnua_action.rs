@@ -1,4 +1,3 @@
-
 use bevy::prelude::*;
 
 use crate::basis_action_traits::{
@@ -147,6 +146,15 @@ impl TnuaAction for Jump {
                         if landed {
                             TnuaActionLifecycleDirective::Finished
                         } else {
+                            let upward_velocity = up.dot(effective_velocity);
+                            if upward_velocity <= 0.0 {
+                                *state = JumpState::FallSection;
+                                continue;
+                            }
+
+                            // TODO: the rest of the StoppedMaintainingJump calculation from
+                            // platformer.rs?
+
                             motor.lin.cancel_on_axis(up);
                             motor.lin.acceleration -= self.shorten_extra_gravity * up;
                             TnuaActionLifecycleDirective::StillActive

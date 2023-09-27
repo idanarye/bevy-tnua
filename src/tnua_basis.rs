@@ -63,21 +63,29 @@ impl TnuaBasis for Walk {
             };
             if considered_in_air {
                 impulse_to_offset = Vec3::ZERO;
-            } else if let Some(standing_on_state) = &state.standing_on {
-                if standing_on_state.entity != sensor_output.entity {
-                    impulse_to_offset = Vec3::ZERO;
-                } else {
-                    impulse_to_offset =
-                        sensor_output.entity_linvel - standing_on_state.entity_linvel;
-                }
+                state.standing_on = None;
             } else {
-                impulse_to_offset = Vec3::ZERO;
+                if let Some(standing_on_state) = &state.standing_on {
+                    if standing_on_state.entity != sensor_output.entity {
+                        impulse_to_offset = Vec3::ZERO;
+                    } else {
+                        impulse_to_offset =
+                            sensor_output.entity_linvel - standing_on_state.entity_linvel;
+                    }
+                } else {
+                    impulse_to_offset = Vec3::ZERO;
+                }
+                state.standing_on = Some(StandingOnState {
+                    entity: sensor_output.entity,
+                    entity_linvel: sensor_output.entity_linvel,
+                });
             }
         } else {
             state.effective_velocity = ctx.tracker.velocity;
             climb_vectors = None;
             considered_in_air = true;
             impulse_to_offset = Vec3::ZERO;
+            state.standing_on = None;
         }
         state.effective_velocity += impulse_to_offset;
 
@@ -189,6 +197,8 @@ impl TnuaBasis for Walk {
             TnuaVelChange::ZERO
         };
         motor.lin = TnuaVelChange::boost(walk_acceleration + impulse_to_offset) + upward_impulse;
+        let new_velocity = state.effective_velocity + motor.lin.boost - impulse_to_offset;
+        state.running_velocity = new_velocity.reject_from(self.up);
     }
 
     fn proximity_sensor_cast_range(&self) -> f32 {
@@ -230,6 +240,13 @@ pub struct WalkState {
     standing_on: Option<StandingOnState>,
     effective_velocity: Vec3,
     vertical_velocity: f32,
+    pub running_velocity: Vec3,
+}
+
+impl WalkState {
+    pub fn standing_on_entity(&self) -> Option<Entity> {
+        Some(self.standing_on.as_ref()?.entity)
+    }
 }
 
 // TODO: does this need to be an `enum`? Without all the jump-specific fields, maybe it can be an
