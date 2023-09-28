@@ -67,12 +67,10 @@ impl TnuaController {
         self.named_basis(B::NAME, basis)
     }
 
-    pub fn basis_name(&self) -> &'static str {
-        if let Some((basis_name, _)) = self.current_basis {
-            basis_name
-        } else {
-            ""
-        }
+    pub fn basis_name(&self) -> Option<&'static str> {
+        self.current_basis
+            .as_ref()
+            .map(|(basis_name, _)| *basis_name)
     }
 
     pub fn basis_and_state<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
@@ -134,12 +132,10 @@ impl TnuaController {
         self.named_action(A::NAME, action)
     }
 
-    pub fn action_name(&self) -> &'static str {
-        if let Some((action_name, _)) = self.current_action {
-            action_name
-        } else {
-            ""
-        }
+    pub fn action_name(&self) -> Option<&'static str> {
+        self.current_action
+            .as_ref()
+            .map(|(action_name, _)| *action_name)
     }
 
     pub fn action_and_state<A: TnuaAction>(&self) -> Option<(&A, &A::State)> {

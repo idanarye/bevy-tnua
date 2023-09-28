@@ -510,19 +510,18 @@ fn animate(
     )>,
     mut animation_players_query: Query<&mut AnimationPlayer>,
 ) {
-    'bigloop: for (mut animating_state, controller, handler) in animations_handlers_query.iter_mut()
-    {
+    for (mut animating_state, controller, handler) in animations_handlers_query.iter_mut() {
         let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else {
             continue;
         };
-        match animating_state.update_by_discriminant('animation: {
+        match animating_state.update_by_discriminant({
             match controller.action_name() {
-                tnua_action::Jump::NAME => {
+                Some(tnua_action::Jump::NAME) => {
                     let (_, jump_state) = controller
                         .action_and_state::<tnua_action::Jump>()
                         .expect("action name mismatch");
-                    break 'animation match jump_state {
-                        tnua_action::JumpState::NoJump => continue 'bigloop,
+                    match jump_state {
+                        tnua_action::JumpState::NoJump => continue,
                         tnua_action::JumpState::StartingJump { .. } => AnimationState::Jumping,
                         tnua_action::JumpState::SlowDownTooFastSlopeJump { .. } => {
                             AnimationState::Jumping
@@ -530,30 +529,34 @@ fn animate(
                         tnua_action::JumpState::MaintainingJump => AnimationState::Jumping,
                         tnua_action::JumpState::StoppedMaintainingJump => AnimationState::Jumping,
                         tnua_action::JumpState::FallSection => AnimationState::Falling,
+                    }
+                }
+                Some(other) => panic!("Unknown action {other}"),
+                None => {
+                    let Some((_, basis_state)) = controller.basis_and_state::<tnua_basis::Walk>()
+                    else {
+                        continue;
                     };
-                }
-                _ => {}
-            }
-            let Some((_, basis_state)) = controller.basis_and_state::<tnua_basis::Walk>() else {
-                continue 'bigloop;
-            };
-            if basis_state.standing_on_entity().is_none() {
-                break 'animation AnimationState::Falling;
-            }
-            let speed = basis_state.running_velocity.length();
-            // let is_crouching = animating_output.standing_offset < -0.3;
-            let is_crouching = false;
-            if 0.01 < speed {
-                if is_crouching {
-                    AnimationState::Crawling(0.3 * speed)
-                } else {
-                    AnimationState::Running(0.1 * speed)
-                }
-            } else {
-                if is_crouching {
-                    AnimationState::Crouching
-                } else {
-                    AnimationState::Standing
+                    if basis_state.standing_on_entity().is_none() {
+                        AnimationState::Falling
+                    } else {
+                        let speed = basis_state.running_velocity.length();
+                        // let is_crouching = animating_output.standing_offset < -0.3;
+                        let is_crouching = false;
+                        if 0.01 < speed {
+                            if is_crouching {
+                                AnimationState::Crawling(0.3 * speed)
+                            } else {
+                                AnimationState::Running(0.1 * speed)
+                            }
+                        } else {
+                            if is_crouching {
+                                AnimationState::Crouching
+                            } else {
+                                AnimationState::Standing
+                            }
+                        }
+                    }
                 }
             }
         }) {
