@@ -70,8 +70,10 @@ fn update_rigid_body_trackers_system(
             TnuaToggle::SenseOnly => {}
             TnuaToggle::Enabled => {}
         }
+        let (_, rotation, translation) = transform.to_scale_rotation_translation();
         *tracker = TnuaRigidBodyTracker {
-            translation: transform.translation(),
+            translation,
+            rotation,
             velocity: velocity.linvel,
             angvel: velocity.angvel,
             gravity: rapier_config.gravity,

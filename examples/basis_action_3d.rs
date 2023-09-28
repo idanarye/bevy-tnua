@@ -379,7 +379,7 @@ fn apply_controls(
 
     let jump = keyboard.pressed(KeyCode::Space);
 
-    // let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
+    let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
     // let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
     // let crouch = keyboard.any_pressed(crouch_buttons);
@@ -396,7 +396,12 @@ fn apply_controls(
     ) in query.iter_mut()
     {
         controller.basis(tnua_basis::Walk {
-            desired_velocity: direction * config.full_speed,
+            desired_velocity: if turn_in_place {
+                Vec3::ZERO
+            } else {
+                direction * config.full_speed
+            },
+            desired_forward: direction.normalize_or_zero(),
             float_height: config.float_height,
             cling_distance: config.cling_distance,
             up: Vec3::Y,
@@ -412,6 +417,7 @@ fn apply_controls(
                 TnuaFreeFallBehavior::LikeJumpShorten => config.jump_shorten_extra_gravity,
                 TnuaFreeFallBehavior::LikeJumpFall => config.jump_fall_extra_gravity,
             },
+            turning_angvel: config.turning_angvel,
         });
 
         if jump {

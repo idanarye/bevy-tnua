@@ -2,10 +2,12 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
+use crate::util::ProjectionPlaneForRotation;
 use crate::{TnuaBasis, TnuaVelChange};
 
 pub struct Walk {
     pub desired_velocity: Vec3,
+    pub desired_forward: Vec3,
     pub float_height: f32,
     pub cling_distance: f32,
     pub up: Vec3,
@@ -17,6 +19,7 @@ pub struct Walk {
     pub air_acceleration: f32,
     pub coyote_time: f32,
     pub free_fall_extra_gravity: f32,
+    pub turning_angvel: f32,
 }
 
 impl TnuaBasis for Walk {
@@ -200,6 +203,30 @@ impl TnuaBasis for Walk {
         motor.lin = TnuaVelChange::boost(walk_acceleration + impulse_to_offset) + upward_impulse;
         let new_velocity = state.effective_velocity + motor.lin.boost - impulse_to_offset;
         state.running_velocity = new_velocity.reject_from(self.up);
+
+        let desired_angvel = if 0.0 < self.desired_forward.length_squared() {
+            let projection = ProjectionPlaneForRotation::from_up_using_default_forward(self.up);
+            let current_forward = ctx.tracker.rotation.mul_vec3(projection.forward);
+            let rotation_along_up_axis =
+                projection.rotation_to_set_forward(current_forward, self.desired_forward);
+            (rotation_along_up_axis / ctx.frame_duration)
+                .clamp(-self.turning_angvel, self.turning_angvel)
+        } else {
+            0.0
+        };
+
+        // NOTE: This is the regular axis system so we used the configured up.
+        let existing_angvel = ctx.tracker.angvel.dot(self.up);
+
+        // This is the torque. Should it be clamped by an acceleration? From experimenting with
+        // this I think it's meaningless and only causes bugs.
+        let torque_to_turn = desired_angvel - existing_angvel;
+
+        // TODO:
+        // 1. The tilt
+        // 2. Manual turning
+
+        motor.ang = TnuaVelChange::boost(torque_to_turn * self.up);
     }
 
     fn proximity_sensor_cast_range(&self) -> f32 {
