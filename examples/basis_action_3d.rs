@@ -417,6 +417,8 @@ fn apply_controls(
                 TnuaFreeFallBehavior::LikeJumpShorten => config.jump_shorten_extra_gravity,
                 TnuaFreeFallBehavior::LikeJumpFall => config.jump_fall_extra_gravity,
             },
+            tilt_offset_angvel: config.tilt_offset_angvel,
+            tilt_offset_angacl: config.tilt_offset_angacl,
             turning_angvel: config.turning_angvel,
         });
 

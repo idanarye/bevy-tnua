@@ -19,6 +19,8 @@ pub struct Walk {
     pub air_acceleration: f32,
     pub coyote_time: f32,
     pub free_fall_extra_gravity: f32,
+    pub tilt_offset_angvel: f32,
+    pub tilt_offset_angacl: f32,
     pub turning_angvel: f32,
 }
 
@@ -204,6 +206,21 @@ impl TnuaBasis for Walk {
         let new_velocity = state.effective_velocity + motor.lin.boost - impulse_to_offset;
         state.running_velocity = new_velocity.reject_from(self.up);
 
+        // Tilt
+
+        let torque_to_fix_tilt = {
+            let tilted_up = ctx.tracker.rotation.mul_vec3(self.up);
+
+            let rotation_required_to_fix_tilt = Quat::from_rotation_arc(tilted_up, self.up);
+
+            let desired_angvel = (rotation_required_to_fix_tilt.xyz() / ctx.frame_duration)
+                .clamp_length_max(self.tilt_offset_angvel);
+            let angular_velocity_diff = desired_angvel - ctx.tracker.angvel;
+            angular_velocity_diff.clamp_length_max(ctx.frame_duration * self.tilt_offset_angacl)
+        };
+
+        // Turning
+
         let desired_angvel = if 0.0 < self.desired_forward.length_squared() {
             let projection = ProjectionPlaneForRotation::from_up_using_default_forward(self.up);
             let current_forward = ctx.tracker.rotation.mul_vec3(projection.forward);
@@ -222,11 +239,10 @@ impl TnuaBasis for Walk {
         // this I think it's meaningless and only causes bugs.
         let torque_to_turn = desired_angvel - existing_angvel;
 
-        // TODO:
-        // 1. The tilt
-        // 2. Manual turning
+        let existing_turn_torque = torque_to_fix_tilt.dot(self.up);
+        let torque_to_turn = torque_to_turn - existing_turn_torque;
 
-        motor.ang = TnuaVelChange::boost(torque_to_turn * self.up);
+        motor.ang = TnuaVelChange::boost(torque_to_fix_tilt + torque_to_turn * self.up);
     }
 
     fn proximity_sensor_cast_range(&self) -> f32 {
