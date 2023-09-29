@@ -120,26 +120,24 @@ fn setup_level(
         cmd.insert(Collider::cuboid(0.5 * width, 0.5 * height, 0.5 * depth));
     }
 
-    if true {
-        return;
-    }
-
-    // Fall-through platforms
-    let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8).into());
-    for y in [2.0, 4.5] {
-        let mut cmd = commands.spawn_empty();
-        cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(6.0, 0.5, 2.0))),
-            material: fall_through_obstacles_material.clone(),
-            transform: Transform::from_xyz(6.0, y, 10.0),
-            ..Default::default()
-        });
-        cmd.insert(Collider::cuboid(3.0, 0.25, 1.0));
-        cmd.insert(SolverGroups {
-            memberships: Group::empty(),
-            filters: Group::empty(),
-        });
-        cmd.insert(TnuaGhostPlatform);
+    if false {
+        // Fall-through platforms
+        let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8).into());
+        for y in [2.0, 4.5] {
+            let mut cmd = commands.spawn_empty();
+            cmd.insert(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Box::new(6.0, 0.5, 2.0))),
+                material: fall_through_obstacles_material.clone(),
+                transform: Transform::from_xyz(6.0, y, 10.0),
+                ..Default::default()
+            });
+            cmd.insert(Collider::cuboid(3.0, 0.25, 1.0));
+            cmd.insert(SolverGroups {
+                memberships: Group::empty(),
+                filters: Group::empty(),
+            });
+            cmd.insert(TnuaGhostPlatform);
+        }
     }
 
     commands.spawn((
