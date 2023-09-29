@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- Big refactor which completely breaks the API:
+  - Instead of having a `TnuaPlatformerControls`, Tnua now has `TnuaController`
+    which can be fed a _basis_ and (optionally) an _action_. The basis controls
+    the basic floating and walking abound, while the action can be a jump - but
+    also all other kinds of movement actions.
+  - Instead of `TnuaPlatformerConfig`, the configuration is fed to the basis
+    and the action on every frame.
+
 ## 0.9.0 - 2023-08-17
 ### Changed
 - `TnuaKeepCrouchingBelowObstacles` now also prevent jumping while crouched
