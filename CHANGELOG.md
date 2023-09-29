@@ -7,13 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Changed
-- Big refactor which completely breaks the API:
+- [**BREAKING**] Big refactor which completely breaks the API:
   - Instead of having a `TnuaPlatformerControls`, Tnua now has `TnuaController`
     which can be fed a _basis_ and (optionally) an _action_. The basis controls
     the basic floating and walking abound, while the action can be a jump - but
     also all other kinds of movement actions.
   - Instead of `TnuaPlatformerConfig`, the configuration is fed to the basis
     and the action on every frame.
+- Turn direction no longer defaults to the walk direction. If it is not passed
+  to the `Walk` basis, the character will not turn.
+
+### Removed
+- There is no longer `forward`. It was only needed before because Tnua needed
+  to turn the character's "forward" in the movement direction. Instead, the
+  forward direction is always assumed to be negative Z - even if this is not
+  the real forward direction of the sprite/model.
+- Manual turning. Now that Tnua does not make the character turn in the walk
+  direction by default, there is no longer need to redirect that output in games with 2D physics.
 
 ## 0.9.0 - 2023-08-17
 ### Changed
