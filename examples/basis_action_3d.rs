@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
+use bevy_tnua::builtins::{TnuaBuiltinJump, TnuaBuiltinJumpState, TnuaBuiltinWalk};
 use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
 use bevy_tnua::{
@@ -393,7 +394,7 @@ fn apply_controls(
         _falling_through_control_scheme,
     ) in query.iter_mut()
     {
-        controller.basis(bevy_tnua::builtins::TnuaBuiltinWalk {
+        controller.basis(TnuaBuiltinWalk {
             desired_velocity: if turn_in_place {
                 Vec3::ZERO
             } else {
@@ -421,7 +422,7 @@ fn apply_controls(
         });
 
         if jump {
-            controller.action(bevy_tnua::builtins::TnuaBuiltinJump {
+            controller.action(TnuaBuiltinJump {
                 height: config.full_jump_height,
                 upslope_extra_gravity: config.upslope_jump_extra_gravity,
                 takeoff_extra_gravity: config.jump_takeoff_extra_gravity,
@@ -522,33 +523,24 @@ fn animate(
         };
         match animating_state.update_by_discriminant({
             match controller.action_name() {
-                Some(bevy_tnua::builtins::TnuaBuiltinJump::NAME) => {
+                Some(TnuaBuiltinJump::NAME) => {
                     let (_, jump_state) = controller
-                        .action_and_state::<bevy_tnua::builtins::TnuaBuiltinJump>()
+                        .action_and_state::<TnuaBuiltinJump>()
                         .expect("action name mismatch");
                     match jump_state {
-                        bevy_tnua::builtins::TnuaBuiltinJumpState::NoJump => continue,
-                        bevy_tnua::builtins::TnuaBuiltinJumpState::StartingJump { .. } => {
+                        TnuaBuiltinJumpState::NoJump => continue,
+                        TnuaBuiltinJumpState::StartingJump { .. } => AnimationState::Jumping,
+                        TnuaBuiltinJumpState::SlowDownTooFastSlopeJump { .. } => {
                             AnimationState::Jumping
                         }
-                        bevy_tnua::builtins::TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
-                            ..
-                        } => AnimationState::Jumping,
-                        bevy_tnua::builtins::TnuaBuiltinJumpState::MaintainingJump => {
-                            AnimationState::Jumping
-                        }
-                        bevy_tnua::builtins::TnuaBuiltinJumpState::StoppedMaintainingJump => {
-                            AnimationState::Jumping
-                        }
-                        bevy_tnua::builtins::TnuaBuiltinJumpState::FallSection => {
-                            AnimationState::Falling
-                        }
+                        TnuaBuiltinJumpState::MaintainingJump => AnimationState::Jumping,
+                        TnuaBuiltinJumpState::StoppedMaintainingJump => AnimationState::Jumping,
+                        TnuaBuiltinJumpState::FallSection => AnimationState::Falling,
                     }
                 }
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
-                    let Some((_, basis_state)) =
-                        controller.basis_and_state::<bevy_tnua::builtins::TnuaBuiltinWalk>()
+                    let Some((_, basis_state)) = controller.basis_and_state::<TnuaBuiltinWalk>()
                     else {
                         continue;
                     };

@@ -17,7 +17,7 @@ pub struct TnuaBuiltinJump {
 }
 
 impl TnuaAction for TnuaBuiltinJump {
-    const NAME: &'static str = "Jump";
+    const NAME: &'static str = "TnuaBuiltinJump";
     type State = TnuaBuiltinJumpState;
 
     fn apply(

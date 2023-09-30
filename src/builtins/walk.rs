@@ -25,7 +25,7 @@ pub struct TnuaBuiltinWalk {
 }
 
 impl TnuaBasis for TnuaBuiltinWalk {
-    const NAME: &'static str = "Walk";
+    const NAME: &'static str = "TnuaBuiltinWalk";
     type State = TnuaBuiltinWalkState;
 
     fn apply(
