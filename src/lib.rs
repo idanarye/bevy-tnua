@@ -106,12 +106,11 @@ mod backend_rapier2d;
 #[cfg(feature = "rapier_3d")]
 mod backend_rapier3d;
 mod basis_action_traits;
+pub mod builtins;
 pub mod control_helpers;
 pub mod controller;
 mod platformer;
 mod subservient_sensors;
-pub mod tnua_action;
-pub mod tnua_basis;
 mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{TnuaAction, TnuaBasis};

@@ -8,9 +8,9 @@ use bevy_rapier3d::prelude::*;
 use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
 use bevy_tnua::{
-    tnua_action, tnua_basis, TnuaAction, TnuaAnimatingState, TnuaAnimatingStateDirective,
-    TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles,
-    TnuaMotor, TnuaPipelineStages, TnuaPlatformerConfig, TnuaProximitySensor, TnuaRapier3dIOBundle,
+    TnuaAction, TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
+    TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles, TnuaMotor,
+    TnuaPipelineStages, TnuaPlatformerConfig, TnuaProximitySensor, TnuaRapier3dIOBundle,
     TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaRigidBodyTracker, TnuaToggle,
     TnuaUserControlsSystemSet,
 };
@@ -393,7 +393,7 @@ fn apply_controls(
         _falling_through_control_scheme,
     ) in query.iter_mut()
     {
-        controller.basis(tnua_basis::Walk {
+        controller.basis(bevy_tnua::builtins::TnuaBuiltinWalk {
             desired_velocity: if turn_in_place {
                 Vec3::ZERO
             } else {
@@ -421,7 +421,7 @@ fn apply_controls(
         });
 
         if jump {
-            controller.action(tnua_action::Jump {
+            controller.action(bevy_tnua::builtins::TnuaBuiltinJump {
                 height: config.full_jump_height,
                 upslope_extra_gravity: config.upslope_jump_extra_gravity,
                 takeoff_extra_gravity: config.jump_takeoff_extra_gravity,
@@ -522,24 +522,33 @@ fn animate(
         };
         match animating_state.update_by_discriminant({
             match controller.action_name() {
-                Some(tnua_action::Jump::NAME) => {
+                Some(bevy_tnua::builtins::TnuaBuiltinJump::NAME) => {
                     let (_, jump_state) = controller
-                        .action_and_state::<tnua_action::Jump>()
+                        .action_and_state::<bevy_tnua::builtins::TnuaBuiltinJump>()
                         .expect("action name mismatch");
                     match jump_state {
-                        tnua_action::JumpState::NoJump => continue,
-                        tnua_action::JumpState::StartingJump { .. } => AnimationState::Jumping,
-                        tnua_action::JumpState::SlowDownTooFastSlopeJump { .. } => {
+                        bevy_tnua::builtins::TnuaBuiltinJumpState::NoJump => continue,
+                        bevy_tnua::builtins::TnuaBuiltinJumpState::StartingJump { .. } => {
                             AnimationState::Jumping
                         }
-                        tnua_action::JumpState::MaintainingJump => AnimationState::Jumping,
-                        tnua_action::JumpState::StoppedMaintainingJump => AnimationState::Jumping,
-                        tnua_action::JumpState::FallSection => AnimationState::Falling,
+                        bevy_tnua::builtins::TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
+                            ..
+                        } => AnimationState::Jumping,
+                        bevy_tnua::builtins::TnuaBuiltinJumpState::MaintainingJump => {
+                            AnimationState::Jumping
+                        }
+                        bevy_tnua::builtins::TnuaBuiltinJumpState::StoppedMaintainingJump => {
+                            AnimationState::Jumping
+                        }
+                        bevy_tnua::builtins::TnuaBuiltinJumpState::FallSection => {
+                            AnimationState::Falling
+                        }
                     }
                 }
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
-                    let Some((_, basis_state)) = controller.basis_and_state::<tnua_basis::Walk>()
+                    let Some((_, basis_state)) =
+                        controller.basis_and_state::<bevy_tnua::builtins::TnuaBuiltinWalk>()
                     else {
                         continue;
                     };

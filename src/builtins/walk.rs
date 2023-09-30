@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::util::ProjectionPlaneForRotation;
 use crate::{TnuaBasis, TnuaVelChange};
 
-pub struct Walk {
+pub struct TnuaBuiltinWalk {
     pub desired_velocity: Vec3,
     pub desired_forward: Vec3,
     pub float_height: f32,
@@ -24,9 +24,9 @@ pub struct Walk {
     pub turning_angvel: f32,
 }
 
-impl TnuaBasis for Walk {
+impl TnuaBasis for TnuaBuiltinWalk {
     const NAME: &'static str = "Walk";
-    type State = WalkState;
+    type State = TnuaBuiltinWalkState;
 
     fn apply(
         &self,
@@ -278,7 +278,7 @@ struct StandingOnState {
 }
 
 #[derive(Default)]
-pub struct WalkState {
+pub struct TnuaBuiltinWalkState {
     airborne_state: AirborneState,
     pub standing_offset: f32,
     standing_on: Option<StandingOnState>,
@@ -287,7 +287,7 @@ pub struct WalkState {
     pub running_velocity: Vec3,
 }
 
-impl WalkState {
+impl TnuaBuiltinWalkState {
     pub fn standing_on_entity(&self) -> Option<Entity> {
         Some(self.standing_on.as_ref()?.entity)
     }
