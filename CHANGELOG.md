@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Instead of `TnuaPlatformerConfig`, the configuration is fed to the basis
     and the action on every frame.
 - Turn direction no longer defaults to the walk direction. If it is not passed
-  to the `Walk` basis, the character will not turn.
+  to the `TnuaBuiltinWalk` basis, the character will not turn.
+- Crouching is done via an action - `TnuaBuiltinCrouch`.
 
 ### Removed
 - There is no longer `forward`. It was only needed before because Tnua needed

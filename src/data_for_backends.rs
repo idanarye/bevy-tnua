@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 use bevy::prelude::*;
 
@@ -123,7 +123,7 @@ pub struct TnuaProximitySensorOutput {
 }
 
 /// Represents a change to velocity (linear or angular)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TnuaVelChange {
     // The part of the velocity change that gets multiplied by the frame duration.
     //
@@ -176,6 +176,13 @@ impl Add<TnuaVelChange> for TnuaVelChange {
             acceleration: self.acceleration + rhs.acceleration,
             boost: self.boost + rhs.boost,
         }
+    }
+}
+
+impl AddAssign for TnuaVelChange {
+    fn add_assign(&mut self, rhs: Self) {
+        self.acceleration += rhs.acceleration;
+        self.boost += rhs.boost;
     }
 }
 

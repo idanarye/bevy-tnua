@@ -5,7 +5,10 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
-use bevy_tnua::builtins::{TnuaBuiltinJump, TnuaBuiltinJumpState, TnuaBuiltinWalk};
+use bevy_tnua::builtins::{
+    TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinJump, TnuaBuiltinJumpState,
+    TnuaBuiltinWalk,
+};
 use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
 use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
 use bevy_tnua::{
@@ -380,8 +383,8 @@ fn apply_controls(
 
     let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
-    // let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
-    // let crouch = keyboard.any_pressed(crouch_buttons);
+    let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
+    let crouch = keyboard.any_pressed(crouch_buttons);
     // let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
 
     for (
@@ -394,11 +397,22 @@ fn apply_controls(
         _falling_through_control_scheme,
     ) in query.iter_mut()
     {
+        let speed_factor =
+            if let Some((_, state)) = controller.action_and_state::<TnuaBuiltinCrouch>() {
+                if matches!(state, TnuaBuiltinCrouchState::Rising) {
+                    1.0
+                } else {
+                    0.2
+                }
+            } else {
+                1.0
+            };
+
         controller.basis(TnuaBuiltinWalk {
             desired_velocity: if turn_in_place {
                 Vec3::ZERO
             } else {
-                direction * config.full_speed
+                direction * speed_factor * config.full_speed
             },
             desired_forward: direction.normalize_or_zero(),
             float_height: config.float_height,
@@ -406,8 +420,6 @@ fn apply_controls(
             up: Vec3::Y,
             spring_strengh: config.spring_strengh,
             spring_dampening: config.spring_dampening,
-            height_change_impulse_for_duration: config.height_change_impulse_for_duration,
-            height_change_impulse_limit: config.height_change_impulse_limit,
             acceleration: config.acceleration,
             air_acceleration: config.air_acceleration,
             coyote_time: config.coyote_time,
@@ -420,6 +432,14 @@ fn apply_controls(
             tilt_offset_angacl: config.tilt_offset_angacl,
             turning_angvel: config.turning_angvel,
         });
+
+        if crouch {
+            controller.action(TnuaBuiltinCrouch {
+                float_offset: -0.9,
+                height_change_impulse_for_duration: config.height_change_impulse_for_duration,
+                height_change_impulse_limit: config.height_change_impulse_limit,
+            });
+        }
 
         if jump {
             controller.action(TnuaBuiltinJump {
@@ -441,22 +461,6 @@ fn apply_controls(
         // ghost_sensor,
         // 1.0,
         // );
-        // let speed_factor = if crouch || keep_crouching.force_crouching_to_height < -0.5 {
-        // 0.2
-        // } else {
-        // 1.0
-        // };
-
-        // *controls = TnuaPlatformerControls {
-        // desired_velocity: if turn_in_place {
-        // Vec3::ZERO
-        // } else {
-        // speed_factor * direction
-        // },
-        // desired_forward: direction.normalize(),
-        // jump: jump.then(|| 1.0),
-        // float_height_offset: if crouch { -0.9 } else { 0.0 },
-        // };
     }
 }
 
@@ -538,6 +542,21 @@ fn animate(
                         TnuaBuiltinJumpState::FallSection => AnimationState::Falling,
                     }
                 }
+                Some(TnuaBuiltinCrouch::NAME) => {
+                    let Some((_, basis_state)) = controller.basis_and_state::<TnuaBuiltinWalk>()
+                    else {
+                        continue;
+                    };
+                    let speed =
+                        Some(basis_state.running_velocity.length()).filter(|speed| 0.01 < *speed);
+                    let is_crouching = basis_state.standing_offset < -0.3;
+                    match (speed, is_crouching) {
+                        (None, false) => AnimationState::Standing,
+                        (None, true) => AnimationState::Crouching,
+                        (Some(speed), false) => AnimationState::Running(0.1 * speed),
+                        (Some(speed), true) => AnimationState::Crawling(0.1 * speed),
+                    }
+                }
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
                     let Some((_, basis_state)) = controller.basis_and_state::<TnuaBuiltinWalk>()
@@ -548,20 +567,10 @@ fn animate(
                         AnimationState::Falling
                     } else {
                         let speed = basis_state.running_velocity.length();
-                        // let is_crouching = animating_output.standing_offset < -0.3;
-                        let is_crouching = false;
                         if 0.01 < speed {
-                            if is_crouching {
-                                AnimationState::Crawling(0.3 * speed)
-                            } else {
-                                AnimationState::Running(0.1 * speed)
-                            }
+                            AnimationState::Running(0.1 * speed)
                         } else {
-                            if is_crouching {
-                                AnimationState::Crouching
-                            } else {
-                                AnimationState::Standing
-                            }
+                            AnimationState::Standing
                         }
                     }
                 }

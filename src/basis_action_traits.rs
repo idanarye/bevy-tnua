@@ -95,6 +95,21 @@ pub struct TnuaActionContext<'a> {
     pub basis: &'a dyn DynamicBasis,
 }
 
+impl<'a> TnuaActionContext<'a> {
+    pub fn basis_and_state<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
+        let boxable_basis: &BoxableBasis<B> = self.basis.as_any().downcast_ref()?;
+        Some((&boxable_basis.input, &boxable_basis.state))
+    }
+
+    pub fn as_basis_context(&self) -> TnuaBasisContext<'a> {
+        TnuaBasisContext {
+            frame_duration: self.frame_duration,
+            tracker: self.tracker,
+            proximity_sensor: self.proximity_sensor,
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum TnuaActionLifecycleStatus {
     /// There was no action in the previous frame
