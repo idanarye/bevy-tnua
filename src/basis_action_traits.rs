@@ -156,10 +156,11 @@ impl TnuaActionLifecycleStatus {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum TnuaActionLifecycleDirective {
     StillActive,
     Finished,
+    Reschedule { after_seconds: f32 },
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]

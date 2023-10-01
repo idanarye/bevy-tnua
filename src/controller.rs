@@ -39,10 +39,15 @@ impl Plugin for TnuaPlatformerPlugin2 {
     }
 }
 
+struct FedEntry {
+    fed_this_frame: bool,
+    rescheduled_in: Option<Timer>,
+}
+
 #[derive(Component, Default)]
 pub struct TnuaController {
     current_basis: Option<(&'static str, Box<dyn DynamicBasis>)>,
-    actions_being_fed: HashMap<&'static str, bool>,
+    actions_being_fed: HashMap<&'static str, FedEntry>,
     current_action: Option<(&'static str, Box<dyn DynamicAction>)>,
     contender_action: Option<(&'static str, Box<dyn DynamicAction>, Stopwatch)>,
 }
@@ -82,7 +87,7 @@ impl TnuaController {
     pub fn named_action<A: TnuaAction>(&mut self, name: &'static str, action: A) -> &mut Self {
         match self.actions_being_fed.entry(name) {
             Entry::Occupied(mut entry) => {
-                *entry.get_mut() = true;
+                entry.get_mut().fed_this_frame = true;
                 if let Some((current_name, current_action)) = self.current_action.as_mut() {
                     if *current_name == name {
                         let Some(current_action) = current_action
@@ -96,13 +101,26 @@ impl TnuaController {
                         // different action is running - will not override because button was
                         // already pressed.
                     }
+                } else if self.contender_action.is_none()
+                    && entry
+                        .get()
+                        .rescheduled_in
+                        .as_ref()
+                        .map_or(false, |timer| timer.finished())
+                {
+                    // no action is running - but this action is rescheduled and there is no
+                    // already-existing contender that would have taken priority
+                    self.contender_action =
+                        Some((name, Box::new(BoxableAction::new(action)), Stopwatch::new()));
                 } else {
-                    // different action is running - will not set because button was already
-                    // pressed.
+                    // no action is running - will not set because button was already pressed.
                 }
             }
             Entry::Vacant(entry) => {
-                entry.insert(true);
+                entry.insert(FedEntry {
+                    fed_this_frame: true,
+                    rescheduled_in: None,
+                });
                 if let Some(contender_action) = self.contender_action.as_mut().and_then(
                     |(contender_name, contender_action, _)| {
                         if *contender_name == name {
@@ -209,7 +227,7 @@ fn apply_controller_system(
                 } else if controller
                     .actions_being_fed
                     .get(name)
-                    .copied()
+                    .map(|fed_entry| fed_entry.fed_this_frame)
                     .unwrap_or(false)
                 {
                     TnuaActionLifecycleStatus::StillFed
@@ -227,11 +245,30 @@ fn apply_controller_system(
                     lifecycle_status,
                     motor.as_mut(),
                 );
+                let reschedule_action =
+                    |actions_being_fed: &mut HashMap<&'static str, FedEntry>,
+                     after_seconds: f32| {
+                        if let Some(fed_entry) = actions_being_fed.get_mut(name) {
+                            fed_entry.rescheduled_in =
+                                Some(Timer::from_seconds(after_seconds, TimerMode::Once));
+                        }
+                    };
                 match directive {
                     TnuaActionLifecycleDirective::StillActive => {}
-                    TnuaActionLifecycleDirective::Finished => {
+                    TnuaActionLifecycleDirective::Finished
+                    | TnuaActionLifecycleDirective::Reschedule { .. } => {
+                        if let TnuaActionLifecycleDirective::Reschedule { after_seconds } =
+                            directive
+                        {
+                            reschedule_action(&mut controller.actions_being_fed, after_seconds);
+                        }
                         controller.current_action = if has_valid_contender {
                             let (contender_name, mut contender_action, _) = controller.contender_action.take().expect("has_valid_contender can only be true if contender_action is Some");
+                            if let Some(contender_fed_entry) =
+                                controller.actions_being_fed.get_mut(contender_name)
+                            {
+                                contender_fed_entry.rescheduled_in = None;
+                            }
                             let contender_directive = contender_action.apply(
                                 TnuaActionContext {
                                     frame_duration,
@@ -247,6 +284,13 @@ fn apply_controller_system(
                                     Some((contender_name, contender_action))
                                 }
                                 TnuaActionLifecycleDirective::Finished => None,
+                                TnuaActionLifecycleDirective::Reschedule { after_seconds } => {
+                                    reschedule_action(
+                                        &mut controller.actions_being_fed,
+                                        after_seconds,
+                                    );
+                                    None
+                                }
                             }
                         } else {
                             None
@@ -273,15 +317,16 @@ fn apply_controller_system(
         }
 
         // Cycle actions_being_fed
-        controller
-            .actions_being_fed
-            .retain(|_, triggered_this_frame| {
-                if *triggered_this_frame {
-                    *triggered_this_frame = false;
-                    true
-                } else {
-                    false
+        controller.actions_being_fed.retain(|_, fed_entry| {
+            if fed_entry.fed_this_frame {
+                fed_entry.fed_this_frame = false;
+                if let Some(rescheduled_in) = &mut fed_entry.rescheduled_in {
+                    rescheduled_in.tick(time.delta());
                 }
-            });
+                true
+            } else {
+                false
+            }
+        });
     }
 }

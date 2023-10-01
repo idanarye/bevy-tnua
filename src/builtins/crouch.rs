@@ -43,9 +43,7 @@ impl TnuaAction for TnuaBuiltinCrouch {
             return TnuaActionLifecycleDirective::Finished;
         };
         let Some(sensor_output) = &ctx.proximity_sensor.output else {
-            // TODO: return a new TnuaActionLifecycleDirective that "reschedules" the
-            // crouch action?
-            return TnuaActionLifecycleDirective::Finished;
+            return TnuaActionLifecycleDirective::Reschedule { after_seconds: 0.0 };
         };
         let spring_offset_up = walk_basis.float_height - sensor_output.proximity;
         let spring_offset_down = spring_offset_up + self.float_offset;
@@ -95,7 +93,7 @@ impl TnuaAction for TnuaBuiltinCrouch {
                     // `TnuaKeepCrouchingBelowObstacles`?
                     if matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto) {
                         // Don't finish the rise - just do the other action
-                        TnuaActionLifecycleDirective::Finished
+                        TnuaActionLifecycleDirective::Reschedule { after_seconds: 0.0 }
                     } else {
                         // Finish the rise
                         TnuaActionLifecycleDirective::StillActive
