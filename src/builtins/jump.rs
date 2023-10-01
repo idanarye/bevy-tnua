@@ -14,6 +14,7 @@ pub struct TnuaBuiltinJump {
     pub peak_prevention_extra_gravity: f32,
     pub shorten_extra_gravity: f32,
     pub fall_extra_gravity: f32,
+    pub reschedule_cooldown: Option<f32>,
 }
 
 impl TnuaAction for TnuaBuiltinJump {
@@ -74,7 +75,7 @@ impl TnuaAction for TnuaBuiltinJump {
                             zero_potential_energy_at: ctx.tracker.translation - extra_height * up,
                         };
                     }
-                    lifecycle_status.directive_simple()
+                    self.directive_simple_or_reschedule(lifecycle_status)
                 }
                 TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
                     desired_energy,
@@ -105,7 +106,7 @@ impl TnuaAction for TnuaBuiltinJump {
                         }
                         motor.lin.cancel_on_axis(up);
                         motor.lin.acceleration = -extra_gravity * up;
-                        lifecycle_status.directive_simple()
+                        self.directive_simple_or_reschedule(lifecycle_status)
                     }
                 }
                 TnuaBuiltinJumpState::MaintainingJump => {
@@ -127,9 +128,7 @@ impl TnuaAction for TnuaBuiltinJump {
                         | TnuaActionLifecycleStatus::StillFed => {
                             TnuaActionLifecycleDirective::StillActive
                         }
-                        TnuaActionLifecycleStatus::CancelledInto => {
-                            TnuaActionLifecycleDirective::Finished
-                        }
+                        TnuaActionLifecycleStatus::CancelledInto => self.finish_or_reschedule(),
                         TnuaActionLifecycleStatus::NoLongerFed => {
                             *state = TnuaBuiltinJumpState::StoppedMaintainingJump;
                             TnuaActionLifecycleDirective::StillActive
@@ -138,14 +137,14 @@ impl TnuaAction for TnuaBuiltinJump {
                 }
                 TnuaBuiltinJumpState::StoppedMaintainingJump => {
                     if matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto) {
-                        TnuaActionLifecycleDirective::Finished
+                        self.finish_or_reschedule()
                     } else {
                         let landed = ctx
                             .basis
                             .displacement()
                             .map_or(false, |displacement| displacement.dot(up) <= 0.0);
                         if landed {
-                            TnuaActionLifecycleDirective::Finished
+                            self.finish_or_reschedule()
                         } else {
                             let upward_velocity = up.dot(effective_velocity);
                             if upward_velocity <= 0.0 {
@@ -170,7 +169,7 @@ impl TnuaAction for TnuaBuiltinJump {
                     if landed
                         || matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto)
                     {
-                        TnuaActionLifecycleDirective::Finished
+                        self.finish_or_reschedule()
                     } else {
                         motor.lin.cancel_on_axis(up);
                         motor.lin.acceleration -= self.fall_extra_gravity * up;
@@ -181,6 +180,29 @@ impl TnuaAction for TnuaBuiltinJump {
         }
         error!("Tnua could not decide on jump state");
         TnuaActionLifecycleDirective::Finished
+    }
+}
+
+impl TnuaBuiltinJump {
+    fn finish_or_reschedule(&self) -> TnuaActionLifecycleDirective {
+        if let Some(cooldown) = self.reschedule_cooldown {
+            TnuaActionLifecycleDirective::Reschedule {
+                after_seconds: cooldown,
+            }
+        } else {
+            TnuaActionLifecycleDirective::Finished
+        }
+    }
+
+    fn directive_simple_or_reschedule(
+        &self,
+        lifecycle_status: TnuaActionLifecycleStatus,
+    ) -> TnuaActionLifecycleDirective {
+        if let Some(cooldown) = self.reschedule_cooldown {
+            lifecycle_status.directive_simple_reschedule(cooldown)
+        } else {
+            lifecycle_status.directive_simple()
+        }
     }
 }
 

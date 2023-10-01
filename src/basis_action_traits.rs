@@ -135,6 +135,22 @@ impl TnuaActionLifecycleStatus {
         }
     }
 
+    pub fn directive_simple_reschedule(&self, after_seconds: f32) -> TnuaActionLifecycleDirective {
+        match self {
+            TnuaActionLifecycleStatus::Initiated => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::CancelledFrom => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::StillFed => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::NoLongerFed => {
+                // The rescheduling will probably go away, but in case things happen too fast and
+                // it doesn't - pass it anyway.
+                TnuaActionLifecycleDirective::Reschedule { after_seconds }
+            }
+            TnuaActionLifecycleStatus::CancelledInto => {
+                TnuaActionLifecycleDirective::Reschedule { after_seconds }
+            }
+        }
+    }
+
     pub fn just_started(&self) -> bool {
         match self {
             TnuaActionLifecycleStatus::Initiated => true,

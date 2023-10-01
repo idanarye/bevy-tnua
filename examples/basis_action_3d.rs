@@ -451,6 +451,7 @@ fn apply_controls(
                 peak_prevention_extra_gravity: config.jump_peak_prevention_extra_gravity,
                 shorten_extra_gravity: config.jump_shorten_extra_gravity,
                 fall_extra_gravity: config.jump_fall_extra_gravity,
+                reschedule_cooldown: config.held_jump_cooldown,
             });
         }
         // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
