@@ -3,7 +3,6 @@ use std::any::Any;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
-use crate::builtins::TnuaBuiltinCrouch;
 use crate::controller::TnuaController;
 use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::{TnuaAction, TnuaPipelineStages, TnuaProximitySensor};
@@ -66,16 +65,6 @@ impl TnuaCrouchEnforcer {
 pub trait TnuaCrouchEnforcedAction: TnuaAction + Clone {
     fn range_to_cast_up(&self, state: &Self::State) -> f32;
     fn prevent_cancellation(&mut self);
-}
-
-impl TnuaCrouchEnforcedAction for TnuaBuiltinCrouch {
-    fn range_to_cast_up(&self, _state: &Self::State) -> f32 {
-        -self.float_offset
-    }
-
-    fn prevent_cancellation(&mut self) {
-        self.uncancellable = true;
-    }
 }
 
 trait DynamicCrouchEnforcedAction: Send + Sync {

@@ -4,6 +4,7 @@ use crate::basis_action_traits::{
     TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus,
 };
+use crate::control_helpers::TnuaCrouchEnforcedAction;
 use crate::{TnuaAction, TnuaMotor, TnuaVelChange};
 
 use super::TnuaBuiltinWalk;
@@ -136,4 +137,14 @@ pub enum TnuaBuiltinCrouchState {
     Sinking,
     Maintaining,
     Rising,
+}
+
+impl TnuaCrouchEnforcedAction for TnuaBuiltinCrouch {
+    fn range_to_cast_up(&self, _state: &Self::State) -> f32 {
+        -self.float_offset
+    }
+
+    fn prevent_cancellation(&mut self) {
+        self.uncancellable = true;
+    }
 }
