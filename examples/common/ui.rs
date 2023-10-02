@@ -1,5 +1,6 @@
 use std::ops::RangeInclusive;
 
+use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
@@ -16,6 +17,7 @@ impl Plugin for ExampleUi {
         app.insert_resource(ExampleUiPhysicsBackendActive(true));
         app.add_systems(Update, ui_system);
         app.add_systems(Update, super::ui_plotting::plot_source_rolling_update);
+        app.add_plugins(FrameTimeDiagnosticsPlugin);
     }
 }
 
@@ -184,6 +186,7 @@ fn ui_system(
         Option<&mut CommandAlteringSelectors>,
     )>,
     mut commands: Commands,
+    diagnostics_store: Res<DiagnosticsStore>,
 ) {
     for (entity, .., command_altering_selectors) in query.iter_mut() {
         if let Some(mut command_altering_selectors) = command_altering_selectors {
@@ -216,6 +219,19 @@ fn ui_system(
         }
     }
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
+        for (diagnostic_id, range) in [
+            (FrameTimeDiagnosticsPlugin::FPS, 0.0..120.0),
+            (FrameTimeDiagnosticsPlugin::FRAME_TIME, 0.0..50.0),
+        ] {
+            if let Some(diagnostic) = diagnostics_store.get(diagnostic_id) {
+                if let Some(value) = diagnostic.smoothed() {
+                    ui.add(
+                        egui::widgets::ProgressBar::new((value as f32 - range.start) / (range.end - range.start))
+                        .text(format!("{}: {:.0}", diagnostic.name, value))
+                    );
+                }
+            }
+        }
         egui::CollapsingHeader::new("Controls:")
             .default_open(false)
             .show(ui, |ui| {
