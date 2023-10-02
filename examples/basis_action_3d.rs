@@ -9,7 +9,9 @@ use bevy_tnua::builtins::{
     TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinJump, TnuaBuiltinJumpState,
     TnuaBuiltinWalk,
 };
-use bevy_tnua::control_helpers::TnuaSimpleFallThroughPlatformsHelper;
+use bevy_tnua::control_helpers::{
+    TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleFallThroughPlatformsHelper,
+};
 use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
 use bevy_tnua::{
     TnuaAction, TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
@@ -29,6 +31,7 @@ fn main() {
     app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugins(TnuaRapier3dPlugin);
     app.add_plugins(TnuaPlatformerPlugin2);
+    app.add_plugins(TnuaCrouchEnforcerPlugin);
     app.add_plugins(common::ui::ExampleUi);
     app.add_systems(Startup, setup_camera);
     app.add_systems(Startup, setup_level);
@@ -278,6 +281,9 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(TnuaKeepCrouchingBelowObstacles::new(1.5, |cmd| {
         cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
     }));
+    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
+        cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
+    }));
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
     cmd.insert(FallingThroughControlScheme::default());
@@ -348,7 +354,7 @@ fn apply_controls(
     mut query: Query<(
         &TnuaPlatformerConfig,
         &mut TnuaController,
-        &TnuaKeepCrouchingBelowObstacles,
+        &mut TnuaCrouchEnforcer,
         &mut TnuaProximitySensor,
         &TnuaGhostSensor,
         &mut TnuaSimpleFallThroughPlatformsHelper,
@@ -390,7 +396,7 @@ fn apply_controls(
     for (
         config,
         mut controller,
-        _keep_crouching,
+        mut crouch_enforcer,
         mut _sensor,
         _ghost_sensor,
         mut _fall_through_helper,
@@ -434,11 +440,11 @@ fn apply_controls(
         });
 
         if crouch {
-            controller.action(TnuaBuiltinCrouch {
+            controller.action(crouch_enforcer.enforcing(TnuaBuiltinCrouch {
                 float_offset: -0.9,
                 height_change_impulse_for_duration: config.height_change_impulse_for_duration,
                 height_change_impulse_limit: config.height_change_impulse_limit,
-            });
+            }));
         }
 
         if jump {

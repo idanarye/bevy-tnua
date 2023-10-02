@@ -8,6 +8,7 @@ use crate::{TnuaAction, TnuaMotor, TnuaVelChange};
 
 use super::TnuaBuiltinWalk;
 
+#[derive(Clone)]
 pub struct TnuaBuiltinCrouch {
     pub float_offset: f32,
     pub height_change_impulse_for_duration: f32,
