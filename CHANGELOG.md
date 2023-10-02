@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Turn direction no longer defaults to the walk direction. If it is not passed
   to the `TnuaBuiltinWalk` basis, the character will not turn.
 - Crouching is done via an action - `TnuaBuiltinCrouch`.
+- Replace `TnuaKeepCrouchingBelowObstacles` with `TnuaCrouchEnforcer`. This is
+  not just a name change - their semantics are also different.
 
 ### Removed
 - There is no longer `forward`. It was only needed before because Tnua needed

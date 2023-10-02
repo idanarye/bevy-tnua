@@ -444,6 +444,7 @@ fn apply_controls(
                 float_offset: -0.9,
                 height_change_impulse_for_duration: config.height_change_impulse_for_duration,
                 height_change_impulse_limit: config.height_change_impulse_limit,
+                uncancellable: false,
             }));
         }
 

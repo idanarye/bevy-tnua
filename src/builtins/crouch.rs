@@ -13,6 +13,7 @@ pub struct TnuaBuiltinCrouch {
     pub float_offset: f32,
     pub height_change_impulse_for_duration: f32,
     pub height_change_impulse_limit: f32,
+    pub uncancellable: bool,
 }
 
 impl TnuaAction for TnuaBuiltinCrouch {
@@ -49,8 +50,18 @@ impl TnuaAction for TnuaBuiltinCrouch {
         let spring_offset_up = walk_basis.float_height - sensor_output.proximity;
         let spring_offset_down = spring_offset_up + self.float_offset;
 
-        if !lifecycle_status.is_active() {
-            *state = TnuaBuiltinCrouchState::Rising;
+        match lifecycle_status {
+            TnuaActionLifecycleStatus::Initiated => {}
+            TnuaActionLifecycleStatus::CancelledFrom => {}
+            TnuaActionLifecycleStatus::StillFed => {}
+            TnuaActionLifecycleStatus::NoLongerFed => {
+                *state = TnuaBuiltinCrouchState::Rising;
+            }
+            TnuaActionLifecycleStatus::CancelledInto => {
+                if !self.uncancellable {
+                    *state = TnuaBuiltinCrouchState::Rising;
+                }
+            }
         }
 
         let spring_force_boost = |spring_offset: f32| -> f32 {
@@ -84,7 +95,8 @@ impl TnuaAction for TnuaBuiltinCrouch {
             }
             TnuaBuiltinCrouchState::Maintaining => {
                 set_impulse(spring_force_boost(spring_offset_down));
-                lifecycle_status.directive_simple()
+                // If it's finished/cancelled, something else should changed its state
+                TnuaActionLifecycleDirective::StillActive
             }
             TnuaBuiltinCrouchState::Rising => {
                 if 0.01 < spring_offset_up {
