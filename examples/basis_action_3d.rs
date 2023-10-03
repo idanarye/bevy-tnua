@@ -127,24 +127,22 @@ fn setup_level(
         cmd.insert(Collider::cuboid(0.5 * width, 0.5 * height, 0.5 * depth));
     }
 
-    if false {
-        // Fall-through platforms
-        let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8).into());
-        for y in [2.0, 4.5] {
-            let mut cmd = commands.spawn_empty();
-            cmd.insert(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Box::new(6.0, 0.5, 2.0))),
-                material: fall_through_obstacles_material.clone(),
-                transform: Transform::from_xyz(6.0, y, 10.0),
-                ..Default::default()
-            });
-            cmd.insert(Collider::cuboid(3.0, 0.25, 1.0));
-            cmd.insert(SolverGroups {
-                memberships: Group::empty(),
-                filters: Group::empty(),
-            });
-            cmd.insert(TnuaGhostPlatform);
-        }
+    // Fall-through platforms
+    let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8).into());
+    for y in [2.0, 4.5] {
+        let mut cmd = commands.spawn_empty();
+        cmd.insert(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(6.0, 0.5, 2.0))),
+            material: fall_through_obstacles_material.clone(),
+            transform: Transform::from_xyz(6.0, y, 10.0),
+            ..Default::default()
+        });
+        cmd.insert(Collider::cuboid(3.0, 0.25, 1.0));
+        cmd.insert(SolverGroups {
+            memberships: Group::empty(),
+            filters: Group::empty(),
+        });
+        cmd.insert(TnuaGhostPlatform);
     }
 
     commands.spawn((
@@ -391,18 +389,27 @@ fn apply_controls(
 
     let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
     let crouch = keyboard.any_pressed(crouch_buttons);
-    // let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
+     let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
 
     for (
         config,
         mut controller,
         mut crouch_enforcer,
-        mut _sensor,
-        _ghost_sensor,
-        mut _fall_through_helper,
-        _falling_through_control_scheme,
+        mut sensor,
+        ghost_sensor,
+        mut fall_through_helper,
+        falling_through_control_scheme,
     ) in query.iter_mut()
     {
+        let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
+            crouch,
+            crouch_just_pressed,
+            fall_through_helper.as_mut(),
+            sensor.as_mut(),
+            ghost_sensor,
+            1.0,
+        );
+
         let speed_factor =
             if let Some((_, state)) = controller.action_and_state::<TnuaBuiltinCrouch>() {
                 if matches!(state, TnuaBuiltinCrouchState::Rising) {
@@ -461,14 +468,6 @@ fn apply_controls(
                 reschedule_cooldown: config.held_jump_cooldown,
             });
         }
-        // let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
-        // crouch,
-        // crouch_just_pressed,
-        // fall_through_helper.as_mut(),
-        // sensor.as_mut(),
-        // ghost_sensor,
-        // 1.0,
-        // );
     }
 }
 
