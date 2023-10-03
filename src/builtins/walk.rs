@@ -221,6 +221,11 @@ impl TnuaBasis for TnuaBuiltinWalk {
     fn vertical_velocity(&self, state: &Self::State) -> f32 {
         state.vertical_velocity
     }
+
+    fn neutralize(&mut self) {
+        self.desired_velocity = Vec3::ZERO;
+        self.desired_forward = Vec3::ZERO;
+    }
 }
 
 impl TnuaBuiltinWalk {

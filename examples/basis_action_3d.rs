@@ -360,9 +360,9 @@ fn apply_controls(
     )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
-        // for (mut controls, ..) in query.iter_mut() {
-        // *controls = Default::default();
-        // }
+        for (_, mut controller, ..) in query.iter_mut() {
+            controller.neutralize_basis();
+        }
         return;
     }
 
@@ -389,7 +389,7 @@ fn apply_controls(
 
     let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
     let crouch = keyboard.any_pressed(crouch_buttons);
-     let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
+    let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
 
     for (
         config,

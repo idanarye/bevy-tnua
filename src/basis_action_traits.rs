@@ -25,6 +25,8 @@ pub trait TnuaBasis: 'static + Send + Sync {
 
     fn effective_velocity(&self, state: &Self::State) -> Vec3;
     fn vertical_velocity(&self, state: &Self::State) -> f32;
+
+    fn neutralize(&mut self);
 }
 
 pub trait DynamicBasis: Send + Sync + Any + 'static {
@@ -38,6 +40,8 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
 
     fn effective_velocity(&self) -> Vec3;
     fn vertical_velocity(&self) -> f32;
+
+    fn neutralize(&mut self);
 }
 
 pub(crate) struct BoxableBasis<B: TnuaBasis> {
@@ -85,6 +89,10 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
 
     fn vertical_velocity(&self) -> f32 {
         self.input.vertical_velocity(&self.state)
+    }
+
+    fn neutralize(&mut self) {
+        self.input.neutralize();
     }
 }
 

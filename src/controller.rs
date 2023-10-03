@@ -72,6 +72,13 @@ impl TnuaController {
         self.named_basis(B::NAME, basis)
     }
 
+    pub fn neutralize_basis(&mut self) -> &mut Self {
+        if let Some((_, basis)) = self.current_basis.as_mut() {
+            basis.neutralize();
+        }
+        self
+    }
+
     pub fn basis_name(&self) -> Option<&'static str> {
         self.current_basis
             .as_ref()
