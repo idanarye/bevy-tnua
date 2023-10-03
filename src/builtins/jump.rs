@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 
 use crate::basis_action_traits::{
-    TnuaAction, TnuaActionContext, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus,
+    TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
+    TnuaActionLifecycleStatus,
 };
 use crate::util::SegmentedJumpInitialVelocityCalculator;
 
@@ -15,11 +16,26 @@ pub struct TnuaBuiltinJump {
     pub shorten_extra_gravity: f32,
     pub fall_extra_gravity: f32,
     pub reschedule_cooldown: Option<f32>,
+    pub input_buffer_time: f32,
 }
 
 impl TnuaAction for TnuaBuiltinJump {
     const NAME: &'static str = "TnuaBuiltinJump";
     type State = TnuaBuiltinJumpState;
+
+    fn initiation_decision(
+        &self,
+        ctx: TnuaActionContext,
+        being_fed_for: &bevy::time::Stopwatch,
+    ) -> crate::basis_action_traits::TnuaActionInitiationDirective {
+        if ctx.proximity_sensor.output.is_some() {
+            TnuaActionInitiationDirective::Allow
+        } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
+            TnuaActionInitiationDirective::Delay
+        } else {
+            TnuaActionInitiationDirective::Reject
+        }
+    }
 
     fn apply(
         &self,
@@ -57,7 +73,8 @@ impl TnuaAction for TnuaBuiltinJump {
                     let extra_height = if let Some(displacement) = ctx.basis.displacement() {
                         displacement.dot(up)
                     } else {
-                        0.0
+                        // TODO: air jumps?
+                        return self.directive_simple_or_reschedule(lifecycle_status);
                     };
                     let gravity = ctx.tracker.gravity.dot(-up);
                     let energy_from_extra_height = extra_height * gravity;

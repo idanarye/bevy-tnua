@@ -465,6 +465,7 @@ fn apply_controls(
                 peak_prevention_extra_gravity: config.jump_peak_prevention_extra_gravity,
                 shorten_extra_gravity: config.jump_shorten_extra_gravity,
                 fall_extra_gravity: config.jump_fall_extra_gravity,
+                input_buffer_time: config.jump_input_buffer_time,
                 reschedule_cooldown: config.held_jump_cooldown,
             });
         }

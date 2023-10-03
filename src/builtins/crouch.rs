@@ -19,7 +19,6 @@ pub struct TnuaBuiltinCrouch {
 
 impl TnuaAction for TnuaBuiltinCrouch {
     const NAME: &'static str = "TnuaBuiltinCrouch";
-
     type State = TnuaBuiltinCrouchState;
 
     fn initiation_decision(

@@ -214,15 +214,7 @@ pub trait TnuaAction: 'static + Send + Sync {
         &self,
         ctx: TnuaActionContext,
         being_fed_for: &Stopwatch,
-    ) -> TnuaActionInitiationDirective {
-        if 0.2 < being_fed_for.elapsed().as_secs_f32() {
-            TnuaActionInitiationDirective::Reject
-        } else if ctx.proximity_sensor.output.is_some() {
-            TnuaActionInitiationDirective::Allow
-        } else {
-            TnuaActionInitiationDirective::Delay
-        }
-    }
+    ) -> TnuaActionInitiationDirective;
 }
 
 pub(crate) trait DynamicAction: Send + Sync + Any + 'static {
