@@ -435,7 +435,6 @@ fn apply_controls(
             spring_dampening: config.spring_dampening,
             acceleration: config.acceleration,
             air_acceleration: config.air_acceleration,
-            coyote_time: config.coyote_time,
             free_fall_extra_gravity: match config.free_fall_behavior {
                 TnuaFreeFallBehavior::ExtraGravity(extra_gravity) => extra_gravity,
                 TnuaFreeFallBehavior::LikeJumpShorten => config.jump_shorten_extra_gravity,
@@ -465,6 +464,7 @@ fn apply_controls(
                 peak_prevention_extra_gravity: config.jump_peak_prevention_extra_gravity,
                 shorten_extra_gravity: config.jump_shorten_extra_gravity,
                 fall_extra_gravity: config.jump_fall_extra_gravity,
+                coyote_time: config.coyote_time,
                 input_buffer_time: config.jump_input_buffer_time,
                 reschedule_cooldown: config.held_jump_cooldown,
             });

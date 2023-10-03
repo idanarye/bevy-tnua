@@ -14,6 +14,7 @@ pub struct TnuaBuiltinJump {
     pub peak_prevention_at_upward_velocity: f32,
     pub peak_prevention_extra_gravity: f32,
     pub shorten_extra_gravity: f32,
+    pub coyote_time: f32,
     pub fall_extra_gravity: f32,
     pub reschedule_cooldown: Option<f32>,
     pub input_buffer_time: f32,
@@ -28,12 +29,17 @@ impl TnuaAction for TnuaBuiltinJump {
         ctx: TnuaActionContext,
         being_fed_for: &bevy::time::Stopwatch,
     ) -> crate::basis_action_traits::TnuaActionInitiationDirective {
-        if ctx.proximity_sensor.output.is_some() {
-            TnuaActionInitiationDirective::Allow
-        } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
-            TnuaActionInitiationDirective::Delay
+        if let Some(airborne_duration) = ctx.basis.airborne_duration() {
+            if airborne_duration.as_secs_f32() < self.coyote_time {
+                TnuaActionInitiationDirective::Allow
+            } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
+                TnuaActionInitiationDirective::Delay
+            } else {
+                TnuaActionInitiationDirective::Reject
+            }
         } else {
-            TnuaActionInitiationDirective::Reject
+            // Not airborne - can jump
+            TnuaActionInitiationDirective::Allow
         }
     }
 
@@ -72,8 +78,17 @@ impl TnuaAction for TnuaBuiltinJump {
                 TnuaBuiltinJumpState::StartingJump { desired_energy } => {
                     let extra_height = if let Some(displacement) = ctx.basis.displacement() {
                         displacement.dot(up)
+                    } else if let Some(airborne_duration) = ctx.basis.airborne_duration() {
+                        if airborne_duration.as_secs_f32() < self.coyote_time {
+                            // FIXME: Long coyote time allows for double jump. This needs to be
+                            // fixed.
+                            0.0
+                        } else {
+                            // TODO: air jumps?
+                            return self.directive_simple_or_reschedule(lifecycle_status);
+                        }
                     } else {
-                        // TODO: air jumps?
+                        // Can this state even be reached?
                         return self.directive_simple_or_reschedule(lifecycle_status);
                     };
                     let gravity = ctx.tracker.gravity.dot(-up);
@@ -86,7 +101,7 @@ impl TnuaAction for TnuaBuiltinJump {
 
                     motor.lin.cancel_on_axis(up);
                     motor.lin.boost += (desired_upward_velocity - relative_velocity) * up;
-                    if 0.0 < extra_height {
+                    if 0.0 <= extra_height {
                         *state = TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
                             desired_energy: *desired_energy,
                             zero_potential_energy_at: ctx.tracker.translation - extra_height * up,

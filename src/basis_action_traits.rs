@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use std::any::Any;
+use std::time::Duration;
 
 use crate::{TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker};
 
@@ -27,6 +28,8 @@ pub trait TnuaBasis: 'static + Send + Sync {
     fn vertical_velocity(&self, state: &Self::State) -> f32;
 
     fn neutralize(&mut self);
+
+    fn airborne_duration(&self, state: &Self::State) -> Option<Duration>;
 }
 
 pub trait DynamicBasis: Send + Sync + Any + 'static {
@@ -42,6 +45,7 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
     fn vertical_velocity(&self) -> f32;
 
     fn neutralize(&mut self);
+    fn airborne_duration(&self) -> Option<Duration>;
 }
 
 pub(crate) struct BoxableBasis<B: TnuaBasis> {
@@ -93,6 +97,10 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
 
     fn neutralize(&mut self) {
         self.input.neutralize();
+    }
+
+    fn airborne_duration(&self) -> Option<Duration> {
+        self.input.airborne_duration(&self.state)
     }
 }
 

@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 
 use crate::basis_action_traits::TnuaBasisContext;
 use crate::util::ProjectionPlaneForRotation;
@@ -16,7 +17,6 @@ pub struct TnuaBuiltinWalk {
     pub spring_dampening: f32,
     pub acceleration: f32,
     pub air_acceleration: f32,
-    pub coyote_time: f32,
     pub free_fall_extra_gravity: f32,
     pub tilt_offset_angvel: f32,
     pub tilt_offset_angacl: f32,
@@ -28,11 +28,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
     type State = TnuaBuiltinWalkState;
 
     fn apply(&self, state: &mut Self::State, ctx: TnuaBasisContext, motor: &mut crate::TnuaMotor) {
-        match &mut state.airborne_state {
-            AirborneState::NoJump => {}
-            AirborneState::FreeFall { coyote_time } => {
-                coyote_time.tick(Duration::from_secs_f32(ctx.frame_duration));
-            }
+        if let Some(stopwatch) = &mut state.airborne_timer {
+            stopwatch.tick(Duration::from_secs_f32(ctx.frame_duration));
         }
 
         let climb_vectors: Option<ClimbVectors>;
@@ -52,10 +49,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     sideways: sideways_unnormalized.normalize_or_zero(),
                 });
             }
-            considered_in_air = match state.airborne_state {
-                AirborneState::NoJump => false,
-                AirborneState::FreeFall { .. } => true,
-            };
+            considered_in_air = state.airborne_timer.is_some();
             if considered_in_air {
                 impulse_to_offset = Vec3::ZERO;
                 state.standing_on = None;
@@ -118,8 +112,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
         let upward_impulse: TnuaVelChange = 'upward_impulse: {
             for _ in 0..2 {
-                match &mut state.airborne_state {
-                    AirborneState::NoJump => {
+                match &mut state.airborne_timer {
+                    None => {
                         if let Some(sensor_output) = &ctx.proximity_sensor.output {
                             // not doing the jump calculation here
                             let spring_offset = self.float_height - sensor_output.proximity;
@@ -127,19 +121,14 @@ impl TnuaBasis for TnuaBuiltinWalk {
                             let boost = self.spring_force_boost(state, &ctx, spring_offset);
                             break 'upward_impulse TnuaVelChange::boost(boost * self.up);
                         } else {
-                            state.airborne_state = AirborneState::FreeFall {
-                                coyote_time: Timer::new(
-                                    Duration::from_secs_f32(self.coyote_time),
-                                    TimerMode::Once,
-                                ),
-                            };
+                            state.airborne_timer = Some(Stopwatch::new());
                             continue;
                         }
                     }
-                    AirborneState::FreeFall { coyote_time: _ } => {
+                    Some(_) => {
                         if let Some(sensor_output) = &ctx.proximity_sensor.output {
                             if sensor_output.proximity <= self.float_height {
-                                state.airborne_state = AirborneState::NoJump;
+                                state.airborne_timer = None;
                                 continue;
                             }
                         }
@@ -208,9 +197,9 @@ impl TnuaBasis for TnuaBuiltinWalk {
     }
 
     fn displacement(&self, state: &Self::State) -> Option<Vec3> {
-        match state.airborne_state {
-            AirborneState::NoJump => Some(self.up * state.standing_offset),
-            AirborneState::FreeFall { .. } => None,
+        match state.airborne_timer {
+            None => Some(self.up * state.standing_offset),
+            Some(_) => None,
         }
     }
 
@@ -225,6 +214,13 @@ impl TnuaBasis for TnuaBuiltinWalk {
     fn neutralize(&mut self) {
         self.desired_velocity = Vec3::ZERO;
         self.desired_forward = Vec3::ZERO;
+    }
+
+    fn airborne_duration(&self, state: &Self::State) -> Option<Duration> {
+        match &state.airborne_timer {
+            None => None,
+            Some(stopwatch) => Some(stopwatch.elapsed()),
+        }
     }
 }
 
@@ -259,7 +255,7 @@ struct StandingOnState {
 
 #[derive(Default)]
 pub struct TnuaBuiltinWalkState {
-    airborne_state: AirborneState,
+    airborne_timer: Option<Stopwatch>,
     pub standing_offset: f32,
     standing_on: Option<StandingOnState>,
     effective_velocity: Vec3,
@@ -271,18 +267,6 @@ impl TnuaBuiltinWalkState {
     pub fn standing_on_entity(&self) -> Option<Entity> {
         Some(self.standing_on.as_ref()?.entity)
     }
-}
-
-// TODO: does this need to be an `enum`? Without all the jump-specific fields, maybe it can be an
-// `Option`?
-#[derive(Default)]
-enum AirborneState {
-    #[default]
-    NoJump,
-    FreeFall {
-        // Maybe move the coyote time setting to the jump, and make this a Stopwatch?
-        coyote_time: Timer,
-    },
 }
 
 struct ClimbVectors {
