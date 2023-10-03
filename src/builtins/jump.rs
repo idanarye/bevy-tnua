@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::basis_action_traits::{
@@ -23,23 +25,25 @@ pub struct TnuaBuiltinJump {
 impl TnuaAction for TnuaBuiltinJump {
     const NAME: &'static str = "TnuaBuiltinJump";
     type State = TnuaBuiltinJumpState;
+    const AIR_ACTION: bool = true;
 
     fn initiation_decision(
         &self,
         ctx: TnuaActionContext,
         being_fed_for: &bevy::time::Stopwatch,
     ) -> crate::basis_action_traits::TnuaActionInitiationDirective {
-        if let Some(airborne_duration) = ctx.basis.airborne_duration() {
-            if airborne_duration.as_secs_f32() < self.coyote_time {
-                TnuaActionInitiationDirective::Allow
-            } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
-                TnuaActionInitiationDirective::Delay
-            } else {
-                TnuaActionInitiationDirective::Reject
-            }
-        } else {
+        if ctx
+            .basis
+            .airborne_status()
+            .is_grounded_or_coyote(Duration::from_secs_f32(self.coyote_time))
+        {
             // Not airborne - can jump
             TnuaActionInitiationDirective::Allow
+        } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
+            TnuaActionInitiationDirective::Delay
+        } else {
+            // TODO: allow air actions?
+            TnuaActionInitiationDirective::Reject
         }
     }
 
@@ -78,17 +82,14 @@ impl TnuaAction for TnuaBuiltinJump {
                 TnuaBuiltinJumpState::StartingJump { desired_energy } => {
                     let extra_height = if let Some(displacement) = ctx.basis.displacement() {
                         displacement.dot(up)
-                    } else if let Some(airborne_duration) = ctx.basis.airborne_duration() {
-                        if airborne_duration.as_secs_f32() < self.coyote_time {
-                            // FIXME: Long coyote time allows for double jump. This needs to be
-                            // fixed.
-                            0.0
-                        } else {
-                            // TODO: air jumps?
-                            return self.directive_simple_or_reschedule(lifecycle_status);
-                        }
+                    } else if ctx
+                        .basis
+                        .airborne_status()
+                        .is_grounded_or_coyote(Duration::from_secs_f32(self.coyote_time))
+                    {
+                        0.0
                     } else {
-                        // Can this state even be reached?
+                        // TODO: allow air actions?
                         return self.directive_simple_or_reschedule(lifecycle_status);
                     };
                     let gravity = ctx.tracker.gravity.dot(-up);

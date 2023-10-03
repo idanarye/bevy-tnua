@@ -32,10 +32,6 @@ impl Plugin for TnuaPlatformerPlugin2 {
             Update,
             apply_controller_system.in_set(TnuaPipelineStages::Logic),
         );
-        //app.add_systems(
-        //Update,
-        //handle_keep_crouching_below_obstacles.in_set(TnuaPipelineStages::SubservientSensors),
-        //);
     }
 }
 
@@ -188,6 +184,7 @@ fn apply_controller_system(
         let controller = controller.as_mut();
 
         if let Some((_, basis)) = controller.current_basis.as_mut() {
+            let basis = basis.as_mut();
             basis.apply(
                 TnuaBasisContext {
                     frame_duration,
@@ -201,7 +198,6 @@ fn apply_controller_system(
 
             // To streamline TnuaActionContext creation
             let proximity_sensor = sensor.as_ref();
-            let basis = basis.as_ref();
 
             let has_valid_contender = if let Some((_, contender_action, being_fed_for)) =
                 &mut controller.contender_action
@@ -228,6 +224,7 @@ fn apply_controller_system(
                 false
             };
 
+            let update_air_action_in_basis;
             if let Some((name, current_action)) = controller.current_action.as_mut() {
                 let lifecycle_status = if has_valid_contender {
                     TnuaActionLifecycleStatus::CancelledInto
@@ -261,7 +258,9 @@ fn apply_controller_system(
                         }
                     };
                 match directive {
-                    TnuaActionLifecycleDirective::StillActive => {}
+                    TnuaActionLifecycleDirective::StillActive => {
+                        update_air_action_in_basis = None;
+                    }
                     TnuaActionLifecycleDirective::Finished
                     | TnuaActionLifecycleDirective::Reschedule { .. } => {
                         if let TnuaActionLifecycleDirective::Reschedule { after_seconds } =
@@ -288,10 +287,25 @@ fn apply_controller_system(
                             );
                             match contender_directive {
                                 TnuaActionLifecycleDirective::StillActive => {
+                                    update_air_action_in_basis = contender_action
+                                        .is_air_action()
+                                        .then_some(Some(contender_name));
                                     Some((contender_name, contender_action))
                                 }
-                                TnuaActionLifecycleDirective::Finished => None,
+                                TnuaActionLifecycleDirective::Finished => {
+                                    update_air_action_in_basis = if current_action.is_air_action() {
+                                        Some(None)
+                                    } else {
+                                        None
+                                    };
+                                    None
+                                }
                                 TnuaActionLifecycleDirective::Reschedule { after_seconds } => {
+                                    update_air_action_in_basis = if current_action.is_air_action() {
+                                        Some(None)
+                                    } else {
+                                        None
+                                    };
                                     reschedule_action(
                                         &mut controller.actions_being_fed,
                                         after_seconds,
@@ -300,6 +314,11 @@ fn apply_controller_system(
                                 }
                             }
                         } else {
+                            update_air_action_in_basis = if current_action.is_air_action() {
+                                Some(None)
+                            } else {
+                                None
+                            };
                             None
                         };
                     }
@@ -319,7 +338,16 @@ fn apply_controller_system(
                     TnuaActionLifecycleStatus::Initiated,
                     motor.as_mut(),
                 );
+                update_air_action_in_basis = contender_action
+                    .is_air_action()
+                    .then_some(Some(contender_name));
                 controller.current_action = Some((contender_name, contender_action));
+            } else {
+                update_air_action_in_basis = None;
+            }
+
+            if let Some(changed_air_action_name) = update_air_action_in_basis {
+                basis.update_air_action(changed_air_action_name)
             }
         }
 

@@ -1,11 +1,10 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy::time::Stopwatch;
 
 use crate::basis_action_traits::TnuaBasisContext;
 use crate::util::ProjectionPlaneForRotation;
-use crate::{TnuaBasis, TnuaVelChange};
+use crate::{TnuaAirborneStatus, TnuaBasis, TnuaVelChange};
 
 pub struct TnuaBuiltinWalk {
     pub desired_velocity: Vec3,
@@ -28,8 +27,13 @@ impl TnuaBasis for TnuaBuiltinWalk {
     type State = TnuaBuiltinWalkState;
 
     fn apply(&self, state: &mut Self::State, ctx: TnuaBasisContext, motor: &mut crate::TnuaMotor) {
-        if let Some(stopwatch) = &mut state.airborne_timer {
-            stopwatch.tick(Duration::from_secs_f32(ctx.frame_duration));
+        match &mut state.airborne_status {
+            TnuaAirborneStatus::Grounded => {}
+            TnuaAirborneStatus::Coyote { duration }
+            | TnuaAirborneStatus::AirAction { name: _, duration } => {
+                *duration += Duration::from_secs_f32(ctx.frame_duration);
+            }
+            TnuaAirborneStatus::PostAction { .. } => {}
         }
 
         let climb_vectors: Option<ClimbVectors>;
@@ -49,7 +53,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     sideways: sideways_unnormalized.normalize_or_zero(),
                 });
             }
-            considered_in_air = state.airborne_timer.is_some();
+            considered_in_air = state.airborne_status.is_in_air();
             if considered_in_air {
                 impulse_to_offset = Vec3::ZERO;
                 state.standing_on = None;
@@ -112,33 +116,47 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
         let upward_impulse: TnuaVelChange = 'upward_impulse: {
             for _ in 0..2 {
-                match &mut state.airborne_timer {
-                    None => {
-                        if let Some(sensor_output) = &ctx.proximity_sensor.output {
-                            // not doing the jump calculation here
-                            let spring_offset = self.float_height - sensor_output.proximity;
-                            state.standing_offset = -spring_offset;
-                            let boost = self.spring_force_boost(state, &ctx, spring_offset);
-                            break 'upward_impulse TnuaVelChange::boost(boost * self.up);
-                        } else {
-                            state.airborne_timer = Some(Stopwatch::new());
+                if state.airborne_status.is_in_air() {
+                    if let Some(sensor_output) = &ctx.proximity_sensor.output {
+                        if sensor_output.proximity <= self.float_height {
+                            match state.airborne_status {
+                                TnuaAirborneStatus::Grounded
+                                | TnuaAirborneStatus::Coyote { .. }
+                                | TnuaAirborneStatus::PostAction { .. } => {
+                                    state.airborne_status = TnuaAirborneStatus::Grounded;
+                                }
+                                TnuaAirborneStatus::AirAction { .. } => {}
+                            }
                             continue;
                         }
                     }
-                    Some(_) => {
-                        if let Some(sensor_output) = &ctx.proximity_sensor.output {
-                            if sensor_output.proximity <= self.float_height {
-                                state.airborne_timer = None;
-                                continue;
-                            }
-                        }
-                        if state.vertical_velocity <= 0.0 {
-                            break 'upward_impulse TnuaVelChange::acceleration(
-                                -self.free_fall_extra_gravity * self.up,
-                            );
-                        } else {
-                            break 'upward_impulse TnuaVelChange::ZERO;
-                        }
+                    if state.vertical_velocity <= 0.0 {
+                        break 'upward_impulse TnuaVelChange::acceleration(
+                            -self.free_fall_extra_gravity * self.up,
+                        );
+                    } else {
+                        break 'upward_impulse TnuaVelChange::ZERO;
+                    }
+                } else {
+                    if let Some(sensor_output) = &ctx.proximity_sensor.output {
+                        // not doing the jump calculation here
+                        let spring_offset = self.float_height - sensor_output.proximity;
+                        state.standing_offset = -spring_offset;
+                        let boost = self.spring_force_boost(state, &ctx, spring_offset);
+                        break 'upward_impulse TnuaVelChange::boost(boost * self.up);
+                    } else {
+                        // match state.airborne_status {
+                                state.airborne_status = TnuaAirborneStatus::Coyote {
+                                    duration: Default::default(),
+                                };
+                            // TnuaAirborneStatus::Grounded => {
+                            // }
+                            // TnuaAirborneStatus::Coyote { .. }
+                            // | TnuaAirborneStatus::AirAction { .. } 
+                            // | TnuaAirborneStatus::PostAction { .. } => {
+                            // }
+                        // }
+                        continue;
                     }
                 }
             }
@@ -197,9 +215,11 @@ impl TnuaBasis for TnuaBuiltinWalk {
     }
 
     fn displacement(&self, state: &Self::State) -> Option<Vec3> {
-        match state.airborne_timer {
-            None => Some(self.up * state.standing_offset),
-            Some(_) => None,
+        match state.airborne_status {
+            TnuaAirborneStatus::Grounded => Some(self.up * state.standing_offset),
+            TnuaAirborneStatus::Coyote { .. } => None,
+            TnuaAirborneStatus::AirAction { .. } => None,
+            TnuaAirborneStatus::PostAction { .. } => None,
         }
     }
 
@@ -216,11 +236,32 @@ impl TnuaBasis for TnuaBuiltinWalk {
         self.desired_forward = Vec3::ZERO;
     }
 
-    fn airborne_duration(&self, state: &Self::State) -> Option<Duration> {
-        match &state.airborne_timer {
-            None => None,
-            Some(stopwatch) => Some(stopwatch.elapsed()),
-        }
+    fn airborne_status(&self, state: &Self::State) -> TnuaAirborneStatus {
+        state.airborne_status.clone()
+    }
+
+    fn update_air_action(&self, state: &mut Self::State, name: Option<&'static str>) {
+        state.airborne_status = match state.airborne_status {
+            TnuaAirborneStatus::Grounded
+            | TnuaAirborneStatus::Coyote { .. }
+            | TnuaAirborneStatus::PostAction { .. } => {
+                let Some(name) = name else { return };
+                TnuaAirborneStatus::AirAction {
+                    name,
+                    duration: Duration::ZERO,
+                }
+            }
+            TnuaAirborneStatus::AirAction { name: old_name, .. } => {
+                if let Some(name) = name {
+                    TnuaAirborneStatus::AirAction {
+                        name,
+                        duration: Duration::ZERO,
+                    }
+                } else {
+                    TnuaAirborneStatus::PostAction { name: old_name }
+                }
+            }
+        };
     }
 }
 
@@ -255,7 +296,7 @@ struct StandingOnState {
 
 #[derive(Default)]
 pub struct TnuaBuiltinWalkState {
-    airborne_timer: Option<Stopwatch>,
+    airborne_status: TnuaAirborneStatus,
     pub standing_offset: f32,
     standing_on: Option<StandingOnState>,
     effective_velocity: Vec3,

@@ -12,6 +12,42 @@ pub struct TnuaBasisContext<'a> {
     pub proximity_sensor: &'a TnuaProximitySensor,
 }
 
+#[derive(Default, Debug, Clone)]
+pub enum TnuaAirborneStatus {
+    #[default]
+    Grounded,
+    Coyote {
+        duration: Duration,
+    },
+    AirAction {
+        name: &'static str,
+        duration: Duration,
+    },
+    PostAction {
+        name: &'static str,
+    },
+}
+
+impl TnuaAirborneStatus {
+    pub fn is_in_air(&self) -> bool {
+        match self {
+            TnuaAirborneStatus::Grounded => false,
+            TnuaAirborneStatus::Coyote { .. } => true,
+            TnuaAirborneStatus::AirAction { .. } => true,
+            TnuaAirborneStatus::PostAction { .. } => true,
+        }
+    }
+
+    pub fn is_grounded_or_coyote(&self, coyote_time: Duration) -> bool {
+        match self {
+            TnuaAirborneStatus::Grounded => true,
+            TnuaAirborneStatus::Coyote { duration } => *duration < coyote_time,
+            TnuaAirborneStatus::AirAction { .. } => false,
+            TnuaAirborneStatus::PostAction { .. } => false,
+        }
+    }
+}
+
 pub trait TnuaBasis: 'static + Send + Sync {
     const NAME: &'static str;
     type State: Default + Send + Sync;
@@ -29,7 +65,8 @@ pub trait TnuaBasis: 'static + Send + Sync {
 
     fn neutralize(&mut self);
 
-    fn airborne_duration(&self, state: &Self::State) -> Option<Duration>;
+    fn airborne_status(&self, state: &Self::State) -> TnuaAirborneStatus;
+    fn update_air_action(&self, state: &mut Self::State, name: Option<&'static str>);
 }
 
 pub trait DynamicBasis: Send + Sync + Any + 'static {
@@ -45,7 +82,8 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
     fn vertical_velocity(&self) -> f32;
 
     fn neutralize(&mut self);
-    fn airborne_duration(&self) -> Option<Duration>;
+    fn airborne_status(&self) -> TnuaAirborneStatus;
+    fn update_air_action(&mut self, name: Option<&'static str>);
 }
 
 pub(crate) struct BoxableBasis<B: TnuaBasis> {
@@ -99,8 +137,12 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
         self.input.neutralize();
     }
 
-    fn airborne_duration(&self) -> Option<Duration> {
-        self.input.airborne_duration(&self.state)
+    fn airborne_status(&self) -> TnuaAirborneStatus {
+        self.input.airborne_status(&self.state)
+    }
+
+    fn update_air_action(&mut self, name: Option<&'static str>) {
+        self.input.update_air_action(&mut self.state, name)
     }
 }
 
@@ -205,6 +247,7 @@ pub enum TnuaActionInitiationDirective {
 pub trait TnuaAction: 'static + Send + Sync {
     const NAME: &'static str;
     type State: Default + Send + Sync;
+    const AIR_ACTION: bool;
 
     fn apply(
         &self,
@@ -240,6 +283,7 @@ pub(crate) trait DynamicAction: Send + Sync + Any + 'static {
         ctx: TnuaActionContext,
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective;
+    fn is_air_action(&self) -> bool;
 }
 
 pub(crate) struct BoxableAction<A: TnuaAction> {
@@ -285,5 +329,9 @@ impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective {
         self.input.initiation_decision(ctx, being_fed_for)
+    }
+
+    fn is_air_action(&self) -> bool {
+        A::AIR_ACTION
     }
 }
