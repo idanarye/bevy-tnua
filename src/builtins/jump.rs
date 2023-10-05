@@ -6,6 +6,7 @@ use crate::basis_action_traits::{
 };
 use crate::util::SegmentedJumpInitialVelocityCalculator;
 
+#[derive(Clone)]
 pub struct TnuaBuiltinJump {
     /// The height the character will jump to.
     ///
@@ -84,6 +85,23 @@ pub struct TnuaBuiltinJump {
     /// possible (typically when a character is still in the air and about the land) and the jump
     /// action would still get registered and be executed once the jump is possible.
     pub input_buffer_time: f32,
+}
+
+impl Default for TnuaBuiltinJump {
+    fn default() -> Self {
+        Self {
+            height: 0.0,
+            upslope_extra_gravity: 30.0,
+            takeoff_extra_gravity: 30.0,
+            takeoff_above_velocity: 2.0,
+            fall_extra_gravity: 20.0,
+            shorten_extra_gravity: 60.0,
+            peak_prevention_at_upward_velocity: 1.0,
+            peak_prevention_extra_gravity: 20.0,
+            reschedule_cooldown: None,
+            input_buffer_time: 0.2,
+        }
+    }
 }
 
 impl TnuaAction for TnuaBuiltinJump {

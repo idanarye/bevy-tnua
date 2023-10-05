@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::ops::RangeInclusive;
 
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
@@ -6,16 +7,37 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerConfig, TnuaToggle};
 
+use super::tuning::UiTunable;
 use super::ui_plotting::PlotSource;
 use super::FallingThroughControlScheme;
 
-pub struct ExampleUi;
+// TODO: Remove this once the old examples are overwritten
+#[derive(Component, Default)]
+pub struct DummyTunable;
 
-impl Plugin for ExampleUi {
+impl UiTunable for DummyTunable {
+    fn tune(&mut self, ui: &mut egui::Ui) {
+        ui.label("DUMMY TUNABLE");
+    }
+}
+
+pub struct ExampleUi<C: Component + UiTunable> {
+    _phantom: PhantomData<C>,
+}
+
+impl<C: Component + UiTunable> Default for ExampleUi<C> {
+    fn default() -> Self {
+        Self {
+            _phantom: Default::default(),
+        }
+    }
+}
+
+impl<C: Component + UiTunable> Plugin for ExampleUi<C> {
     fn build(&self, app: &mut App) {
         app.add_plugins(EguiPlugin);
         app.insert_resource(ExampleUiPhysicsBackendActive(true));
-        app.add_systems(Update, ui_system);
+        app.add_systems(Update, ui_system::<C>);
         app.add_systems(Update, super::ui_plotting::plot_source_rolling_update);
         app.add_plugins(FrameTimeDiagnosticsPlugin);
     }
@@ -173,7 +195,7 @@ fn slider_or_none(
     });
 }
 
-fn ui_system(
+fn ui_system<C: Component + UiTunable>(
     mut egui_context: EguiContexts,
     mut physics_backend_active: ResMut<ExampleUiPhysicsBackendActive>,
     mut query: Query<(
@@ -181,7 +203,8 @@ fn ui_system(
         &TrackedEntity,
         &PlotSource,
         &mut TnuaToggle,
-        &mut TnuaPlatformerConfig,
+        Option<&mut TnuaPlatformerConfig>,
+        Option<&mut C>,
         &mut FallingThroughControlScheme,
         Option<&mut CommandAlteringSelectors>,
     )>,
@@ -247,6 +270,7 @@ fn ui_system(
             plot_source,
             mut tnua_toggle,
             mut platformer_config,
+            mut tunable,
             mut falling_through_control_scheme,
             command_altering_selectors,
         ) in query.iter_mut()
@@ -268,15 +292,21 @@ fn ui_system(
                                         ui.selectable_value(tnua_toggle.as_mut(), option, label);
                                     }
                                 });
-                            ui.add(
-                                egui::Slider::new(&mut platformer_config.full_speed, 0.0..=60.0)
-                                    .text("Speed"),
-                            );
-                            ui.add(
-                                egui::Slider::new(&mut platformer_config.full_jump_height, 0.0..=10.0)
-                                    .text("Jump Height"),
-                            );
-                            platformer_config.full_jump_height = platformer_config.full_jump_height.max(0.1);
+                            if let Some(platformer_config) = platformer_config.as_mut() {
+                                ui.add(
+                                    egui::Slider::new(&mut platformer_config.full_speed, 0.0..=60.0)
+                                        .text("Speed"),
+                                );
+                                ui.add(
+                                    egui::Slider::new(&mut platformer_config.full_jump_height, 0.0..=10.0)
+                                        .text("Jump Height"),
+                                );
+                                platformer_config.full_jump_height = platformer_config.full_jump_height.max(0.1);
+                            }
+
+                            if let Some(tunable) = tunable.as_mut() {
+                                tunable.tune(ui);
+                            }
 
                             if let Some(mut command_altering_selectors) = command_altering_selectors
                             {
@@ -305,133 +335,135 @@ fn ui_system(
                                 }
                             }
 
-                            ui.add(
-                                egui::Slider::new(&mut platformer_config.float_height, 0.0..=10.0)
-                                    .text("Float At"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.cling_distance,
-                                    0.0..=10.0,
-                                )
-                                .text("Cling Distance"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.spring_strengh,
-                                    0.0..=4000.0,
-                                )
-                                .text("Spring Strengh"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.spring_dampening,
-                                    0.0..=1.9,
-                                )
-                                .text("Spring Dampening"),
-                            );
-                            slider_or_infinity(ui, "Acceleration", &mut platformer_config.acceleration, 0.0..=200.0);
-                            slider_or_infinity(ui, "Air Acceleration", &mut platformer_config.air_acceleration, 0.0..=200.0);
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.coyote_time,
-                                    0.0..=1.0,
-                                )
-                                .text("Coyote Time"),
-                            );
-                            ui.add(egui::Slider::new(&mut platformer_config.jump_input_buffer_time, 0.0..=1.0).text("Jump Input Buffer Time"));
-                            slider_or_none(ui, "Held Jump Cooldown", &mut platformer_config.held_jump_cooldown, 0.0..=2.0);
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.upslope_jump_extra_gravity,
-                                    0.0..=100.0,
-                                )
-                                .text("Upslope Jump Extra Gravity"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.jump_takeoff_extra_gravity,
-                                    0.0..=100.0,
-                                )
-                                .text("Jump Takeoff Extra Gravity"),
-                            );
-                            slider_or_infinity(ui, "Jump Takeoff Above Velocity", &mut platformer_config.jump_takeoff_above_velocity, 0.0..=20.0);
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.jump_fall_extra_gravity,
-                                    0.0..=50.0,
-                                )
-                                .text("Jump Fall Extra Gravity"),
-                            );
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.jump_shorten_extra_gravity,
-                                    0.0..=100.0,
-                                )
-                                .text("Jump Shorten Extra Gravity"),
-                            );
-
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.jump_peak_prevention_at_upward_velocity,
-                                    0.0..=20.0,
-                                )
-                                .text("Jump Peak Prevention At Upward Velocity"),
-                            );
-
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.jump_peak_prevention_extra_gravity,
-                                    0.0..=100.0,
-                                )
-                                .text("Jump Peak Prevention Extra Gravity"),
-                            );
-
-                            let free_fall_options: [(bool, &str, fn() -> TnuaFreeFallBehavior); 3] = [
-                                (
-                                    matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::ExtraGravity(_)),
-                                    "Extra Gravity",
-                                    || TnuaFreeFallBehavior::ExtraGravity(0.0),
-                                ),
-                                (
-                                    matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::LikeJumpShorten),
-                                    "Like Jump Shorten",
-                                    || TnuaFreeFallBehavior::LikeJumpShorten,
-                                ),
-                                (
-                                    matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::LikeJumpFall),
-                                    "Like Jump Fall",
-                                    || TnuaFreeFallBehavior::LikeJumpFall,
-                                ),
-                            ];
-                            egui::ComboBox::from_label("Free Fall Behavior")
-                                .selected_text(free_fall_options.iter().find_map(|(chosen, name, _)| chosen.then_some(*name)).unwrap_or("???"))
-                                .show_ui(ui, |ui| {
-                                    for (chosen, name, make_variant) in free_fall_options {
-                                        if ui.selectable_label(chosen, name).clicked() {
-                                             platformer_config.free_fall_behavior = make_variant();
-                                        }
-                                    }
-                                });
-                            if let TnuaFreeFallBehavior::ExtraGravity(extra_gravity) = &mut platformer_config.free_fall_behavior {
+                            if let Some(platformer_config) = platformer_config.as_mut() {
                                 ui.add(
-                                    egui::Slider::new(extra_gravity, 0.0..=100.0).text("Extra Gravity"),
+                                    egui::Slider::new(&mut platformer_config.float_height, 0.0..=10.0)
+                                    .text("Float At"),
                                 );
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.cling_distance,
+                                        0.0..=10.0,
+                                    )
+                                    .text("Cling Distance"),
+                                );
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.spring_strengh,
+                                        0.0..=4000.0,
+                                    )
+                                    .text("Spring Strengh"),
+                                );
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.spring_dampening,
+                                        0.0..=1.9,
+                                    )
+                                    .text("Spring Dampening"),
+                                );
+                                slider_or_infinity(ui, "Acceleration", &mut platformer_config.acceleration, 0.0..=200.0);
+                                slider_or_infinity(ui, "Air Acceleration", &mut platformer_config.air_acceleration, 0.0..=200.0);
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.coyote_time,
+                                        0.0..=1.0,
+                                    )
+                                    .text("Coyote Time"),
+                                );
+                                ui.add(egui::Slider::new(&mut platformer_config.jump_input_buffer_time, 0.0..=1.0).text("Jump Input Buffer Time"));
+                                slider_or_none(ui, "Held Jump Cooldown", &mut platformer_config.held_jump_cooldown, 0.0..=2.0);
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.upslope_jump_extra_gravity,
+                                        0.0..=100.0,
+                                    )
+                                    .text("Upslope Jump Extra Gravity"),
+                                );
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.jump_takeoff_extra_gravity,
+                                        0.0..=100.0,
+                                    )
+                                    .text("Jump Takeoff Extra Gravity"),
+                                );
+                                slider_or_infinity(ui, "Jump Takeoff Above Velocity", &mut platformer_config.jump_takeoff_above_velocity, 0.0..=20.0);
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.jump_fall_extra_gravity,
+                                        0.0..=50.0,
+                                    )
+                                    .text("Jump Fall Extra Gravity"),
+                                );
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.jump_shorten_extra_gravity,
+                                        0.0..=100.0,
+                                    )
+                                    .text("Jump Shorten Extra Gravity"),
+                                );
+
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.jump_peak_prevention_at_upward_velocity,
+                                        0.0..=20.0,
+                                    )
+                                    .text("Jump Peak Prevention At Upward Velocity"),
+                                );
+
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.jump_peak_prevention_extra_gravity,
+                                        0.0..=100.0,
+                                    )
+                                    .text("Jump Peak Prevention Extra Gravity"),
+                                );
+
+                                let free_fall_options: [(bool, &str, fn() -> TnuaFreeFallBehavior); 3] = [
+                                    (
+                                        matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::ExtraGravity(_)),
+                                        "Extra Gravity",
+                                        || TnuaFreeFallBehavior::ExtraGravity(0.0),
+                                    ),
+                                    (
+                                        matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::LikeJumpShorten),
+                                        "Like Jump Shorten",
+                                        || TnuaFreeFallBehavior::LikeJumpShorten,
+                                    ),
+                                    (
+                                        matches!(platformer_config.free_fall_behavior, TnuaFreeFallBehavior::LikeJumpFall),
+                                        "Like Jump Fall",
+                                        || TnuaFreeFallBehavior::LikeJumpFall,
+                                    ),
+                                ];
+                                egui::ComboBox::from_label("Free Fall Behavior")
+                                    .selected_text(free_fall_options.iter().find_map(|(chosen, name, _)| chosen.then_some(*name)).unwrap_or("???"))
+                                    .show_ui(ui, |ui| {
+                                        for (chosen, name, make_variant) in free_fall_options {
+                                            if ui.selectable_label(chosen, name).clicked() {
+                                                platformer_config.free_fall_behavior = make_variant();
+                                            }
+                                        }
+                                    });
+                                if let TnuaFreeFallBehavior::ExtraGravity(extra_gravity) = &mut platformer_config.free_fall_behavior {
+                                    ui.add(
+                                        egui::Slider::new(extra_gravity, 0.0..=100.0).text("Extra Gravity"),
+                                    );
+                                }
+
+                                slider_or_infinity(ui, "Staying Upward Max Angular Velocity", &mut platformer_config.tilt_offset_angvel, 0.0..=20.0);
+                                slider_or_infinity(ui, "Staying Upward Max Angular Acceleration", &mut platformer_config.tilt_offset_angacl, 0.0..=2000.0);
+
+                                slider_or_infinity(ui, "Turning Angular Velocity", &mut platformer_config.turning_angvel, 0.0..=70.0);
+
+                                ui.add(
+                                    egui::Slider::new(
+                                        &mut platformer_config.height_change_impulse_for_duration,
+                                        0.001..=0.2,
+                                    ).text("Height Change Impulse for Duration"),
+                                );
+
+                                slider_or_infinity(ui, "Height Change Impulse", &mut platformer_config.height_change_impulse_limit, 0.0..=40.0);
                             }
-
-                            slider_or_infinity(ui, "Staying Upward Max Angular Velocity", &mut platformer_config.tilt_offset_angvel, 0.0..=20.0);
-                            slider_or_infinity(ui, "Staying Upward Max Angular Acceleration", &mut platformer_config.tilt_offset_angacl, 0.0..=2000.0);
-
-                            slider_or_infinity(ui, "Turning Angular Velocity", &mut platformer_config.turning_angvel, 0.0..=70.0);
-
-                            ui.add(
-                                egui::Slider::new(
-                                    &mut platformer_config.height_change_impulse_for_duration,
-                                    0.001..=0.2,
-                                ).text("Height Change Impulse for Duration"),
-                            );
-
-                            slider_or_infinity(ui, "Height Change Impulse", &mut platformer_config.height_change_impulse_limit, 0.0..=40.0);
 
                             falling_through_control_scheme.edit_with_ui(ui);
                         });

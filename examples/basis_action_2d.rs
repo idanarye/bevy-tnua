@@ -8,11 +8,9 @@ use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::prelude::*;
-use bevy_tnua::{
-    TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaPlatformerConfig,
-    TnuaProximitySensor, TnuaToggle,
-};
+use bevy_tnua::{TnuaGhostPlatform, TnuaGhostSensor, TnuaProximitySensor, TnuaToggle};
 
+use self::common::tuning::CharacterMotionConfigForPlatformerExample;
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use self::common::ui_plotting::PlotSource;
 use self::common::{FallingThroughControlScheme, MovingPlatform};
@@ -25,7 +23,9 @@ fn main() {
     app.add_plugins(TnuaRapier2dPlugin);
     app.add_plugins(TnuaControllerPlugin);
     app.add_plugins(TnuaCrouchEnforcerPlugin);
-    app.add_plugins(common::ui::ExampleUi);
+    app.add_plugins(common::ui::ExampleUi::<
+        CharacterMotionConfigForPlatformerExample,
+    >::default());
     app.add_systems(Startup, setup_camera);
     app.add_systems(Startup, setup_level);
     app.add_systems(Startup, setup_player);
@@ -229,33 +229,20 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaRapier2dIOBundle::default());
     cmd.insert(TnuaControllerBundle::default());
-    cmd.insert(TnuaPlatformerConfig {
-        full_speed: 40.0,
-        full_jump_height: 4.0,
-        up: Vec3::Y,
-        forward: Vec3::X,
-        float_height: 2.0,
-        cling_distance: 1.0,
-        spring_strengh: 40.0,
-        spring_dampening: 0.4,
-        acceleration: 60.0,
-        air_acceleration: 20.0,
-        coyote_time: 0.15,
-        jump_input_buffer_time: 0.2,
-        held_jump_cooldown: None,
-        upslope_jump_extra_gravity: 30.0,
-        jump_takeoff_extra_gravity: 30.0,
-        jump_takeoff_above_velocity: 2.0,
-        jump_fall_extra_gravity: 20.0,
-        jump_shorten_extra_gravity: 60.0,
-        jump_peak_prevention_at_upward_velocity: 1.0,
-        jump_peak_prevention_extra_gravity: 20.0,
-        free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
-        tilt_offset_angvel: 5.0,
-        tilt_offset_angacl: 500.0,
-        turning_angvel: 10.0,
-        height_change_impulse_for_duration: 0.04,
-        height_change_impulse_limit: 40.0,
+    cmd.insert(CharacterMotionConfigForPlatformerExample {
+        speed: 40.0,
+        walk: TnuaBuiltinWalk {
+            float_height: 2.0,
+            ..Default::default()
+        },
+        jump: TnuaBuiltinJump {
+            height: 4.0,
+            ..Default::default()
+        },
+        crouch: TnuaBuiltinCrouch {
+            float_offset: -0.9,
+            ..Default::default()
+        },
     });
     cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
@@ -327,7 +314,7 @@ fn apply_controls(
     mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,
     mut query: Query<(
-        &TnuaPlatformerConfig,
+        &CharacterMotionConfigForPlatformerExample,
         &mut TnuaController,
         &mut TnuaCrouchEnforcer,
         &mut TnuaProximitySensor,
@@ -394,49 +381,18 @@ fn apply_controls(
             desired_velocity: if turn_in_place {
                 Vec3::ZERO
             } else {
-                direction * speed_factor * config.full_speed
+                direction * speed_factor * config.speed
             },
-            desired_forward: Vec3::ZERO,
-            float_height: config.float_height,
-            cling_distance: config.cling_distance,
-            up: Vec3::Y,
-            spring_strengh: config.spring_strengh,
-            spring_dampening: config.spring_dampening,
-            acceleration: config.acceleration,
-            air_acceleration: config.air_acceleration,
-            coyote_time: config.coyote_time,
-            free_fall_extra_gravity: match config.free_fall_behavior {
-                TnuaFreeFallBehavior::ExtraGravity(extra_gravity) => extra_gravity,
-                TnuaFreeFallBehavior::LikeJumpShorten => config.jump_shorten_extra_gravity,
-                TnuaFreeFallBehavior::LikeJumpFall => config.jump_fall_extra_gravity,
-            },
-            tilt_offset_angvel: config.tilt_offset_angvel,
-            tilt_offset_angacl: config.tilt_offset_angacl,
-            turning_angvel: config.turning_angvel,
+            desired_forward: direction.normalize_or_zero(),
+            ..config.walk.clone()
         });
 
         if crouch {
-            controller.action(crouch_enforcer.enforcing(TnuaBuiltinCrouch {
-                float_offset: -0.9,
-                height_change_impulse_for_duration: config.height_change_impulse_for_duration,
-                height_change_impulse_limit: config.height_change_impulse_limit,
-                uncancellable: false,
-            }));
+            controller.action(crouch_enforcer.enforcing(config.crouch.clone()));
         }
 
         if jump {
-            controller.action(TnuaBuiltinJump {
-                height: config.full_jump_height,
-                upslope_extra_gravity: config.upslope_jump_extra_gravity,
-                takeoff_extra_gravity: config.jump_takeoff_extra_gravity,
-                takeoff_above_velocity: config.jump_takeoff_above_velocity,
-                peak_prevention_at_upward_velocity: config.jump_peak_prevention_at_upward_velocity,
-                peak_prevention_extra_gravity: config.jump_peak_prevention_extra_gravity,
-                shorten_extra_gravity: config.jump_shorten_extra_gravity,
-                fall_extra_gravity: config.jump_fall_extra_gravity,
-                input_buffer_time: config.jump_input_buffer_time,
-                reschedule_cooldown: config.held_jump_cooldown,
-            });
+            controller.action(config.jump.clone());
         }
     }
 }

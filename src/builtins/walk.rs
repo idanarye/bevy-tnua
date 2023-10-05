@@ -6,6 +6,7 @@ use crate::basis_action_traits::TnuaBasisContext;
 use crate::util::ProjectionPlaneForRotation;
 use crate::{TnuaBasis, TnuaVelChange};
 
+#[derive(Clone)]
 pub struct TnuaBuiltinWalk {
     /// The direction (in the world space) and speed to accelerate to.
     ///
@@ -91,6 +92,27 @@ pub struct TnuaBuiltinWalk {
 
     /// The maximum angular velocity used for turning the character when the direction changes.
     pub turning_angvel: f32,
+}
+
+impl Default for TnuaBuiltinWalk {
+    fn default() -> Self {
+        Self {
+            desired_velocity: Vec3::ZERO,
+            desired_forward: Vec3::ZERO,
+            float_height: 0.0,
+            cling_distance: 1.0,
+            up: Vec3::Y,
+            spring_strengh: 400.0,
+            spring_dampening: 1.2,
+            acceleration: 60.0,
+            air_acceleration: 20.0,
+            coyote_time: 0.15,
+            free_fall_extra_gravity: 60.0,
+            tilt_offset_angvel: 5.0,
+            tilt_offset_angacl: 500.0,
+            turning_angvel: 10.0,
+        }
+    }
 }
 
 impl TnuaBasis for TnuaBuiltinWalk {

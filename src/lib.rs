@@ -9,11 +9,12 @@
 //! * For 2D, enable `features = ["rapier_2d"]` and use [`TnuaRapier2dPlugin`].
 //! * For 3D, enable `features = ["rapier_3d"]` and use [`TnuaRapier3dPlugin`].
 //!
-//! In addition to the physics backend plugin, the [`TnuaPlatformerPlugin`] should also be added.
+//! In addition to the physics backend plugin, the
+//! [`TnuaControllerPlugin`](prelude::TnuaControllerPlugin) should also be added.
 //!
 //! A Tnua controlled character must have a dynamic rigid body, everything from
 //! [`TnuaRapier2dIOBundle`]/[`TnuaRapier3dIOBundle`] (depending on the physics backend), and
-//! everything from [`TnuaPlatformerBundle`]:
+//! everything from [`TnuaControllerBundle`](prelude::TnuaControllerBundle):
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # // Not importing from Rapier because there are two versions and the default features does not

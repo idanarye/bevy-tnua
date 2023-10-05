@@ -28,6 +28,17 @@ pub struct TnuaBuiltinCrouch {
     pub uncancellable: bool,
 }
 
+impl Default for TnuaBuiltinCrouch {
+    fn default() -> Self {
+        Self {
+            float_offset: 0.0,
+            height_change_impulse_for_duration: 0.02,
+            height_change_impulse_limit: 40.0,
+            uncancellable: false,
+        }
+    }
+}
+
 impl TnuaAction for TnuaBuiltinCrouch {
     const NAME: &'static str = "TnuaBuiltinCrouch";
     type State = TnuaBuiltinCrouchState;

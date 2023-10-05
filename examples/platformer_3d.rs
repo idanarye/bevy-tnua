@@ -24,7 +24,7 @@ fn main() {
     app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugins(TnuaRapier3dPlugin);
     app.add_plugins(TnuaPlatformerPlugin);
-    app.add_plugins(common::ui::ExampleUi);
+    app.add_plugins(common::ui::ExampleUi::<common::ui::DummyTunable>::default());
     app.add_systems(Startup, setup_camera);
     app.add_systems(Startup, setup_level);
     app.add_systems(Startup, setup_player);
