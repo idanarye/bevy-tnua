@@ -62,6 +62,10 @@ name = "platformer_3d"
 required-features = ["rapier_3d"]
 
 [[example]]
+name = "basis_action_2d"
+required-features = ["rapier_2d"]
+
+[[example]]
 name = "basis_action_3d"
 required-features = ["rapier_3d"]
 
