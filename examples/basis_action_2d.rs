@@ -3,17 +3,14 @@ mod common;
 use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 use bevy_rapier2d::prelude::*;
-use bevy_tnua::builtins::{
-    TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinJump, TnuaBuiltinWalk,
-};
+use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState};
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::controller::{TnuaController, TnuaControllerBundle, TnuaControllerPlugin};
+use bevy_tnua::prelude::*;
 use bevy_tnua::{
-    TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaPipelineStages,
-    TnuaPlatformerConfig, TnuaProximitySensor, TnuaRapier2dIOBundle, TnuaRapier2dPlugin,
-    TnuaRapier2dSensorShape, TnuaToggle, TnuaUserControlsSystemSet,
+    TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaPlatformerConfig,
+    TnuaProximitySensor, TnuaToggle,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};

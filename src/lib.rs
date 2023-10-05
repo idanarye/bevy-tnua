@@ -121,6 +121,16 @@ pub use backend_rapier2d::*;
 pub use backend_rapier3d::*;
 pub use platformer::*;
 
+pub mod prelude {
+    pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
+    pub use crate::controller::{TnuaController, TnuaControllerBundle, TnuaControllerPlugin};
+    pub use crate::{TnuaAction, TnuaPipelineStages, TnuaUserControlsSystemSet};
+    #[cfg(feature = "rapier_2d")]
+    pub use crate::{TnuaRapier2dIOBundle, TnuaRapier2dPlugin, TnuaRapier2dSensorShape};
+    #[cfg(feature = "rapier_3d")]
+    pub use crate::{TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape};
+}
+
 mod data_for_backends;
 pub use data_for_backends::*;
 

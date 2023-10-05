@@ -5,19 +5,14 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
-use bevy_tnua::builtins::{
-    TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinJump, TnuaBuiltinJumpState,
-    TnuaBuiltinWalk,
-};
+use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinJumpState};
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::controller::{TnuaController, TnuaControllerBundle, TnuaControllerPlugin};
+use bevy_tnua::prelude::*;
 use bevy_tnua::{
-    TnuaAction, TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
-    TnuaGhostPlatform, TnuaGhostSensor, TnuaPipelineStages, TnuaPlatformerConfig,
-    TnuaProximitySensor, TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
-    TnuaToggle, TnuaUserControlsSystemSet,
+    TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior, TnuaGhostPlatform,
+    TnuaGhostSensor, TnuaPlatformerConfig, TnuaProximitySensor, TnuaToggle,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
