@@ -7,19 +7,89 @@ use crate::util::ProjectionPlaneForRotation;
 use crate::{TnuaBasis, TnuaVelChange};
 
 pub struct TnuaBuiltinWalk {
+    /// The direction (in the world space) and speed to accelerate to.
+    ///
+    /// Tnua assumes that this vector is orthogonal to the [`up`](Self::up) vector.
     pub desired_velocity: Vec3,
+
+    /// If non-zero, Tnua will rotate the character so that its negative Z will face in that
+    /// direction.
+    ///
+    /// Tnua assumes that this vector is orthogonal to the [`up`](Self::up) vector.
     pub desired_forward: Vec3,
+
+    /// The height at which the character will float above ground at rest.
+    ///
+    /// Note that this is the height of the character's center of mass - not the distance from its
+    /// collision mesh.
     pub float_height: f32,
+
+    /// Extra distance above the `float_height` where the spring is still in effect.
+    ///
+    /// When the character is at at most this distance above the
+    /// [`float_height`](Self::float_height), the spring force will kick in and move it to the
+    /// float height - even if that means pushing it down. If the character is above that distance
+    /// above the `float_height`, Tnua will consider it to be in the air.
     pub cling_distance: f32,
+
+    /// The direction considered as upward.
+    ///
+    /// Typically `Vec3::Y`.
     pub up: Vec3,
+
+    /// The force that pushes the character to the float height.
+    ///
+    /// The actual force applied is in direct linear relationship to the displacement from the
+    /// `float_height`.
     pub spring_strengh: f32,
+
+    /// A force that slows down the characters vertical spring motion.
+    ///
+    /// The actual dampening is in direct linear relationship to the vertical velocity it tries to
+    /// dampen.
+    ///
+    /// Note that as this approaches 2.0, the character starts to shake violently and eventually
+    /// get launched upward at great speed.
     pub spring_dampening: f32,
+
+    /// The acceleration for horizontal movement.
+    ///
+    /// Note that this is the acceleration for starting the horizontal motion and for reaching the
+    /// top speed. When braking or changing direction the acceleration is greater, up to 2 times
+    /// `acceleration` when doing a 180 turn.
     pub acceleration: f32,
+
+    /// The acceleration for horizontal movement while in the air.
+    ///
+    /// Set to 0.0 to completely disable air movement.
     pub air_acceleration: f32,
+
+    /// The time, in seconds, the character can still jump after losing their footing.
     pub coyote_time: f32,
+
+    /// Extra gravity for free fall (fall that's not initiated by a jump or some other action that
+    /// provides its own fall gravity)
+    ///
+    /// **NOTE**: This force will be added to the normal gravity.
+    ///
+    /// **NOTE**: If the parameter set to this option is too low, the character may be able to run
+    /// up a slope and "jump" potentially even higher than a regular jump, even without pressing
+    /// the jump button.
     pub free_fall_extra_gravity: f32,
+
+    /// The maximum angular velocity used for keeping the character standing upright.
+    ///
+    /// NOTE: The character's rotation can also be locked to prevent it from being tilted, in which
+    /// case this paramter is redundant and can be set to 0.0.
     pub tilt_offset_angvel: f32,
+
+    /// The maximum angular acceleration used for reaching `tilt_offset_angvel`.
+    ///
+    /// NOTE: The character's rotation can also be locked to prevent it from being tilted, in which
+    /// case this paramter is redundant and can be set to 0.0.
     pub tilt_offset_angacl: f32,
+
+    /// The maximum angular velocity used for turning the character when the direction changes.
     pub turning_angvel: f32,
 }
 

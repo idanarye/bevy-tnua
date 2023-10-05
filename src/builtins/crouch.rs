@@ -12,8 +12,19 @@ use super::TnuaBuiltinWalk;
 #[derive(Clone)]
 pub struct TnuaBuiltinCrouch {
     pub float_offset: f32,
+
+    /// A duration, in seconds, that it should take for the character to change its floating height
+    /// to start or stop the crouch.
+    ///
+    /// Set this to more than the expected duration of a single frame, so that the character will
+    /// some distance for the
+    /// [`spring_dampening`](crate::builtins::TnuaBuiltinWalk::spring_dampening) force to reduce
+    /// its vertical velocity.
     pub height_change_impulse_for_duration: f32,
+
+    /// The maximum impulse to apply when starting or stopping the crouch.
     pub height_change_impulse_limit: f32,
+
     pub uncancellable: bool,
 }
 
