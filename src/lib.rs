@@ -98,8 +98,8 @@
 //!
 //! ## Motion Based Animation
 //!
-//! [`TnuaController`] can also be used to retreive data that can be used to decide which animation
-//! to play. A useful helper for that is [`TnuaAnimatingState`].
+//! [`TnuaController`](crate::prelude::TnuaController) can also be used to retreive data that can
+//! be used to decide which animation to play. A useful helper for that is [`TnuaAnimatingState`].
 mod animating_helper;
 #[cfg(feature = "rapier_2d")]
 mod backend_rapier2d;

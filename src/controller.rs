@@ -12,6 +12,10 @@ use crate::{
     TnuaSystemSet, TnuaToggle, TnuaUserControlsSystemSet,
 };
 
+/// The main for supporting Tnua character controller.
+///
+/// Will not work without a physics backend plugin (like `TnuaRapier2dPlugin` or
+/// `TnuaRapier3dPlugin`)
 pub struct TnuaControllerPlugin;
 
 impl Plugin for TnuaControllerPlugin {
@@ -35,6 +39,10 @@ impl Plugin for TnuaControllerPlugin {
     }
 }
 
+/// All the Tnua components needed to run a floating character controller.
+///
+/// Note that this bundle only contains components defined by Tnua. The components of the physics
+/// backend that turn the entity into a dynamic rigid body must be added separately.
 #[derive(Default, Bundle)]
 pub struct TnuaControllerBundle {
     pub controller: TnuaController,
@@ -48,6 +56,28 @@ struct FedEntry {
     rescheduled_in: Option<Timer>,
 }
 
+/// The main component used for interaction with the controls and animation code.
+///
+/// Every frame, the game code should feed input this component on every controlled entity. What
+/// should be fed is:
+///
+/// * A basis - this is the main movement command - usually
+///   [`TnuaBuiltinWalk`](crate::builtins::TnuaBuiltinWalk), but there can be others. It is the
+///   game code's responsibility to ensure only one basis is fed at any given time, because basis
+///   can hold state and replacing the basis type restarts the state.
+///
+///   Refer to the documentation of [the implementors of
+///   `TnuaBasis`](crate::TnuaBasis#implementors) for more information.
+///
+/// * Zero or more actions - these are movements like jumping, dashing, crouching, etc. Multiple
+///   actions can be fed, but only one can be active at any given moment. Unlike basis, there is a
+///   smart mechanism for deciding which action to use and which to discard, so it is safe to feed
+///   many actions at the same frame.
+///
+///   Refer to the documentation of [the implementors of
+///   `TnuaAction`](crate::TnuaAction#implementors) for more information.
+///
+/// Without [`TnuaControllerPlugin`] this component will not do anything.
 #[derive(Component, Default)]
 pub struct TnuaController {
     current_basis: Option<(&'static str, Box<dyn DynamicBasis>)>,
@@ -57,6 +87,16 @@ pub struct TnuaController {
 }
 
 impl TnuaController {
+    /// Feed a basis - the main movement command - with [its default name](TnuaBasis::NAME).
+    pub fn basis<B: TnuaBasis>(&mut self, basis: B) -> &mut Self {
+        self.named_basis(B::NAME, basis)
+    }
+
+    /// Feed a basis - the main movement command - with a custom name.
+    ///
+    /// This should only be used if the same basis type needs to be used with different names to
+    /// allow, for example, different animations. Otherwise prefer to use the default name with
+    /// [`basis`](Self::basis).
     pub fn named_basis<B: TnuaBasis>(&mut self, name: &'static str, basis: B) -> &mut Self {
         if let Some((existing_name, existing_basis)) =
             self.current_basis.as_mut().and_then(|(n, b)| {
@@ -72,10 +112,11 @@ impl TnuaController {
         self
     }
 
-    pub fn basis<B: TnuaBasis>(&mut self, basis: B) -> &mut Self {
-        self.named_basis(B::NAME, basis)
-    }
-
+    /// Instruct the basis to pretend the user provided no input this frame.
+    ///
+    /// The exact meaning is defined in the basis' [`neutralize`](TnuaBasis::neutralize) method,
+    /// but generally it means that fields that typically come from a configuration will not be
+    /// touched, and only fields that are typically set by user input get nullified.
     pub fn neutralize_basis(&mut self) -> &mut Self {
         if let Some((_, basis)) = self.current_basis.as_mut() {
             basis.neutralize();
@@ -83,18 +124,37 @@ impl TnuaController {
         self
     }
 
+    /// The name of the currently running basis.
+    ///
+    /// When using the basis with it's default name, prefer to match this against
+    /// [`TnuaBasis::NAME`] and not against a string literal.
     pub fn basis_name(&self) -> Option<&'static str> {
         self.current_basis
             .as_ref()
             .map(|(basis_name, _)| *basis_name)
     }
 
+    /// The currently running basis, together with its state.
+    ///
+    /// This is mainly useful for animation. When multiple basis types are used in the game,
+    /// [`basis_name`](Self::basis_name) be used to determine the type of the current basis first,
+    /// to avoid having to try multiple downcasts.
     pub fn basis_and_state<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
         let (_, basis) = self.current_basis.as_ref()?;
         let boxable_basis: &BoxableBasis<B> = basis.as_any().downcast_ref()?;
         Some((&boxable_basis.input, &boxable_basis.state))
     }
 
+    /// Feed an action with [its default name](TnuaBasis::NAME).
+    pub fn action<A: TnuaAction>(&mut self, action: A) -> &mut Self {
+        self.named_action(A::NAME, action)
+    }
+
+    /// Feed an action with a custom name.
+    ///
+    /// This should only be used if the same action type needs to be used with different names to
+    /// allow, for example, different animations. Otherwise prefer to use the default name with
+    /// [`action`](Self::action).
     pub fn named_action<A: TnuaAction>(&mut self, name: &'static str, action: A) -> &mut Self {
         match self.actions_being_fed.entry(name) {
             Entry::Occupied(mut entry) => {
@@ -157,16 +217,21 @@ impl TnuaController {
         self
     }
 
-    pub fn action<A: TnuaAction>(&mut self, action: A) -> &mut Self {
-        self.named_action(A::NAME, action)
-    }
-
+    /// The name of the currently running action.
+    ///
+    /// When using an action with it's default name, prefer to match this against
+    /// [`TnuaAction::NAME`] and not against a string literal.
     pub fn action_name(&self) -> Option<&'static str> {
         self.current_action
             .as_ref()
             .map(|(action_name, _)| *action_name)
     }
 
+    /// The currently running action, together with its state.
+    ///
+    /// This is mainly useful for animation. When multiple action types are used in the game,
+    /// [`action_name`](Self::action_name) be used to determine the type of the current action
+    /// first, to avoid having to try multiple downcasts.
     pub fn action_and_state<A: TnuaAction>(&self) -> Option<(&A, &A::State)> {
         let (_, action) = self.current_action.as_ref()?;
         let boxable_action: &BoxableAction<A> = action.as_any().downcast_ref()?;
