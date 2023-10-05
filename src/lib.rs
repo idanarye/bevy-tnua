@@ -22,42 +22,12 @@
 //! # type TnuaRapier3dIOBundle = ();
 //! # #[derive(Component)]
 //! # enum RigidBody { Dynamic }
-//! # use bevy_tnua::{TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaFreeFallBehavior};
+//! # use bevy_tnua::prelude::*;
 //! # let mut commands: Commands = panic!();
 //! # let mut cmd = commands.spawn_empty();
 //! cmd.insert(RigidBody::Dynamic);
-//! cmd.insert(TnuaRapier3dIOBundle::default());
-//! cmd.insert(TnuaPlatformerBundle {
-//!     config: TnuaPlatformerConfig {
-//!         full_speed: 20.0,
-//!         full_jump_height: 4.0,
-//!         up: Vec3::Y,
-//!         forward: -Vec3::Z,
-//!         float_height: 2.0,
-//!         cling_distance: 1.0,
-//!         spring_strengh: 400.0,
-//!         spring_dampening: 1.2,
-//!         acceleration: 60.0,
-//!         air_acceleration: 20.0,
-//!         coyote_time: 0.15,
-//!         jump_input_buffer_time: 0.2,
-//!         held_jump_cooldown: None,
-//!         upslope_jump_extra_gravity: 30.0,
-//!         jump_takeoff_extra_gravity: 30.0,
-//!         jump_takeoff_above_velocity: 2.0,
-//!         jump_fall_extra_gravity: 20.0,
-//!         jump_shorten_extra_gravity: 60.0,
-//!         jump_peak_prevention_at_upward_velocity: 1.0,
-//!         jump_peak_prevention_extra_gravity: 20.0,
-//!         free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
-//!         tilt_offset_angvel: 10.0,
-//!         tilt_offset_angacl: 1000.0,
-//!         turning_angvel: 10.0,
-//!         height_change_impulse_for_duration: 0.02,
-//!         height_change_impulse_limit: 10.0,
-//!     },
-//!     ..Default::default()
-//! });
+//! cmd.insert(TnuaRapier3dIOBundle::default()); // this one depends on the physics backend
+//! cmd.insert(TnuaControllerBundle::default());
 //! ```
 //! Typically though it'd also include a `Collider`.
 //!
@@ -75,32 +45,61 @@
 //!
 //! ## Controlling the Character
 //!
-//! To control the character, update the [`TnuaPlatformerControls`] in a system. For some of the
-//! advanced features to work, this system needs to be placed inside the
-//! [`TnuaUserControlsSystemSet`] system set.
+//! To control the character, update the [`TnuaController`](prelude::TnuaController) (added via tha
+//! [`TnuaControllerBundle`](prelude::TnuaControllerBundle)) in a system. For some of the advanced
+//! features to work, this system needs to be placed inside the [`TnuaUserControlsSystemSet`]
+//! system set.
 //!
 //! ```no_run
 //! # use bevy::prelude::*;
-//! # use bevy_tnua::{TnuaPlatformerControls};
-//! fn player_control_system(mut query: Query<&mut TnuaPlatformerControls>) {
-//!     for mut controls in query.iter_mut() {
-//!         *controls = TnuaPlatformerControls {
-//!             desired_velocity: Vec3::X, // always go right for some reason
-//!             desired_forward: -Vec3::X, // face backwards from walking direction
-//!             jump: None, // no jumping
-//!             float_height_offset: 0.0, // not crouching
-//!         };
+//! # use bevy_tnua::prelude::*;
+//! # #[derive(Component)]
+//! # struct PlayerInputComponent;
+//! # impl PlayerInputComponent {
+//! # fn direction_vector(&self) -> Vec3 { Vec3::ZERO }
+//! # fn jump_pressed(&self) -> bool { false }
+//! # }
+//! fn player_control_system(mut query: Query<(
+//!     &mut TnuaController,
+//!     &PlayerInputComponent,  // not part of Tnua - defined in user code
+//! )>) {
+//!     for (mut controller, player_input) in query.iter_mut() {
+//!         controller.basis(TnuaBuiltinWalk {
+//!             // Move in the direction the player entered, at a speed of 10.0:
+//!             desired_velocity: player_input.direction_vector() * 10.0,
+//!
+//!             // Turn the character in the movement direction:
+//!             desired_forward: player_input.direction_vector(),
+//!             
+//!             // Must be larger than the height of the entity's center from the bottom of its
+//!             // collider, or else the character will not float and Tnua will not work properly:
+//!             float_height: 2.0,
+//!
+//!             // TnuaBuiltinWalk has many other fields that can be configured:
+//!             ..Default::default()
+//!         });
+//!
+//!         if player_input.jump_pressed() {
+//!             // The jump action must be fed as long as the player holds the button.
+//!             controller.action(TnuaBuiltinJump {
+//!                 // The full height of the jump, if the player does not release the button:
+//!                 height: 4.0,
+//!
+//!                 // TnuaBuiltinJump too has other fields that can be configured:
+//!                 ..Default::default()
+//!             });
+//!         }
 //!     }
 //! }
 //! ```
-//! Tnua does not write to [`TnuaPlatformerControls`] - only reads from it - so it should be updated
-//! every frame.
+//! Refer to the documentation of [`TnuaController`](prelude::TnuaController) for more information,
+//! but essentially the _basis_ controls the general movement and the _action_ is something
+//! special (jump, dash, crouch, etc.)
 //!
 //! ## Motion Based Animation
 //!
-//! If the [`TnuaPlatformerAnimatingOutput`] component is added to the entity, Tnua will keep it
-//! updated with data that can be used to decide which animation to play.
-//! a useful helper for that.
+//! [`TnuaController`] can also be used to retreive data that can be used to decide which animation
+//! to play. A useful helper for that is [`TnuaAnimatingState`].
 mod animating_helper;
 #[cfg(feature = "rapier_2d")]
 mod backend_rapier2d;
