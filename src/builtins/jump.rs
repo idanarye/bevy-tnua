@@ -14,7 +14,6 @@ pub struct TnuaBuiltinJump {
     pub peak_prevention_at_upward_velocity: f32,
     pub peak_prevention_extra_gravity: f32,
     pub shorten_extra_gravity: f32,
-    pub coyote_time: f32,
     pub fall_extra_gravity: f32,
     pub reschedule_cooldown: Option<f32>,
     pub input_buffer_time: f32,
@@ -23,23 +22,21 @@ pub struct TnuaBuiltinJump {
 impl TnuaAction for TnuaBuiltinJump {
     const NAME: &'static str = "TnuaBuiltinJump";
     type State = TnuaBuiltinJumpState;
+    const VIOLATES_COYOTE_TIME: bool = true;
 
     fn initiation_decision(
         &self,
         ctx: TnuaActionContext,
         being_fed_for: &bevy::time::Stopwatch,
     ) -> crate::basis_action_traits::TnuaActionInitiationDirective {
-        if let Some(airborne_duration) = ctx.basis.airborne_duration() {
-            if airborne_duration.as_secs_f32() < self.coyote_time {
-                TnuaActionInitiationDirective::Allow
-            } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
-                TnuaActionInitiationDirective::Delay
-            } else {
-                TnuaActionInitiationDirective::Reject
-            }
-        } else {
+        if !ctx.basis.is_airborne() {
             // Not airborne - can jump
             TnuaActionInitiationDirective::Allow
+        } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
+            TnuaActionInitiationDirective::Delay
+        } else {
+            // TODO: allow air jumps?
+            TnuaActionInitiationDirective::Reject
         }
     }
 
@@ -78,18 +75,12 @@ impl TnuaAction for TnuaBuiltinJump {
                 TnuaBuiltinJumpState::StartingJump { desired_energy } => {
                     let extra_height = if let Some(displacement) = ctx.basis.displacement() {
                         displacement.dot(up)
-                    } else if let Some(airborne_duration) = ctx.basis.airborne_duration() {
-                        if airborne_duration.as_secs_f32() < self.coyote_time {
-                            // FIXME: Long coyote time allows for double jump. This needs to be
-                            // fixed.
-                            0.0
-                        } else {
-                            // TODO: air jumps?
-                            return self.directive_simple_or_reschedule(lifecycle_status);
-                        }
-                    } else {
-                        // Can this state even be reached?
+                    } else if ctx.basis.is_airborne() {
+                        // TODO: air jumps?
                         return self.directive_simple_or_reschedule(lifecycle_status);
+                    } else {
+                        // This means we are at Coyote time, so just jump from place.
+                        0.0
                     };
                     let gravity = ctx.tracker.gravity.dot(-up);
                     let energy_from_extra_height = extra_height * gravity;

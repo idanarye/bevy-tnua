@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use std::any::Any;
-use std::time::Duration;
 
 use crate::{TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker};
 
@@ -29,7 +28,8 @@ pub trait TnuaBasis: 'static + Send + Sync {
 
     fn neutralize(&mut self);
 
-    fn airborne_duration(&self, state: &Self::State) -> Option<Duration>;
+    fn is_airborne(&self, state: &Self::State) -> bool;
+    fn violate_coyote_time(&self, state: &mut Self::State);
 }
 
 pub trait DynamicBasis: Send + Sync + Any + 'static {
@@ -45,7 +45,8 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
     fn vertical_velocity(&self) -> f32;
 
     fn neutralize(&mut self);
-    fn airborne_duration(&self) -> Option<Duration>;
+    fn is_airborne(&self) -> bool;
+    fn violate_coyote_time(&mut self);
 }
 
 pub(crate) struct BoxableBasis<B: TnuaBasis> {
@@ -99,8 +100,12 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
         self.input.neutralize();
     }
 
-    fn airborne_duration(&self) -> Option<Duration> {
-        self.input.airborne_duration(&self.state)
+    fn is_airborne(&self) -> bool {
+        self.input.is_airborne(&self.state)
+    }
+
+    fn violate_coyote_time(&mut self) {
+        self.input.violate_coyote_time(&mut self.state)
     }
 }
 
@@ -205,6 +210,7 @@ pub enum TnuaActionInitiationDirective {
 pub trait TnuaAction: 'static + Send + Sync {
     const NAME: &'static str;
     type State: Default + Send + Sync;
+    const VIOLATES_COYOTE_TIME: bool;
 
     fn apply(
         &self,
@@ -240,6 +246,7 @@ pub(crate) trait DynamicAction: Send + Sync + Any + 'static {
         ctx: TnuaActionContext,
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective;
+    fn violates_coyote_time(&self) -> bool;
 }
 
 pub(crate) struct BoxableAction<A: TnuaAction> {
@@ -285,5 +292,9 @@ impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective {
         self.input.initiation_decision(ctx, being_fed_for)
+    }
+
+    fn violates_coyote_time(&self) -> bool {
+        A::VIOLATES_COYOTE_TIME
     }
 }

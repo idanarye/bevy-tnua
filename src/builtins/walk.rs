@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy::time::Stopwatch;
 
 use crate::basis_action_traits::TnuaBasisContext;
 use crate::util::ProjectionPlaneForRotation;
@@ -17,6 +16,7 @@ pub struct TnuaBuiltinWalk {
     pub spring_dampening: f32,
     pub acceleration: f32,
     pub air_acceleration: f32,
+    pub coyote_time: f32,
     pub free_fall_extra_gravity: f32,
     pub tilt_offset_angvel: f32,
     pub tilt_offset_angacl: f32,
@@ -121,7 +121,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
                             let boost = self.spring_force_boost(state, &ctx, spring_offset);
                             break 'upward_impulse TnuaVelChange::boost(boost * self.up);
                         } else {
-                            state.airborne_timer = Some(Stopwatch::new());
+                            state.airborne_timer =
+                                Some(Timer::from_seconds(self.coyote_time, TimerMode::Once));
                             continue;
                         }
                     }
@@ -216,10 +217,16 @@ impl TnuaBasis for TnuaBuiltinWalk {
         self.desired_forward = Vec3::ZERO;
     }
 
-    fn airborne_duration(&self, state: &Self::State) -> Option<Duration> {
-        match &state.airborne_timer {
-            None => None,
-            Some(stopwatch) => Some(stopwatch.elapsed()),
+    fn is_airborne(&self, state: &Self::State) -> bool {
+        state
+            .airborne_timer
+            .as_ref()
+            .is_some_and(|timer| timer.finished())
+    }
+
+    fn violate_coyote_time(&self, state: &mut Self::State) {
+        if let Some(timer) = &mut state.airborne_timer {
+            timer.set_duration(Duration::ZERO);
         }
     }
 }
@@ -255,7 +262,7 @@ struct StandingOnState {
 
 #[derive(Default)]
 pub struct TnuaBuiltinWalkState {
-    airborne_timer: Option<Stopwatch>,
+    airborne_timer: Option<Timer>,
     pub standing_offset: f32,
     standing_on: Option<StandingOnState>,
     effective_velocity: Vec3,

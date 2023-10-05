@@ -188,6 +188,7 @@ fn apply_controller_system(
         let controller = controller.as_mut();
 
         if let Some((_, basis)) = controller.current_basis.as_mut() {
+            let basis = basis.as_mut();
             basis.apply(
                 TnuaBasisContext {
                     frame_duration,
@@ -201,7 +202,6 @@ fn apply_controller_system(
 
             // To streamline TnuaActionContext creation
             let proximity_sensor = sensor.as_ref();
-            let basis = basis.as_ref();
 
             let has_valid_contender = if let Some((_, contender_action, being_fed_for)) =
                 &mut controller.contender_action
@@ -252,6 +252,9 @@ fn apply_controller_system(
                     lifecycle_status,
                     motor.as_mut(),
                 );
+                if current_action.violates_coyote_time() {
+                    basis.violate_coyote_time();
+                }
                 let reschedule_action =
                     |actions_being_fed: &mut HashMap<&'static str, FedEntry>,
                      after_seconds: f32| {
@@ -286,6 +289,9 @@ fn apply_controller_system(
                                 TnuaActionLifecycleStatus::CancelledFrom,
                                 motor.as_mut(),
                             );
+                            if contender_action.violates_coyote_time() {
+                                basis.violate_coyote_time();
+                            }
                             match contender_directive {
                                 TnuaActionLifecycleDirective::StillActive => {
                                     Some((contender_name, contender_action))
@@ -319,6 +325,9 @@ fn apply_controller_system(
                     TnuaActionLifecycleStatus::Initiated,
                     motor.as_mut(),
                 );
+                if contender_action.violates_coyote_time() {
+                    basis.violate_coyote_time();
+                }
                 controller.current_action = Some((contender_name, contender_action));
             }
         }
