@@ -12,7 +12,7 @@ use bevy_tnua::builtins::{
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::controller::{TnuaController, TnuaControllerBundle, TnuaPlatformerPlugin2};
+use bevy_tnua::controller::{TnuaController, TnuaControllerBundle, TnuaControllerPlugin};
 use bevy_tnua::{
     TnuaAction, TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
     TnuaGhostPlatform, TnuaGhostSensor, TnuaPipelineStages, TnuaPlatformerConfig,
@@ -29,7 +29,7 @@ fn main() {
     app.add_plugins(DefaultPlugins);
     app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugins(TnuaRapier3dPlugin);
-    app.add_plugins(TnuaPlatformerPlugin2);
+    app.add_plugins(TnuaControllerPlugin);
     app.add_plugins(TnuaCrouchEnforcerPlugin);
     app.add_plugins(common::ui::ExampleUi);
     app.add_systems(Startup, setup_camera);

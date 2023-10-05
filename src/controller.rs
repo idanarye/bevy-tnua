@@ -12,9 +12,9 @@ use crate::{
     TnuaSystemSet, TnuaToggle, TnuaUserControlsSystemSet,
 };
 
-pub struct TnuaPlatformerPlugin2;
+pub struct TnuaControllerPlugin;
 
-impl Plugin for TnuaPlatformerPlugin2 {
+impl Plugin for TnuaControllerPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(
             Update,
