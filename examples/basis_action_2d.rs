@@ -6,13 +6,14 @@ use bevy_rapier2d::prelude::*;
 use bevy_tnua::builtins::{
     TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinJump, TnuaBuiltinWalk,
 };
-use bevy_tnua::control_helpers::{TnuaCrouchEnforcer, TnuaSimpleFallThroughPlatformsHelper};
-use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
+use bevy_tnua::control_helpers::{
+    TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleFallThroughPlatformsHelper,
+};
+use bevy_tnua::controller::{TnuaController, TnuaControllerBundle, TnuaPlatformerPlugin2};
 use bevy_tnua::{
-    TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles,
-    TnuaManualTurningOutput, TnuaMotor, TnuaPipelineStages, TnuaPlatformerConfig,
-    TnuaProximitySensor, TnuaRapier2dIOBundle, TnuaRapier2dPlugin, TnuaRapier2dSensorShape,
-    TnuaRigidBodyTracker, TnuaToggle, TnuaUserControlsSystemSet,
+    TnuaFreeFallBehavior, TnuaGhostPlatform, TnuaGhostSensor, TnuaPipelineStages,
+    TnuaPlatformerConfig, TnuaProximitySensor, TnuaRapier2dIOBundle, TnuaRapier2dPlugin,
+    TnuaRapier2dSensorShape, TnuaToggle, TnuaUserControlsSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
@@ -26,6 +27,7 @@ fn main() {
     app.add_plugins(RapierDebugRenderPlugin::default());
     app.add_plugins(TnuaRapier2dPlugin);
     app.add_plugins(TnuaPlatformerPlugin2);
+    app.add_plugins(TnuaCrouchEnforcerPlugin);
     app.add_plugins(common::ui::ExampleUi);
     app.add_systems(Startup, setup_camera);
     app.add_systems(Startup, setup_level);
@@ -229,7 +231,7 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaRapier2dIOBundle::default());
-    cmd.insert(TnuaController::default());
+    cmd.insert(TnuaControllerBundle::default());
     cmd.insert(TnuaPlatformerConfig {
         full_speed: 40.0,
         full_jump_height: 4.0,
@@ -258,22 +260,13 @@ fn setup_player(mut commands: Commands) {
         height_change_impulse_for_duration: 0.04,
         height_change_impulse_limit: 40.0,
     });
-    cmd.insert((
-        TnuaMotor::default(),
-        TnuaRigidBodyTracker::default(),
-        TnuaProximitySensor::default(),
-    ));
     cmd.insert(TnuaToggle::default());
-    cmd.insert(TnuaKeepCrouchingBelowObstacles::new(1.5, |cmd| {
-        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
-    }));
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
         cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
     }));
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
     cmd.insert(FallingThroughControlScheme::default());
-    cmd.insert(TnuaManualTurningOutput::default());
     cmd.insert({
         CommandAlteringSelectors::default()
             .with_combo(

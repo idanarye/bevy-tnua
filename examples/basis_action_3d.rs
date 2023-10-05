@@ -12,13 +12,12 @@ use bevy_tnua::builtins::{
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::controller::{TnuaController, TnuaPlatformerPlugin2};
+use bevy_tnua::controller::{TnuaController, TnuaControllerBundle, TnuaPlatformerPlugin2};
 use bevy_tnua::{
     TnuaAction, TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaFreeFallBehavior,
-    TnuaGhostPlatform, TnuaGhostSensor, TnuaKeepCrouchingBelowObstacles, TnuaMotor,
-    TnuaPipelineStages, TnuaPlatformerConfig, TnuaProximitySensor, TnuaRapier3dIOBundle,
-    TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaRigidBodyTracker, TnuaToggle,
-    TnuaUserControlsSystemSet,
+    TnuaGhostPlatform, TnuaGhostSensor, TnuaPipelineStages, TnuaPlatformerConfig,
+    TnuaProximitySensor, TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape,
+    TnuaToggle, TnuaUserControlsSystemSet,
 };
 
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
@@ -241,7 +240,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule_y(0.5, 0.5));
     cmd.insert(TnuaRapier3dIOBundle::default());
-    cmd.insert(TnuaController::default());
+    cmd.insert(TnuaControllerBundle::default());
     cmd.insert(TnuaPlatformerConfig {
         full_speed: 20.0,
         full_jump_height: 4.0,
@@ -270,15 +269,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         height_change_impulse_for_duration: 0.02,
         height_change_impulse_limit: 40.0,
     });
-    cmd.insert((
-        TnuaMotor::default(),
-        TnuaRigidBodyTracker::default(),
-        TnuaProximitySensor::default(),
-    ));
     cmd.insert(TnuaToggle::default());
-    cmd.insert(TnuaKeepCrouchingBelowObstacles::new(1.5, |cmd| {
-        cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
-    }));
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
         cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
     }));

@@ -9,7 +9,7 @@ use crate::basis_action_traits::{
 };
 use crate::{
     TnuaBasis, TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker,
-    TnuaSystemSet, TnuaUserControlsSystemSet,
+    TnuaSystemSet, TnuaToggle, TnuaUserControlsSystemSet,
 };
 
 pub struct TnuaPlatformerPlugin2;
@@ -32,11 +32,15 @@ impl Plugin for TnuaPlatformerPlugin2 {
             Update,
             apply_controller_system.in_set(TnuaPipelineStages::Logic),
         );
-        //app.add_systems(
-        //Update,
-        //handle_keep_crouching_below_obstacles.in_set(TnuaPipelineStages::SubservientSensors),
-        //);
     }
+}
+
+#[derive(Default, Bundle)]
+pub struct TnuaControllerBundle {
+    pub controller: TnuaController,
+    pub motor: TnuaMotor,
+    pub rigid_body_tracker: TnuaRigidBodyTracker,
+    pub proximity_sensor: TnuaProximitySensor,
 }
 
 struct FedEntry {
@@ -178,13 +182,20 @@ fn apply_controller_system(
         &TnuaRigidBodyTracker,
         &mut TnuaProximitySensor,
         &mut TnuaMotor,
+        Option<&TnuaToggle>,
     )>,
 ) {
     let frame_duration = time.delta().as_secs_f32();
     if frame_duration == 0.0 {
         return;
     }
-    for (mut controller, tracker, mut sensor, mut motor) in query.iter_mut() {
+    for (mut controller, tracker, mut sensor, mut motor, tnua_toggle) in query.iter_mut() {
+        match tnua_toggle.copied().unwrap_or_default() {
+            TnuaToggle::Disabled => continue,
+            TnuaToggle::SenseOnly => {}
+            TnuaToggle::Enabled => {}
+        }
+
         let controller = controller.as_mut();
 
         if let Some((_, basis)) = controller.current_basis.as_mut() {
