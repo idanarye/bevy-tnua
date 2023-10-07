@@ -281,7 +281,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         motor.ang = TnuaVelChange::boost(torque_to_fix_tilt + torque_to_turn * self.up);
     }
 
-    fn proximity_sensor_cast_range(&self) -> f32 {
+    fn proximity_sensor_cast_range(&self, _state: &Self::State) -> f32 {
         self.float_height + self.cling_distance
     }
 

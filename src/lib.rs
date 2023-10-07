@@ -113,7 +113,10 @@ mod platformer;
 mod subservient_sensors;
 mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
-pub use basis_action_traits::{TnuaAction, TnuaBasis};
+pub use basis_action_traits::{
+    TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
+    TnuaActionLifecycleStatus, TnuaBasis, TnuaBasisContext,
+};
 
 #[cfg(feature = "rapier_2d")]
 pub use backend_rapier2d::*;
