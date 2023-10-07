@@ -433,5 +433,11 @@ fn apply_controller_system(
                 false
             }
         });
+
+        if let Some((contender_name, ..)) = controller.contender_action {
+            if !controller.actions_being_fed.contains_key(contender_name) {
+                controller.contender_action = None;
+            }
+        }
     }
 }
