@@ -63,7 +63,7 @@ impl TnuaAction for TnuaBuiltinCrouch {
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
-        let Some((walk_basis, walk_state)) = ctx.basis_and_state::<TnuaBuiltinWalk>() else {
+        let Some((walk_basis, walk_state)) = ctx.concrete_basis::<TnuaBuiltinWalk>() else {
             error!("Cannot crouch - basis is not TnuaBuiltinWalk");
             return TnuaActionLifecycleDirective::Finished;
         };

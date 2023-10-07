@@ -217,7 +217,7 @@ impl<'a> TnuaActionContext<'a> {
     /// Can be used to get the concrete basis.
     ///
     /// Use with care - actions that use it will only be usable with one basis.
-    pub fn basis_and_state<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
+    pub fn concrete_basis<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
         let boxable_basis: &BoxableBasis<B> = self.basis.as_any().downcast_ref()?;
         Some((&boxable_basis.input, &boxable_basis.state))
     }
@@ -225,7 +225,7 @@ impl<'a> TnuaActionContext<'a> {
     /// "Downgrade" to a basis context.
     ///
     /// This is useful for some helper methods of [the concrete basis and its
-    /// state](Self::basis_and_state) that require a basis context.
+    /// state](Self::concrete_basis) that require a basis context.
     pub fn as_basis_context(&self) -> TnuaBasisContext<'a> {
         TnuaBasisContext {
             frame_duration: self.frame_duration,

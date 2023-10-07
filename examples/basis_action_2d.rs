@@ -367,7 +367,7 @@ fn apply_controls(
         );
 
         let speed_factor =
-            if let Some((_, state)) = controller.action_and_state::<TnuaBuiltinCrouch>() {
+            if let Some((_, state)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
                 if matches!(state, TnuaBuiltinCrouchState::Rising) {
                     1.0
                 } else {

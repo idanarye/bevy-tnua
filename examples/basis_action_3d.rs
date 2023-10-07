@@ -387,7 +387,7 @@ fn apply_controls(
         );
 
         let speed_factor =
-            if let Some((_, state)) = controller.action_and_state::<TnuaBuiltinCrouch>() {
+            if let Some((_, state)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
                 if matches!(state, TnuaBuiltinCrouchState::Rising) {
                     1.0
                 } else {
@@ -482,7 +482,7 @@ fn animate(
             match controller.action_name() {
                 Some(TnuaBuiltinJump::NAME) => {
                     let (_, jump_state) = controller
-                        .action_and_state::<TnuaBuiltinJump>()
+                        .concrete_action::<TnuaBuiltinJump>()
                         .expect("action name mismatch");
                     match jump_state {
                         TnuaBuiltinJumpState::NoJump => continue,
@@ -496,7 +496,7 @@ fn animate(
                     }
                 }
                 Some(TnuaBuiltinCrouch::NAME) => {
-                    let Some((_, basis_state)) = controller.basis_and_state::<TnuaBuiltinWalk>()
+                    let Some((_, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>()
                     else {
                         continue;
                     };
@@ -512,7 +512,7 @@ fn animate(
                 }
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
-                    let Some((_, basis_state)) = controller.basis_and_state::<TnuaBuiltinWalk>()
+                    let Some((_, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>()
                     else {
                         continue;
                     };

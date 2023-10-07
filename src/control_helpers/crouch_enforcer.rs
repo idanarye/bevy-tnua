@@ -133,7 +133,7 @@ impl<A: TnuaCrouchEnforcedAction> DynamicCrouchEnforcedAction for BoxableCrouchE
     }
 
     fn range_to_cast_up(&self, controller: &TnuaController) -> Option<f32> {
-        if let Some((action, state)) = controller.action_and_state::<A>() {
+        if let Some((action, state)) = controller.concrete_action::<A>() {
             Some(action.range_to_cast_up(state))
         } else {
             None

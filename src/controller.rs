@@ -144,7 +144,7 @@ impl TnuaController {
     /// This is mainly useful for animation. When multiple basis types are used in the game,
     /// [`basis_name`](Self::basis_name) be used to determine the type of the current basis first,
     /// to avoid having to try multiple downcasts.
-    pub fn basis_and_state<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
+    pub fn concrete_basis<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
         let (_, basis) = self.current_basis.as_ref()?;
         let boxable_basis: &BoxableBasis<B> = basis.as_any().downcast_ref()?;
         Some((&boxable_basis.input, &boxable_basis.state))
@@ -237,7 +237,7 @@ impl TnuaController {
     /// This is mainly useful for animation. When multiple action types are used in the game,
     /// [`action_name`](Self::action_name) be used to determine the type of the current action
     /// first, to avoid having to try multiple downcasts.
-    pub fn action_and_state<A: TnuaAction>(&self) -> Option<(&A, &A::State)> {
+    pub fn concrete_action<A: TnuaAction>(&self) -> Option<(&A, &A::State)> {
         let (_, action) = self.current_action.as_ref()?;
         let boxable_action: &BoxableAction<A> = action.as_any().downcast_ref()?;
         Some((&boxable_action.input, &boxable_action.state))
