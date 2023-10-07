@@ -46,9 +46,9 @@
 //! ## Controlling the Character
 //!
 //! To control the character, update the [`TnuaController`](prelude::TnuaController) (added via tha
-//! [`TnuaControllerBundle`](prelude::TnuaControllerBundle)) in a system. For some of the advanced
-//! features to work, this system needs to be placed inside the [`TnuaUserControlsSystemSet`]
-//! system set.
+//! [`TnuaControllerBundle`](prelude::TnuaControllerBundle)) by feeding it a [basis](TnuaBasis) and
+//! zero or more [actions](TnuaAction). For some of the advanced features to work, the system that
+//! does this needs to be placed inside the [`TnuaUserControlsSystemSet`] system set.
 //!
 //! ```no_run
 //! # use bevy::prelude::*;

@@ -80,7 +80,8 @@ pub trait TnuaBasis: 'static + Send + Sync {
     /// This is a query method, used by the action to determine what the basis thinks.
     fn effective_velocity(&self, state: &Self::State) -> Vec3;
 
-    // TODO: replace with a `climb_vectors()` method?
+    /// The vertical velocity the character requires to stay the same height if it wants to move in
+    /// [`effective_velocity`](Self::effective_velocity).
     fn vertical_velocity(&self, state: &Self::State) -> f32;
 
     /// Nullify the fields of the basis that represent user input.
