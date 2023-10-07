@@ -273,8 +273,7 @@ fn apply_controller_system(
                 },
                 motor.as_mut(),
             );
-            let sensor_cast_range = basis.proximity_sensor_cast_range();
-            sensor.cast_range = sensor_cast_range;
+            let sensor_cast_range_for_basis = basis.proximity_sensor_cast_range();
 
             // To streamline TnuaActionContext creation
             let proximity_sensor = sensor.as_ref();
@@ -406,6 +405,15 @@ fn apply_controller_system(
                 }
                 controller.current_action = Some((contender_name, contender_action));
             }
+
+            let sensor_case_range_for_action =
+                if let Some((_, current_action)) = &controller.current_action {
+                    current_action.proximity_sensor_cast_range()
+                } else {
+                    0.0
+                };
+
+            sensor.cast_range = sensor_cast_range_for_basis.max(sensor_case_range_for_action);
         }
 
         // Cycle actions_being_fed
