@@ -9,6 +9,7 @@ use crate::{TnuaAction, TnuaPipelineStages, TnuaProximitySensor};
 
 pub struct TnuaCrouchEnforcerPlugin;
 
+/// A plugin required for making [`TnuaCrouchEnforcer`] work.
 impl Plugin for TnuaCrouchEnforcerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
@@ -18,6 +19,30 @@ impl Plugin for TnuaCrouchEnforcerPlugin {
     }
 }
 
+/// Prevents the character from standing up if the player stops feeding a crouch action (like
+/// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch)) while under an obstacle.
+///
+/// This will create a child entity with a proximity sensor pointed upward. When that sensor senses
+/// a ceiling, it will force feed the action even if it is no longer fed by the game code into the
+/// controller (which would happen if the player releases the crouch button)
+///
+/// Using it requires three things:
+///
+/// 1. Adding the plugin [`TnuaCrouchEnforcerPlugin`].
+/// 2. Adding [`TnuaCrouchEnforcer`] as a component to the character entity.
+/// 2. Passing the crouch action through the component's
+///    [`enforcing`](TnuaCrouchEnforcer::enforcing) method:
+///     ```no_run
+///     # use bevy_tnua::prelude::*;
+///     # use bevy_tnua::builtins::TnuaBuiltinCrouch;
+///     # use bevy_tnua::control_helpers::TnuaCrouchEnforcer;
+///     # let mut controller = TnuaController::default();
+///     # let mut crouch_enforcer = TnuaCrouchEnforcer::new(Default::default(), |_| {});
+///     controller.action(crouch_enforcer.enforcing(TnuaBuiltinCrouch {
+///         float_offset: -0.9,
+///         ..Default::default()
+///     }));
+///     ```
 #[derive(Component)]
 pub struct TnuaCrouchEnforcer {
     sensor_entity: Option<Entity>,
@@ -28,6 +53,17 @@ pub struct TnuaCrouchEnforcer {
 }
 
 impl TnuaCrouchEnforcer {
+    /// Create a new crouch enforcer, to be added as a component to the entity that the crouch
+    /// action will be fed to.
+    ///
+    /// # Arguments:
+    ///
+    /// * `offset` - the origin of the proximity sensor used to determine if the character needs to
+    ///   crouch. Should be placed at the top of the collider. The sensor is always pointed
+    ///   upwards.
+    /// * `modify_sensor` - a function called with the command that creates the sensor. This
+    ///   function has the opportunity to add things to the sensor entity - mostly cast-shape
+    ///   components.
     pub fn new(
         offset: Vec3,
         modify_sensor: impl 'static + Send + Sync + Fn(&mut EntityCommands),
@@ -62,8 +98,13 @@ impl TnuaCrouchEnforcer {
     }
 }
 
+/// An action that can be enforced by [`TnuaCrouchEnforcer`].
 pub trait TnuaCrouchEnforcedAction: TnuaAction + Clone {
+    /// The range, from the sensor's offset (as set by [`TnuaCrouchEnforcer::new`]), to check for a
+    /// ceiling. If the sensor finds anything within that range - the crouch will be enforced.
     fn range_to_cast_up(&self, state: &Self::State) -> f32;
+
+    /// Modify the action so that it won't be cancellable by another action.
     fn prevent_cancellation(&mut self);
 }
 
