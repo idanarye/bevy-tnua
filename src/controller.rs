@@ -134,6 +134,11 @@ impl TnuaController {
             .map(|(basis_name, _)| *basis_name)
     }
 
+    /// A dynamic accessor to the currently running basis.
+    pub fn dynaimc_basis(&self) -> Option<&dyn DynamicBasis> {
+        Some(self.current_basis.as_ref()?.1.as_ref())
+    }
+
     /// The currently running basis, together with its state.
     ///
     /// This is mainly useful for animation. When multiple basis types are used in the game,

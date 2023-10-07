@@ -147,10 +147,22 @@ fn update_crouch_enforcer(
     mut commands: Commands,
 ) {
     for (owner_entity, mut controller, mut crouch_enforcer) in query.iter_mut() {
-        let set_sensor: Option<f32>;
+        struct SetSensor {
+            cast_direction: Vec3,
+            cast_range: f32,
+        }
+        let set_sensor: Option<SetSensor>;
         if let Some((enforced_action, fed_this_frame)) = crouch_enforcer.enforced_action.as_mut() {
             if *fed_this_frame {
-                set_sensor = enforced_action.range_to_cast_up(controller.as_mut());
+                set_sensor = enforced_action
+                    .range_to_cast_up(controller.as_mut())
+                    .and_then(|cast_range| {
+                        let cast_direction = controller.dynaimc_basis()?.up_direction();
+                        Some(SetSensor {
+                            cast_direction,
+                            cast_range,
+                        })
+                    });
                 *fed_this_frame = false;
             } else {
                 set_sensor = None;
@@ -160,13 +172,18 @@ fn update_crouch_enforcer(
             set_sensor = None;
         }
 
-        if let Some(set_sensor) = set_sensor {
+        if let Some(SetSensor {
+            cast_direction,
+            cast_range,
+        }) = set_sensor
+        {
             if let Some(mut subservient_sensor) = crouch_enforcer
                 .sensor_entity
                 .and_then(|entity| sensors_query.get_mut(entity).ok())
             {
                 subservient_sensor.cast_origin = crouch_enforcer.offset;
-                subservient_sensor.cast_range = set_sensor;
+                subservient_sensor.cast_direction = cast_direction;
+                subservient_sensor.cast_range = cast_range;
             } else {
                 let mut cmd = commands.spawn((
                     TransformBundle {
@@ -174,9 +191,9 @@ fn update_crouch_enforcer(
                     },
                     TnuaSubservientSensor { owner_entity },
                     TnuaProximitySensor {
-                        cast_direction: Vec3::Y,
                         cast_origin: crouch_enforcer.offset,
-                        cast_range: set_sensor,
+                        cast_direction,
+                        cast_range,
                         ..Default::default()
                     },
                 ));
