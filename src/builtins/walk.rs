@@ -6,6 +6,31 @@ use crate::basis_action_traits::TnuaBasisContext;
 use crate::util::ProjectionPlaneForRotation;
 use crate::{TnuaBasis, TnuaVelChange};
 
+/// The most common [basis](TnuaBasis) - walk around as a floating capsule.
+///
+/// This basis implements the floating capsule character controller explained in
+/// <https://youtu.be/qdskE8PJy6Q>. It controls both the floating and the movement. Most of its
+/// fields have sane defaults, except:
+///
+/// * [`float_height`](Self::float_height) - this field defaults to 0.0, which means the character
+///   will not float. Set it to be higher than the distance from the center of the entity to the
+///   bottom of the collider.
+/// * [`desired_velocity`](Self::desired_velocity) - while leaving this as as the default
+///   `Vec3::ZERO`, doing so would mean that the character will not move.
+/// * [`desired_forward`](Self::desired_forward) - leaving this is the default `Vec3::ZERO` will
+///   mean that Tnua will not attempt to fix the character's rotation along the [up](Self::up)
+///   axis.
+///
+///   This is fine if rotation along the up axis is locked (Rapier only supports locking cardinal
+///   axes, but [`up`](Self::up) defaults to `Vec3::Y` which fits the bill).
+///
+///   This is also fine for 2D games (or games with 3D graphics and 2D physics) played from side
+///   view where the physics engine cannot rotate the character along the up axis.
+///
+///   But if the physics engine is free to rotate the character's rigid body along the up axis,
+///   leaving `desired_forward` as the default `Vec3::ZERO` may cause the character to spin
+///   uncontrollably when it contacts other colliders. Unless, of course, some other mechanism
+///   prevents that.
 #[derive(Clone)]
 pub struct TnuaBuiltinWalk {
     /// The direction (in the world space) and speed to accelerate to.
@@ -23,6 +48,9 @@ pub struct TnuaBuiltinWalk {
     ///
     /// Note that this is the height of the character's center of mass - not the distance from its
     /// collision mesh.
+    ///
+    /// To make a character crouch, instead of altering this field, prefer to use the
+    /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) action.
     pub float_height: f32,
 
     /// Extra distance above the `float_height` where the spring is still in effect.
@@ -327,6 +355,13 @@ impl TnuaBuiltinWalk {
     // TODO: maybe this needs to be an acceleration rather than an
     // impulse? The problem is the comparison between `spring_impulse`
     // and `offset_change_impulse`...
+
+    /// Calculate the vertical spring force that this basis would need to apply assuming its
+    /// vertical distance from the vertical distance it needs to be at equals the `spring_offset`
+    /// argument.
+    ///
+    /// Note: this is exposed so that actions like
+    /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) may rely on it.
     pub fn spring_force_boost(
         &self,
         state: &TnuaBuiltinWalkState,
@@ -355,14 +390,22 @@ struct StandingOnState {
 #[derive(Default)]
 pub struct TnuaBuiltinWalkState {
     airborne_timer: Option<Timer>,
+    /// The current vertical distance of the character from the distance its supposed to float at.
     pub standing_offset: f32,
     standing_on: Option<StandingOnState>,
     effective_velocity: Vec3,
     vertical_velocity: f32,
+    /// The velocity, perpendicular to the [up](TnuaBuiltinWalk::up) axis, that the character is
+    /// supposed to move at.
+    ///
+    /// If the character is standing on something else
+    /// ([`standing_on_entity`](Self::standing_on_entity) returns `Some`) then the
+    /// `running_velocity` will be relative to the velocity of that entity.
     pub running_velocity: Vec3,
 }
 
 impl TnuaBuiltinWalkState {
+    /// Returns the entity that the character currently stands on.
     pub fn standing_on_entity(&self) -> Option<Entity> {
         Some(self.standing_on.as_ref()?.entity)
     }
