@@ -51,7 +51,8 @@ bevy = { version = "^0.11", default-features = false, features = [
 ] }
 bevy_rapier2d = { version = "^0.22", features = ["debug-render-2d"]}
 bevy_rapier3d = { version = "^0.22", features = ["debug-render-3d"]}
-bevy_egui = "0.21"
+bevy_egui = "0.22"
+egui_plot = "0.23"
 
 [[example]]
 name = "platformer_2d"

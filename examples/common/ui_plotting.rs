@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use bevy::prelude::*;
 use bevy_egui::egui;
-use bevy_egui::egui::plot::{Corner, Legend, Plot};
+use egui_plot::{Corner, Legend, Plot};
 
 #[derive(Component, Debug)]
 pub struct PlotSource {
@@ -71,7 +71,7 @@ impl PlotSource {
                 .show_axes([false, true]);
             plot.show(ui, |plot_ui| {
                 for (field, curve) in plot_fields.iter().zip(plot_data) {
-                    plot_ui.line(egui::plot::Line::new(curve).name(field));
+                    plot_ui.line(egui_plot::Line::new(curve).name(field));
                 }
             });
         }
