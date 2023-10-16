@@ -79,6 +79,54 @@ is some other forward direction, the game must do the math itself and set
 `desired_forward` to set the negative Z axis of the model to the correct
 direction.
 
+## Animating
+
+`TnuaPlatformerAnimatingOutput` is removed. Instead, the animating data should
+be taken directly from the `TnuaController`.
+
+The state of the basis can be retrieved with `TnuaController::concrete_basis`:
+
+```rust
+let Some((basis_input, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>()
+else {
+    // in case some other basis is used - usually happens before the first basis is fed.
+    continue;
+};
+
+// basis_input is the `TnuaBuiltinWalk` command, which is usually not very interesting.
+
+// This replaces `let speed = animating_output.running_velocity.length();`:
+let speed = basis_state.running_velocity.length();
+```
+
+Many games would only ever use one basis (probably `TnuaBuiltinWalk`), but a
+game that uses multiple bases (e.g. - different bases for walking and for
+swiming) can retrieve the name of the current basis by using the
+`TnuaController::basis_name` method. This returns a string that can be
+`match`ed on, which should be faster than trying multiple downcasts with
+`concrete_basis`.
+
+Actions, similarly, have `TnuaController::concrete_action` and
+`TnuaController::action_name` (which is more useful than `basis_name`, because
+it should be more common for games to use multiple actions, and because action
+may play animation based on the action name only, regardless of the action
+state)
+
+For both bases and actions, when matching on `basis_name`/`action_name`, prefer
+using the `NAME` constant of the basis/action over a string literal:
+
+```rust
+match controller.action_name() {
+    Some(TnuaBuiltinJump::NAME) => { /* ... */ }
+    Some(TnuaBuiltinCrouch::NAME) => { /* ... */ }
+    Some(other) => panic!("Unknown action {other}"),
+    None => { /* ... */ }
+}
+```
+
+Of course, when using `named_basis`/`named_action` it is perfectly acceptable
+to use the string literal.
+
 ## Storing configuration as data
 
 There is no longer `TnuaPlatformerConfig` component, but it may still be
