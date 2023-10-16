@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Changed
-- [**BREAKING**] Big refactor which completely breaks the API:
+- [**BREAKING**] Big refactor which completely breaks the API. See the
+  [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-010). The main
+  changes are:
   - Instead of having a `TnuaPlatformerControls`, Tnua now has `TnuaController`
     which can be fed a _basis_ and (optionally) an _action_. The basis controls
     the basic floating and walking abound, while the action can be a jump - but
