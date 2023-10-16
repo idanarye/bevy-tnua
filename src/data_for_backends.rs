@@ -12,15 +12,15 @@ use bevy::prelude::*;
 pub enum TnuaToggle {
     /// Do not update the sensors, and do not apply forces from the motor.
     ///
-    /// The platformer controller system will also not run and won't update the motor and output
-    /// components (like [`TnuaPlatformerAnimatingOutput`](crate::TnuaPlatformerAnimatingOutput)).
-    /// They will retain their last value from before `TnuaToggle::Disabled` was set.
+    /// The controller system will also not run and won't update the motor components not the state
+    /// stored in the [`TnuaController`](crate::prelude::TnuaController) component. They will
+    /// retain their last value from before `TnuaToggle::Disabled` was set.
     Disabled,
     /// Update the sensors, but do not apply forces from the motor.
     ///
-    /// The platformer controller system will still run and still update the motor and output
-    /// components (like [`TnuaPlatformerAnimatingOutput`](crate::TnuaPlatformerAnimatingOutput)),
-    /// only the system that applies the motor forces will be disabled.
+    /// The platformer controller system will still run and still update the motor components and
+    /// state stored in the [`TnuaController`](crate::prelude::TnuaController) component. only the
+    /// system that applies the motor forces will be disabled.
     SenseOnly,
     #[default]
     /// The backend behaves normally - it updates the sensors and applies forces from the motor.

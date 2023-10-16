@@ -6,7 +6,7 @@ use bevy::prelude::*;
 ///
 /// Add `TnuaAnimatingState<State>` as a component, where `State` is a data type - usually an
 /// `enum` - that determines which animation to play. Each frame, decide (with the help of
-/// [`TnuaPlatformerAnimatingOutput`](crate::TnuaPlatformerAnimatingOutput)) which animation should
+/// [`TnuaController`](crate::prelude::TnuaController)) which animation should
 /// be played and the animation's parameters (like speed) and feed it to the `TnuaAnimatingState`.
 /// Use the emitted [`TnuaAnimatingStateDirective`] to determine if this is a new animation or an
 /// existing one (possibly with different parameters), and use that information to work the actual
@@ -14,7 +14,8 @@ use bevy::prelude::*;
 ///
 /// ```
 /// # use bevy::prelude::*;
-/// # use bevy_tnua::{TnuaAnimatingState, TnuaPlatformerAnimatingOutput, TnuaAnimatingStateDirective};
+/// # use bevy_tnua::prelude::*;
+/// # use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 /// # #[derive(Resource)]
 /// # struct AnimationClips {
 /// #     standing: Handle<AnimationClip>,
@@ -28,14 +29,18 @@ use bevy::prelude::*;
 /// fn animating_system(
 ///     mut query: &mut Query<(
 ///         &mut TnuaAnimatingState<AnimationState>,
-///         &TnuaPlatformerAnimatingOutput,
+///         &TnuaController,
 ///         &mut AnimationPlayer,
 ///     )>,
 ///     animation_clips: Res<AnimationClips>,
 /// ) {
-///     for (mut animating_state, animating_output, mut animation_player) in query.iter_mut() {
+///     for (mut animating_state, controller, mut animation_player) in query.iter_mut() {
 ///         match animating_state.update_by_discriminant({
-///             let speed = animating_output.running_velocity.length();
+///             let Some((_, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>()
+///             else {
+///                 continue;
+///             };
+///             let speed = basis_state.running_velocity.length();
 ///             if 0.01 < speed {
 ///                 AnimationState::Running(speed)
 ///             } else {

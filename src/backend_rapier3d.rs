@@ -17,7 +17,7 @@ use crate::{
 /// Add this plugin to use bevy_rapier3d as a physics backend.
 ///
 /// This plugin should be used in addition to
-/// [`TnuaPlatformerPlugin`](crate::TnuaPlatformerPlugin).
+/// [`TnuaControllerPlugin`](crate::prelude::TnuaControllerPlugin).
 pub struct TnuaRapier3dPlugin;
 
 impl Plugin for TnuaRapier3dPlugin {
