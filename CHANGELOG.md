@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 0.10.0 - 2023-10-16
 ### Changed
 - [**BREAKING**] Big refactor which completely breaks the API. See the
   [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-010). The main
