@@ -9,8 +9,26 @@ use crate::{TnuaAction, TnuaMotor, TnuaVelChange};
 
 use super::TnuaBuiltinWalk;
 
+/// An [action](TnuaAction) for crouching. Only works when [`TnuaBuiltinWalk`] is the
+/// [basis](crate::TnuaBasis).
+///
+/// Most of the fields have sane defaults - the only field that must be set is
+/// [`float_offset`](Self::float_offset), which controls how low the character will crouch
+/// (compared to its regular float offset while standing). That field should typically have a
+/// negative value.
+///
+/// If the player stops crouching while crawling under an obstacle, Tnua will push the character
+/// upward toward the obstacle - which will bring about undesired physics behavior (especially if
+/// the player tries to move). To prevent that, use this action together with
+/// [`TnuaCrouchEnforcer`](crate::control_helpers::TnuaCrouchEnforcer).
 #[derive(Clone)]
 pub struct TnuaBuiltinCrouch {
+    /// Controls how low the character will crouch, compared to its regular float offset while
+    /// standing.
+    ///
+    /// This field should typically have a negative value. A positive value will cause the
+    /// character to "crouch" upward - which may be an interesting gameplay action, but not
+    /// what one would call a "crouch".
     pub float_offset: f32,
 
     /// A duration, in seconds, that it should take for the character to change its floating height
@@ -25,6 +43,12 @@ pub struct TnuaBuiltinCrouch {
     /// The maximum impulse to apply when starting or stopping the crouch.
     pub height_change_impulse_limit: f32,
 
+    /// If set to `true`, this action will not yield to other action who try to take control.
+    ///
+    /// For example - if the player holds the crouch button, and then hits the jump button while
+    /// the crouch button is still pressed, the character will jump if `uncancellable` is `false`.
+    /// But if `uncancellable` is `true`, the character will stay crouched, ignoring the jump
+    /// action.
     pub uncancellable: bool,
 }
 
@@ -125,8 +149,6 @@ impl TnuaAction for TnuaBuiltinCrouch {
                 if 0.01 < spring_offset_up {
                     set_impulse(impulse_or_spring_force_boost(spring_offset_up));
 
-                    // TODO: maybe this decision should be smarter, and based on
-                    // `TnuaKeepCrouchingBelowObstacles`?
                     if matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto) {
                         // Don't finish the rise - just do the other action
                         TnuaActionLifecycleDirective::Reschedule { after_seconds: 0.0 }
@@ -155,9 +177,12 @@ impl TnuaBuiltinCrouch {
 
 #[derive(Default, Debug)]
 pub enum TnuaBuiltinCrouchState {
+    /// The character is transitioning from standing to crouching.
     #[default]
     Sinking,
+    /// The character is currently crouched.
     Maintaining,
+    /// The character is transitioning from crouching to standing.
     Rising,
 }
 
