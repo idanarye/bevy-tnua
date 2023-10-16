@@ -6,6 +6,16 @@ use crate::basis_action_traits::{
 };
 use crate::util::SegmentedJumpInitialVelocityCalculator;
 
+/// The basic jump [action](TnuaAction).
+///
+/// This action implements jump physiscs explained in <https://youtu.be/hG9SzQxaCm8> and
+/// <https://youtu.be/eeLPL3Y9jjA>. Most of its fields have sane defaults - the only field that
+/// must be set is [`height`](Self::height), which controls the jump height.
+///
+/// The action must be fed for as long as the player holds the jump button. Once the action stops
+/// being fed, it'll apply extra gravity to shorten the jump. If the game desires fixed height
+/// jumps instead (where the player cannot make lower jumps by tapping the jump button)
+/// [`shorten_extra_gravity`](Self::shorten_extra_gravity) should be set to `0.0`.
 #[derive(Clone)]
 pub struct TnuaBuiltinJump {
     /// The height the character will jump to.
