@@ -270,11 +270,14 @@ impl TnuaAction for TnuaBuiltinJump {
                                 continue;
                             }
 
-                            // TODO: the rest of the StoppedMaintainingJump calculation from
-                            // platformer.rs?
+                            let extra_gravity = if self.takeoff_above_velocity <= upward_velocity {
+                                self.shorten_extra_gravity + self.takeoff_extra_gravity
+                            } else {
+                                self.shorten_extra_gravity
+                            };
 
                             motor.lin.cancel_on_axis(up);
-                            motor.lin.acceleration -= self.shorten_extra_gravity * up;
+                            motor.lin.acceleration -= extra_gravity * up;
                             TnuaActionLifecycleDirective::StillActive
                         }
                     }
