@@ -54,14 +54,6 @@ bevy_rapier3d = { version = "^0.22", features = ["debug-render-3d"]}
 bevy_egui = "0.21"
 
 [[example]]
-name = "platformer_2d"
-required-features = ["rapier_2d"]
-
-[[example]]
-name = "platformer_3d"
-required-features = ["rapier_3d"]
-
-[[example]]
 name = "basis_action_2d"
 required-features = ["rapier_2d"]
 
@@ -70,6 +62,5 @@ name = "basis_action_3d"
 required-features = ["rapier_3d"]
 
 [package.metadata.docs.rs]
-
 all-features = true
 features = ["bevy_rapier2d/headless", "bevy_rapier3d/headless"]

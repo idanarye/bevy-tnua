@@ -109,7 +109,6 @@ mod basis_action_traits;
 pub mod builtins;
 pub mod control_helpers;
 pub mod controller;
-mod platformer;
 mod subservient_sensors;
 mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
@@ -122,7 +121,6 @@ pub use basis_action_traits::{
 pub use backend_rapier2d::*;
 #[cfg(feature = "rapier_3d")]
 pub use backend_rapier3d::*;
-pub use platformer::*;
 
 pub mod prelude {
     pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
