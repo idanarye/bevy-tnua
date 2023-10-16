@@ -54,11 +54,11 @@ bevy_rapier3d = { version = "^0.22", features = ["debug-render-3d"]}
 bevy_egui = "0.21"
 
 [[example]]
-name = "basis_action_2d"
+name = "platformer_2d"
 required-features = ["rapier_2d"]
 
 [[example]]
-name = "basis_action_3d"
+name = "platformer_3d"
 required-features = ["rapier_3d"]
 
 [package.metadata.docs.rs]
