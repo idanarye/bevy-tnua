@@ -341,8 +341,6 @@ fn apply_controls(
 
     let jump = keyboard.any_pressed([KeyCode::Space, KeyCode::Up]);
 
-    let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
-
     let crouch_buttons = [KeyCode::Down, KeyCode::ControlLeft, KeyCode::ControlRight];
     let crouch = keyboard.any_pressed(crouch_buttons);
     let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
@@ -378,12 +376,7 @@ fn apply_controls(
             };
 
         controller.basis(TnuaBuiltinWalk {
-            desired_velocity: if turn_in_place {
-                Vec3::ZERO
-            } else {
-                direction * speed_factor * config.speed
-            },
-            desired_forward: direction.normalize_or_zero(),
+            desired_velocity: direction * speed_factor * config.speed,
             ..config.walk.clone()
         });
 
