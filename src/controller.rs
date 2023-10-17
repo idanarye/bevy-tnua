@@ -84,6 +84,7 @@ pub struct TnuaController {
     actions_being_fed: HashMap<&'static str, FedEntry>,
     current_action: Option<(&'static str, Box<dyn DynamicAction>)>,
     contender_action: Option<(&'static str, Box<dyn DynamicAction>, Stopwatch)>,
+    action_flow_status: TnuaActionFlowStatus,
 }
 
 impl TnuaController {
@@ -135,7 +136,7 @@ impl TnuaController {
     }
 
     /// A dynamic accessor to the currently running basis.
-    pub fn dynaimc_basis(&self) -> Option<&dyn DynamicBasis> {
+    pub fn dynamic_basis(&self) -> Option<&dyn DynamicBasis> {
         Some(self.current_basis.as_ref()?.1.as_ref())
     }
 
@@ -232,6 +233,11 @@ impl TnuaController {
             .map(|(action_name, _)| *action_name)
     }
 
+    /// A dynamic accessor to the currently running action.
+    pub fn dynamic_action(&self) -> Option<&dyn DynamicAction> {
+        Some(self.current_action.as_ref()?.1.as_ref())
+    }
+
     /// The currently running action, together with its state.
     ///
     /// This is mainly useful for animation. When multiple action types are used in the game,
@@ -241,6 +247,37 @@ impl TnuaController {
         let (_, action) = self.current_action.as_ref()?;
         let boxable_action: &BoxableAction<A> = action.as_any().downcast_ref()?;
         Some((&boxable_action.input, &boxable_action.state))
+    }
+
+    pub fn action_flow_status(&self) -> &TnuaActionFlowStatus {
+        &self.action_flow_status
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+pub enum TnuaActionFlowStatus {
+    #[default]
+    NoAction,
+    ActionStarted(&'static str),
+    ActionOngoing(&'static str),
+    ActionEnded(&'static str),
+    Cancelled {
+        old: &'static str,
+        new: &'static str,
+    },
+}
+
+impl TnuaActionFlowStatus {
+    pub fn ongoing(&self) -> Option<&'static str> {
+        match self {
+            TnuaActionFlowStatus::NoAction | TnuaActionFlowStatus::ActionEnded(_) => None,
+            TnuaActionFlowStatus::ActionStarted(action_name)
+            | TnuaActionFlowStatus::ActionOngoing(action_name)
+            | TnuaActionFlowStatus::Cancelled {
+                old: _,
+                new: action_name,
+            } => Some(action_name),
+        }
     }
 }
 
@@ -267,6 +304,20 @@ fn apply_controller_system(
         }
 
         let controller = controller.as_mut();
+
+        match controller.action_flow_status {
+            TnuaActionFlowStatus::NoAction | TnuaActionFlowStatus::ActionOngoing(_) => {}
+            TnuaActionFlowStatus::ActionEnded(_) => {
+                controller.action_flow_status = TnuaActionFlowStatus::NoAction;
+            }
+            TnuaActionFlowStatus::ActionStarted(action_name)
+            | TnuaActionFlowStatus::Cancelled {
+                old: _,
+                new: action_name,
+            } => {
+                controller.action_flow_status = TnuaActionFlowStatus::ActionOngoing(action_name);
+            }
+        }
 
         if let Some((_, basis)) = controller.current_basis.as_mut() {
             let basis = basis.as_mut();
@@ -344,7 +395,16 @@ fn apply_controller_system(
                         }
                     };
                 match directive {
-                    TnuaActionLifecycleDirective::StillActive => {}
+                    TnuaActionLifecycleDirective::StillActive => {
+                        if !lifecycle_status.is_active()
+                            && matches!(
+                                controller.action_flow_status,
+                                TnuaActionFlowStatus::ActionOngoing(_)
+                            )
+                        {
+                            controller.action_flow_status = TnuaActionFlowStatus::ActionEnded(name);
+                        }
+                    }
                     TnuaActionLifecycleDirective::Finished
                     | TnuaActionLifecycleDirective::Reschedule { .. } => {
                         if let TnuaActionLifecycleDirective::Reschedule { after_seconds } =
@@ -374,10 +434,39 @@ fn apply_controller_system(
                             }
                             match contender_directive {
                                 TnuaActionLifecycleDirective::StillActive => {
+                                    if matches!(
+                                        controller.action_flow_status,
+                                        TnuaActionFlowStatus::ActionOngoing(_)
+                                    ) {
+                                        controller.action_flow_status =
+                                            TnuaActionFlowStatus::Cancelled {
+                                                old: name,
+                                                new: contender_name,
+                                            };
+                                    } else {
+                                        controller.action_flow_status =
+                                            TnuaActionFlowStatus::ActionStarted(contender_name);
+                                    }
                                     Some((contender_name, contender_action))
                                 }
-                                TnuaActionLifecycleDirective::Finished => None,
+                                TnuaActionLifecycleDirective::Finished => {
+                                    if matches!(
+                                        controller.action_flow_status,
+                                        TnuaActionFlowStatus::ActionOngoing(_)
+                                    ) {
+                                        controller.action_flow_status =
+                                            TnuaActionFlowStatus::ActionEnded(name);
+                                    }
+                                    None
+                                }
                                 TnuaActionLifecycleDirective::Reschedule { after_seconds } => {
+                                    if matches!(
+                                        controller.action_flow_status,
+                                        TnuaActionFlowStatus::ActionOngoing(_)
+                                    ) {
+                                        controller.action_flow_status =
+                                            TnuaActionFlowStatus::ActionEnded(name);
+                                    }
                                     reschedule_action(
                                         &mut controller.actions_being_fed,
                                         after_seconds,
@@ -386,6 +475,7 @@ fn apply_controller_system(
                                 }
                             }
                         } else {
+                            controller.action_flow_status = TnuaActionFlowStatus::ActionEnded(name);
                             None
                         };
                     }
@@ -408,6 +498,7 @@ fn apply_controller_system(
                 if contender_action.violates_coyote_time() {
                     basis.violate_coyote_time();
                 }
+                controller.action_flow_status = TnuaActionFlowStatus::ActionStarted(contender_name);
                 controller.current_action = Some((contender_name, contender_action));
             }
 

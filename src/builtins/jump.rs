@@ -30,6 +30,8 @@ pub struct TnuaBuiltinJump {
     /// and the basis' [`displacement`](crate::TnuaBasis::displacement).
     pub height: f32,
 
+    pub allow_in_air: bool,
+
     /// Extra gravity for breaking too fast jump from running up a slope.
     ///
     /// When running up a slope, the character gets more jump strength to avoid slamming into the
@@ -101,6 +103,7 @@ impl Default for TnuaBuiltinJump {
     fn default() -> Self {
         Self {
             height: 0.0,
+            allow_in_air: false,
             upslope_extra_gravity: 30.0,
             takeoff_extra_gravity: 30.0,
             takeoff_above_velocity: 2.0,
@@ -124,13 +127,12 @@ impl TnuaAction for TnuaBuiltinJump {
         ctx: TnuaActionContext,
         being_fed_for: &bevy::time::Stopwatch,
     ) -> crate::basis_action_traits::TnuaActionInitiationDirective {
-        if !ctx.basis.is_airborne() {
-            // Not airborne - can jump
+        if self.allow_in_air || !ctx.basis.is_airborne() {
+            // Either not airborne, or air jumps are allowed
             TnuaActionInitiationDirective::Allow
         } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
             TnuaActionInitiationDirective::Delay
         } else {
-            // TODO: allow air jumps?
             TnuaActionInitiationDirective::Reject
         }
     }
@@ -170,8 +172,7 @@ impl TnuaAction for TnuaBuiltinJump {
                 TnuaBuiltinJumpState::StartingJump { desired_energy } => {
                     let extra_height = if let Some(displacement) = ctx.basis.displacement() {
                         displacement.dot(up)
-                    } else if ctx.basis.is_airborne() {
-                        // TODO: air jumps?
+                    } else if !self.allow_in_air && ctx.basis.is_airborne() {
                         return self.directive_simple_or_reschedule(lifecycle_status);
                     } else {
                         // This means we are at Coyote time, so just jump from place.

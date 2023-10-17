@@ -7,7 +7,8 @@ use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinJumpState};
 use bevy_tnua::control_helpers::{
-    TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleFallThroughPlatformsHelper,
+    TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
+    TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::prelude::*;
 use bevy_tnua::{
@@ -261,6 +262,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     }));
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
+    cmd.insert(TnuaSimpleAirActionsCounter::default());
     cmd.insert(FallingThroughControlScheme::default());
     cmd.insert(TnuaAnimatingState::<AnimationState>::default());
     cmd.insert({
@@ -333,6 +335,7 @@ fn apply_controls(
         &TnuaGhostSensor,
         &mut TnuaSimpleFallThroughPlatformsHelper,
         &FallingThroughControlScheme,
+        &mut TnuaSimpleAirActionsCounter,
     )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
@@ -375,8 +378,11 @@ fn apply_controls(
         ghost_sensor,
         mut fall_through_helper,
         falling_through_control_scheme,
+        mut air_actions_counter,
     ) in query.iter_mut()
     {
+        air_actions_counter.update(controller.as_mut());
+
         let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
             crouch,
             crouch_just_pressed,
@@ -412,7 +418,10 @@ fn apply_controls(
         }
 
         if jump {
-            controller.action(config.jump.clone());
+            controller.action(TnuaBuiltinJump {
+                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME) < 2,
+                ..config.jump.clone()
+            });
         }
     }
 }

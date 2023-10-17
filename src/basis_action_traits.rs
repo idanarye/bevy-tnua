@@ -427,7 +427,7 @@ pub trait TnuaAction: 'static + Send + Sync {
     ) -> TnuaActionInitiationDirective;
 }
 
-pub(crate) trait DynamicAction: Send + Sync + Any + 'static {
+pub trait DynamicAction: Send + Sync + Any + 'static {
     fn as_any(&self) -> &dyn Any;
     fn as_mut_any(&mut self) -> &mut dyn Any;
     fn apply(

@@ -157,7 +157,7 @@ fn update_crouch_enforcer(
                 set_sensor = enforced_action
                     .range_to_cast_up(controller.as_mut())
                     .and_then(|cast_range| {
-                        let cast_direction = controller.dynaimc_basis()?.up_direction();
+                        let cast_direction = controller.dynamic_basis()?.up_direction();
                         Some(SetSensor {
                             cast_direction,
                             cast_range,
