@@ -594,7 +594,11 @@ fn animate(
                         .set_speed(*speed)
                         .repeat();
                 }
-                AnimationState::Dashing => {}
+                AnimationState::Dashing => {
+                    player
+                        .start(handler.animations["Dashing"].clone_weak())
+                        .set_speed(10.0);
+                }
             },
         }
     }
