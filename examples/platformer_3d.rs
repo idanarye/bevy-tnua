@@ -557,11 +557,17 @@ fn animate(
                 }
             }
         }) {
-            TnuaAnimatingStateDirective::Maintain { state } => {
-                if let AnimationState::Running(speed) | AnimationState::Crawling(speed) = state {
+            TnuaAnimatingStateDirective::Maintain { state } => match state {
+                AnimationState::Running(speed) | AnimationState::Crawling(speed) => {
                     player.set_speed(*speed);
                 }
-            }
+                AnimationState::Jumping | AnimationState::Dashing => {
+                    if controller.action_flow_status().just_starting().is_some() {
+                        player.set_elapsed(0.0);
+                    }
+                }
+                _ => {}
+            },
             TnuaAnimatingStateDirective::Alter {
                 old_state: _,
                 state,

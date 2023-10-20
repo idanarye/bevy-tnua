@@ -279,6 +279,19 @@ impl TnuaActionFlowStatus {
             } => Some(action_name),
         }
     }
+
+    pub fn just_starting(&self) -> Option<&'static str> {
+        match self {
+            TnuaActionFlowStatus::NoAction
+            | TnuaActionFlowStatus::ActionOngoing(_)
+            | TnuaActionFlowStatus::ActionEnded(_) => None,
+            TnuaActionFlowStatus::ActionStarted(action_name)
+            | TnuaActionFlowStatus::Cancelled {
+                old: _,
+                new: action_name,
+            } => Some(action_name),
+        }
+    }
 }
 
 #[allow(clippy::type_complexity)]
