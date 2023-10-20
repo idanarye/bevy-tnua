@@ -431,6 +431,7 @@ fn apply_controls(
             controller.action(TnuaBuiltinDash {
                 displacement: direction.normalize() * 10.0,
                 desired_forward: direction.normalize(),
+                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME) < 2,
                 ..Default::default()
             });
         }
