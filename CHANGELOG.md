@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - [**BREAKING**] Fix typo `dynaimc_basis` -> `dynamic_basis`.
 
+### Added
+- Ability to start a jump while the air.
+- A simple dash action - `TnuaBuiltinDash`. Also air-able.
+- Utilities for tracking the air actions, so that games can limit how many (and
+  which) air actions a character can perform. See `TnuaAirActionsTracker` and
+  `TnuaSimpleAirActionsCounter`.
+
 ## 0.10.0 - 2023-10-16
 ### Changed
 - [**BREAKING**] Big refactor which completely breaks the API. See the

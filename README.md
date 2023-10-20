@@ -23,6 +23,7 @@ Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions
 * Rotating platforms
 * Animation helpers (not the animation itself, but Tnua has facilities that help deciding which animation to play)
 * [Jump/fall through platforms](https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms)
+* Air actions
 
 ## Examples:
 
