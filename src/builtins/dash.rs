@@ -74,6 +74,7 @@ impl TnuaAction for TnuaBuiltinDash {
                         direction: self.displacement.normalize(),
                         destination: ctx.tracker.translation + self.displacement,
                         desired_forward: self.desired_forward,
+                        consider_blocked_if_speed_is_less_than: f32::NEG_INFINITY,
                     };
                     continue;
                 }
@@ -81,6 +82,7 @@ impl TnuaAction for TnuaBuiltinDash {
                     direction,
                     destination,
                     desired_forward,
+                    consider_blocked_if_speed_is_less_than,
                 } => {
                     let distance_to_destination =
                         direction.dot(*destination - ctx.tracker.translation);
@@ -90,10 +92,22 @@ impl TnuaAction for TnuaBuiltinDash {
                         };
                         continue;
                     }
+
+                    let current_speed = direction.dot(ctx.tracker.velocity);
+                    if current_speed < *consider_blocked_if_speed_is_less_than {
+                        return TnuaActionLifecycleDirective::Finished;
+                    }
+
                     motor.lin = Default::default();
                     motor.lin.acceleration = -ctx.tracker.gravity;
                     motor.lin.boost = (*direction * self.speed - ctx.tracker.velocity)
                         .clamp_length_max(ctx.frame_duration * self.acceleration);
+                    let expected_speed = direction.dot(ctx.tracker.velocity + motor.lin.boost);
+                    *consider_blocked_if_speed_is_less_than = if current_speed < expected_speed {
+                        0.5 * (current_speed + expected_speed)
+                    } else {
+                        0.5 * current_speed
+                    };
 
                     if 0.0 < desired_forward.length_squared() {
                         let up = ctx.basis.up_direction();
@@ -136,6 +150,7 @@ pub enum TnuaBuiltinDashState {
         direction: Vec3,
         destination: Vec3,
         desired_forward: Vec3,
+        consider_blocked_if_speed_is_less_than: f32,
     },
     Braking {
         direction: Vec3,
