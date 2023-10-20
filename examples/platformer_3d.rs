@@ -5,7 +5,9 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_egui::EguiContexts;
 use bevy_rapier3d::prelude::*;
-use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinJumpState};
+use bevy_tnua::builtins::{
+    TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash, TnuaBuiltinJumpState,
+};
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
     TnuaSimpleFallThroughPlatformsHelper,
@@ -363,6 +365,7 @@ fn apply_controls(
     direction = direction.clamp_length_max(1.0);
 
     let jump = keyboard.pressed(KeyCode::Space);
+    let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
     let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
@@ -423,6 +426,14 @@ fn apply_controls(
                 ..config.jump.clone()
             });
         }
+
+        if dash {
+            controller.action(TnuaBuiltinDash {
+                displacement: direction.normalize() * 10.0,
+                desired_forward: direction.normalize(),
+                ..Default::default()
+            });
+        }
     }
 }
 
@@ -473,6 +484,7 @@ enum AnimationState {
     Falling,
     Crouching,
     Crawling(f32),
+    Dashing,
 }
 
 fn animate(
@@ -519,6 +531,7 @@ fn animate(
                         (Some(speed), true) => AnimationState::Crawling(0.1 * speed),
                     }
                 }
+                Some(TnuaBuiltinDash::NAME) => AnimationState::Dashing,
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
                     let Some((_, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>()
@@ -581,6 +594,7 @@ fn animate(
                         .set_speed(*speed)
                         .repeat();
                 }
+                AnimationState::Dashing => {}
             },
         }
     }
