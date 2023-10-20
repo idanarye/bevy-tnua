@@ -30,6 +30,7 @@ pub struct TnuaBuiltinJump {
     /// and the basis' [`displacement`](crate::TnuaBasis::displacement).
     pub height: f32,
 
+    /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
 
     /// Extra gravity for breaking too fast jump from running up a slope.

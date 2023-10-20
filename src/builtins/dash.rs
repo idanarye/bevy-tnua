@@ -6,15 +6,43 @@ use crate::{
     TnuaActionLifecycleStatus, TnuaMotor,
 };
 
+/// The basic dash [action](TnuaAction).
 #[derive(Clone)]
 pub struct TnuaBuiltinDash {
+    /// The direction and distance of the dash.
+    ///
+    /// This input parameter is cached when the action starts. This means that the control system
+    /// does not have to make sure the direction reamins the same even if the player changes it
+    /// mid-dash.
     pub displacement: Vec3,
+
+    /// Point the negative Z axis of the characetr model in that direction during the dash.
+    ///
+    /// This input parameter is cached when the action starts. This means that the control system
+    /// does not have to make sure the direction reamins the same even if the player changes it
+    /// mid-dash.
     pub desired_forward: Vec3,
+
+    /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
+
+    /// The speed the character will move in during the dash.
     pub speed: f32,
+
+    /// After the dash, the character will brake until its speed is below that number.
     pub brake_to_speed: f32,
+
+    /// The maximum acceleration when starting the jump.
     pub acceleration: f32,
+
+    /// The maximum acceleration when braking after the jump.
+    ///
+    /// Irrelevant if [`brake_to_speed`](Self::brake_to_speed) is set to infinity.
     pub brake_acceleration: f32,
+
+    /// A duration, in seconds, where a player can press a dash button before a dash becomes
+    /// possible (typically when a character is still in the air and about the land) and the dash
+    /// action would still get registered and be executed once the dash is possible.
     pub input_buffer_time: f32,
 }
 
