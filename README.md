@@ -1,6 +1,7 @@
 [![Build Status](https://github.com/idanarye/bevy-tnua/workflows/CI/badge.svg)](https://github.com/idanarye/bevy-tnua/actions)
 [![Latest Version](https://img.shields.io/crates/v/bevy-tnua.svg)](https://crates.io/crates/bevy-tnua)
-[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://idanarye.github.io/bevy-tnua/)
+[![Rust Documentation](https://img.shields.io/badge/nightly-rustdoc-blue.svg)](https://idanarye.github.io/bevy-tnua/)
+[![Rust Documentation](https://img.shields.io/badge/stable-rustdoc-purple.svg)](https://docs.rs/bevy-tnua/)
 
 # Tnua - A Character Controller for [bevy_rapier](https://github.com/dimforge/bevy_rapier).
 
@@ -34,7 +35,7 @@ Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions
 
 | bevy | bevy-tnua  | bevy_rapier |
 |------|------------|-------------|
-| 0.11 | 0.8 - 0.10 | 0.22        |
+| 0.11 | 0.8 - 0.11 | 0.22        |
 | 0.10 | 0.1 - 0.7  | 0.21        |
 
 ## Reference Material
