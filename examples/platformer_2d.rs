@@ -243,6 +243,8 @@ fn setup_player(mut commands: Commands) {
             float_offset: -0.9,
             ..Default::default()
         },
+        dash_distance: 10.0,
+        dash: Default::default(),
     });
     cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {

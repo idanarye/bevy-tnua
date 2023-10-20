@@ -64,7 +64,7 @@ impl PlotSource {
         for (i, (plot_fields, plot_data)) in self.fields.iter().zip(plots_data).enumerate() {
             let plot = Plot::new((entity, i))
                 .legend(Legend::default().position(Corner::LeftBottom))
-                .width(180.0)
+                .width(280.0)
                 .height(180.0)
                 .include_y(-20.0)
                 .include_y(20.0)

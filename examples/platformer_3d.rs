@@ -257,6 +257,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             float_offset: -0.9,
             ..Default::default()
         },
+        dash_distance: 10.0,
+        dash: Default::default(),
     });
     cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
@@ -429,10 +431,10 @@ fn apply_controls(
 
         if dash {
             controller.action(TnuaBuiltinDash {
-                displacement: direction.normalize() * 10.0,
+                displacement: direction.normalize() * config.dash_distance,
                 desired_forward: direction.normalize(),
                 allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME) < 2,
-                ..Default::default()
+                ..config.dash.clone()
             });
         }
     }

@@ -2,7 +2,7 @@ use std::ops::RangeInclusive;
 
 use bevy::prelude::*;
 
-use bevy_tnua::builtins::TnuaBuiltinCrouch;
+use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash};
 use bevy_tnua::prelude::*;
 
 use bevy_egui::egui;
@@ -103,14 +103,26 @@ pub struct CharacterMotionConfigForPlatformerExample {
     pub walk: TnuaBuiltinWalk,
     pub jump: TnuaBuiltinJump,
     pub crouch: TnuaBuiltinCrouch,
+    pub dash_distance: f32,
+    pub dash: TnuaBuiltinDash,
 }
 
 impl UiTunable for CharacterMotionConfigForPlatformerExample {
     fn tune(&mut self, ui: &mut egui::Ui) {
-        ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));
-        self.walk.tune(ui);
-        self.jump.tune(ui);
-        self.crouch.tune(ui);
+        ui.collapsing("Walking:", |ui| {
+            ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));
+            self.walk.tune(ui);
+        });
+        ui.collapsing("Jumping:", |ui| {
+            self.jump.tune(ui);
+        });
+        ui.collapsing("Dashing:", |ui| {
+            ui.add(egui::Slider::new(&mut self.dash_distance, 0.0..=40.0).text("Dash Distance"));
+            self.dash.tune(ui);
+        });
+        ui.collapsing("Crouching:", |ui| {
+            self.crouch.tune(ui);
+        });
     }
 }
 
@@ -215,6 +227,29 @@ impl UiTunable for TnuaBuiltinCrouch {
             "Height Change Impulse",
             &mut self.height_change_impulse_limit,
             0.0..=40.0,
+        );
+    }
+}
+
+impl UiTunable for TnuaBuiltinDash {
+    fn tune(&mut self, ui: &mut egui::Ui) {
+        ui.add(egui::Slider::new(&mut self.speed, 0.0..=200.0).text("Dash Speed"));
+        slider_or_infinity(
+            ui,
+            "Brake to Speed After Dash",
+            &mut self.brake_to_speed,
+            0.0..=80.0,
+        );
+        slider_or_infinity(ui, "Dash Acceleration", &mut self.acceleration, 0.0..=800.0);
+        slider_or_infinity(
+            ui,
+            "Dash Brake Acceleration",
+            &mut self.brake_acceleration,
+            0.0..=800.0,
+        );
+        ui.add(
+            egui::Slider::new(&mut self.input_buffer_time, 0.0..=1.0)
+                .text("Dash Input Buffer Time"),
         );
     }
 }
