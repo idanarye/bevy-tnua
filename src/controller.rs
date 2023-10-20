@@ -249,18 +249,42 @@ impl TnuaController {
         Some((&boxable_action.input, &boxable_action.state))
     }
 
+    /// Indicator for the state and flow of movement actions.
+    ///
+    /// Query this every frame to keep track of the actions. For air actions,
+    /// [`TnuaAirActionsTracker`](crate::control_helpers::TnuaAirActionsTracker) is easier to use
+    /// (and uses this behind the scenes)
+    ///
+    /// The benefits of this over querying [`action_name`](Self::action_name) every frame are:
+    ///
+    /// * `action_flow_status` can indicate when the same action has been fed again immediately
+    ///   after stopping or cancelled into itself.
+    /// * `action_flow_status` shows an [`ActionEnded`](TnuaActionFlowStatus::ActionEnded) when the
+    ///   action is no longer fed, even if the action is still active (termination sequence)
     pub fn action_flow_status(&self) -> &TnuaActionFlowStatus {
         &self.action_flow_status
     }
 }
 
+/// The result of [`TnuaController::action_flow_status()`].
 #[derive(Debug, Default, Clone)]
 pub enum TnuaActionFlowStatus {
+    /// No action is going on.
     #[default]
     NoAction,
+
+    /// An action just started.
     ActionStarted(&'static str),
+
+    /// An action was fed in a past frame and is still ongoing.
     ActionOngoing(&'static str),
+
+    /// An action has stopped being fed.
+    ///
+    /// Note that the action may still have a termination sequence after this happens.
     ActionEnded(&'static str),
+
+    /// An action has just been canceled into another action.
     Cancelled {
         old: &'static str,
         new: &'static str,
@@ -268,6 +292,9 @@ pub enum TnuaActionFlowStatus {
 }
 
 impl TnuaActionFlowStatus {
+    /// The name of the ongoing action, if there is an ongoing action.
+    ///
+    /// Will also return a value if the action has just started.
     pub fn ongoing(&self) -> Option<&'static str> {
         match self {
             TnuaActionFlowStatus::NoAction | TnuaActionFlowStatus::ActionEnded(_) => None,
@@ -280,6 +307,10 @@ impl TnuaActionFlowStatus {
         }
     }
 
+    /// The name of the action that has just started this frame.
+    ///
+    /// Will return `None` if there is no action, or if the ongoing action has started in a past
+    /// frame.
     pub fn just_starting(&self) -> Option<&'static str> {
         match self {
             TnuaActionFlowStatus::NoAction
