@@ -235,6 +235,7 @@ fn setup_player(mut commands: Commands) {
             float_height: 2.0,
             ..Default::default()
         },
+        actions_in_air: 1,
         jump: TnuaBuiltinJump {
             height: 4.0,
             ..Default::default()

@@ -101,6 +101,7 @@ fn slider_or_none(
 pub struct CharacterMotionConfigForPlatformerExample {
     pub speed: f32,
     pub walk: TnuaBuiltinWalk,
+    pub actions_in_air: usize,
     pub jump: TnuaBuiltinJump,
     pub crouch: TnuaBuiltinCrouch,
     pub dash_distance: f32,
@@ -113,6 +114,7 @@ impl UiTunable for CharacterMotionConfigForPlatformerExample {
             ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));
             self.walk.tune(ui);
         });
+        ui.add(egui::Slider::new(&mut self.actions_in_air, 0..=8).text("Max Actions in Air"));
         ui.collapsing("Jumping:", |ui| {
             self.jump.tune(ui);
         });

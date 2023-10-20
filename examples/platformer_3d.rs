@@ -249,6 +249,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             float_height: 2.0,
             ..Default::default()
         },
+        actions_in_air: 1,
         jump: TnuaBuiltinJump {
             height: 4.0,
             ..Default::default()
@@ -424,7 +425,8 @@ fn apply_controls(
 
         if jump {
             controller.action(TnuaBuiltinJump {
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME) < 2,
+                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME)
+                    <= config.actions_in_air,
                 ..config.jump.clone()
             });
         }
@@ -433,7 +435,8 @@ fn apply_controls(
             controller.action(TnuaBuiltinDash {
                 displacement: direction.normalize() * config.dash_distance,
                 desired_forward: direction.normalize(),
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME) < 2,
+                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
+                    <= config.actions_in_air,
                 ..config.dash.clone()
             });
         }
