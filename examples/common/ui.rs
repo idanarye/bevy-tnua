@@ -174,6 +174,7 @@ fn ui_system<C: Component + UiTunable>(
                 ui.label("Jump with Spacebar (Also with the up arrow also works in 2D)");
                 ui.label("Crouch or fall through pink platforms with Ctrl (Also with the down arrow key in 2D)");
                 ui.label("Turn in place with Alt (only in 3D)");
+                ui.label("Dash with Shift (while moving in a direction)");
             });
         ui.checkbox(&mut physics_backend_active.0, "Physics Backend Enabled");
         for (
