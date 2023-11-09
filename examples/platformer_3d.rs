@@ -483,6 +483,7 @@ fn animation_patcher_system(
     }
 }
 
+#[derive(Debug)]
 enum AnimationState {
     Standing,
     Running(f32),
@@ -492,6 +493,9 @@ enum AnimationState {
     Crawling(f32),
     Dashing,
 }
+
+#[derive(Component)]
+struct Bla;
 
 fn animate(
     mut animations_handlers_query: Query<(
@@ -563,7 +567,7 @@ fn animate(
                 }
                 AnimationState::Jumping | AnimationState::Dashing => {
                     if controller.action_flow_status().just_starting().is_some() {
-                        player.set_elapsed(0.0);
+                        player.seek_to(0.0);
                     }
                 }
                 _ => {}

@@ -22,7 +22,7 @@ pub struct TnuaRapier2dPlugin;
 
 impl Plugin for TnuaRapier2dPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_set(
+        app.configure_sets(
             Update,
             TnuaSystemSet.run_if(|rapier_config: Res<RapierConfiguration>| {
                 rapier_config.physics_pipeline_active
@@ -104,7 +104,7 @@ fn update_proximity_sensors_system(
     ghost_platforms_query: Query<With<TnuaGhostPlatform>>,
     other_object_query_query: Query<(&GlobalTransform, &Velocity)>,
 ) {
-    query.par_iter_mut().for_each_mut(
+    query.par_iter_mut().for_each(
         |(
             owner_entity,
             transform,
@@ -203,13 +203,17 @@ fn update_proximity_sensors_system(
                             cast_direction.truncate(),
                             shape,
                             cast_range,
+                            false,
                             query_filter,
                         )
-                        .map(|(entity, toi)| CastResult {
-                            entity,
-                            proximity: toi.toi + cast_range_skip,
-                            intersection_point: toi.witness1,
-                            normal: toi.normal1,
+                        .and_then(|(entity, toi)| {
+                            let details = toi.details?;
+                            Some(CastResult {
+                                entity,
+                                proximity: toi.toi + cast_range_skip,
+                                intersection_point: details.witness1,
+                                normal: details.normal1,
+                            })
                         })
                 } else {
                     rapier_context
@@ -307,13 +311,14 @@ fn apply_motors_system(
             velocity.linvel += motor.lin.boost.truncate();
         }
         if motor.lin.acceleration.is_finite() {
-            external_force.force = motor.lin.acceleration.truncate() * mass_properties.0.mass;
+            external_force.force = motor.lin.acceleration.truncate() * mass_properties.get().mass;
         }
         if motor.ang.boost.is_finite() {
             velocity.angvel += motor.ang.boost.z;
         }
         if motor.ang.acceleration.is_finite() {
-            external_force.torque = motor.ang.acceleration.z * mass_properties.0.principal_inertia;
+            external_force.torque =
+                motor.ang.acceleration.z * mass_properties.get().principal_inertia;
         }
     }
 }

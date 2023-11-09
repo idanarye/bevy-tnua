@@ -35,6 +35,7 @@ Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions
 
 | bevy | bevy-tnua  | bevy_rapier |
 |------|------------|-------------|
+| 0.12 | 0.12       | 0.23        |
 | 0.11 | 0.8 - 0.11 | 0.22        |
 | 0.10 | 0.1 - 0.7  | 0.21        |
 

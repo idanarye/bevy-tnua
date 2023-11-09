@@ -1,7 +1,7 @@
 [package]
 name = "bevy-tnua"
 description = "A floating character controller for bevy_rapier"
-version = "0.11.0"
+version = "0.12.0"
 edition = "2021"
 authors = ["IdanArye <idanarye@gmail.com>"]
 license = "MIT/Apache-2.0"
@@ -17,9 +17,9 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.11", default-features = false }
-bevy_rapier2d = { version = "^0.22", default-features = false, optional = true, features = ["dim2"]}
-bevy_rapier3d = { version = "^0.22", default-features = false, optional = true, features = ["dim3"]}
+bevy = { version = "^0.12", default-features = false }
+bevy_rapier2d = { version = "^0.23", default-features = false, optional = true, features = ["dim2"]}
+bevy_rapier3d = { version = "^0.23", default-features = false, optional = true, features = ["dim3"]}
 
 [features]
 rapier_2d = [
@@ -30,7 +30,7 @@ rapier_3d = [
 ]
 
 [dev-dependencies]
-bevy = { version = "^0.11", default-features = false, features = [
+bevy = { version = "^0.12", default-features = false, features = [
      "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -49,9 +49,9 @@ bevy = { version = "^0.11", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-bevy_rapier2d = { version = "^0.22", features = ["debug-render-2d"]}
-bevy_rapier3d = { version = "^0.22", features = ["debug-render-3d"]}
-bevy_egui = "0.22"
+bevy_rapier2d = { version = "^0.23", features = ["debug-render-2d"]}
+bevy_rapier3d = { version = "^0.23", features = ["debug-render-3d"]}
+bevy_egui = "0.23"
 egui_plot = "0.23"
 
 [[example]]
