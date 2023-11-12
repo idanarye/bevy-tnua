@@ -83,8 +83,10 @@ fn update_proximity_sensors_system(
         Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
+    collision_layers_entity: Query<&CollisionLayers>,
     other_object_query: Query<(
         Option<(&GlobalTransform, &LinearVelocity, &AngularVelocity)>,
+        Option<&CollisionLayers>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
     )>,
@@ -121,6 +123,8 @@ fn update_proximity_sensors_system(
                 owner_entity
             };
 
+            let collision_layers = collision_layers_entity.get(owner_entity).ok();
+
             let mut final_sensor_output = None;
             if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                 ghost_sensor.0.clear();
@@ -155,8 +159,12 @@ fn update_proximity_sensors_system(
                 // TODO: see if https://github.com/idanarye/bevy-tnua/issues/14 replicates in XPBD,
                 // and if figure out how to port its fix to XPBD.
 
-                let Ok((entity_kinematic_data, entity_is_ghost, entity_is_sensor)) =
-                    other_object_query.get(entity)
+                let Ok((
+                    entity_kinematic_data,
+                    entity_collision_layers,
+                    entity_is_ghost,
+                    entity_is_sensor,
+                )) = other_object_query.get(entity)
                 else {
                     return false;
                 };
@@ -194,7 +202,13 @@ fn update_proximity_sensors_system(
                         ghost_sensor.0.push(sensor_output);
                     }
                     true
-                } else if entity_is_sensor {
+                } else if entity_is_sensor
+                    || collision_layers.is_some_and(|collision_layers| {
+                        let entity_collision_layers =
+                            entity_collision_layers.copied().unwrap_or_default();
+                        !collision_layers.interacts_with(entity_collision_layers)
+                    })
+                {
                     true
                 } else {
                     final_sensor_output = Some(sensor_output);
