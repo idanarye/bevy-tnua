@@ -9,7 +9,7 @@ use bevy_tnua_physics_integration_layer::data_for_backends::{
 };
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
 use bevy_tnua_physics_integration_layer::TnuaPipelineStages;
-// use bevy_tnua_physics_integration_layer::TnuaSystemSet;
+use bevy_tnua_physics_integration_layer::TnuaSystemSet;
 
 /// Add this plugin to use bevy_xpbd_3d as a physics backend.
 ///
@@ -19,12 +19,10 @@ pub struct TnuaXpbd3dPlugin;
 
 impl Plugin for TnuaXpbd3dPlugin {
     fn build(&self, app: &mut App) {
-        //app.configure_sets(
-        //Update,
-        //TnuaSystemSet.run_if(|rapier_config: Res<RapierConfiguration>| {
-        //rapier_config.physics_pipeline_active
-        //}),
-        //);
+        app.configure_sets(
+            Update,
+            TnuaSystemSet.run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
+        );
         app.add_systems(
             Update,
             (

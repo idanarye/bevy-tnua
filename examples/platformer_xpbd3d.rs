@@ -58,13 +58,15 @@ enum LayerNames {
     FallThrough,
 }
 
-// TODO: can this be done in XPBD?
 fn update_rapier_physics_active(
-    // mut rapier_config: ResMut<RapierConfiguration>,
+    mut physics_time: ResMut<Time<Physics>>,
     setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
 ) {
-    let _ = setting_from_ui.0;
-    // rapier_config.physics_pipeline_active = setting_from_ui.0;
+    if setting_from_ui.0 {
+        physics_time.unpause();
+    } else {
+        physics_time.pause();
+    }
 }
 
 fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &LinearVelocity)>) {
