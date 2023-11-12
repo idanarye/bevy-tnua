@@ -28,8 +28,8 @@ Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions
 
 ## Examples:
 
-* https://idanarye.github.io/bevy-tnua/demos/platformer_2d
-* https://idanarye.github.io/bevy-tnua/demos/platformer_3d
+* https://idanarye.github.io/bevy-tnua/demos/platformer_rapier2d
+* https://idanarye.github.io/bevy-tnua/demos/platformer_rapier3d
 
 ## Versions
 

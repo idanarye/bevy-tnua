@@ -43,19 +43,21 @@ bevy = { version = "^0.12", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
+
 bevy_rapier2d = { version = "^0.23", features = ["debug-render-2d"]}
 bevy-tnua-rapier2d = { version = "0.1.0", path = "rapier2d" }
+
 bevy_rapier3d = { version = "^0.23", features = ["debug-render-3d"]}
 bevy-tnua-rapier3d = { version = "0.1.0", path = "rapier3d" }
+
 bevy_egui = "0.23"
 egui_plot = "0.23"
 
 [[example]]
-name = "platformer_2d"
+name = "platformer_rapier2d"
 
 [[example]]
-name = "platformer_3d"
+name = "platformer_rapier3d"
 
 [package.metadata.docs.rs]
 all-features = true
-features = ["bevy_rapier2d/headless", "bevy_rapier3d/headless"]
