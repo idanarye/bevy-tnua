@@ -143,6 +143,7 @@ fn update_proximity_sensors_system(
                     normal,
                 } = cast_result;
 
+                // This fixes https://github.com/idanarye/bevy-tnua/issues/14
                 if let Some(contacts) = collisions.get(owner_entity, entity) {
                     let same_order = owner_entity == contacts.entity1;
                     for manifold in contacts.manifolds.iter() {

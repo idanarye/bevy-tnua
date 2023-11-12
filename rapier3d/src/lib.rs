@@ -172,6 +172,8 @@ fn update_proximity_sensors_system(
                             return false;
                         }
                     }
+
+                    // This fixes https://github.com/idanarye/bevy-tnua/issues/14
                     if let Some(contact) = rapier_context.contact_pair(owner_entity, other_entity) {
                         let same_order = owner_entity == contact.collider1();
                         for manifold in contact.manifolds() {
