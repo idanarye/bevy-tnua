@@ -1,0 +1,14 @@
+[package]
+name = "bevy-tnua-rapier2d"
+description = "Rapier 2D integration for bevy-tnua"
+version = "0.1.0"
+edition = "2021"
+authors = ["IdanArye <idanarye@gmail.com>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/idanarye/bevy-tnua"
+documentation = "https://docs.rs/bevy-tnua-rapier2d"
+
+[dependencies]
+bevy = { version = "^0.12", default-features = false }
+bevy_rapier2d = { version = "^0.23", default-features = false, features = ["dim2"]}
+bevy-tnua-physics-integration-layer = { version = "0.1.0", path = "../physics-integration-layer" }

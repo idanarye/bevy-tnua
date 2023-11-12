@@ -10,6 +10,7 @@ use bevy_tnua::control_helpers::{
 };
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostPlatform, TnuaGhostSensor, TnuaProximitySensor, TnuaToggle};
+use bevy_tnua_rapier2d::*;
 
 use self::common::tuning::CharacterMotionConfigForPlatformerExample;
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};

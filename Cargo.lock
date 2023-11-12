@@ -317,10 +317,38 @@ name = "bevy-tnua"
 version = "0.12.0"
 dependencies = [
  "bevy",
+ "bevy-tnua-physics-integration-layer",
+ "bevy-tnua-rapier2d",
+ "bevy-tnua-rapier3d",
  "bevy_egui",
  "bevy_rapier2d",
  "bevy_rapier3d",
  "egui_plot",
+]
+
+[[package]]
+name = "bevy-tnua-physics-integration-layer"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
+name = "bevy-tnua-rapier2d"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-tnua-physics-integration-layer",
+ "bevy_rapier2d",
+]
+
+[[package]]
+name = "bevy-tnua-rapier3d"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-tnua-physics-integration-layer",
+ "bevy_rapier3d",
 ]
 
 [[package]]

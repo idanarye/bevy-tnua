@@ -17,6 +17,7 @@ use bevy_tnua::{
     TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaGhostPlatform, TnuaGhostSensor,
     TnuaProximitySensor, TnuaToggle,
 };
+use bevy_tnua_rapier3d::*;
 
 use self::common::tuning::CharacterMotionConfigForPlatformerExample;
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};

@@ -4,15 +4,15 @@ use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier;
 use bevy_rapier3d::rapier::prelude::InteractionGroups;
 
-use crate::subservient_sensors::TnuaSubservientSensor;
-use crate::TnuaGhostPlatform;
-use crate::TnuaGhostSensor;
-use crate::TnuaSystemSet;
-use crate::TnuaToggle;
-use crate::{
-    TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaProximitySensorOutput,
-    TnuaRigidBodyTracker,
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
+use bevy_tnua_physics_integration_layer::data_for_backends::{
+    TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
 };
+use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
+use bevy_tnua_physics_integration_layer::TnuaPipelineStages;
+use bevy_tnua_physics_integration_layer::TnuaSystemSet;
 
 /// Add this plugin to use bevy_rapier3d as a physics backend.
 ///
@@ -43,7 +43,7 @@ impl Plugin for TnuaRapier3dPlugin {
     }
 }
 
-/// `bevy_rapier_3d`-specific components required for Tnua to work.
+/// `bevy_rapier3d`-specific components required for Tnua to work.
 #[derive(Bundle, Default)]
 pub struct TnuaRapier3dIOBundle {
     pub velocity: Velocity,

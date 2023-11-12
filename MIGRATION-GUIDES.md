@@ -1,3 +1,10 @@
+# Migrating to Tnua 0.13
+
+- Instead of using the `rapier_2d` or the `rapier_3d` features, add the
+  `bevy-tnua-rapier2d` or the `bevy-tnua-rapier3d` crate.
+- The `TnuaRapier2d*` or `TnuaRapier3d*` components are no longer in
+  `bevy_tnua::prelude`. They should be imported from the new crates.
+
 # Migrating to Tnua 0.10
 
 ## Basic ECS initialization

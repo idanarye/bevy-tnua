@@ -4,16 +4,17 @@
 //! constantly touching the ground the character floats above it, which makes many aspects of the
 //! motion control simpler.
 //!
-//! Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions of it:
+//! Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions of it with
+//! integration crates:
 //!
-//! * For 2D, enable `features = ["rapier_2d"]` and use [`TnuaRapier2dPlugin`].
-//! * For 3D, enable `features = ["rapier_3d"]` and use [`TnuaRapier3dPlugin`].
+//! * For 2D, add the `bevy-tnua-rapier2d` crate.
+//! * For 3D, add the `bevy-tnua-rapier3d` crate.
 //!
 //! In addition to the physics backend plugin, the
 //! [`TnuaControllerPlugin`](prelude::TnuaControllerPlugin) should also be added.
 //!
 //! A Tnua controlled character must have a dynamic rigid body, everything from
-//! [`TnuaRapier2dIOBundle`]/[`TnuaRapier3dIOBundle`] (depending on the physics backend), and
+//! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 2D, use `TnuaRapier2dIOBundle1), and
 //! everything from [`TnuaControllerBundle`](prelude::TnuaControllerBundle):
 //! ```no_run
 //! # use bevy::prelude::*;
@@ -35,11 +36,11 @@
 //!
 //! * Tnua, by default, casts a single ray to the ground. This can be a problem when the character
 //!   stands on a ledge, because the ray may be past the ledge while the character's collider
-//!   isn't. To avoid that, use [`TnuaRapier2dSensorShape`] or [`TnuaRapier3dSensorShape`]
-//!   (depending on the physics backend) to replace the ray with a shape that resembles the
-//!   collider. It is better to use a shape a little bit smaller than the collider, so that when
-//!   the character presses against a wall Tnua won't think it should be lifted up when the casted
-//!   shape hits that wall.
+//!   isn't. To avoid that, use `Tnua<physics-backend>SensorShape` (e.g. - for Rapier 2D, use
+//!   `TnuaRapier2dSensorShape`) to replace the ray with a shape that resembles the collider. It is
+//!   better to use a shape a little bit smaller than the collider, so that when the character
+//!   presses against a wall Tnua won't think it should be lifted up when the casted shape hits
+//!   that wall.
 //! * Tnua will apply forces to keep the character upright, but `LockedAxes` can also be used to
 //!   prevent tilting entirely (without it the tilting will be visible)
 //!
@@ -101,15 +102,10 @@
 //! [`TnuaController`](crate::prelude::TnuaController) can also be used to retreive data that can
 //! be used to decide which animation to play. A useful helper for that is [`TnuaAnimatingState`].
 mod animating_helper;
-#[cfg(feature = "rapier_2d")]
-mod backend_rapier2d;
-#[cfg(feature = "rapier_3d")]
-mod backend_rapier3d;
 mod basis_action_traits;
 pub mod builtins;
 pub mod control_helpers;
 pub mod controller;
-mod subservient_sensors;
 mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
@@ -117,45 +113,16 @@ pub use basis_action_traits::{
     TnuaActionLifecycleStatus, TnuaBasis, TnuaBasisContext,
 };
 
-#[cfg(feature = "rapier_2d")]
-pub use backend_rapier2d::*;
-#[cfg(feature = "rapier_3d")]
-pub use backend_rapier3d::*;
-
 pub mod prelude {
     pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
     pub use crate::controller::{TnuaController, TnuaControllerBundle, TnuaControllerPlugin};
     pub use crate::{TnuaAction, TnuaPipelineStages, TnuaUserControlsSystemSet};
-    #[cfg(feature = "rapier_2d")]
-    pub use crate::{TnuaRapier2dIOBundle, TnuaRapier2dPlugin, TnuaRapier2dSensorShape};
-    #[cfg(feature = "rapier_3d")]
-    pub use crate::{TnuaRapier3dIOBundle, TnuaRapier3dPlugin, TnuaRapier3dSensorShape};
 }
 
-mod data_for_backends;
-pub use data_for_backends::*;
+pub use bevy_tnua_physics_integration_layer::data_for_backends::*;
+pub use bevy_tnua_physics_integration_layer::*;
 
 use bevy::prelude::*;
-
-/// Umbrella system set for [`TnuaPipelineStages`].
-///
-/// The physics backends' plugins are responsible for preventing this entire system set from
-/// running when the physics backend itself is paused.
-#[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
-pub struct TnuaSystemSet;
-
-/// The various stages of the Tnua pipeline.
-#[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
-pub enum TnuaPipelineStages {
-    /// Data is read from the physics backend.
-    Sensors,
-    /// Data is propagated through the subservient sensors.
-    SubservientSensors,
-    /// Tnua decieds how the entity should be manipulated.
-    Logic,
-    /// Forces are applied in the physiscs backend.
-    Motors,
-}
 
 /// The user controls should be applied in this system set.
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- [**BREAKING**] Split the physics integration to separate crates. See the
+  [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-013).
+
 ## 0.12.0 - 2023-11-09
 ### Changed
 - Upgrade Bevy to 0.12
