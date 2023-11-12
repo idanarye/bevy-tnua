@@ -306,8 +306,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 }
             })
             .with_checkbox(
-                "Use Collision Groups",
-                false,
+                "Phase Through Collision Groups",
+                true,
                 |mut cmd, use_collision_groups| {
                     if use_collision_groups {
                         cmd.insert(CollisionGroups {
@@ -315,20 +315,30 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                             filters: Group::GROUP_2,
                         });
                     } else {
-                        cmd.remove::<CollisionGroups>();
+                        cmd.insert(CollisionGroups {
+                            memberships: Group::ALL,
+                            filters: Group::ALL,
+                        });
                     }
                 },
             )
-            .with_checkbox("Use Solver Groups", false, |mut cmd, use_solver_groups| {
-                if use_solver_groups {
-                    cmd.insert(SolverGroups {
-                        memberships: Group::GROUP_2,
-                        filters: Group::GROUP_2,
-                    });
-                } else {
-                    cmd.remove::<SolverGroups>();
-                }
-            })
+            .with_checkbox(
+                "Phase Through Solver Groups",
+                true,
+                |mut cmd, use_solver_groups| {
+                    if use_solver_groups {
+                        cmd.insert(SolverGroups {
+                            memberships: Group::GROUP_2,
+                            filters: Group::GROUP_2,
+                        });
+                    } else {
+                        cmd.insert(SolverGroups {
+                            memberships: Group::ALL,
+                            filters: Group::ALL,
+                        });
+                    }
+                },
+            )
     });
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());

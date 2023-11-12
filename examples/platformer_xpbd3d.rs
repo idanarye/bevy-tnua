@@ -56,6 +56,7 @@ fn main() {
 enum LayerNames {
     Player,
     FallThrough,
+    PhaseThrough,
 }
 
 fn update_rapier_physics_active(
@@ -162,12 +163,23 @@ fn setup_level(
 
     commands.spawn((
         SceneBundle {
-            scene: asset_server.load("sensor-text.glb#Scene0"),
-            transform: Transform::from_xyz(10.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
+            scene: asset_server.load("collision-groups-text.glb#Scene0"),
+            transform: Transform::from_xyz(10.0, 2.0, 1.0),
             ..Default::default()
         },
         RigidBody::Static,
-        Collider::cuboid(2.0, 1.0, 2.0),
+        Collider::cuboid(4.0, 2.0, 4.0),
+        CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
+    ));
+
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load("sensor-text.glb#Scene0"),
+            transform: Transform::from_xyz(15.0, 2.0, 1.0),
+            ..Default::default()
+        },
+        RigidBody::Static,
+        Collider::cuboid(4.0, 2.0, 4.0),
         Sensor,
     ));
 
@@ -230,10 +242,6 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule(1.0, 0.5));
-    cmd.insert(CollisionLayers::new(
-        [LayerNames::Player],
-        [LayerNames::Player],
-    ));
     cmd.insert(TnuaControllerBundle::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerExample {
@@ -296,6 +304,18 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     cmd.insert(LockedAxes::new());
                 }
             })
+            .with_checkbox(
+                "Phase Through Collision Layers",
+                true,
+                |mut cmd, use_collision_groups| {
+                    let player_layers: &[LayerNames] = if use_collision_groups {
+                        &[LayerNames::Player]
+                    } else {
+                        &[LayerNames::Player, LayerNames::PhaseThrough]
+                    };
+                    cmd.insert(CollisionLayers::new(player_layers, player_layers));
+                },
+            )
     });
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
