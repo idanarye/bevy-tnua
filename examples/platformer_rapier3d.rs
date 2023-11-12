@@ -287,6 +287,9 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     ("flat (exact)", |mut cmd| {
                         cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.5)));
                     }),
+                    ("flat (overfit)", |mut cmd| {
+                        cmd.insert(TnuaRapier3dSensorShape(Collider::cylinder(0.0, 0.51)));
+                    }),
                     ("ball (underfit)", |mut cmd| {
                         cmd.insert(TnuaRapier3dSensorShape(Collider::ball(0.49)));
                     }),

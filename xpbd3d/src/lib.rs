@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::utils::HashSet;
 use bevy_xpbd_3d::prelude::*;
 
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
@@ -12,7 +11,7 @@ use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSen
 use bevy_tnua_physics_integration_layer::TnuaPipelineStages;
 // use bevy_tnua_physics_integration_layer::TnuaSystemSet;
 
-/// Add this plugin to use bevy_rapier3d as a physics backend.
+/// Add this plugin to use bevy_xpbd_3d as a physics backend.
 ///
 /// This plugin should be used in addition to
 /// [`TnuaControllerPlugin`](crate::prelude::TnuaControllerPlugin).
@@ -21,10 +20,10 @@ pub struct TnuaXpbd3dPlugin;
 impl Plugin for TnuaXpbd3dPlugin {
     fn build(&self, app: &mut App) {
         //app.configure_sets(
-            //Update,
-            //TnuaSystemSet.run_if(|rapier_config: Res<RapierConfiguration>| {
-                //rapier_config.physics_pipeline_active
-            //}),
+        //Update,
+        //TnuaSystemSet.run_if(|rapier_config: Res<RapierConfiguration>| {
+        //rapier_config.physics_pipeline_active
+        //}),
         //);
         app.add_systems(
             Update,
@@ -63,7 +62,8 @@ fn update_rigid_body_trackers_system(
         Option<&TnuaToggle>,
     )>,
 ) {
-    for (transform, linaer_velocity, angular_velocity, mut tracker, tnua_toggle) in query.iter_mut() {
+    for (transform, linaer_velocity, angular_velocity, mut tracker, tnua_toggle) in query.iter_mut()
+    {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
@@ -80,17 +80,9 @@ fn update_rigid_body_trackers_system(
     }
 }
 
-// fn get_collider(
-    // rapier_context: &RapierContext,
-    // entity: Entity,
-// ) -> Option<&Collider> {
-    // let collider_handle = rapier_context.entity2collider().get(&entity)?;
-    // rapier_context.colliders.get(*collider_handle)
-    // //if let Some(owner_collider) = rapier_context.entity2collider().get(&owner_entity).and_then(|handle| rapier_context.colliders.get(*handle)) {
-// }
-
 fn update_proximity_sensors_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
+    collisions: Res<Collisions>,
     // rapier_context: Res<RapierContext>,
     mut query: Query<(
         Entity,
@@ -101,8 +93,11 @@ fn update_proximity_sensors_system(
         Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
-    ghost_platforms_query: Query<With<TnuaGhostPlatform>>,
-    other_object_query: Query<(&GlobalTransform, &LinearVelocity, &AngularVelocity)>,
+    other_object_query: Query<(
+        Option<(&GlobalTransform, &LinearVelocity, &AngularVelocity)>,
+        Has<TnuaGhostPlatform>,
+        Has<Sensor>,
+    )>,
 ) {
     query.par_iter_mut().for_each(
         |(
@@ -136,156 +131,124 @@ fn update_proximity_sensors_system(
                 owner_entity
             };
 
-            let mut query_filter = SpatialQueryFilter::new().without_entities([owner_entity]);
-            /*
-            let owner_solver_groups: InteractionGroups;
-
-            if let Some(owner_collider) = get_collider(&rapier_context, owner_entity) {
-                let collision_groups = owner_collider.collision_groups();
-                query_filter.groups = Some(CollisionGroups {
-                    memberships: Group::from_bits_truncate(collision_groups.memberships.bits()),
-                    filters: Group::from_bits_truncate(collision_groups.filter.bits()),
-                });
-                owner_solver_groups = owner_collider.solver_groups();
-            } else {
-                owner_solver_groups = InteractionGroups::all();
-            }
-            */
-
-            let mut already_visited_ghost_entities = HashSet::<Entity>::default();
-
-            let has_ghost_sensor = ghost_sensor.is_some();
-
-            let do_cast = |cast_range_skip: f32,
-                           already_visited_ghost_entities: &HashSet<Entity>|
-             -> Option<CastResult> {
-                 /*
-                let predicate = |other_entity: Entity| {
-                    if let Some(other_collider) = get_collider(&rapier_context, other_entity) {
-                        if !other_collider.solver_groups().test(owner_solver_groups) {
-                            if has_ghost_sensor && ghost_platforms_query.contains(other_entity) {
-                                if already_visited_ghost_entities.contains(&other_entity) {
-                                    return false;
-                                }
-                            } else {
-                                return false;
-                            }
-                        }
-                        if other_collider.is_sensor() {
-                            return false;
-                        }
-                    }
-                    if let Some(contact) = rapier_context.contact_pair(owner_entity, other_entity) {
-                        let same_order = owner_entity == contact.collider1();
-                        for manifold in contact.manifolds() {
-                            if 0 < manifold.num_points() {
-                                let manifold_normal = if same_order {
-                                    manifold.local_n2()
-                                } else {
-                                    manifold.local_n1()
-                                };
-                                if sensor.intersection_match_prevention_cutoff
-                                    < manifold_normal.dot(cast_direction)
-                                {
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                    true
-                };
-                let query_filter = query_filter.clone().predicate(&predicate);
-                 */
-                let cast_origin = cast_origin + cast_range_skip * cast_direction;
-                let cast_range = sensor.cast_range - cast_range_skip;
-                if let Some(TnuaXpbd3dSensorShape(shape)) = shape {
-                    spatial_query_pipeline
-                        .cast_shape(
-                            shape,
-                            cast_origin,
-                            owner_rotation,
-                            cast_direction,
-                            cast_range,
-                            true,
-                            query_filter.clone(),
-                        )
-                        .map(|shape_hit_data| {
-                            CastResult {
-                                entity: shape_hit_data.entity,
-                                proximity: shape_hit_data.time_of_impact,
-                                intersection_point: shape_hit_data.point1,
-                                normal: shape_hit_data.normal1,
-                            }
-                        })
-                } else {
-                    spatial_query_pipeline
-                        .cast_ray(
-                            cast_origin,
-                            cast_direction,
-                            cast_range,
-                            false,
-                            query_filter.clone(),
-                        )
-                        .map(|ray_hit_data| CastResult {
-                            entity: ray_hit_data.entity,
-                            proximity: ray_hit_data.time_of_impact,
-                            intersection_point: cast_origin + ray_hit_data.time_of_impact * cast_direction,
-                            normal: ray_hit_data.normal,
-                        })
-                }
-            };
-
-            let mut cast_range_skip = 0.0;
+            let mut final_sensor_output = None;
             if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                 ghost_sensor.0.clear();
             }
-            sensor.output = 'sensor_output: loop {
-                if let Some(CastResult {
+            let mut apply_cast = |cast_result: CastResult| {
+                let CastResult {
                     entity,
                     proximity,
                     intersection_point,
                     normal,
-                }) = do_cast(cast_range_skip, &already_visited_ghost_entities)
-                {
-                    let entity_linvel;
-                    let entity_angvel;
-                    if let Ok((entity_transform, entity_linear_velocity, entity_angular_velocity)) = other_object_query.get(entity)
-                    {
-                        entity_angvel = entity_angular_velocity.0;
-                        entity_linvel = entity_linear_velocity.0
-                            + if 0.0 < entity_angvel.length_squared() {
-                                let relative_point =
-                                    intersection_point - entity_transform.translation();
-                                // NOTE: no need to project relative_point on the rotation plane, it will not
-                                // affect the cross product.
-                                entity_angvel.cross(relative_point)
+                } = cast_result;
+
+                if let Some(contacts) = collisions.get(owner_entity, entity) {
+                    let same_order = owner_entity == contacts.entity1;
+                    for manifold in contacts.manifolds.iter() {
+                        if !manifold.contacts.is_empty() {
+                            let manifold_normal = if same_order {
+                                manifold.normal2
                             } else {
-                                Vec3::ZERO
+                                manifold.normal1
                             };
-                    } else {
-                        entity_angvel = Vec3::ZERO;
-                        entity_linvel = Vec3::ZERO;
-                    }
-                    let sensor_output = TnuaProximitySensorOutput {
-                        entity,
-                        proximity,
-                        normal,
-                        entity_linvel,
-                        entity_angvel,
-                    };
-                    if ghost_platforms_query.contains(entity) {
-                        cast_range_skip = proximity;
-                        already_visited_ghost_entities.insert(entity);
-                        if let Some(ghost_sensor) = ghost_sensor.as_mut() {
-                            ghost_sensor.0.push(sensor_output);
+                            if sensor.intersection_match_prevention_cutoff
+                                < manifold_normal.dot(cast_direction)
+                            {
+                                return true;
+                            }
                         }
-                    } else {
-                        break 'sensor_output Some(sensor_output);
                     }
+                }
+
+                // TODO: see if https://github.com/idanarye/bevy-tnua/issues/14 replicates in XPBD,
+                // and if figure out how to port its fix to XPBD.
+
+                let Ok((entity_kinematic_data, entity_is_ghost, entity_is_sensor)) =
+                    other_object_query.get(entity)
+                else {
+                    return false;
+                };
+
+                let entity_linvel;
+                let entity_angvel;
+                if let Some((entity_transform, entity_linear_velocity, entity_angular_velocity)) =
+                    entity_kinematic_data
+                {
+                    entity_angvel = entity_angular_velocity.0;
+                    entity_linvel = entity_linear_velocity.0
+                        + if 0.0 < entity_angvel.length_squared() {
+                            let relative_point =
+                                intersection_point - entity_transform.translation();
+                            // NOTE: no need to project relative_point on the
+                            // rotation plane, it will not affect the cross
+                            // product.
+                            entity_angvel.cross(relative_point)
+                        } else {
+                            Vec3::ZERO
+                        };
                 } else {
-                    break 'sensor_output None;
+                    entity_angvel = Vec3::ZERO;
+                    entity_linvel = Vec3::ZERO;
+                }
+                let sensor_output = TnuaProximitySensorOutput {
+                    entity,
+                    proximity,
+                    normal,
+                    entity_linvel,
+                    entity_angvel,
+                };
+                if entity_is_ghost {
+                    if let Some(ghost_sensor) = ghost_sensor.as_mut() {
+                        ghost_sensor.0.push(sensor_output);
+                    }
+                    true
+                } else if entity_is_sensor {
+                    true
+                } else {
+                    final_sensor_output = Some(sensor_output);
+                    false
                 }
             };
+
+            let query_filter = SpatialQueryFilter::new().without_entities([owner_entity]);
+            if let Some(TnuaXpbd3dSensorShape(shape)) = shape {
+                spatial_query_pipeline.shape_hits_callback(
+                    shape,
+                    cast_origin,
+                    owner_rotation,
+                    cast_direction,
+                    sensor.cast_range,
+                    true,
+                    query_filter,
+                    |shape_hit_data| {
+                        apply_cast(CastResult {
+                            entity: shape_hit_data.entity,
+                            proximity: shape_hit_data.time_of_impact,
+                            intersection_point: shape_hit_data.point1,
+                            normal: shape_hit_data.normal1,
+                        })
+                    },
+                );
+            } else {
+                spatial_query_pipeline.ray_hits_callback(
+                    cast_origin,
+                    cast_direction,
+                    sensor.cast_range,
+                    true,
+                    query_filter,
+                    |ray_hit_data| {
+                        apply_cast(CastResult {
+                            entity: ray_hit_data.entity,
+                            proximity: ray_hit_data.time_of_impact,
+                            intersection_point: cast_origin
+                                + ray_hit_data.time_of_impact * cast_direction,
+                            normal: ray_hit_data.normal,
+                        })
+                    },
+                );
+            }
+            sensor.output = final_sensor_output;
         },
     );
 }
@@ -302,7 +265,16 @@ fn apply_motors_system(
         Option<&TnuaToggle>,
     )>,
 ) {
-    for (motor, mut linare_velocity, mut angular_velocity, mass, inertia, mut external_force, mut external_torque, tnua_toggle) in query.iter_mut()
+    for (
+        motor,
+        mut linare_velocity,
+        mut angular_velocity,
+        mass,
+        inertia,
+        mut external_force,
+        mut external_torque,
+        tnua_toggle,
+    ) in query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
@@ -324,7 +296,7 @@ fn apply_motors_system(
             external_torque.set_torque(
                 // NOTE: I did not actually verify that this is the correct formula. Nothing uses
                 // angular acceleration yet - only angular impulses.
-                inertia.0 * motor.ang.acceleration
+                inertia.0 * motor.ang.acceleration,
             );
         }
     }

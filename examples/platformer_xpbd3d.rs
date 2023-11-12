@@ -4,7 +4,6 @@ use bevy::gltf::Gltf;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_egui::EguiContexts;
-use bevy_xpbd_3d::prelude::*;
 use bevy_tnua::builtins::{
     TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash, TnuaBuiltinJumpState,
 };
@@ -18,6 +17,7 @@ use bevy_tnua::{
     TnuaProximitySensor, TnuaToggle,
 };
 use bevy_tnua_xpbd3d::*;
+use bevy_xpbd_3d::prelude::*;
 
 use self::common::tuning::CharacterMotionConfigForPlatformerExample;
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
@@ -50,6 +50,12 @@ fn main() {
     );
     app.add_systems(Update, update_rapier_physics_active);
     app.run();
+}
+
+#[derive(PhysicsLayer)]
+enum LayerNames {
+    Player,
+    FallThrough,
 }
 
 // TODO: can this be done in XPBD?
@@ -145,45 +151,17 @@ fn setup_level(
         });
         cmd.insert(RigidBody::Static);
         cmd.insert(Collider::cuboid(6.0, 0.5, 2.0));
-        // cmd.insert(SolverGroups {
-            // memberships: Group::empty(),
-            // filters: Group::empty(),
-        // });
+        cmd.insert(CollisionLayers::new(
+            [LayerNames::FallThrough],
+            [LayerNames::FallThrough],
+        ));
         cmd.insert(TnuaGhostPlatform);
     }
 
     commands.spawn((
         SceneBundle {
-            scene: asset_server.load("collision-groups-text.glb#Scene0"),
-            transform: Transform::from_xyz(10.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        },
-        RigidBody::Static,
-        Collider::cuboid(2.0, 1.0, 2.0),
-        // CollisionGroups {
-            // memberships: Group::GROUP_1,
-            // filters: Group::GROUP_1,
-        // },
-    ));
-
-    commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("solver-groups-text.glb#Scene0"),
-            transform: Transform::from_xyz(15.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        },
-        RigidBody::Static,
-        Collider::cuboid(2.0, 1.0, 2.0),
-        // SolverGroups {
-            // memberships: Group::GROUP_1,
-            // filters: Group::GROUP_1,
-        // },
-    ));
-
-    commands.spawn((
-        SceneBundle {
             scene: asset_server.load("sensor-text.glb#Scene0"),
-            transform: Transform::from_xyz(20.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
+            transform: Transform::from_xyz(10.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
             ..Default::default()
         },
         RigidBody::Static,
@@ -201,7 +179,7 @@ fn setup_level(
             transform: Transform::from_xyz(-4.0, 6.0, 0.0),
             ..Default::default()
         });
-        cmd.insert(Collider::cuboid(2.0, 0.5, 2.0));
+        cmd.insert(Collider::cuboid(4.0, 1.0, 4.0));
         // cmd.insert(Velocity::default());
         cmd.insert(RigidBody::Kinematic);
         cmd.insert(MovingPlatform::new(
@@ -250,6 +228,10 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule(1.0, 0.5));
+    cmd.insert(CollisionLayers::new(
+        [LayerNames::Player],
+        [LayerNames::Player],
+    ));
     cmd.insert(TnuaXpbd3dIOBundle::default());
     cmd.insert(TnuaControllerBundle::default());
 
@@ -295,6 +277,9 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     ("flat (exact)", |mut cmd| {
                         cmd.insert(TnuaXpbd3dSensorShape(Collider::cylinder(0.0, 0.5)));
                     }),
+                    ("flat (overfit)", |mut cmd| {
+                        cmd.insert(TnuaXpbd3dSensorShape(Collider::cylinder(0.0, 0.51)));
+                    }),
                     ("ball (underfit)", |mut cmd| {
                         cmd.insert(TnuaXpbd3dSensorShape(Collider::ball(0.49)));
                     }),
@@ -305,33 +290,9 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             )
             .with_checkbox("Lock Tilt", true, |mut cmd, lock_tilt| {
                 if lock_tilt {
-                    cmd.insert(LockedAxes::new().lock_rotation_x().lock_rotation_y());
+                    cmd.insert(LockedAxes::new().lock_rotation_x().lock_rotation_z());
                 } else {
                     cmd.insert(LockedAxes::new());
-                }
-            })
-            .with_checkbox(
-                "Use Collision Groups",
-                false,
-                |mut cmd, use_collision_groups| {
-                    if use_collision_groups {
-                        // cmd.insert(CollisionGroups {
-                            // memberships: Group::GROUP_2,
-                            // filters: Group::GROUP_2,
-                        // });
-                    } else {
-                        // cmd.remove::<CollisionGroups>();
-                    }
-                },
-            )
-            .with_checkbox("Use Solver Groups", false, |mut cmd, use_solver_groups| {
-                if use_solver_groups {
-                    // cmd.insert(SolverGroups {
-                        // memberships: Group::GROUP_2,
-                        // filters: Group::GROUP_2,
-                    // });
-                } else {
-                    // cmd.remove::<SolverGroups>();
                 }
             })
     });
@@ -397,6 +358,7 @@ fn apply_controls(
         mut air_actions_counter,
     ) in query.iter_mut()
     {
+        // println!("{}", ghost_sensor.iter().count());
         air_actions_counter.update(controller.as_mut());
 
         let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(

@@ -272,6 +272,9 @@ fn setup_player(mut commands: Commands) {
                     ("Flat (exact)", |mut cmd| {
                         cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
                     }),
+                    ("flat (overfit)", |mut cmd| {
+                        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.51, 0.0)));
+                    }),
                     ("Ball (underfit)", |mut cmd| {
                         cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.49)));
                     }),
