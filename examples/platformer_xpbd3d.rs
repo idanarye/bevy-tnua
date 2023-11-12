@@ -234,7 +234,6 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         [LayerNames::Player],
         [LayerNames::Player],
     ));
-    cmd.insert(TnuaXpbd3dIOBundle::default());
     cmd.insert(TnuaControllerBundle::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerExample {

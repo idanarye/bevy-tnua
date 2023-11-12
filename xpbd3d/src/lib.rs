@@ -38,14 +38,6 @@ impl Plugin for TnuaXpbd3dPlugin {
     }
 }
 
-/// `bevy_rapier3d`-specific components required for Tnua to work.
-#[derive(Bundle, Default)]
-pub struct TnuaXpbd3dIOBundle {
-    // pub velocity: LinearVelocity,
-    // pub external_force: ExternalForce,
-    // pub mass: Mass,
-}
-
 /// Add this component to make [`TnuaProximitySensor`] cast a shape instead of a ray.
 #[derive(Component)]
 pub struct TnuaXpbd3dSensorShape(pub Collider);
