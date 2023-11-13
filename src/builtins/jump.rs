@@ -8,7 +8,7 @@ use crate::util::SegmentedJumpInitialVelocityCalculator;
 
 /// The basic jump [action](TnuaAction).
 ///
-/// This action implements jump physiscs explained in <https://youtu.be/hG9SzQxaCm8> and
+/// This action implements jump physics explained in <https://youtu.be/hG9SzQxaCm8> and
 /// <https://youtu.be/eeLPL3Y9jjA>. Most of its fields have sane defaults - the only field that
 /// must be set is [`height`](Self::height), which controls the jump height.
 ///

@@ -64,7 +64,7 @@ NOTE: Subcrates have their own changelogs: [physics-integration-layer](bevy-tnua
 ## 0.7.0 - 2023-06-11
 ### Changed
 - Physics backend plugins are now in charge of preventing `TnuaSystemSet` from
-  running while the physiscs backend is paused. Users no longer need to do it.
+  running while the physics backend is paused. Users no longer need to do it.
 
 ### Added
 - `TnuaToggle` for temporarily disabling Tnua for specific entities.

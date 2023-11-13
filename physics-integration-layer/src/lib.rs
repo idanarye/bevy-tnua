@@ -19,6 +19,6 @@ pub enum TnuaPipelineStages {
     SubservientSensors,
     /// Tnua decieds how the entity should be manipulated.
     Logic,
-    /// Forces are applied in the physiscs backend.
+    /// Forces are applied in the physics backend.
     Motors,
 }
