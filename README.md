@@ -3,7 +3,7 @@
 [![Rust Documentation](https://img.shields.io/badge/nightly-rustdoc-blue.svg)](https://idanarye.github.io/bevy-tnua/)
 [![Rust Documentation](https://img.shields.io/badge/stable-rustdoc-purple.svg)](https://docs.rs/bevy-tnua/)
 
-# Tnua - A Character Controller for [bevy_rapier](https://github.com/dimforge/bevy_rapier).
+# Tnua - A Character Controller for [Bevy](https://bevyengine.org/).
 
 Tnua ("motion" in Hebrew) is a floating character controller, which means that instead of constantly touching the ground the character floats above it, which makes many aspects of the motion control simpler.
 
