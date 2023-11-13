@@ -48,7 +48,7 @@ fn main() {
         })
         .before(TnuaPipelineStages::Sensors),
     );
-    app.add_systems(Update, update_rapier_physics_active);
+    app.add_systems(Update, update_xpbd_physics_active);
     app.run();
 }
 
@@ -59,7 +59,7 @@ enum LayerNames {
     PhaseThrough,
 }
 
-fn update_rapier_physics_active(
+fn update_xpbd_physics_active(
     mut physics_time: ResMut<Time<Physics>>,
     setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
 ) {
@@ -71,10 +71,16 @@ fn update_rapier_physics_active(
 }
 
 fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &LinearVelocity)>) {
-    for (mut plot_source, transform, velocity) in query.iter_mut() {
+    for (mut plot_source, transform, linear_velocity) in query.iter_mut() {
         plot_source.set(&[
-            &[("Y", transform.translation.y), ("vel-Y", velocity.0.y)],
-            &[("X", transform.translation.x), ("vel-X", velocity.0.x)],
+            &[
+                ("Y", transform.translation.y),
+                ("vel-Y", linear_velocity.0.y),
+            ],
+            &[
+                ("X", transform.translation.x),
+                ("vel-X", linear_velocity.0.x),
+            ],
         ]);
     }
 }
@@ -194,7 +200,6 @@ fn setup_level(
             ..Default::default()
         });
         cmd.insert(Collider::cuboid(4.0, 1.0, 4.0));
-        // cmd.insert(Velocity::default());
         cmd.insert(RigidBody::Kinematic);
         cmd.insert(MovingPlatform::new(
             4.0,
@@ -243,7 +248,6 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(RigidBody::Dynamic);
     cmd.insert(Collider::capsule(1.0, 0.5));
     cmd.insert(TnuaControllerBundle::default());
-
     cmd.insert(CharacterMotionConfigForPlatformerExample {
         speed: 20.0,
         walk: TnuaBuiltinWalk {

@@ -320,10 +320,12 @@ dependencies = [
  "bevy-tnua-physics-integration-layer",
  "bevy-tnua-rapier2d",
  "bevy-tnua-rapier3d",
+ "bevy-tnua-xpbd2d",
  "bevy-tnua-xpbd3d",
  "bevy_egui",
  "bevy_rapier2d",
  "bevy_rapier3d",
+ "bevy_xpbd_2d",
  "bevy_xpbd_3d",
  "egui_plot",
 ]
@@ -351,6 +353,15 @@ dependencies = [
  "bevy",
  "bevy-tnua-physics-integration-layer",
  "bevy_rapier3d",
+]
+
+[[package]]
+name = "bevy-tnua-xpbd2d"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-tnua-physics-integration-layer",
+ "bevy_xpbd_2d",
 ]
 
 [[package]]
@@ -1110,6 +1121,24 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
  "winit",
+]
+
+[[package]]
+name = "bevy_xpbd_2d"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68c97f486ccbe480db72550ec5547cedbd7a2a09fe028b9f567b175100f7b9a2"
+dependencies = [
+ "bevy",
+ "bevy_xpbd_derive",
+ "derive_more",
+ "fxhash",
+ "glam",
+ "indexmap 2.1.0",
+ "itertools",
+ "nalgebra",
+ "parry2d",
+ "parry2d-f64",
 ]
 
 [[package]]
@@ -2782,6 +2811,29 @@ dependencies = [
  "nalgebra",
  "num-derive",
  "num-traits",
+ "rayon",
+ "rustc-hash",
+ "simba",
+ "slab",
+ "smallvec",
+ "spade",
+]
+
+[[package]]
+name = "parry2d-f64"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82bb5868f03fac0eb9ff77ab24dd6c2e7606b44f0ff745784a49de4e67486e78"
+dependencies = [
+ "approx",
+ "arrayvec",
+ "bitflags 1.3.2",
+ "downcast-rs",
+ "either",
+ "nalgebra",
+ "num-derive",
+ "num-traits",
+ "rayon",
  "rustc-hash",
  "simba",
  "slab",

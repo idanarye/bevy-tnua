@@ -264,10 +264,10 @@ fn update_proximity_sensors_system(
                         entity_linvel = entity_velocity.linvel.extend(0.0)
                             + if 0.0 < entity_velocity.angvel.abs() {
                                 let relative_point =
-                                    intersection_point.extend(0.0) - entity_transform.translation();
+                                    intersection_point - entity_transform.translation().truncate();
                                 // NOTE: no need to project relative_point on the rotation plane, it will not
                                 // affect the cross product.
-                                entity_angvel.cross(relative_point)
+                                entity_angvel.cross(relative_point.extend(0.0))
                             } else {
                                 Vec3::ZERO
                             };
