@@ -49,14 +49,8 @@ pub struct ExampleUiPhysicsBackendActive(pub bool);
 #[derive(Component)]
 pub struct TrackedEntity(pub String);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct CommandAlteringSelectors(Vec<CommandAlteringSelector>);
-
-impl Default for CommandAlteringSelectors {
-    fn default() -> Self {
-        Self(Default::default())
-    }
-}
 
 enum CommandAlteringSelector {
     Combo {
@@ -73,6 +67,7 @@ enum CommandAlteringSelector {
     },
 }
 
+#[allow(clippy::type_complexity)]
 impl CommandAlteringSelectors {
     pub fn with_combo(
         mut self,
@@ -84,7 +79,7 @@ impl CommandAlteringSelectors {
             chosen: 0,
             caption: caption.to_owned(),
             options: options
-                .into_iter()
+                .iter()
                 .map(|(name, applier)| (name.to_string(), *applier))
                 .collect(),
             set_to: Some(initial),
@@ -108,6 +103,7 @@ impl CommandAlteringSelectors {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn ui_system<C: Component + UiTunable>(
     mut egui_context: EguiContexts,
     mut physics_backend_active: ResMut<ExampleUiPhysicsBackendActive>,

@@ -27,14 +27,12 @@ fn slider_or_infinity(
             if infinite {
                 ui.memory_mut(|memory| memory.data.insert_temp(resp.id, CachedValue(*value)));
                 *value = f32::INFINITY
+            } else if let Some(CachedValue(saved_value)) =
+                ui.memory_mut(|memory| memory.data.get_temp(resp.id))
+            {
+                *value = saved_value;
             } else {
-                if let Some(CachedValue(saved_value)) =
-                    ui.memory_mut(|memory| memory.data.get_temp(resp.id))
-                {
-                    *value = saved_value;
-                } else {
-                    *value = *range.end();
-                }
+                *value = *range.end();
             }
         }
         if infinite {
@@ -70,15 +68,13 @@ fn slider_or_none(
             if is_none {
                 ui.memory_mut(|memory| memory.data.insert_temp(resp.id, CachedValue(value.expect("checkbox was clicked, and is_none is now true, so previously it was false, which means value should not be None"))));
                 *value = None;
-            } else {
-                if let Some(CachedValue(saved_value)) =
+            } else if let Some(CachedValue(saved_value)) =
                     ui.memory_mut(|memory| memory.data.get_temp(resp.id))
                 {
                     *value = Some(saved_value);
                 } else {
                     *value = Some(*range.start());
                 }
-            }
         }
         if let Some(value) = value.as_mut() {
             ui.add(egui::Slider::new(value, range).text(caption));

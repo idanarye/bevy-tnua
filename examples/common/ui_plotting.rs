@@ -30,10 +30,7 @@ impl Default for PlotSource {
 impl PlotSource {
     pub fn set(&mut self, input: &[&[(&'static str, f32)]]) {
         if self.input.is_empty() {
-            self.input = input
-                .iter()
-                .map(|plot| plot.iter().map(|curve_data| *curve_data).collect())
-                .collect();
+            self.input = input.iter().map(|plot| plot.to_vec()).collect();
         } else {
             for (target_plot, source_plot) in self.input.iter_mut().zip(input) {
                 for (target_curve, source_curve) in target_plot.iter_mut().zip(*source_plot) {

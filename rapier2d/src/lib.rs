@@ -98,6 +98,7 @@ fn get_collider(
     //if let Some(owner_collider) = rapier_context.entity2collider().get(&owner_entity).and_then(|handle| rapier_context.colliders.get(*handle)) {
 }
 
+#[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
     rapier_context: Res<RapierContext>,
     mut query: Query<(
@@ -201,7 +202,7 @@ fn update_proximity_sensors_system(
                     }
                     true
                 };
-                let query_filter = query_filter.clone().predicate(&predicate);
+                let query_filter = query_filter.predicate(&predicate);
                 let cast_origin = cast_origin + cast_range_skip * cast_direction;
                 let cast_range = sensor.cast_range - cast_range_skip;
                 if let Some(TnuaRapier2dSensorShape(shape)) = shape {

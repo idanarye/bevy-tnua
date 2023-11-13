@@ -329,6 +329,7 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(PlotSource::default());
 }
 
+#[allow(clippy::type_complexity)]
 fn apply_controls(
     mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,

@@ -77,10 +77,10 @@ fn update_rigid_body_trackers_system(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
     collisions: Res<Collisions>,
-    // rapier_context: Res<RapierContext>,
     mut query: Query<(
         Entity,
         &GlobalTransform,
@@ -204,18 +204,20 @@ fn update_proximity_sensors_system(
                     entity_linvel,
                     entity_angvel,
                 };
+
+                let excluded_by_collision_layers = || {
+                    let collision_layers = collision_layers.copied().unwrap_or_default();
+                    let entity_collision_layers =
+                        entity_collision_layers.copied().unwrap_or_default();
+                    !collision_layers.interacts_with(entity_collision_layers)
+                };
+
                 if entity_is_ghost {
                     if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                         ghost_sensor.0.push(sensor_output);
                     }
                     true
-                } else if entity_is_sensor
-                    || collision_layers.is_some_and(|collision_layers| {
-                        let entity_collision_layers =
-                            entity_collision_layers.copied().unwrap_or_default();
-                        !collision_layers.interacts_with(entity_collision_layers)
-                    })
-                {
+                } else if entity_is_sensor || excluded_by_collision_layers() {
                     true
                 } else {
                     final_sensor_output = Some(sensor_output);
@@ -265,6 +267,7 @@ fn update_proximity_sensors_system(
     );
 }
 
+#[allow(clippy::type_complexity)]
 fn apply_motors_system(
     mut query: Query<(
         &TnuaMotor,
