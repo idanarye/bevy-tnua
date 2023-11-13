@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-xpbd](xpbd3d/CHANGELOG.md).
+
 ## [Unreleased]
+
+### Changed
+- [**BREAKING**] Split the physics integration to separate crates. See the
+  [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-013).
 
 ## 0.12.0 - 2023-11-09
 ### Changed
@@ -58,7 +64,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## 0.7.0 - 2023-06-11
 ### Changed
 - Physics backend plugins are now in charge of preventing `TnuaSystemSet` from
-  running while the physiscs backend is paused. Users no longer need to do it.
+  running while the physics backend is paused. Users no longer need to do it.
 
 ### Added
 - `TnuaToggle` for temporarily disabling Tnua for specific entities.

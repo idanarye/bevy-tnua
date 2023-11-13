@@ -1,3 +1,6 @@
+[workspace]
+members = ["physics-integration-layer", "rapier2d", "rapier3d", "xpbd2d", "xpbd3d"]
+
 [package]
 name = "bevy-tnua"
 description = "A floating character controller for bevy_rapier"
@@ -18,16 +21,7 @@ exclude = [
 
 [dependencies]
 bevy = { version = "^0.12", default-features = false }
-bevy_rapier2d = { version = "^0.23", default-features = false, optional = true, features = ["dim2"]}
-bevy_rapier3d = { version = "^0.23", default-features = false, optional = true, features = ["dim3"]}
-
-[features]
-rapier_2d = [
-    "bevy_rapier2d",
-]
-rapier_3d = [
-    "bevy_rapier3d",
-]
+bevy-tnua-physics-integration-layer = { version = "0.1.0", path = "physics-integration-layer" }
 
 [dev-dependencies]
 bevy = { version = "^0.12", default-features = false, features = [
@@ -49,19 +43,33 @@ bevy = { version = "^0.12", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
+
 bevy_rapier2d = { version = "^0.23", features = ["debug-render-2d"]}
+bevy-tnua-rapier2d = { version = "0.1.0", path = "rapier2d" }
+
 bevy_rapier3d = { version = "^0.23", features = ["debug-render-3d"]}
+bevy-tnua-rapier3d = { version = "0.1.0", path = "rapier3d" }
+
+bevy_xpbd_2d = "^0.3"
+bevy-tnua-xpbd2d = { version = "0.1.0", path = "xpbd2d" }
+
+bevy_xpbd_3d = "^0.3"
+bevy-tnua-xpbd3d = { version = "0.1.0", path = "xpbd3d" }
+
 bevy_egui = "0.23"
 egui_plot = "0.23"
 
 [[example]]
-name = "platformer_2d"
-required-features = ["rapier_2d"]
+name = "platformer_rapier2d"
 
 [[example]]
-name = "platformer_3d"
-required-features = ["rapier_3d"]
+name = "platformer_rapier3d"
+
+[[example]]
+name = "platformer_xpbd2d"
+
+[[example]]
+name = "platformer_xpbd3d"
 
 [package.metadata.docs.rs]
 all-features = true
-features = ["bevy_rapier2d/headless", "bevy_rapier3d/headless"]

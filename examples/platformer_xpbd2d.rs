@@ -2,7 +2,6 @@ mod common;
 
 use bevy::prelude::*;
 use bevy_egui::EguiContexts;
-use bevy_rapier2d::prelude::*;
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash};
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
@@ -10,6 +9,8 @@ use bevy_tnua::control_helpers::{
 };
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostPlatform, TnuaGhostSensor, TnuaProximitySensor, TnuaToggle};
+use bevy_tnua_xpbd2d::*;
+use bevy_xpbd_2d::prelude::*;
 
 use self::common::tuning::CharacterMotionConfigForPlatformerExample;
 use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
@@ -19,9 +20,9 @@ use self::common::{FallingThroughControlScheme, MovingPlatform};
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
-    app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
-    app.add_plugins(RapierDebugRenderPlugin::default());
-    app.add_plugins(TnuaRapier2dPlugin);
+    app.add_plugins(PhysicsPlugins::default());
+    app.add_plugins(PhysicsDebugPlugin::default());
+    app.add_plugins(TnuaXpbd2dPlugin);
     app.add_plugins(TnuaControllerPlugin);
     app.add_plugins(TnuaCrouchEnforcerPlugin);
     app.add_plugins(common::ui::ExampleUi::<
@@ -34,30 +35,47 @@ fn main() {
     app.add_systems(Update, update_plot_data);
     app.add_systems(
         Update,
-        MovingPlatform::make_system(|velocity: &mut Velocity, linvel: Vec3| {
-            velocity.linvel = linvel.truncate();
+        MovingPlatform::make_system(|velocity: &mut LinearVelocity, linvel: Vec3| {
+            velocity.0 = linvel.truncate();
         })
         .before(TnuaPipelineStages::Sensors),
     );
-    app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
-        cfg.gravity = Vec2::Y * -9.81;
+    app.add_systems(Startup, |mut gravity: ResMut<Gravity>| {
+        gravity.0 = Vec2::Y * -9.81;
     });
-    app.add_systems(Update, update_rapier_physics_active);
+    app.add_systems(Update, update_xpbd_physics_active);
     app.run();
 }
 
-fn update_rapier_physics_active(
-    mut rapier_config: ResMut<RapierConfiguration>,
-    setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
-) {
-    rapier_config.physics_pipeline_active = setting_from_ui.0;
+#[derive(PhysicsLayer)]
+enum LayerNames {
+    Player,
+    FallThrough,
+    PhaseThrough,
 }
 
-fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) {
-    for (mut plot_source, transform, velocity) in query.iter_mut() {
+fn update_xpbd_physics_active(
+    mut physics_time: ResMut<Time<Physics>>,
+    setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
+) {
+    if setting_from_ui.0 {
+        physics_time.unpause();
+    } else {
+        physics_time.pause();
+    }
+}
+
+fn update_plot_data(mut query: Query<(&mut PlotSource, &Transform, &LinearVelocity)>) {
+    for (mut plot_source, transform, linear_velocity) in query.iter_mut() {
         plot_source.set(&[
-            &[("Y", transform.translation.y), ("vel-Y", velocity.linvel.y)],
-            &[("X", transform.translation.x), ("vel-X", velocity.linvel.x)],
+            &[
+                ("Y", transform.translation.y),
+                ("vel-Y", linear_velocity.0.y),
+            ],
+            &[
+                ("X", transform.translation.x),
+                ("vel-X", linear_velocity.0.x),
+            ],
         ]);
     }
 }
@@ -86,7 +104,8 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         ..Default::default()
     });
-    cmd.insert(Collider::halfspace(Vec2::Y).unwrap());
+    cmd.insert(RigidBody::Static);
+    cmd.insert(Collider::halfspace(Vec2::Y));
 
     for ([width, height], transform) in [
         (
@@ -107,7 +126,8 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             transform,
             ..Default::default()
         });
-        cmd.insert(Collider::cuboid(0.5 * width, 0.5 * height));
+        cmd.insert(RigidBody::Static);
+        cmd.insert(Collider::cuboid(width, height));
     }
 
     // Fall-through platforms
@@ -122,25 +142,24 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             transform: Transform::from_xyz(-20.0, y, -1.0),
             ..Default::default()
         });
-        cmd.insert(Collider::cuboid(3.0, 0.25));
-        cmd.insert(SolverGroups {
-            memberships: Group::empty(),
-            filters: Group::empty(),
-        });
+        cmd.insert(RigidBody::Static);
+        cmd.insert(Collider::cuboid(6.0, 0.5));
+        cmd.insert(CollisionLayers::new(
+            [LayerNames::FallThrough],
+            [LayerNames::FallThrough],
+        ));
         cmd.insert(TnuaGhostPlatform);
     }
 
     commands.spawn((
         TransformBundle::from_transform(Transform::from_xyz(10.0, 2.0, 0.0)),
+        RigidBody::Static,
         Collider::ball(1.0),
-        CollisionGroups {
-            memberships: Group::GROUP_1,
-            filters: Group::GROUP_1,
-        },
+        CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
     ));
     commands.spawn(Text2dBundle {
         text: Text::from_section(
-            "collision\ngroups",
+            "collision\nlayers",
             TextStyle {
                 font: asset_server.load("FiraSans-Bold.ttf"),
                 font_size: 72.0,
@@ -154,28 +173,7 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands.spawn((
         TransformBundle::from_transform(Transform::from_xyz(15.0, 2.0, 0.0)),
-        Collider::ball(1.0),
-        SolverGroups {
-            memberships: Group::GROUP_1,
-            filters: Group::GROUP_1,
-        },
-    ));
-    commands.spawn(Text2dBundle {
-        text: Text::from_section(
-            "solver\ngroups",
-            TextStyle {
-                font: asset_server.load("FiraSans-Bold.ttf"),
-                font_size: 72.0,
-                color: Color::WHITE,
-            },
-        )
-        .with_alignment(TextAlignment::Center),
-        transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-        ..Default::default()
-    });
-
-    commands.spawn((
-        TransformBundle::from_transform(Transform::from_xyz(20.0, 2.0, 0.0)),
+        RigidBody::Static,
         Collider::ball(1.0),
         Sensor,
     ));
@@ -189,7 +187,7 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             },
         )
         .with_alignment(TextAlignment::Center),
-        transform: Transform::from_xyz(20.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
+        transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
         ..Default::default()
     });
 
@@ -205,9 +203,8 @@ fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             transform: Transform::from_xyz(-4.0, 6.0, 0.0),
             ..Default::default()
         });
-        cmd.insert(Collider::cuboid(2.0, 0.5));
-        cmd.insert(Velocity::default());
-        cmd.insert(RigidBody::KinematicVelocityBased);
+        cmd.insert(Collider::cuboid(4.0, 1.0));
+        cmd.insert(RigidBody::Kinematic);
         cmd.insert(MovingPlatform::new(
             4.0,
             &[
@@ -227,8 +224,7 @@ fn setup_player(mut commands: Commands) {
     )));
     cmd.insert(VisibilityBundle::default());
     cmd.insert(RigidBody::Dynamic);
-    cmd.insert(Collider::capsule_y(0.5, 0.5));
-    cmd.insert(TnuaRapier2dIOBundle::default());
+    cmd.insert(Collider::capsule(1.0, 0.5));
     cmd.insert(TnuaControllerBundle::default());
     cmd.insert(CharacterMotionConfigForPlatformerExample {
         speed: 40.0,
@@ -250,7 +246,7 @@ fn setup_player(mut commands: Commands) {
     });
     cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
-        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
+        cmd.insert(TnuaXpbd2dSensorShape(Collider::cuboid(1.0, 0.0)));
     }));
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
@@ -263,53 +259,44 @@ fn setup_player(mut commands: Commands) {
                 1,
                 &[
                     ("Point", |mut cmd| {
-                        cmd.remove::<TnuaRapier2dSensorShape>();
+                        cmd.remove::<TnuaXpbd2dSensorShape>();
                     }),
                     ("Flat (underfit)", |mut cmd| {
-                        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.49, 0.0)));
+                        cmd.insert(TnuaXpbd2dSensorShape(Collider::cuboid(0.99, 0.0)));
                     }),
                     ("Flat (exact)", |mut cmd| {
-                        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.5, 0.0)));
+                        cmd.insert(TnuaXpbd2dSensorShape(Collider::cuboid(1.0, 0.0)));
+                    }),
+                    ("flat (overfit)", |mut cmd| {
+                        cmd.insert(TnuaXpbd2dSensorShape(Collider::cuboid(1.01, 0.0)));
                     }),
                     ("Ball (underfit)", |mut cmd| {
-                        cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.49)));
+                        cmd.insert(TnuaXpbd2dSensorShape(Collider::ball(0.49)));
                     }),
                     ("Ball (exact)", |mut cmd| {
-                        cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.5)));
+                        cmd.insert(TnuaXpbd2dSensorShape(Collider::ball(0.5)));
                     }),
                 ],
             )
             .with_checkbox("Lock Tilt", false, |mut cmd, lock_tilt| {
                 if lock_tilt {
-                    cmd.insert(LockedAxes::ROTATION_LOCKED);
+                    cmd.insert(LockedAxes::new().lock_rotation());
                 } else {
-                    cmd.insert(LockedAxes::empty());
+                    cmd.insert(LockedAxes::new());
                 }
             })
             .with_checkbox(
-                "Use Collision Groups",
-                false,
+                "Phase Through Collision Layers",
+                true,
                 |mut cmd, use_collision_groups| {
-                    if use_collision_groups {
-                        cmd.insert(CollisionGroups {
-                            memberships: Group::GROUP_2,
-                            filters: Group::GROUP_2,
-                        });
+                    let player_layers: &[LayerNames] = if use_collision_groups {
+                        &[LayerNames::Player]
                     } else {
-                        cmd.remove::<CollisionGroups>();
-                    }
+                        &[LayerNames::Player, LayerNames::PhaseThrough]
+                    };
+                    cmd.insert(CollisionLayers::new(player_layers, player_layers));
                 },
             )
-            .with_checkbox("Use Solver Groups", false, |mut cmd, use_solver_groups| {
-                if use_solver_groups {
-                    cmd.insert(SolverGroups {
-                        memberships: Group::GROUP_2,
-                        filters: Group::GROUP_2,
-                    });
-                } else {
-                    cmd.remove::<SolverGroups>();
-                }
-            })
     });
     cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
