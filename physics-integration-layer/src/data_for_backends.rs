@@ -13,14 +13,14 @@ pub enum TnuaToggle {
     /// Do not update the sensors, and do not apply forces from the motor.
     ///
     /// The controller system will also not run and won't update the motor components not the state
-    /// stored in the [`TnuaController`](crate::prelude::TnuaController) component. They will
-    /// retain their last value from before `TnuaToggle::Disabled` was set.
+    /// stored in the `TnuaController` component. They will retain their last value from before
+    /// `TnuaToggle::Disabled` was set.
     Disabled,
     /// Update the sensors, but do not apply forces from the motor.
     ///
     /// The platformer controller system will still run and still update the motor components and
-    /// state stored in the [`TnuaController`](crate::prelude::TnuaController) component. only the
-    /// system that applies the motor forces will be disabled.
+    /// state stored in the `TnuaController` component. only the system that applies the motor
+    /// forces will be disabled.
     SenseOnly,
     #[default]
     /// The backend behaves normally - it updates the sensors and applies forces from the motor.
@@ -213,8 +213,7 @@ pub struct TnuaMotor {
 ///
 /// See <https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms>
 ///
-/// See
-/// [`TnuaSimpleFallThroughPlatformsHelper`](crate::control_helpers::TnuaSimpleFallThroughPlatformsHelper).
+/// See `TnuaSimpleFallThroughPlatformsHelper`.
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostSensor(pub Vec<TnuaProximitySensorOutput>);
 
@@ -232,7 +231,6 @@ impl TnuaGhostSensor {
 ///
 /// See <https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms>
 ///
-/// See
-/// [`TnuaSimpleFallThroughPlatformsHelper`](crate::control_helpers::TnuaSimpleFallThroughPlatformsHelper).
+/// See `TnuaSimpleFallThroughPlatformsHelper`.
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostPlatform;

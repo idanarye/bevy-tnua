@@ -13,8 +13,7 @@ use bevy_tnua_physics_integration_layer::TnuaSystemSet;
 
 /// Add this plugin to use bevy_xpbd_3d as a physics backend.
 ///
-/// This plugin should be used in addition to
-/// [`TnuaControllerPlugin`](crate::prelude::TnuaControllerPlugin).
+/// This plugin should be used in addition to `TnuaControllerPlugin`.
 pub struct TnuaXpbd3dPlugin;
 
 impl Plugin for TnuaXpbd3dPlugin {
