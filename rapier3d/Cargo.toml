@@ -7,6 +7,9 @@ authors = ["IdanArye <idanarye@gmail.com>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/idanarye/bevy-tnua"
 documentation = "https://docs.rs/bevy-tnua-rapier3d"
+readme = "README.md"
+categories = ["game-development"]
+keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
 
 [dependencies]
 bevy = { version = "^0.12", default-features = false }
