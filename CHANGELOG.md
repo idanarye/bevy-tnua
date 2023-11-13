@@ -9,8 +9,14 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 ## [Unreleased]
 
 ### Changed
+
+## 0.13.0 - 2023-11-13
+### Changed
 - [**BREAKING**] Split the physics integration to separate crates. See the
   [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-013).
+
+### Added
+- [XPBD](https://github.com/Jondolf/bevy_xpbd) support (with separate crates)
 
 ## 0.12.0 - 2023-11-09
 ### Changed
