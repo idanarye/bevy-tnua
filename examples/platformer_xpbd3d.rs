@@ -229,7 +229,7 @@ fn setup_level(
             transform: Transform::from_xyz(-2.0, 2.0, 10.0),
             ..Default::default()
         });
-        cmd.insert(Collider::cylinder(0.5, 3.0));
+        cmd.insert(Collider::cylinder(1.0, 3.0));
         cmd.insert(AngularVelocity(Vec3::Y));
         cmd.insert(RigidBody::Kinematic);
     }
