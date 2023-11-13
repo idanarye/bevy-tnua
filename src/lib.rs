@@ -48,8 +48,12 @@
 //!   better to use a shape a little bit smaller than the collider, so that when the character
 //!   presses against a wall Tnua won't think it should be lifted up when the casted shape hits
 //!   that wall.
-//! * Tnua will apply forces to keep the character upright, but `LockedAxes` can also be used to
-//!   prevent tilting entirely (without it the tilting will be visible)
+//! * Tnua will apply forces to keep the character upright, but it is also possible to lock
+//!   rotation so that there would be no tilting at all. This is done by Tnua itself - it has to be
+//!   done by the physics engine. Both Rapier and XPBD can do it using a component called
+//!   `LockedAxes`. When using it in 3D in combination of rotation controls (such as
+//!   [`TnuaBuiltinWalk::desired_forward`](builtins::TnuaBuiltinWalk::desired_forward)) make sure
+//!   to only lock the X and Z axess, so that Tnua could rotate the character around the Y axis.
 //!
 //! ## Controlling the Character
 //!
