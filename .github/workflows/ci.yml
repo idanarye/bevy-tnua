@@ -111,12 +111,22 @@ jobs:
         with:
           command: test
           args: --doc --all-features
+      - name: Get package names
+        id: get-package-names
+        run: |-
+          echo "PACKAGE_NAMES=$(
+            cargo metadata --no-deps --format-version=1 \
+            | jq '.packages[].name' -r \
+            | sort -u \
+            | xargs -L1 echo --package \
+            | paste -sd ' '
+          )" >> "$GITHUB_OUTPUT"
       - name: Get features for docs
         id: get-features-for-docs
         run: |-
           echo "FEATURES_FOR_DOCS=$(
             cargo metadata --no-deps --format-version=1 \
-            | jq '.packages[].metadata.docs.rs.features[]' -r \
+            | jq '.packages[].metadata.docs.rs.features | select(.) | .[]' -r \
             | sort -u \
             | xargs -L1 echo --features \
             | paste -sd ' '
@@ -125,7 +135,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: doc
-          args: --no-deps --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }}
+          args: --no-deps ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }}
   docs-and-demos-ghpages:
     name: Update Docs and Demos in GitHub Pages
     runs-on: ubuntu-latest
