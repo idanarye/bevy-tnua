@@ -7,7 +7,12 @@
 
 Tnua ("motion" in Hebrew) is a floating character controller, which means that instead of constantly touching the ground the character floats above it, which makes many aspects of the motion control simpler.
 
-Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions of it:
+Tnua can use [Rapier](https://rapier.rs/) or [XPBD](https://github.com/Jondolf/bevy_xpbd), and supports both the 2D and 3D versions of both with integration crates:
+* For Rapier 2D, add the [bevy-tnua-rapier2d](https://crates.io/crates/bevy-tnua-rapier2d) crate.
+* For Rapier 3D, add the [bevy-tnua-rapier3d](https://crates.io/crates/bevy-tnua-rapier3d) crate.
+* For XPBD 2D, add the [bevy-tnua-xpbd2d](https://crates.io/crates/bevy-tnua-xpbd2d) crate.
+* For XPBD 3D, add the [bevy-tnua-xpbd3d](https://crates.io/crates/bevy-tnua-xpbd3d) crate.
+* Third party integration crates. Such crates should depend on [bevy-tnua-physics-integration-layer](https://crates.io/crates/bevy-tnua-physics-integration-layer) and not the main bevy-tnua crate.
 
 ## Features
 
@@ -35,6 +40,28 @@ Tnua uses [Rapier](https://rapier.rs/), and supports both the 2D and 3D versions
   * XPBD 3D: https://idanarye.github.io/bevy-tnua/demos/platformer_xpbd3d
 
 ## Versions
+
+Tnua is broken into different crates that update separately, so this is broken into multiple tables. The version of bevy-tnua-physics-integration-layer must be the same for both the main bevy-tnua crate and the integration crates.
+
+### Main
+
+| bevy | bevy-tnua-physics-integration-layer | bevy-tnua  |
+|------|-------------------------------------|------------|
+| 0.12 | 0.1                                 | 0.13       |
+
+### Rapier integration
+
+| bevy | bevy-tnua-physics-integration-layer | bevy-tnua-rapier | bevy_rapier |
+|------|-------------------------------------|------------------|-------------|
+| 0.12 | 0.1                                 | 0.1              | 0.23        |
+
+### XPBD integration
+
+| bevy | bevy-tnua-physics-integration-layer | bevy-tnua-xpbd | bevy_xpbd |
+|------|-------------------------------------|----------------|-----------|
+| 0.12 | 0.1                                 | 0.1            | 0.3       |
+
+### Pre-split
 
 | bevy | bevy-tnua  | bevy_rapier |
 |------|------------|-------------|
