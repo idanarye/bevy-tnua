@@ -7,7 +7,7 @@ authors = ["IdanArye <idanarye@gmail.com>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/idanarye/bevy-tnua"
 documentation = "https://docs.rs/bevy-tnua-xpbd3d"
-readme = "README.md"
+readme = "../README.md"
 categories = ["game-development"]
 keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
 
