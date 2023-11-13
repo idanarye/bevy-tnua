@@ -150,12 +150,22 @@ jobs:
           target: wasm32-unknown-unknown
           toolchain: 1.70.0
           override: true
+      - name: Get package names
+        id: get-package-names
+        run: |-
+          echo "PACKAGE_NAMES=$(
+            cargo metadata --no-deps --format-version=1 \
+            | jq '.packages[].name' -r \
+            | sort -u \
+            | xargs -L1 echo --package \
+            | paste -sd ' '
+          )" >> "$GITHUB_OUTPUT"
       - name: Get features for docs
         id: get-features-for-docs
         run: |-
           echo "FEATURES_FOR_DOCS=$(
             cargo metadata --no-deps --format-version=1 \
-            | jq '.packages[].metadata.docs.rs.features[]' -r \
+            | jq '.packages[].metadata.docs.rs.features | select(.) | .[]' -r \
             | sort -u \
             | xargs -L1 echo --features \
             | paste -sd ' '
@@ -165,7 +175,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |-
-          cargo doc --verbose --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }} &&
+          cargo doc --verbose ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }} &&
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html &&
           cargo build --examples --release --features "$(
               cargo metadata --no-deps --format-version 1 \
