@@ -100,8 +100,7 @@ fn setup_camera(mut commands: Commands) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 4000.0,
-            // For some reason in Bevy 0.12 shadows no longer work in WASM
-            shadows_enabled: !cfg!(target_arch = "wasm32"),
+            shadows_enabled: true,
             ..Default::default()
         },
         transform: Transform::default().looking_at(-Vec3::Y, Vec3::Z),
