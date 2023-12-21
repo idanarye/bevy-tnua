@@ -379,6 +379,7 @@ fn apply_controls(
     ) in query.iter_mut()
     {
         air_actions_counter.update(controller.as_mut());
+        air_actions_counter.reset_count();
 
         let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
             crouch,
