@@ -215,8 +215,9 @@ impl TnuaBasis for TnuaBuiltinWalk {
         };
         let acceleration = direction_change_factor * relevant_acceleration_limit;
 
+        // TODO: calc the acceleration as an acceleration to begin with
         let walk_acceleration =
-            exact_acceleration.clamp_length_max(ctx.frame_duration * acceleration);
+            (exact_acceleration / ctx.frame_duration).clamp_length_max(acceleration);
         let walk_acceleration = if let Some(climb_vectors) = &climb_vectors {
             climb_vectors.project(walk_acceleration)
         } else {
@@ -266,8 +267,13 @@ impl TnuaBasis for TnuaBuiltinWalk {
             error!("Tnua could not decide on jump state");
             TnuaVelChange::ZERO
         };
-        motor.lin = TnuaVelChange::boost(walk_acceleration + impulse_to_offset) + upward_impulse;
-        let new_velocity = state.effective_velocity + motor.lin.boost - impulse_to_offset;
+        motor.lin = TnuaVelChange {
+            acceleration: walk_acceleration,
+            boost: impulse_to_offset,
+        } + upward_impulse;
+        let new_velocity = state.effective_velocity
+            + motor.lin.effect_for_frame(ctx.frame_duration)
+            - impulse_to_offset;
         state.running_velocity = new_velocity.reject_from(self.up);
 
         // Tilt

@@ -160,6 +160,10 @@ impl TnuaVelChange {
         self.acceleration = self.acceleration.reject_from(axis);
         self.boost = self.boost.reject_from(axis);
     }
+
+    pub fn effect_for_frame(&mut self, frame_duration: f32) -> Vec3 {
+        self.boost + frame_duration * self.acceleration
+    }
 }
 
 impl Default for TnuaVelChange {
