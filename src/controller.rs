@@ -276,32 +276,6 @@ impl TnuaController {
             None => Err(TnuaControllerHasNoBasis),
         }
     }
-
-    /// Checks if the character is currently airborne based on the dynamic basis, with a fallback.
-    ///
-    /// Returns the result of the `is_airborne` method if there is a dynamic basis, otherwise
-    /// returns the provided fallback value.
-    ///
-    /// # Arguments
-    ///
-    /// * `fallback` - The value to return if there is no dynamic basis available.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use bevy_tnua::controller::TnuaController;
-    /// let controller = TnuaController::default();
-    ///
-    /// // Check if the character is airborne with a fallback value.
-    /// let is_airborne = controller.is_airborne_if_none(false);
-    /// println!("Character is airborne: {}", is_airborne);
-    /// ```
-    pub fn is_airborne_or_else(&self, fallback: bool) -> bool {
-        match self.dynamic_basis() {
-            Some(basis) => basis.is_airborne(),
-            None => fallback,
-        }
-    }
 }
 
 #[derive(thiserror::Error, Debug)]
