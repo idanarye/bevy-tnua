@@ -120,8 +120,8 @@ pub mod controller;
 mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
-    TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
-    TnuaActionLifecycleStatus, TnuaBasis, TnuaBasisContext,
+    DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext, TnuaActionInitiationDirective,
+    TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasis, TnuaBasisContext,
 };
 
 pub mod prelude {
