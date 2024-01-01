@@ -175,7 +175,6 @@ impl TnuaSimpleAirActionsCounter {
         self.reset_count_to(0);
     }
 
-
     /// Calculate the "air number" of an action.
     ///
     /// The air number of a ground action is 0. The first air jump (double jump) as an air number

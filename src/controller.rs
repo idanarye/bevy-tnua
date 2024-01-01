@@ -265,28 +265,15 @@ impl TnuaController {
         &self.action_flow_status
     }
 
-    /// Checks if the character is currently airborne based on the dynamic basis.
+    /// Checks if the character is currently airborne.
     ///
-    /// Returns `Some(true)` if the character is airborne, `Some(false)` if the character is
-    /// grounded, and `None` if there is no dynamic basis available.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use bevy_tnua::controller::TnuaController;
-    /// let controller = TnuaController::default();
-    ///
-    /// // Check if the character is airborne.
-    /// if let Some(is_airborne) = controller.is_airborne() {
-    ///     println!("Character is airborne: {}", is_airborne);
-    /// } else {
-    ///     println!("No dynamic basis available.");
-    /// }
-    /// ```
-    pub fn is_airborne(&self) -> Option<bool> {
+    /// The check is done based on the basis, and is equivalent to getting the controller's
+    /// [`dynamic_basis`](Self::dynamic_basis) and checking its
+    /// [`is_airborne`](TnuaBasis::is_airborne) method.
+    pub fn is_airborne(&self) -> Result<bool, TnuaControllerHasNoBasis> {
         match self.dynamic_basis() {
-            Some(basis) => Some(basis.is_airborne()),
-            None => None,
+            Some(basis) => Ok(basis.is_airborne()),
+            None => Err(TnuaControllerHasNoBasis),
         }
     }
 
@@ -316,6 +303,10 @@ impl TnuaController {
         }
     }
 }
+
+#[derive(thiserror::Error, Debug)]
+#[error("The Tnua controller does not have any basis set")]
+pub struct TnuaControllerHasNoBasis;
 
 /// The result of [`TnuaController::action_flow_status()`].
 #[derive(Debug, Default, Clone)]

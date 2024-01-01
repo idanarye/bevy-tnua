@@ -22,6 +22,7 @@ exclude = [
 [dependencies]
 bevy = { version = "^0.12", default-features = false }
 bevy-tnua-physics-integration-layer = { version = "0.1.0", path = "physics-integration-layer" }
+thiserror = "1.0.53"
 
 [dev-dependencies]
 bevy = { version = "^0.12", default-features = false, features = [
