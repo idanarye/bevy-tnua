@@ -134,6 +134,48 @@ impl TnuaSimpleAirActionsCounter {
         }
     }
 
+    /// Resets the air actions counter to a specific count, excluding the current action.
+    ///
+    /// This method allows you to manually set the count of air actions (excluding the current
+    /// action) to a specified value. Use this when you need to synchronize or initialize the air
+    /// actions count to a specific state.
+    ///
+    /// # Arguments
+    ///
+    /// * `count` - The new count to set for air actions, excluding the current action.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use bevy_tnua::control_helpers::TnuaSimpleAirActionsCounter;
+    /// let mut air_actions_counter = TnuaSimpleAirActionsCounter::default();
+    ///
+    /// // Reset the air actions count to 3 (excluding the current action). should also be updated as stated in TnuaAirActionsTracker
+    /// air_actions_counter.reset_count_to(3);
+    /// ```
+    pub fn reset_count_to(&mut self, count: usize) {
+        self.actions_including_current = count;
+    }
+
+    /// Resets the air actions counter to zero, excluding the current action.
+    ///
+    /// This method is a convenience function equivalent to calling `reset_count_to(0)`. It sets
+    /// the count of air actions (excluding the current action) to zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use bevy_tnua::control_helpers::TnuaSimpleAirActionsCounter;
+    /// let mut air_actions_counter = TnuaSimpleAirActionsCounter::default();
+    ///
+    /// // Reset the air actions count to zero (excluding the current action). should also be updated as stated in TnuaAirActionsTracker
+    /// air_actions_counter.reset_count();
+    /// ```
+    pub fn reset_count(&mut self) {
+        self.reset_count_to(0);
+    }
+
+
     /// Calculate the "air number" of an action.
     ///
     /// The air number of a ground action is 0. The first air jump (double jump) as an air number
@@ -151,7 +193,7 @@ impl TnuaSimpleAirActionsCounter {
     /// [`TnuaController::named_action`].
     pub fn air_count_for(&self, action_name: &str) -> usize {
         if self.current_action == Some(action_name) {
-            self.actions_including_current - 1
+            self.actions_including_current.saturating_sub(1)
         } else {
             self.actions_including_current
         }
