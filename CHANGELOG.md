@@ -8,6 +8,10 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+## Added
+- `is_airborne` method for `TnuaController`.
+- `get_count_mut` and `reset_count` methods for `TnuaSimpleAirActionsCounter`.
+
 ### Changed
 
 ## 0.13.0 - 2023-11-13
