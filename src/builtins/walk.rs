@@ -271,7 +271,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
             boost: impulse_to_offset,
         } + upward_impulse;
         let new_velocity = state.effective_velocity
-            + motor.lin.effect_for_frame(ctx.frame_duration)
+            + motor.lin.boost
+            + ctx.frame_duration * motor.lin.acceleration
             - impulse_to_offset;
         state.running_velocity = new_velocity.reject_from(self.up);
 
