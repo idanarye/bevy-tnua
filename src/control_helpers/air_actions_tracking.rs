@@ -105,8 +105,8 @@ pub enum TnuaAirActionsUpdate {
 #[derive(Component, Default)]
 pub struct TnuaSimpleAirActionsCounter {
     tracker: TnuaAirActionsTracker,
-    current_action: Option<&'static str>,
-    actions_including_current: usize,
+    current_action: Option<(&'static str, usize)>,
+    air_actions_count: usize,
 }
 
 impl TnuaSimpleAirActionsCounter {
@@ -118,18 +118,18 @@ impl TnuaSimpleAirActionsCounter {
             TnuaAirActionsUpdate::FreeFallStarted => {
                 // The free fall is considered the first action
                 self.current_action = None;
-                self.actions_including_current += 1;
+                self.air_actions_count += 1;
             }
             TnuaAirActionsUpdate::AirActionStarted(action_name) => {
-                self.current_action = Some(action_name);
-                self.actions_including_current += 1;
+                self.current_action = Some((action_name, self.air_actions_count));
+                self.air_actions_count += 1;
             }
             TnuaAirActionsUpdate::ActionFinishedInAir => {
                 self.current_action = None;
             }
             TnuaAirActionsUpdate::JustLanded => {
                 self.current_action = None;
-                self.actions_including_current = 0;
+                self.air_actions_count = 0;
             }
         }
     }
@@ -154,25 +154,56 @@ impl TnuaSimpleAirActionsCounter {
     /// air_actions_counter.reset_count_to(3);
     /// ```
     pub fn reset_count_to(&mut self, count: usize) {
-        self.actions_including_current = count;
+        self.air_actions_count = count;
     }
 
-    /// Resets the air actions counter to zero, excluding the current action.
+    /// Obtain a mutable reference to the air counter.
     ///
-    /// This method is a convenience function equivalent to calling `reset_count_to(0)`. It sets
-    /// the count of air actions (excluding the current action) to zero.
+    /// This can be use to modify the air counter while the player is in the air - for example,
+    /// restoring an air jump when they pick up a floating token.
     ///
-    /// # Example
+    /// When it fits the usage, prefer [`reset_count`](Self::reset_count) which is simpler.
+    /// `get_count_mut` should be used for more complex cases, e.g. when the player is allowed
+    /// multiple air jumps, but only one jump gets restored per token.
     ///
+    /// Note that:
+    ///
+    /// * When the character is grounded, this method returns `None`. This is only for mutating the
+    ///   counter while the character is airborne.
+    /// * When the character jumps from the ground, or starts a free fall, the counter is one - not
+    ///   zero. Setting the counter to 0 will mean that the next air jump will actually be treated
+    ///   as a ground jump - and they'll get another air jump in addition to it. This is usually
+    ///   not the desired behavior.
+    /// * Changing the action counter returned by this method will not affect the value
+    ///   [`air_count_for`](Self::air_count_for) returns for an action that continues to be fed.
+    pub fn get_count_mut(&mut self) -> Option<&mut usize> {
+        if self.air_actions_count == 0 {
+            None
+        } else {
+            Some(&mut self.air_actions_count)
+        }
+    }
+
+    /// Resets the air actions counter.
+    ///
+    /// This is equivalent to setting the counter to 1 using:
+    ///
+    /// ```no_run
+    /// # use bevy_tnua::control_helpers::TnuaSimpleAirActionsCounter;
+    /// # let mut air_actions_counter = TnuaSimpleAirActionsCounter::default();
+    /// if let Some(count) = air_actions_counter.get_count_mut() {
+    ///     *count = 1;
+    /// }
     /// ```
-    /// use bevy_tnua::control_helpers::TnuaSimpleAirActionsCounter;
-    /// let mut air_actions_counter = TnuaSimpleAirActionsCounter::default();
     ///
-    /// // Reset the air actions count to zero (excluding the current action). should also be updated as stated in TnuaAirActionsTracker
-    /// air_actions_counter.reset_count();
-    /// ```
+    /// The reason it is set to 1 and not 0 is that when the character jumps from the ground or
+    /// starts a free fall the counter is 1 - and this is what one would usually want to reset to.
+    /// Having a counter of 0 means that the character is grounded - but in that case
+    /// [`get_count_mut`](Self::get_count_mut) will return `None` and the counter will not change.
     pub fn reset_count(&mut self) {
-        self.reset_count_to(0);
+        if let Some(count) = self.get_count_mut() {
+            *count = 1;
+        }
     }
 
     /// Calculate the "air number" of an action.
@@ -191,10 +222,11 @@ impl TnuaSimpleAirActionsCounter {
     /// [`TnuaController::action`] or the first argument when using
     /// [`TnuaController::named_action`].
     pub fn air_count_for(&self, action_name: &str) -> usize {
-        if self.current_action == Some(action_name) {
-            self.actions_including_current.saturating_sub(1)
-        } else {
-            self.actions_including_current
+        if let Some((current_action, actions)) = self.current_action {
+            if current_action == action_name {
+                return actions;
+            }
         }
+        self.air_actions_count
     }
 }
