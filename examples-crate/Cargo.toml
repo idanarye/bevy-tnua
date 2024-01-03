@@ -1,0 +1,67 @@
+[package]
+name = "tnua-examples-crate"
+version = "0.0.0"
+edition = "2021"
+
+[features]
+rapier = []
+rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
+rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
+
+xpbd = []
+xpbd2d = ["xpbd", "dep:bevy_xpbd_2d", "dep:bevy-tnua-xpbd2d"]
+xpbd3d = ["xpbd", "dep:bevy_xpbd_3d", "dep:bevy-tnua-xpbd3d"]
+
+[dependencies]
+bevy = { version = "^0.12", default-features = false, features = [
+     "animation",
+    "bevy_asset",
+    # "bevy_audio",
+    "bevy_gilrs",
+    # "bevy_scene",
+    # "bevy_winit",
+    "bevy_render",
+    "bevy_gltf",
+    "ktx2",
+    "zstd",
+    "tonemapping_luts",
+    "bevy_text",
+    # "png",
+    # "hdr",
+    # "vorbis",
+    "x11",
+    # "filesystem_watcher",
+] }
+bevy-tnua = { path = ".." }
+bevy-tnua-physics-integration-layer = { path = "../physics-integration-layer" }
+
+bevy_rapier2d = { version = "^0.23", features = ["debug-render-2d"], optional = true }
+bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
+
+bevy_rapier3d = { version = "^0.23", features = ["debug-render-3d"], optional = true }
+bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
+
+bevy_xpbd_2d = { version = "^0.3", optional = true }
+bevy-tnua-xpbd2d = { path = "../xpbd2d", optional = true }
+
+bevy_xpbd_3d = { version = "^0.3", optional = true }
+bevy-tnua-xpbd3d = { path = "../xpbd3d", optional = true }
+
+bevy_egui = "0.23"
+egui_plot = "0.23"
+
+[[example]]
+name = "platformer_rapier2d"
+required-features = ["rapier2d"]
+
+[[example]]
+name = "platformer_rapier3d"
+required-features = ["rapier3d"]
+
+[[example]]
+name = "platformer_xpbd2d"
+required-features = ["xpbd2d"]
+
+[[example]]
+name = "platformer_xpbd3d"
+required-features = ["xpbd3d"]

@@ -342,16 +342,6 @@ version = "0.14.0"
 dependencies = [
  "bevy",
  "bevy-tnua-physics-integration-layer",
- "bevy-tnua-rapier2d",
- "bevy-tnua-rapier3d",
- "bevy-tnua-xpbd2d",
- "bevy-tnua-xpbd3d",
- "bevy_egui",
- "bevy_rapier2d",
- "bevy_rapier3d",
- "bevy_xpbd_2d",
- "bevy_xpbd_3d",
- "egui_plot",
  "thiserror",
 ]
 
@@ -3584,6 +3574,25 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+
+[[package]]
+name = "tnua-examples-crate"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "bevy-tnua",
+ "bevy-tnua-physics-integration-layer",
+ "bevy-tnua-rapier2d",
+ "bevy-tnua-rapier3d",
+ "bevy-tnua-xpbd2d",
+ "bevy-tnua-xpbd3d",
+ "bevy_egui",
+ "bevy_rapier2d",
+ "bevy_rapier3d",
+ "bevy_xpbd_2d",
+ "bevy_xpbd_3d",
+ "egui_plot",
+]
 
 [[package]]
 name = "toml_datetime"

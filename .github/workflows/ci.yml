@@ -155,7 +155,7 @@ jobs:
         run: |-
           echo "PACKAGE_NAMES=$(
             cargo metadata --no-deps --format-version=1 \
-            | jq '.packages[].name' -r \
+            | jq '.packages[].name | select(. != "tnua-examples-crate")' -r \
             | sort -u \
             | xargs -L1 echo --package \
             | paste -sd ' '
