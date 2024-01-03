@@ -177,7 +177,7 @@ jobs:
         run: |-
           cargo doc --verbose ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }} &&
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html &&
-          cargo build --examples --release --features "$(
+          cargo build --package tnua-examples-crate --examples --release --features "$(
               cargo metadata --no-deps --format-version 1 \
                   | jq '.packages[].targets[] | select(.kind == ["example"]) | .["required-features"][]' -r \
                   | uniq \
