@@ -205,7 +205,7 @@ jobs:
           </html>
           EOF
           done &&
-          cp -R examples-crate/assets/ target/doc/demos/
+          cp -R examples/assets/ target/doc/demos/
       - name: Add read permissions
         run: |-
           chmod --recursive +r target/doc

@@ -1,5 +1,5 @@
 [workspace]
-members = ["physics-integration-layer", "rapier2d", "rapier3d", "xpbd2d", "xpbd3d", "examples-crate"]
+members = ["physics-integration-layer", "rapier2d", "rapier3d", "xpbd2d", "xpbd3d", "examples"]
 
 [package]
 name = "bevy-tnua"
