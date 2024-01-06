@@ -64,7 +64,7 @@ fn main() {
     }
     #[cfg(feature = "xpbd")]
     {
-        app.add_systems(Update, update_plot_data_from_rapier);
+        app.add_systems(Update, update_plot_data_from_xpbd);
         app.add_systems(
             Update,
             MovingPlatform::make_system(|velocity: &mut LinearVelocity, linvel: Vec3| {
