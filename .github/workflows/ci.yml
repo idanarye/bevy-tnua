@@ -170,7 +170,7 @@ jobs:
             | xargs -L1 echo --features \
             | paste -sd ' '
           )" >> "$GITHUB_OUTPUT"
-      - name: Build docs
+      - name: Build docs and examples
         env:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -204,6 +204,33 @@ jobs:
               </body>
           </html>
           EOF
+          done &&
+          for physics_backend in rapier wasm; do
+              cargo clean &&
+              cargo build --example platformer_2d --example platformer_3d --features ${physics_backend}2d --features ${physics_backend}3d &&
+              for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
+                  variant=${demowasm&.*}-$physics_backend
+                  wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --out-name $variant --target web
+                  cat > target/doc/demos/$variant.html <<EOF
+          <html lang="en-us">
+              <head>
+                  <script type="module">
+                      import init from './$variant.js';
+                      var res = await init();
+                      res.start();
+                  </script>
+              </head>
+              <body>
+                  <script>
+                      document.body.addEventListener("contextmenu", (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                      });
+                  </script>
+              </body>
+          </html>
+          EOF
+              done
           done &&
           cp -R examples/assets/ target/doc/demos/
       - name: Add read permissions
