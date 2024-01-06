@@ -466,7 +466,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 if lock_tilt {
                     #[cfg(feature = "rapier")]
                     cmd.insert(
-                        rapier::LockedAxes::ROTATION_LOCKED_X | rapier::LockedAxes::ROTATION_LOCKED_Z,
+                        rapier::LockedAxes::ROTATION_LOCKED_X
+                            | rapier::LockedAxes::ROTATION_LOCKED_Z,
                     );
                     #[cfg(feature = "xpbd")]
                     cmd.insert(xpbd::LockedAxes::new().lock_rotation_x().lock_rotation_z());
