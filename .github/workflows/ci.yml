@@ -207,7 +207,7 @@ jobs:
           done &&
           for physics_backend in rapier wasm; do
               cargo clean &&
-              cargo build --example platformer_2d --example platformer_3d --features ${physics_backend}2d --features ${physics_backend}3d &&
+              cargo build --package tnua-examples-crate --example platformer_2d --example platformer_3d --release --features ${physics_backend}2d --features ${physics_backend}3d &&
               for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
                   variant=${demowasm&.*}-$physics_backend
                   wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --out-name $variant --target web
