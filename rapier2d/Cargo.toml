@@ -2,14 +2,14 @@
 name = "bevy-tnua-rapier2d"
 description = "Rapier 2D integration for bevy-tnua"
 version = "0.1.0"
-edition = "2021"
-authors = ["IdanArye <idanarye@gmail.com>"]
-license = "MIT/Apache-2.0"
-repository = "https://github.com/idanarye/bevy-tnua"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+categories.workspace = true
+keywords.workspace = true
 documentation = "https://docs.rs/bevy-tnua-rapier2d"
 readme = "../README.md"
-categories = ["game-development"]
-keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
 
 [dependencies]
 # bevy_render is required because bevy_rapier uses bevy::render::primitives::Aabb

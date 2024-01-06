@@ -2,14 +2,14 @@
 name = "bevy-tnua-xpbd3d"
 description = "XPBD 3D integration for bevy-tnua"
 version = "0.1.0"
-edition = "2021"
-authors = ["IdanArye <idanarye@gmail.com>"]
-license = "MIT/Apache-2.0"
-repository = "https://github.com/idanarye/bevy-tnua"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+categories.workspace = true
+keywords.workspace = true
 documentation = "https://docs.rs/bevy-tnua-xpbd3d"
 readme = "../README.md"
-categories = ["game-development"]
-keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
 
 [dependencies]
 bevy = { version = "^0.12", default-features = false }

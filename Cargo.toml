@@ -1,21 +1,31 @@
 [workspace]
 members = ["physics-integration-layer", "rapier2d", "rapier3d", "xpbd2d", "xpbd3d", "examples"]
+default-members = ["examples"]
+
+[workspace.package]
+edition = "2021"
+authors = ["IdanArye <idanarye@gmail.com>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/idanarye/bevy-tnua"
+categories = ["game-development"]
+keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
 
 [package]
 name = "bevy-tnua"
 description = "A floating character controller for bevy_rapier"
 version = "0.14.0"
-edition = "2021"
-authors = ["IdanArye <idanarye@gmail.com>"]
-license = "MIT/Apache-2.0"
-repository = "https://github.com/idanarye/bevy-tnua"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+categories.workspace = true
+keywords.workspace = true
 documentation = "https://docs.rs/bevy-tnua"
 readme = "README.md"
-categories = ["game-development"]
-keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
 exclude = [
     "assets",
 ]
+autoexamples = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
