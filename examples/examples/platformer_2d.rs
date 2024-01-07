@@ -1,5 +1,3 @@
-mod common;
-
 use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 #[cfg(feature = "rapier")]
@@ -18,10 +16,10 @@ use bevy_tnua_xpbd2d::*;
 #[cfg(feature = "xpbd")]
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
-use self::common::tuning::CharacterMotionConfigForPlatformerExample;
-use self::common::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
-use self::common::ui_plotting::PlotSource;
-use self::common::{FallingThroughControlScheme, MovingPlatform};
+use tnua_examples_crate::tuning::CharacterMotionConfigForPlatformerExample;
+use tnua_examples_crate::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
+use tnua_examples_crate::ui_plotting::PlotSource;
+use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform};
 
 fn main() {
     let mut app = App::new();
@@ -40,7 +38,7 @@ fn main() {
     }
     app.add_plugins(TnuaControllerPlugin);
     app.add_plugins(TnuaCrouchEnforcerPlugin);
-    app.add_plugins(common::ui::ExampleUi::<
+    app.add_plugins(tnua_examples_crate::ui::ExampleUi::<
         CharacterMotionConfigForPlatformerExample,
     >::default());
     app.add_systems(Startup, setup_camera);
@@ -495,7 +493,7 @@ fn setup_player(mut commands: Commands) {
         );
         command_altering_selectors
     });
-    cmd.insert(common::ui::TrackedEntity("Player".to_owned()));
+    cmd.insert(tnua_examples_crate::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
 }
 
