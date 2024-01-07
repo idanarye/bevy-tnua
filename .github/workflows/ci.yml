@@ -177,34 +177,34 @@ jobs:
         run: |-
           cargo doc --verbose ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }} &&
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html &&
-          cargo build --package tnua-examples-crate --examples --release --features "$(
-              cargo metadata --no-deps --format-version 1 \
-                  | jq '.packages[].targets[] | select(.kind == ["example"]) | .["required-features"][]' -r \
-                  | uniq \
-                  | tr '\n' ' '
-          )" --target wasm32-unknown-unknown --features bevy/webgl2 &&
-          for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
-              wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --target web
-              cat > target/doc/demos/${demowasm%.*}.html <<EOF
-          <html lang="en-us">
-              <head>
-                  <script type="module">
-                      import init from './${demowasm%.*}.js';
-                      var res = await init();
-                      res.start();
-                  </script>
-              </head>
-              <body>
-                  <script>
-                      document.body.addEventListener("contextmenu", (e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                      });
-                  </script>
-              </body>
-          </html>
-          EOF
-          done &&
+          # cargo build --package tnua-examples-crate --examples --release --features "$(
+              # cargo metadata --no-deps --format-version 1 \
+                  # | jq '.packages[].targets[] | select(.kind == ["example"]) | .["required-features"][]' -r \
+                  # | uniq \
+                  # | tr '\n' ' '
+          # )" --target wasm32-unknown-unknown --features bevy/webgl2 &&
+          # for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
+              # wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --target web
+              # cat > target/doc/demos/${demowasm%.*}.html <<EOF
+          # <html lang="en-us">
+              # <head>
+                  # <script type="module">
+                      # import init from './${demowasm%.*}.js';
+                      # var res = await init();
+                      # res.start();
+                  # </script>
+              # </head>
+              # <body>
+                  # <script>
+                      # document.body.addEventListener("contextmenu", (e) => {
+                          # e.preventDefault();
+                          # e.stopPropagation();
+                      # });
+                  # </script>
+              # </body>
+          # </html>
+          # EOF
+          # done &&
           for physics_backend in rapier xpbd; do
               cargo clean &&
               cargo build --package tnua-examples-crate --example platformer_2d --example platformer_3d --release --features ${physics_backend}2d --features ${physics_backend}3d &&
@@ -240,14 +240,14 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           path: target/doc
-  deploy-ghpages:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: docs-and-demos-ghpages
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
+  #deploy-ghpages:
+    #environment:
+      #name: github-pages
+      #url: ${{ steps.deployment.outputs.page_url }}
+    #runs-on: ubuntu-latest
+    #needs: docs-and-demos-ghpages
+    #if: github.ref == 'refs/heads/main'
+    #steps:
+      #- name: Deploy to GitHub Pages
+        #id: deployment
+        #uses: actions/deploy-pages@v2
