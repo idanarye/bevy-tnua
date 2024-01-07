@@ -19,8 +19,9 @@ use tnua_examples_crate::character_animating_systems::platformer_animating_syste
     animate_platformer_character, AnimationState,
 };
 use tnua_examples_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_3d_controls, CharacterMotionConfigForPlatformerExample,
+    apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
 };
+use tnua_examples_crate::character_control_systems::Dimensionality;
 use tnua_examples_crate::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use tnua_examples_crate::ui_plotting::PlotSource;
 use tnua_examples_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
@@ -49,7 +50,7 @@ fn main() {
     app.add_systems(Startup, setup_player);
     app.add_systems(
         Update,
-        apply_platformer_3d_controls.in_set(TnuaUserControlsSystemSet),
+        apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
@@ -380,6 +381,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(TnuaControllerBundle::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerExample {
+        dimensionality: Dimensionality::Dim3,
         speed: 20.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,

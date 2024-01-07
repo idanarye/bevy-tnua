@@ -10,8 +10,10 @@ use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 use crate::tuning::UiTunable;
 use crate::FallingThroughControlScheme;
 
+use super::Dimensionality;
+
 #[allow(clippy::type_complexity)]
-pub fn apply_platformer_2d_controls(
+pub fn apply_platformer_controls(
     mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,
     mut query: Query<(
@@ -32,22 +34,6 @@ pub fn apply_platformer_2d_controls(
         return;
     }
 
-    let mut direction = Vec3::ZERO;
-
-    if keyboard.pressed(KeyCode::Left) {
-        direction -= Vec3::X;
-    }
-    if keyboard.pressed(KeyCode::Right) {
-        direction += Vec3::X;
-    }
-
-    let jump = keyboard.any_pressed([KeyCode::Space, KeyCode::Up]);
-    let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-
-    let crouch_buttons = [KeyCode::Down, KeyCode::ControlLeft, KeyCode::ControlRight];
-    let crouch = keyboard.any_pressed(crouch_buttons);
-    let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
-
     for (
         config,
         mut controller,
@@ -59,115 +45,47 @@ pub fn apply_platformer_2d_controls(
         mut air_actions_counter,
     ) in query.iter_mut()
     {
-        air_actions_counter.update(controller.as_mut());
+        let mut direction = Vec3::ZERO;
 
-        let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
-            crouch,
-            crouch_just_pressed,
-            fall_through_helper.as_mut(),
-            sensor.as_mut(),
-            ghost_sensor,
-            1.0,
-        );
-
-        let speed_factor =
-            if let Some((_, state)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
-                if matches!(state, TnuaBuiltinCrouchState::Rising) {
-                    1.0
-                } else {
-                    0.2
-                }
-            } else {
-                1.0
-            };
-
-        controller.basis(TnuaBuiltinWalk {
-            desired_velocity: direction * speed_factor * config.speed,
-            ..config.walk.clone()
-        });
-
-        if crouch {
-            controller.action(crouch_enforcer.enforcing(config.crouch.clone()));
+        if config.dimensionality == Dimensionality::Dim3 {
+            if keyboard.pressed(KeyCode::Up) {
+                direction -= Vec3::Z;
+            }
+            if keyboard.pressed(KeyCode::Down) {
+                direction += Vec3::Z;
+            }
+        }
+        if keyboard.pressed(KeyCode::Left) {
+            direction -= Vec3::X;
+        }
+        if keyboard.pressed(KeyCode::Right) {
+            direction += Vec3::X;
         }
 
-        if jump {
-            controller.action(TnuaBuiltinJump {
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME)
-                    <= config.actions_in_air,
-                ..config.jump.clone()
-            });
+        direction = direction.clamp_length_max(1.0);
+
+        let jump = match config.dimensionality {
+            Dimensionality::Dim2 => keyboard.any_pressed([KeyCode::Space, KeyCode::Up]),
+            Dimensionality::Dim3 => keyboard.any_pressed([KeyCode::Space]),
+        };
+        let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
+
+        let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
+
+        let crouch: bool;
+        let crouch_just_pressed: bool;
+        match config.dimensionality {
+            Dimensionality::Dim2 => {
+                let crouch_buttons = [KeyCode::Down, KeyCode::ControlLeft, KeyCode::ControlRight];
+                crouch = keyboard.any_pressed(crouch_buttons);
+                crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
+            }
+            Dimensionality::Dim3 => {
+                let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
+                crouch = keyboard.any_pressed(crouch_buttons);
+                crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
+            }
         }
-
-        if dash {
-            controller.action(TnuaBuiltinDash {
-                displacement: direction.normalize() * config.dash_distance,
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
-                    <= config.actions_in_air,
-                ..config.dash.clone()
-            });
-        }
-    }
-}
-
-#[allow(clippy::type_complexity)]
-pub fn apply_platformer_3d_controls(
-    mut egui_context: EguiContexts,
-    keyboard: Res<Input<KeyCode>>,
-    mut query: Query<(
-        &CharacterMotionConfigForPlatformerExample,
-        &mut TnuaController,
-        &mut TnuaCrouchEnforcer,
-        &mut TnuaProximitySensor,
-        &TnuaGhostSensor,
-        &mut TnuaSimpleFallThroughPlatformsHelper,
-        &FallingThroughControlScheme,
-        &mut TnuaSimpleAirActionsCounter,
-    )>,
-) {
-    if egui_context.ctx_mut().wants_keyboard_input() {
-        for (_, mut controller, ..) in query.iter_mut() {
-            controller.neutralize_basis();
-        }
-        return;
-    }
-
-    let mut direction = Vec3::ZERO;
-
-    if keyboard.pressed(KeyCode::Up) {
-        direction -= Vec3::Z;
-    }
-    if keyboard.pressed(KeyCode::Down) {
-        direction += Vec3::Z;
-    }
-    if keyboard.pressed(KeyCode::Left) {
-        direction -= Vec3::X;
-    }
-    if keyboard.pressed(KeyCode::Right) {
-        direction += Vec3::X;
-    }
-
-    direction = direction.clamp_length_max(1.0);
-
-    let jump = keyboard.pressed(KeyCode::Space);
-    let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-
-    let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
-
-    let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
-    let crouch = keyboard.any_pressed(crouch_buttons);
-    let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
-
-    for (
-        config,
-        mut controller,
-        mut crouch_enforcer,
-        mut sensor,
-        ghost_sensor,
-        mut fall_through_helper,
-        falling_through_control_scheme,
-        mut air_actions_counter,
-    ) in query.iter_mut()
-    {
         air_actions_counter.update(controller.as_mut());
 
         let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
@@ -226,6 +144,7 @@ pub fn apply_platformer_3d_controls(
 
 #[derive(Component)]
 pub struct CharacterMotionConfigForPlatformerExample {
+    pub dimensionality: Dimensionality,
     pub speed: f32,
     pub walk: TnuaBuiltinWalk,
     pub actions_in_air: usize,

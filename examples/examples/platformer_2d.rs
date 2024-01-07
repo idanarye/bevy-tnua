@@ -16,8 +16,9 @@ use bevy_tnua_xpbd2d::*;
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
 use tnua_examples_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_2d_controls, CharacterMotionConfigForPlatformerExample,
+    apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
 };
+use tnua_examples_crate::character_control_systems::Dimensionality;
 use tnua_examples_crate::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use tnua_examples_crate::ui_plotting::PlotSource;
 use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform};
@@ -47,7 +48,7 @@ fn main() {
     app.add_systems(Startup, setup_player);
     app.add_systems(
         Update,
-        apply_platformer_2d_controls.in_set(TnuaUserControlsSystemSet),
+        apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
     #[cfg(feature = "rapier")]
     {
@@ -363,6 +364,7 @@ fn setup_player(mut commands: Commands) {
     }
     cmd.insert(TnuaControllerBundle::default());
     cmd.insert(CharacterMotionConfigForPlatformerExample {
+        dimensionality: Dimensionality::Dim2,
         speed: 40.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,
