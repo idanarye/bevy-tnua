@@ -1,14 +1,13 @@
 use bevy::prelude::*;
-use bevy_egui::EguiContexts;
 #[cfg(feature = "rapier")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
-use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash};
+use bevy_tnua::builtins::TnuaBuiltinCrouch;
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
     TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::prelude::*;
-use bevy_tnua::{TnuaGhostPlatform, TnuaGhostSensor, TnuaProximitySensor, TnuaToggle};
+use bevy_tnua::{TnuaGhostPlatform, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "rapier")]
 use bevy_tnua_rapier2d::*;
 #[cfg(feature = "xpbd")]
@@ -16,7 +15,9 @@ use bevy_tnua_xpbd2d::*;
 #[cfg(feature = "xpbd")]
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
-use tnua_examples_crate::tuning::CharacterMotionConfigForPlatformerExample;
+use tnua_examples_crate::character_control_systems::platformer_control_systems::{
+    apply_platformer_2d_controls, CharacterMotionConfigForPlatformerExample,
+};
 use tnua_examples_crate::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use tnua_examples_crate::ui_plotting::PlotSource;
 use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform};
@@ -44,7 +45,10 @@ fn main() {
     app.add_systems(Startup, setup_camera);
     app.add_systems(Startup, setup_level);
     app.add_systems(Startup, setup_player);
-    app.add_systems(Update, apply_controls.in_set(TnuaUserControlsSystemSet));
+    app.add_systems(
+        Update,
+        apply_platformer_2d_controls.in_set(TnuaUserControlsSystemSet),
+    );
     #[cfg(feature = "rapier")]
     {
         app.add_systems(Update, update_plot_data_from_rapier);
@@ -495,103 +499,4 @@ fn setup_player(mut commands: Commands) {
     });
     cmd.insert(tnua_examples_crate::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
-}
-
-#[allow(clippy::type_complexity)]
-fn apply_controls(
-    mut egui_context: EguiContexts,
-    keyboard: Res<Input<KeyCode>>,
-    mut query: Query<(
-        &CharacterMotionConfigForPlatformerExample,
-        &mut TnuaController,
-        &mut TnuaCrouchEnforcer,
-        &mut TnuaProximitySensor,
-        &TnuaGhostSensor,
-        &mut TnuaSimpleFallThroughPlatformsHelper,
-        &FallingThroughControlScheme,
-        &mut TnuaSimpleAirActionsCounter,
-    )>,
-) {
-    if egui_context.ctx_mut().wants_keyboard_input() {
-        for (_, mut controller, ..) in query.iter_mut() {
-            controller.neutralize_basis();
-        }
-        return;
-    }
-
-    let mut direction = Vec3::ZERO;
-
-    if keyboard.pressed(KeyCode::Left) {
-        direction -= Vec3::X;
-    }
-    if keyboard.pressed(KeyCode::Right) {
-        direction += Vec3::X;
-    }
-
-    let jump = keyboard.any_pressed([KeyCode::Space, KeyCode::Up]);
-    let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-
-    let crouch_buttons = [KeyCode::Down, KeyCode::ControlLeft, KeyCode::ControlRight];
-    let crouch = keyboard.any_pressed(crouch_buttons);
-    let crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
-
-    for (
-        config,
-        mut controller,
-        mut crouch_enforcer,
-        mut sensor,
-        ghost_sensor,
-        mut fall_through_helper,
-        falling_through_control_scheme,
-        mut air_actions_counter,
-    ) in query.iter_mut()
-    {
-        air_actions_counter.update(controller.as_mut());
-
-        let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
-            crouch,
-            crouch_just_pressed,
-            fall_through_helper.as_mut(),
-            sensor.as_mut(),
-            ghost_sensor,
-            1.0,
-        );
-
-        let speed_factor =
-            if let Some((_, state)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
-                if matches!(state, TnuaBuiltinCrouchState::Rising) {
-                    1.0
-                } else {
-                    0.2
-                }
-            } else {
-                1.0
-            };
-
-        controller.basis(TnuaBuiltinWalk {
-            desired_velocity: direction * speed_factor * config.speed,
-            ..config.walk.clone()
-        });
-
-        if crouch {
-            controller.action(crouch_enforcer.enforcing(config.crouch.clone()));
-        }
-
-        if jump {
-            controller.action(TnuaBuiltinJump {
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME)
-                    <= config.actions_in_air,
-                ..config.jump.clone()
-            });
-        }
-
-        if dash {
-            controller.action(TnuaBuiltinDash {
-                displacement: direction.normalize() * config.dash_distance,
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
-                    <= config.actions_in_air,
-                ..config.dash.clone()
-            });
-        }
-    }
 }

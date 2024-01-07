@@ -1,7 +1,5 @@
 use std::ops::RangeInclusive;
 
-use bevy::prelude::*;
-
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash};
 use bevy_tnua::prelude::*;
 
@@ -91,37 +89,6 @@ fn slider_or_none(
             );
         }
     });
-}
-
-#[derive(Component)]
-pub struct CharacterMotionConfigForPlatformerExample {
-    pub speed: f32,
-    pub walk: TnuaBuiltinWalk,
-    pub actions_in_air: usize,
-    pub jump: TnuaBuiltinJump,
-    pub crouch: TnuaBuiltinCrouch,
-    pub dash_distance: f32,
-    pub dash: TnuaBuiltinDash,
-}
-
-impl UiTunable for CharacterMotionConfigForPlatformerExample {
-    fn tune(&mut self, ui: &mut egui::Ui) {
-        ui.collapsing("Walking:", |ui| {
-            ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));
-            self.walk.tune(ui);
-        });
-        ui.add(egui::Slider::new(&mut self.actions_in_air, 0..=8).text("Max Actions in Air"));
-        ui.collapsing("Jumping:", |ui| {
-            self.jump.tune(ui);
-        });
-        ui.collapsing("Dashing:", |ui| {
-            ui.add(egui::Slider::new(&mut self.dash_distance, 0.0..=40.0).text("Dash Distance"));
-            self.dash.tune(ui);
-        });
-        ui.collapsing("Crouching:", |ui| {
-            self.crouch.tune(ui);
-        });
-    }
 }
 
 impl UiTunable for TnuaBuiltinWalk {
