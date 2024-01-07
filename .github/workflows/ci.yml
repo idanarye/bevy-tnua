@@ -175,6 +175,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |-
+          echo DBG running cargo doc &&
           cargo doc --verbose ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }} &&
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html &&
           # cargo build --package tnua-examples-crate --examples --release --features "$(
@@ -205,12 +206,20 @@ jobs:
           # </html>
           # EOF
           # done &&
+          echo DBG will loop on all physics backends &&
           for physics_backend in rapier xpbd; do
-              cargo clean &&
-              cargo build --package tnua-examples-crate --example platformer_2d --example platformer_3d --release --features ${physics_backend}2d --features ${physics_backend}3d &&
+              echo DBG running cargo clean before $physics_backend
+              cargo clean
+              echo DBG running cargo build for $physics_backend. The command is
+              echo DBG cargo build --package tnua-examples-crate --example platformer_2d --example platformer_3d --release --features ${physics_backend}2d --features ${physics_backend}3d
+              cargo build --package tnua-examples-crate --example platformer_2d --example platformer_3d --release --features ${physics_backend}2d --features ${physics_backend}3d
+              echo DBG iterating on demo WASMs
               for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
                   variant=${demowasm&.*}-$physics_backend
+                  echo DBG demowasm $demowasm variant $variant. Runnign wasm-bindgen command
+                  echo DBG wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --out-name $variant --target web
                   wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --out-name $variant --target web
+                  echo DBG generating HTML for WASM demo
                   cat > target/doc/demos/$variant.html <<EOF
           <html lang="en-us">
               <head>
