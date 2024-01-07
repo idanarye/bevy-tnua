@@ -178,40 +178,11 @@ jobs:
           set -ex
           cargo doc --verbose ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }}
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html
-          # cargo build --package tnua-examples-crate --examples --release --features "$(
-              # cargo metadata --no-deps --format-version 1 \
-                  # | jq '.packages[].targets[] | select(.kind == ["example"]) | .["required-features"][]' -r \
-                  # | uniq \
-                  # | tr '\n' ' '
-          # )" --target wasm32-unknown-unknown --features bevy/webgl2 &&
-          # for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
-              # wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --target web
-              # cat > target/doc/demos/${demowasm%.*}.html <<EOF
-          # <html lang="en-us">
-              # <head>
-                  # <script type="module">
-                      # import init from './${demowasm%.*}.js';
-                      # var res = await init();
-                      # res.start();
-                  # </script>
-              # </head>
-              # <body>
-                  # <script>
-                      # document.body.addEventListener("contextmenu", (e) => {
-                          # e.preventDefault();
-                          # e.stopPropagation();
-                      # });
-                  # </script>
-              # </body>
-          # </html>
-          # EOF
-          # done &&
           for physics_backend in rapier xpbd; do
               cargo clean
               cargo build \
                   --package tnua-examples-crate \
-                  --example platformer_2d \
-                  --example platformer_3d \
+                  --examples \
                   --release \
                   --features ${physics_backend}2d \
                   --features ${physics_backend}3d \
@@ -242,6 +213,15 @@ jobs:
               done
           done
           cp -R examples/assets/ target/doc/demos/
+
+          # TODO: remove the aliases once a release is made and they are no longer needed
+          function alias_to_old_example_name () {
+              cp target/doc/demos/$1.html target/doc/demos/$2.html
+          }
+          alias_to_old_example_name platformer_2d-rapier platformer_rapier2d
+          alias_to_old_example_name platformer_2d-xpbd platformer_xpbd2d
+          alias_to_old_example_name platformer_3d-rapier platformer_rapier3d
+          alias_to_old_example_name platformer_3d-xpbd platformer_xpbd3d
       - name: Add read permissions
         run: |-
           chmod --recursive +r target/doc

@@ -53,19 +53,3 @@ bevy-tnua-xpbd3d = { path = "../xpbd3d", optional = true }
 
 bevy_egui = "0.23"
 egui_plot = "0.23"
-
-[[example]]
-name = "platformer_rapier2d"
-required-features = ["rapier2d"]
-
-[[example]]
-name = "platformer_rapier3d"
-required-features = ["rapier3d"]
-
-[[example]]
-name = "platformer_xpbd2d"
-required-features = ["xpbd2d"]
-
-[[example]]
-name = "platformer_xpbd3d"
-required-features = ["xpbd3d"]
