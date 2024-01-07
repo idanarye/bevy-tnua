@@ -33,11 +33,10 @@ Tnua can use [Rapier](https://rapier.rs/) or [XPBD](https://github.com/Jondolf/b
 
 ## Examples:
 
-* Basic platformer in:
-  * Rapier 2D: https://idanarye.github.io/bevy-tnua/demos/platformer_rapier2d
-  * Rapier 3D: https://idanarye.github.io/bevy-tnua/demos/platformer_rapier3d
-  * XPBD 2D: https://idanarye.github.io/bevy-tnua/demos/platformer_xpbd2d
-  * XPBD 3D: https://idanarye.github.io/bevy-tnua/demos/platformer_xpbd3d
+| Example       | Rapier                                                          | XPBD                                                          |
+|---------------|-----------------------------------------------------------------|---------------------------------------------------------------|
+| 2D Platformer | https://idanarye.github.io/bevy-tnua/demos/platformer_2d-rapier | https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd |
+| 3D Platformer | https://idanarye.github.io/bevy-tnua/demos/platformer_3d-rapier | https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd |
 
 ## Versions
 
