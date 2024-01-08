@@ -25,7 +25,7 @@ use tnua_examples_crate::character_control_systems::Dimensionality;
 use tnua_examples_crate::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use tnua_examples_crate::ui_plotting::{update_plot_data, PlotSource};
 use tnua_examples_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
-use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform};
+use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform, MovingPlatformPlugin};
 
 fn main() {
     let mut app = App::new();
@@ -55,26 +55,13 @@ fn main() {
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
     app.add_systems(Update, update_plot_data);
+    app.add_plugins(MovingPlatformPlugin);
     #[cfg(feature = "rapier")]
     {
-        app.add_systems(
-            Update,
-            MovingPlatform::make_system(|velocity: &mut Velocity, linvel: Vec3| {
-                velocity.linvel = linvel;
-            })
-            .before(TnuaPipelineStages::Sensors),
-        );
         app.add_systems(Update, update_rapier_physics_active);
     }
     #[cfg(feature = "xpbd")]
     {
-        app.add_systems(
-            Update,
-            MovingPlatform::make_system(|velocity: &mut LinearVelocity, linvel: Vec3| {
-                velocity.0 = linvel;
-            })
-            .before(TnuaPipelineStages::Sensors),
-        );
         app.add_systems(Update, update_xpbd_physics_active);
     }
     app.run();

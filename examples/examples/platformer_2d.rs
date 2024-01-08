@@ -21,7 +21,7 @@ use tnua_examples_crate::character_control_systems::platformer_control_systems::
 use tnua_examples_crate::character_control_systems::Dimensionality;
 use tnua_examples_crate::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
 use tnua_examples_crate::ui_plotting::{update_plot_data, PlotSource};
-use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform};
+use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform, MovingPlatformPlugin};
 
 fn main() {
     let mut app = App::new();
@@ -51,32 +51,17 @@ fn main() {
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
     app.add_systems(Update, update_plot_data);
+    app.add_plugins(MovingPlatformPlugin);
     #[cfg(feature = "rapier")]
     {
-        app.add_systems(
-            Update,
-            MovingPlatform::make_system(|velocity: &mut Velocity, linvel: Vec3| {
-                velocity.linvel = linvel.truncate();
-            })
-            .before(TnuaPipelineStages::Sensors),
-        );
         app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
+            // For some odd reason, Rapier 2D defaults to a gravity of 98.1
             cfg.gravity = Vec2::Y * -9.81;
         });
         app.add_systems(Update, update_rapier_physics_active);
     }
     #[cfg(feature = "xpbd")]
     {
-        app.add_systems(
-            Update,
-            MovingPlatform::make_system(|velocity: &mut LinearVelocity, linvel: Vec3| {
-                velocity.0 = linvel.truncate();
-            })
-            .before(TnuaPipelineStages::Sensors),
-        );
-        app.add_systems(Startup, |mut gravity: ResMut<Gravity>| {
-            gravity.0 = Vec2::Y * -9.81;
-        });
         app.add_systems(Update, update_xpbd_physics_active);
     }
     app.run();

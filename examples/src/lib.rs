@@ -7,4 +7,4 @@ pub mod ui;
 pub mod ui_plotting;
 pub mod util;
 pub use falling_through::FallingThroughControlScheme;
-pub use moving_platform::MovingPlatform;
+pub use moving_platform::{MovingPlatform, MovingPlatformPlugin};
