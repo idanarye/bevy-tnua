@@ -23,7 +23,7 @@ use tnua_examples_crate::character_control_systems::platformer_control_systems::
 };
 use tnua_examples_crate::character_control_systems::Dimensionality;
 use tnua_examples_crate::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
-use tnua_examples_crate::ui_plotting::PlotSource;
+use tnua_examples_crate::ui_plotting::{update_plot_data, PlotSource};
 use tnua_examples_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
 use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform};
 
@@ -54,9 +54,9 @@ fn main() {
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
+    app.add_systems(Update, update_plot_data);
     #[cfg(feature = "rapier")]
     {
-        app.add_systems(Update, update_plot_data_from_rapier);
         app.add_systems(
             Update,
             MovingPlatform::make_system(|velocity: &mut Velocity, linvel: Vec3| {
@@ -68,7 +68,6 @@ fn main() {
     }
     #[cfg(feature = "xpbd")]
     {
-        app.add_systems(Update, update_plot_data_from_xpbd);
         app.add_systems(
             Update,
             MovingPlatform::make_system(|velocity: &mut LinearVelocity, linvel: Vec3| {
@@ -89,16 +88,6 @@ fn update_rapier_physics_active(
     rapier_config.physics_pipeline_active = setting_from_ui.0;
 }
 
-#[cfg(feature = "rapier")]
-fn update_plot_data_from_rapier(mut query: Query<(&mut PlotSource, &Transform, &Velocity)>) {
-    for (mut plot_source, transform, velocity) in query.iter_mut() {
-        plot_source.set(&[
-            &[("Y", transform.translation.y), ("vel-Y", velocity.linvel.y)],
-            &[("X", transform.translation.x), ("vel-X", velocity.linvel.x)],
-        ]);
-    }
-}
-
 #[cfg(feature = "xpbd")]
 #[derive(PhysicsLayer)]
 enum LayerNames {
@@ -116,22 +105,6 @@ fn update_xpbd_physics_active(
         physics_time.unpause();
     } else {
         physics_time.pause();
-    }
-}
-
-#[cfg(feature = "xpbd")]
-fn update_plot_data_from_xpbd(mut query: Query<(&mut PlotSource, &Transform, &LinearVelocity)>) {
-    for (mut plot_source, transform, linear_velocity) in query.iter_mut() {
-        plot_source.set(&[
-            &[
-                ("Y", transform.translation.y),
-                ("vel-Y", linear_velocity.0.y),
-            ],
-            &[
-                ("X", transform.translation.x),
-                ("vel-X", linear_velocity.0.x),
-            ],
-        ]);
     }
 }
 
