@@ -21,7 +21,7 @@ use tnua_examples_crate::character_control_systems::platformer_control_systems::
 use tnua_examples_crate::character_control_systems::Dimensionality;
 use tnua_examples_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_examples_crate::ui::plotting::{update_plot_data, PlotSource};
-use tnua_examples_crate::ui::ExampleUiPhysicsBackendActive;
+use tnua_examples_crate::ui::update_physics_active_from_ui;
 use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform, MovingPlatformPlugin};
 
 fn main() {
@@ -53,27 +53,15 @@ fn main() {
     );
     app.add_systems(Update, update_plot_data);
     app.add_plugins(MovingPlatformPlugin);
+    app.add_systems(Update, update_physics_active_from_ui);
     #[cfg(feature = "rapier")]
     {
         app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
             // For some odd reason, Rapier 2D defaults to a gravity of 98.1
             cfg.gravity = Vec2::Y * -9.81;
         });
-        app.add_systems(Update, update_rapier_physics_active);
-    }
-    #[cfg(feature = "xpbd")]
-    {
-        app.add_systems(Update, update_xpbd_physics_active);
     }
     app.run();
-}
-
-#[cfg(feature = "rapier")]
-fn update_rapier_physics_active(
-    mut rapier_config: ResMut<RapierConfiguration>,
-    setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
-) {
-    rapier_config.physics_pipeline_active = setting_from_ui.0;
 }
 
 #[cfg(feature = "xpbd")]
@@ -82,18 +70,6 @@ enum LayerNames {
     Player,
     FallThrough,
     PhaseThrough,
-}
-
-#[cfg(feature = "xpbd")]
-fn update_xpbd_physics_active(
-    mut physics_time: ResMut<Time<Physics>>,
-    setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
-) {
-    if setting_from_ui.0 {
-        physics_time.unpause();
-    } else {
-        physics_time.pause();
-    }
 }
 
 fn setup_camera(mut commands: Commands) {

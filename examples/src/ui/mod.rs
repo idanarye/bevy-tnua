@@ -137,3 +137,46 @@ fn ui_system<C: Component + UiTunable>(
         }
     });
 }
+
+pub fn update_physics_active_from_ui(
+    setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
+    #[cfg(feature = "rapier2d")] mut config_rapier2d: ResMut<
+        bevy_rapier2d::plugin::RapierConfiguration,
+    >,
+    #[cfg(feature = "rapier3d")] mut config_rapier3d: ResMut<
+        bevy_rapier3d::plugin::RapierConfiguration,
+    >,
+    #[cfg(feature = "xpbd2d")] mut physics_time_xpbd2d: ResMut<
+        Time<bevy_xpbd_2d::plugins::setup::Physics>,
+    >,
+    #[cfg(feature = "xpbd3d")] mut physics_time_xpbd3d: ResMut<
+        Time<bevy_xpbd_3d::plugins::setup::Physics>,
+    >,
+) {
+    #[cfg(feature = "rapier2d")]
+    {
+        config_rapier2d.physics_pipeline_active = setting_from_ui.0;
+    }
+    #[cfg(feature = "rapier3d")]
+    {
+        config_rapier3d.physics_pipeline_active = setting_from_ui.0;
+    }
+    #[cfg(feature = "xpbd2d")]
+    {
+        use bevy_xpbd_2d::plugins::setup::PhysicsTime;
+        if setting_from_ui.0 {
+            physics_time_xpbd2d.unpause();
+        } else {
+            physics_time_xpbd2d.pause();
+        }
+    }
+    #[cfg(feature = "xpbd3d")]
+    {
+        use bevy_xpbd_3d::plugins::setup::PhysicsTime;
+        if setting_from_ui.0 {
+            physics_time_xpbd3d.unpause();
+        } else {
+            physics_time_xpbd3d.pause();
+        }
+    }
+}
