@@ -1,24 +1,20 @@
+pub mod component_alterbation;
+pub mod plotting;
+pub mod tuning;
+
 use std::marker::PhantomData;
 
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
-use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_tnua::TnuaToggle;
 
-use super::tuning::UiTunable;
-use super::ui_plotting::PlotSource;
+use self::component_alterbation::CommandAlteringSelectors;
+use self::plotting::plot_source_rolling_update;
+
 use super::FallingThroughControlScheme;
-
-// TODO: Remove this once the old examples are overwritten
-#[derive(Component, Default)]
-pub struct DummyTunable;
-
-impl UiTunable for DummyTunable {
-    fn tune(&mut self, ui: &mut egui::Ui) {
-        ui.label("DUMMY TUNABLE");
-    }
-}
+use plotting::PlotSource;
+use tuning::UiTunable;
 
 pub struct ExampleUi<C: Component + UiTunable> {
     _phantom: PhantomData<C>,
@@ -37,7 +33,7 @@ impl<C: Component + UiTunable> Plugin for ExampleUi<C> {
         app.add_plugins(EguiPlugin);
         app.insert_resource(ExampleUiPhysicsBackendActive(true));
         app.add_systems(Update, ui_system::<C>);
-        app.add_systems(Update, super::ui_plotting::plot_source_rolling_update);
+        app.add_systems(Update, plot_source_rolling_update);
         app.add_plugins(FrameTimeDiagnosticsPlugin);
     }
 }
@@ -48,60 +44,6 @@ pub struct ExampleUiPhysicsBackendActive(pub bool);
 
 #[derive(Component)]
 pub struct TrackedEntity(pub String);
-
-#[derive(Component, Default)]
-pub struct CommandAlteringSelectors(Vec<CommandAlteringSelector>);
-
-enum CommandAlteringSelector {
-    Combo {
-        chosen: usize,
-        caption: String,
-        options: Vec<(String, fn(EntityCommands))>,
-        set_to: Option<usize>,
-    },
-    Checkbox {
-        checked: bool,
-        caption: String,
-        applier: fn(EntityCommands, bool),
-        set_to: Option<bool>,
-    },
-}
-
-#[allow(clippy::type_complexity)]
-impl CommandAlteringSelectors {
-    pub fn with_combo(
-        mut self,
-        caption: &str,
-        initial: usize,
-        options: &[(&str, fn(EntityCommands))],
-    ) -> Self {
-        self.0.push(CommandAlteringSelector::Combo {
-            chosen: 0,
-            caption: caption.to_owned(),
-            options: options
-                .iter()
-                .map(|(name, applier)| (name.to_string(), *applier))
-                .collect(),
-            set_to: Some(initial),
-        });
-        self
-    }
-
-    pub fn with_checkbox(
-        mut self,
-        caption: &str,
-        initial: bool,
-        applier: fn(EntityCommands, bool),
-    ) -> Self {
-        self.0.push(CommandAlteringSelector::Checkbox {
-            checked: false,
-            caption: caption.to_owned(),
-            applier,
-            set_to: Some(initial),
-        });
-        self
-    }
-}
 
 #[allow(clippy::type_complexity)]
 fn ui_system<C: Component + UiTunable>(
@@ -121,32 +63,7 @@ fn ui_system<C: Component + UiTunable>(
 ) {
     for (entity, .., command_altering_selectors) in query.iter_mut() {
         if let Some(mut command_altering_selectors) = command_altering_selectors {
-            for selector in command_altering_selectors.0.iter_mut() {
-                match selector {
-                    CommandAlteringSelector::Combo {
-                        chosen,
-                        caption: _,
-                        options,
-                        set_to,
-                    } => {
-                        if let Some(set_to) = set_to.take() {
-                            *chosen = set_to;
-                            options[set_to].1(commands.entity(entity));
-                        }
-                    }
-                    CommandAlteringSelector::Checkbox {
-                        checked,
-                        caption: _,
-                        applier,
-                        set_to,
-                    } => {
-                        if let Some(set_to) = set_to.take() {
-                            *checked = set_to;
-                            applier(commands.entity(entity), set_to);
-                        }
-                    }
-                }
-            }
+            command_altering_selectors.apply_set_to(&mut commands, entity);
         }
     }
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
@@ -207,29 +124,7 @@ fn ui_system<C: Component + UiTunable>(
 
                             if let Some(mut command_altering_selectors) = command_altering_selectors
                             {
-                                for selector in command_altering_selectors.0.iter_mut() {
-                                    match selector {
-                                        CommandAlteringSelector::Combo { chosen, caption, options, set_to: _ } => {
-                                            let mut selected_idx: usize = *chosen;
-                                            egui::ComboBox::from_label(caption.as_str())
-                                                .selected_text(&options[*chosen].0)
-                                                .show_ui(ui, |ui| {
-                                                    for (idx, (name, _)) in options.iter().enumerate() {
-                                                        ui.selectable_value(&mut selected_idx, idx, name);
-                                                    }
-                                                });
-                                            if selected_idx != *chosen {
-                                                options[selected_idx].1(commands.entity(entity));
-                                                *chosen = selected_idx;
-                                            }
-                                        }
-                                        CommandAlteringSelector::Checkbox { checked, caption, applier, set_to: _ } => {
-                                            if ui.checkbox(checked, caption.as_str()).clicked() {
-                                                applier(commands.entity(entity), *checked);
-                                            }
-                                        }
-                                    }
-                                }
+                                command_altering_selectors.show_ui(ui, &mut commands, entity);
                             }
 
                             falling_through_control_scheme.edit_with_ui(ui);

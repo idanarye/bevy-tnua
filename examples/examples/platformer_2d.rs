@@ -19,8 +19,9 @@ use tnua_examples_crate::character_control_systems::platformer_control_systems::
     apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
 };
 use tnua_examples_crate::character_control_systems::Dimensionality;
-use tnua_examples_crate::ui::{CommandAlteringSelectors, ExampleUiPhysicsBackendActive};
-use tnua_examples_crate::ui_plotting::{update_plot_data, PlotSource};
+use tnua_examples_crate::ui::component_alterbation::CommandAlteringSelectors;
+use tnua_examples_crate::ui::plotting::{update_plot_data, PlotSource};
+use tnua_examples_crate::ui::ExampleUiPhysicsBackendActive;
 use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform, MovingPlatformPlugin};
 
 fn main() {

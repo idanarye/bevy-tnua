@@ -7,7 +7,7 @@ use bevy_tnua::control_helpers::{
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 
-use crate::tuning::UiTunable;
+use crate::ui::tuning::UiTunable;
 use crate::FallingThroughControlScheme;
 
 use super::Dimensionality;
