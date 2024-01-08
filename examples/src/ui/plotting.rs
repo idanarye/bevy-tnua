@@ -119,54 +119,17 @@ pub fn plot_source_rolling_update(time: Res<Time>, mut query: Query<&mut PlotSou
     }
 }
 
-pub fn update_plot_data(
-    #[cfg(feature = "rapier2d")] mut query_rapier2d: Query<(
-        &mut PlotSource,
-        &Transform,
-        &bevy_rapier2d::prelude::Velocity,
-    )>,
-    #[cfg(feature = "rapier3d")] mut query_rapier3d: Query<(
-        &mut PlotSource,
-        &Transform,
-        &bevy_rapier3d::prelude::Velocity,
-    )>,
-    #[cfg(feature = "xpbd2d")] mut query_xpbd2d: Query<(
-        &mut PlotSource,
-        &Transform,
-        &bevy_xpbd_2d::prelude::LinearVelocity,
-    )>,
-    #[cfg(feature = "xpbd3d")] mut query_xpbd3d: Query<(
-        &mut PlotSource,
-        &Transform,
-        &bevy_xpbd_3d::prelude::LinearVelocity,
-    )>,
-) {
-    #[cfg(feature = "rapier2d")]
-    for (mut plot_source, transform, velocity) in query_rapier2d.iter_mut() {
-        plot_source.set(&[
-            &[("Y", transform.translation.y), ("vel-Y", velocity.linvel.y)],
-            &[("X", transform.translation.x), ("vel-X", velocity.linvel.x)],
-        ]);
-    }
-    #[cfg(feature = "rapier3d")]
-    for (mut plot_source, transform, velocity) in query_rapier3d.iter_mut() {
-        plot_source.set(&[
-            &[("Y", transform.translation.y), ("vel-Y", velocity.linvel.y)],
-            &[("X", transform.translation.x), ("vel-X", velocity.linvel.x)],
-        ]);
-    }
-    #[cfg(feature = "xpbd2d")]
-    for (mut plot_source, transform, velocity) in query_xpbd2d.iter_mut() {
-        plot_source.set(&[
-            &[("Y", transform.translation.y), ("vel-Y", velocity.y)],
-            &[("X", transform.translation.x), ("vel-X", velocity.x)],
-        ]);
-    }
-    #[cfg(feature = "xpbd3d")]
-    for (mut plot_source, transform, velocity) in query_xpbd3d.iter_mut() {
-        plot_source.set(&[
-            &[("Y", transform.translation.y), ("vel-Y", velocity.y)],
-            &[("X", transform.translation.x), ("vel-X", velocity.x)],
-        ]);
-    }
+pub fn make_update_plot_data_system<V: Component>(
+    get_linvel: impl 'static + Send + Sync + Fn(&V) -> Vec3,
+) -> bevy::ecs::schedule::SystemConfigs {
+    (move |mut query_rapier2d: Query<(&mut PlotSource, &Transform, &V)>| {
+        for (mut plot_source, transform, velocity) in query_rapier2d.iter_mut() {
+            let linvel = get_linvel(velocity);
+            plot_source.set(&[
+                &[("Y", transform.translation.y), ("vel-Y", linvel.y)],
+                &[("X", transform.translation.x), ("vel-X", linvel.x)],
+            ]);
+        }
+    })
+    .into_configs()
 }

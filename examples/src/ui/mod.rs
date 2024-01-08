@@ -10,7 +10,7 @@ use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_tnua::TnuaToggle;
 
 use self::component_alterbation::CommandAlteringSelectors;
-use self::plotting::{plot_source_rolling_update, update_plot_data};
+use self::plotting::{make_update_plot_data_system, plot_source_rolling_update};
 
 use super::FallingThroughControlScheme;
 use plotting::PlotSource;
@@ -35,7 +35,36 @@ impl<C: Component + UiTunable> Plugin for ExampleUi<C> {
         app.add_systems(Update, ui_system::<C>);
         app.add_systems(Update, plot_source_rolling_update);
         app.add_plugins(FrameTimeDiagnosticsPlugin);
-        app.add_systems(Update, update_plot_data);
+
+        #[cfg(feature = "rapier2d")]
+        app.add_systems(
+            Update,
+            make_update_plot_data_system(|velocity: &bevy_rapier2d::prelude::Velocity| {
+                velocity.linvel.extend(0.0)
+            }),
+        );
+        #[cfg(feature = "rapier3d")]
+        app.add_systems(
+            Update,
+            make_update_plot_data_system(|velocity: &bevy_rapier3d::prelude::Velocity| {
+                velocity.linvel
+            }),
+        );
+        #[cfg(feature = "xpbd2d")]
+        app.add_systems(
+            Update,
+            make_update_plot_data_system(|velocity: &bevy_xpbd_2d::components::LinearVelocity| {
+                velocity.extend(0.0)
+            }),
+        );
+        #[cfg(feature = "xpbd3d")]
+        app.add_systems(
+            Update,
+            make_update_plot_data_system(|velocity: &bevy_xpbd_3d::components::LinearVelocity| {
+                **velocity
+            }),
+        );
+
         app.add_systems(Update, update_physics_active_from_ui);
     }
 }
@@ -142,43 +171,43 @@ fn ui_system<C: Component + UiTunable>(
 
 fn update_physics_active_from_ui(
     setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
-    #[cfg(feature = "rapier2d")] mut config_rapier2d: ResMut<
-        bevy_rapier2d::plugin::RapierConfiguration,
+    #[cfg(feature = "rapier2d")] mut config_rapier2d: Option<
+        ResMut<bevy_rapier2d::plugin::RapierConfiguration>,
     >,
-    #[cfg(feature = "rapier3d")] mut config_rapier3d: ResMut<
-        bevy_rapier3d::plugin::RapierConfiguration,
+    #[cfg(feature = "rapier3d")] mut config_rapier3d: Option<
+        ResMut<bevy_rapier3d::plugin::RapierConfiguration>,
     >,
-    #[cfg(feature = "xpbd2d")] mut physics_time_xpbd2d: ResMut<
-        Time<bevy_xpbd_2d::plugins::setup::Physics>,
+    #[cfg(feature = "xpbd2d")] mut physics_time_xpbd2d: Option<
+        ResMut<Time<bevy_xpbd_2d::plugins::setup::Physics>>,
     >,
-    #[cfg(feature = "xpbd3d")] mut physics_time_xpbd3d: ResMut<
-        Time<bevy_xpbd_3d::plugins::setup::Physics>,
+    #[cfg(feature = "xpbd3d")] mut physics_time_xpbd3d: Option<
+        ResMut<Time<bevy_xpbd_3d::plugins::setup::Physics>>,
     >,
 ) {
     #[cfg(feature = "rapier2d")]
-    {
-        config_rapier2d.physics_pipeline_active = setting_from_ui.0;
+    if let Some(config) = config_rapier2d.as_mut() {
+        config.physics_pipeline_active = setting_from_ui.0;
     }
     #[cfg(feature = "rapier3d")]
-    {
-        config_rapier3d.physics_pipeline_active = setting_from_ui.0;
+    if let Some(config) = config_rapier3d.as_mut() {
+        config.physics_pipeline_active = setting_from_ui.0;
     }
     #[cfg(feature = "xpbd2d")]
-    {
+    if let Some(physics_time) = physics_time_xpbd2d.as_mut() {
         use bevy_xpbd_2d::plugins::setup::PhysicsTime;
         if setting_from_ui.0 {
-            physics_time_xpbd2d.unpause();
+            physics_time.unpause();
         } else {
-            physics_time_xpbd2d.pause();
+            physics_time.pause();
         }
     }
     #[cfg(feature = "xpbd3d")]
-    {
+    if let Some(physics_time) = physics_time_xpbd3d.as_mut() {
         use bevy_xpbd_3d::plugins::setup::PhysicsTime;
         if setting_from_ui.0 {
-            physics_time_xpbd3d.unpause();
+            physics_time.unpause();
         } else {
-            physics_time_xpbd3d.pause();
+            physics_time.pause();
         }
     }
 }
