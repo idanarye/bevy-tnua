@@ -41,7 +41,7 @@ Tnua can use [Rapier](https://rapier.rs/) or [XPBD](https://github.com/Jondolf/b
 ### Running the Examples Locally
 
 ```sh
-cargo run --example <example-name> --features <physics-backend>
+$ cargo run --example <example-name> --features <physics-backend>
 ```
 
 Where `<example-name>` is the name of the example file and `<physics-backend>` is either `rapier2d`, `rapier3d`, `xpbd2d` or `xpbd3d`. Make sure to match the dimensionality of the backend (2D or 3D) to that of the example. For example, to run the 3D platformer with XPBD, use this:
@@ -52,7 +52,7 @@ $ cargo run --example platformer_3d --features xpbd3d
 
 ### Interesting Parts of the Examples Code
 
-* Check out [the examples `main` files](examples/examples/) to see how the plugins and the player character entities are being set.
+* Check out [the examples entry points](examples/examples/) to see how the plugins and the player character entities are being set.
 * Check out [the character control systems](examples/src/character_control_systems/) to see how to control the character's motion and special movement actions.
 * Check out [the character animating systems](examples/src/character_animating_systems/) to see how to use information from Tnua for character animation.
 

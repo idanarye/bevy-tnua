@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-#[cfg(feature = "rapier")]
+#[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
 use bevy_tnua::builtins::TnuaBuiltinCrouch;
 use bevy_tnua::control_helpers::{
@@ -7,32 +7,34 @@ use bevy_tnua::control_helpers::{
     TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::prelude::*;
-use bevy_tnua::{TnuaGhostPlatform, TnuaGhostSensor, TnuaToggle};
-#[cfg(feature = "rapier")]
+use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
+#[cfg(feature = "rapier2d")]
 use bevy_tnua_rapier2d::*;
-#[cfg(feature = "xpbd")]
+#[cfg(feature = "xpbd2d")]
 use bevy_tnua_xpbd2d::*;
-#[cfg(feature = "xpbd")]
+#[cfg(feature = "xpbd2d")]
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
 use tnua_examples_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
 };
 use tnua_examples_crate::character_control_systems::Dimensionality;
+#[cfg(feature = "xpbd2d")]
+use tnua_examples_crate::levels_setup::for_2d_platformer::LayerNames;
 use tnua_examples_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_examples_crate::ui::plotting::PlotSource;
-use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform, MovingPlatformPlugin};
+use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatformPlugin};
 
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
-    #[cfg(feature = "rapier")]
+    #[cfg(feature = "rapier2d")]
     {
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
         app.add_plugins(RapierDebugRenderPlugin::default());
         app.add_plugins(TnuaRapier2dPlugin);
     }
-    #[cfg(feature = "xpbd")]
+    #[cfg(feature = "xpbd2d")]
     {
         app.add_plugins(PhysicsPlugins::default());
         app.add_plugins(PhysicsDebugPlugin::default());
@@ -44,14 +46,17 @@ fn main() {
         CharacterMotionConfigForPlatformerExample,
     >::default());
     app.add_systems(Startup, setup_camera);
-    app.add_systems(Startup, setup_level);
+    app.add_systems(
+        Startup,
+        tnua_examples_crate::levels_setup::for_2d_platformer::setup_level,
+    );
     app.add_systems(Startup, setup_player);
     app.add_systems(
         Update,
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
     app.add_plugins(MovingPlatformPlugin);
-    #[cfg(feature = "rapier")]
+    #[cfg(feature = "rapier2d")]
     {
         app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
             // For some odd reason, Rapier 2D defaults to a gravity of 98.1
@@ -59,14 +64,6 @@ fn main() {
         });
     }
     app.run();
-}
-
-#[cfg(feature = "xpbd")]
-#[derive(PhysicsLayer)]
-enum LayerNames {
-    Player,
-    FallThrough,
-    PhaseThrough,
 }
 
 fn setup_camera(mut commands: Commands) {
@@ -83,213 +80,19 @@ fn setup_camera(mut commands: Commands) {
     });
 }
 
-fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let mut cmd = commands.spawn_empty();
-    cmd.insert(SpriteBundle {
-        sprite: Sprite {
-            custom_size: Some(Vec2::new(128.0, 0.5)),
-            color: Color::GRAY,
-            ..Default::default()
-        },
-        ..Default::default()
-    });
-    #[cfg(feature = "rapier")]
-    cmd.insert(rapier::Collider::halfspace(Vec2::Y).unwrap());
-    #[cfg(feature = "xpbd")]
-    {
-        cmd.insert(xpbd::RigidBody::Static);
-        cmd.insert(xpbd::Collider::halfspace(Vec2::Y));
-    }
-
-    for ([width, height], transform) in [
-        (
-            [20.0, 0.1],
-            Transform::from_xyz(10.0, 10.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
-        ),
-        ([4.0, 2.0], Transform::from_xyz(-4.0, 1.0, 0.0)),
-        ([6.0, 1.0], Transform::from_xyz(-10.0, 4.0, 0.0)),
-        ([6.0, 1.0], Transform::from_xyz(-20.0, 2.6, 0.0)),
-    ] {
-        let mut cmd = commands.spawn_empty();
-        cmd.insert(SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(width, height)),
-                color: Color::GRAY,
-                ..Default::default()
-            },
-            transform,
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier")]
-        cmd.insert(rapier::Collider::cuboid(0.5 * width, 0.5 * height));
-        #[cfg(feature = "xpbd")]
-        {
-            cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(width, height));
-        }
-    }
-
-    // Fall-through platforms
-    for y in [5.0, 7.5] {
-        let mut cmd = commands.spawn_empty();
-        cmd.insert(SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(6.0, 0.5)),
-                color: Color::PINK,
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(-20.0, y, -1.0),
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier")]
-        {
-            cmd.insert(rapier::Collider::cuboid(3.0, 0.25));
-            cmd.insert(SolverGroups {
-                memberships: Group::empty(),
-                filters: Group::empty(),
-            });
-        }
-        #[cfg(feature = "xpbd")]
-        {
-            cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(6.0, 0.5));
-            cmd.insert(CollisionLayers::new(
-                [LayerNames::FallThrough],
-                [LayerNames::FallThrough],
-            ));
-        }
-        cmd.insert(TnuaGhostPlatform);
-    }
-
-    commands.spawn((
-        TransformBundle::from_transform(Transform::from_xyz(10.0, 2.0, 0.0)),
-        #[cfg(feature = "rapier")]
-        (
-            rapier::Collider::ball(1.0),
-            CollisionGroups {
-                memberships: Group::GROUP_1,
-                filters: Group::GROUP_1,
-            },
-        ),
-        #[cfg(feature = "xpbd")]
-        (
-            xpbd::RigidBody::Static,
-            xpbd::Collider::ball(1.0),
-            CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
-        ),
-    ));
-    commands.spawn(Text2dBundle {
-        text: Text::from_section(
-            "collision\ngroups",
-            TextStyle {
-                font: asset_server.load("FiraSans-Bold.ttf"),
-                font_size: 72.0,
-                color: Color::WHITE,
-            },
-        )
-        .with_alignment(TextAlignment::Center),
-        transform: Transform::from_xyz(10.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-        ..Default::default()
-    });
-
-    #[cfg(feature = "rapier")]
-    {
-        commands.spawn((
-            TransformBundle::from_transform(Transform::from_xyz(15.0, 2.0, 0.0)),
-            rapier::Collider::ball(1.0),
-            SolverGroups {
-                memberships: Group::GROUP_1,
-                filters: Group::GROUP_1,
-            },
-        ));
-        commands.spawn(Text2dBundle {
-            text: Text::from_section(
-                "solver\ngroups",
-                TextStyle {
-                    font: asset_server.load("FiraSans-Bold.ttf"),
-                    font_size: 72.0,
-                    color: Color::WHITE,
-                },
-            )
-            .with_alignment(TextAlignment::Center),
-            transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        });
-    }
-
-    commands.spawn((
-        TransformBundle::from_transform(Transform::from_xyz(20.0, 2.0, 0.0)),
-        #[cfg(feature = "rapier")]
-        (rapier::Collider::ball(1.0), rapier::Sensor),
-        #[cfg(feature = "xpbd")]
-        (
-            xpbd::RigidBody::Static,
-            xpbd::Collider::ball(1.0),
-            xpbd::Sensor,
-        ),
-    ));
-    commands.spawn(Text2dBundle {
-        text: Text::from_section(
-            "sensor",
-            TextStyle {
-                font: asset_server.load("FiraSans-Bold.ttf"),
-                font_size: 72.0,
-                color: Color::WHITE,
-            },
-        )
-        .with_alignment(TextAlignment::Center),
-        transform: Transform::from_xyz(20.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-        ..Default::default()
-    });
-
-    // spawn moving platform
-    {
-        let mut cmd = commands.spawn_empty();
-        cmd.insert(SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(4.0, 1.0)),
-                color: Color::BLUE,
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(-4.0, 6.0, 0.0),
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier")]
-        {
-            cmd.insert(rapier::Collider::cuboid(2.0, 0.5));
-            cmd.insert(Velocity::default());
-            cmd.insert(rapier::RigidBody::KinematicVelocityBased);
-        }
-        #[cfg(feature = "xpbd")]
-        {
-            cmd.insert(xpbd::Collider::cuboid(4.0, 1.0));
-            cmd.insert(xpbd::RigidBody::Kinematic);
-        }
-        cmd.insert(MovingPlatform::new(
-            4.0,
-            &[
-                Vec3::new(-4.0, 6.0, 0.0),
-                Vec3::new(-8.0, 6.0, 0.0),
-                Vec3::new(-8.0, 10.0, 0.0),
-                Vec3::new(-4.0, 10.0, 0.0),
-            ],
-        ));
-    }
-}
-
 fn setup_player(mut commands: Commands) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(TransformBundle::from_transform(Transform::from_xyz(
         0.0, 2.0, 0.0,
     )));
     cmd.insert(VisibilityBundle::default());
-    #[cfg(feature = "rapier")]
+    #[cfg(feature = "rapier2d")]
     {
         cmd.insert(rapier::RigidBody::Dynamic);
         cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
         cmd.insert(TnuaRapier2dIOBundle::default());
     }
-    #[cfg(feature = "xpbd")]
+    #[cfg(feature = "xpbd2d")]
     {
         cmd.insert(xpbd::RigidBody::Dynamic);
         cmd.insert(xpbd::Collider::capsule(1.0, 0.5));
@@ -316,9 +119,9 @@ fn setup_player(mut commands: Commands) {
     });
     cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
-        #[cfg(feature = "rapier")]
+        #[cfg(feature = "rapier2d")]
         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
-        #[cfg(feature = "xpbd")]
+        #[cfg(feature = "xpbd2d")]
         cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.0, 0.0)));
     }));
     cmd.insert(TnuaGhostSensor::default());
@@ -332,53 +135,53 @@ fn setup_player(mut commands: Commands) {
                 1,
                 &[
                     ("Point", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier2d")]
                         cmd.remove::<TnuaRapier2dSensorShape>();
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd2d")]
                         cmd.remove::<TnuaXpbd2dSensorShape>();
                     }),
                     ("Flat (underfit)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.49, 0.0)));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd2d")]
                         cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(0.99, 0.0)));
                     }),
                     ("Flat (exact)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd2d")]
                         cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.0, 0.0)));
                     }),
                     ("flat (overfit)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.51, 0.0)));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd2d")]
                         cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.01, 0.0)));
                     }),
                     ("Ball (underfit)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.49)));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd2d")]
                         cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::ball(0.49)));
                     }),
                     ("Ball (exact)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.5)));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd2d")]
                         cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::ball(0.5)));
                     }),
                 ],
             )
             .with_checkbox("Lock Tilt", false, |mut cmd, lock_tilt| {
                 if lock_tilt {
-                    #[cfg(feature = "rapier")]
+                    #[cfg(feature = "rapier2d")]
                     cmd.insert(rapier::LockedAxes::ROTATION_LOCKED);
-                    #[cfg(feature = "xpbd")]
+                    #[cfg(feature = "xpbd2d")]
                     cmd.insert(xpbd::LockedAxes::new().lock_rotation());
                 } else {
-                    #[cfg(feature = "rapier")]
+                    #[cfg(feature = "rapier2d")]
                     cmd.insert(rapier::LockedAxes::empty());
-                    #[cfg(feature = "xpbd")]
+                    #[cfg(feature = "xpbd2d")]
                     cmd.insert(xpbd::LockedAxes::new());
                 }
             })
@@ -386,7 +189,7 @@ fn setup_player(mut commands: Commands) {
                 "Phase Through Collision Groups",
                 true,
                 |mut cmd, use_collision_groups| {
-                    #[cfg(feature = "rapier")]
+                    #[cfg(feature = "rapier2d")]
                     if use_collision_groups {
                         cmd.insert(CollisionGroups {
                             memberships: Group::GROUP_2,
@@ -398,7 +201,7 @@ fn setup_player(mut commands: Commands) {
                             filters: Group::ALL,
                         });
                     }
-                    #[cfg(feature = "xpbd")]
+                    #[cfg(feature = "xpbd2d")]
                     {
                         let player_layers: &[LayerNames] = if use_collision_groups {
                             &[LayerNames::Player]
@@ -409,19 +212,19 @@ fn setup_player(mut commands: Commands) {
                     }
                 },
             );
-        #[cfg(feature = "rapier")]
+        #[cfg(feature = "rapier2d")]
         let command_altering_selectors = command_altering_selectors.with_checkbox(
             "Phase Through Solver Groups",
             true,
             |mut cmd, use_solver_groups| {
                 if use_solver_groups {
-                    #[cfg(feature = "rapier")]
+                    #[cfg(feature = "rapier2d")]
                     cmd.insert(SolverGroups {
                         memberships: Group::GROUP_2,
                         filters: Group::GROUP_2,
                     });
                 } else {
-                    #[cfg(feature = "rapier")]
+                    #[cfg(feature = "rapier2d")]
                     cmd.insert(SolverGroups {
                         memberships: Group::ALL,
                         filters: Group::ALL,

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-#[cfg(feature = "rapier")]
+#[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
 use bevy_tnua::builtins::TnuaBuiltinCrouch;
 use bevy_tnua::control_helpers::{
@@ -7,12 +7,12 @@ use bevy_tnua::control_helpers::{
     TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::prelude::*;
-use bevy_tnua::{TnuaAnimatingState, TnuaGhostPlatform, TnuaGhostSensor, TnuaToggle};
-#[cfg(feature = "rapier")]
+use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
+#[cfg(feature = "rapier3d")]
 use bevy_tnua_rapier3d::*;
-#[cfg(feature = "xpbd")]
+#[cfg(feature = "xpbd3d")]
 use bevy_tnua_xpbd3d::*;
-#[cfg(feature = "xpbd")]
+#[cfg(feature = "xpbd3d")]
 use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
 
 use tnua_examples_crate::character_animating_systems::platformer_animating_systems::{
@@ -22,20 +22,22 @@ use tnua_examples_crate::character_control_systems::platformer_control_systems::
     apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
 };
 use tnua_examples_crate::character_control_systems::Dimensionality;
+#[cfg(feature = "xpbd3d")]
+use tnua_examples_crate::levels_setup::for_3d_platformer::LayerNames;
 use tnua_examples_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_examples_crate::ui::plotting::PlotSource;
 use tnua_examples_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
-use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform, MovingPlatformPlugin};
+use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatformPlugin};
 
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
-    #[cfg(feature = "rapier")]
+    #[cfg(feature = "rapier3d")]
     {
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
         app.add_plugins(TnuaRapier3dPlugin);
     }
-    #[cfg(feature = "xpbd")]
+    #[cfg(feature = "xpbd3d")]
     {
         app.add_plugins(PhysicsPlugins::default());
         app.add_plugins(TnuaXpbd3dPlugin);
@@ -46,7 +48,10 @@ fn main() {
         CharacterMotionConfigForPlatformerExample,
     >::default());
     app.add_systems(Startup, setup_camera);
-    app.add_systems(Startup, setup_level);
+    app.add_systems(
+        Startup,
+        tnua_examples_crate::levels_setup::for_3d_platformer::setup_level,
+    );
     app.add_systems(Startup, setup_player);
     app.add_systems(
         Update,
@@ -56,14 +61,6 @@ fn main() {
     app.add_systems(Update, animate_platformer_character);
     app.add_plugins(MovingPlatformPlugin);
     app.run();
-}
-
-#[cfg(feature = "xpbd")]
-#[derive(PhysicsLayer)]
-enum LayerNames {
-    Player,
-    FallThrough,
-    PhaseThrough,
 }
 
 fn setup_camera(mut commands: Commands) {
@@ -89,205 +86,6 @@ fn setup_camera(mut commands: Commands) {
     });
 }
 
-fn setup_level(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
-) {
-    let mut cmd = commands.spawn_empty();
-    cmd.insert(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane {
-            size: 128.0,
-            subdivisions: 0,
-        })),
-        material: materials.add(Color::WHITE.into()),
-        ..Default::default()
-    });
-    #[cfg(feature = "rapier")]
-    cmd.insert(rapier::Collider::halfspace(Vec3::Y).unwrap());
-    #[cfg(feature = "xpbd")]
-    {
-        cmd.insert(xpbd::RigidBody::Static);
-        cmd.insert(xpbd::Collider::halfspace(Vec3::Y));
-    }
-
-    let obstacles_material = materials.add(Color::GRAY.into());
-    for ([width, height, depth], transform) in [
-        (
-            [20.0, 0.1, 2.0],
-            Transform::from_xyz(10.0, 10.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
-        ),
-        ([4.0, 2.0, 2.0], Transform::from_xyz(-4.0, 1.0, 0.0)),
-        ([6.0, 1.0, 2.0], Transform::from_xyz(-10.0, 4.0, 0.0)),
-        ([6.0, 1.0, 2.0], Transform::from_xyz(0.0, 2.6, -5.0)),
-    ] {
-        let mut cmd = commands.spawn_empty();
-        cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(width, height, depth))),
-            material: obstacles_material.clone(),
-            transform,
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier")]
-        cmd.insert(rapier::Collider::cuboid(
-            0.5 * width,
-            0.5 * height,
-            0.5 * depth,
-        ));
-        #[cfg(feature = "xpbd")]
-        {
-            cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(width, height, depth));
-        }
-    }
-
-    // Fall-through platforms
-    let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8).into());
-    for y in [2.0, 4.5] {
-        let mut cmd = commands.spawn_empty();
-        cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(6.0, 0.5, 2.0))),
-            material: fall_through_obstacles_material.clone(),
-            transform: Transform::from_xyz(6.0, y, 10.0),
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier")]
-        {
-            cmd.insert(rapier::Collider::cuboid(3.0, 0.25, 1.0));
-            cmd.insert(SolverGroups {
-                memberships: Group::empty(),
-                filters: Group::empty(),
-            });
-        }
-        #[cfg(feature = "xpbd")]
-        {
-            cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(6.0, 0.5, 2.0));
-            cmd.insert(CollisionLayers::new(
-                [LayerNames::FallThrough],
-                [LayerNames::FallThrough],
-            ));
-        }
-        cmd.insert(TnuaGhostPlatform);
-    }
-
-    commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("collision-groups-text.glb#Scene0"),
-            transform: Transform::from_xyz(10.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        },
-        #[cfg(feature = "rapier")]
-        (
-            rapier::Collider::cuboid(2.0, 1.0, 2.0),
-            CollisionGroups {
-                memberships: Group::GROUP_1,
-                filters: Group::GROUP_1,
-            },
-        ),
-        #[cfg(feature = "xpbd")]
-        (
-            xpbd::RigidBody::Static,
-            xpbd::Collider::cuboid(4.0, 2.0, 4.0),
-            CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
-        ),
-    ));
-
-    #[cfg(feature = "rapier")]
-    commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("solver-groups-text.glb#Scene0"),
-            transform: Transform::from_xyz(15.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        },
-        rapier::Collider::cuboid(2.0, 1.0, 2.0),
-        SolverGroups {
-            memberships: Group::GROUP_1,
-            filters: Group::GROUP_1,
-        },
-    ));
-
-    commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("sensor-text.glb#Scene0"),
-            transform: Transform::from_xyz(20.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        },
-        #[cfg(feature = "rapier")]
-        (rapier::Collider::cuboid(2.0, 1.0, 2.0), rapier::Sensor),
-        #[cfg(feature = "xpbd")]
-        (
-            xpbd::RigidBody::Static,
-            xpbd::Collider::cuboid(4.0, 2.0, 4.0),
-            xpbd::Sensor,
-        ),
-    ));
-
-    // spawn moving platform
-    {
-        let mut cmd = commands.spawn_empty();
-
-        cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(4.0, 1.0, 4.0))),
-            material: materials.add(Color::BLUE.into()),
-            transform: Transform::from_xyz(-4.0, 6.0, 0.0),
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier")]
-        {
-            cmd.insert(rapier::Collider::cuboid(2.0, 0.5, 2.0));
-            cmd.insert(Velocity::default());
-            cmd.insert(rapier::RigidBody::KinematicVelocityBased);
-        }
-        #[cfg(feature = "xpbd")]
-        {
-            cmd.insert(xpbd::Collider::cuboid(4.0, 1.0, 4.0));
-            cmd.insert(xpbd::RigidBody::Kinematic);
-        }
-        cmd.insert(MovingPlatform::new(
-            4.0,
-            &[
-                Vec3::new(-4.0, 6.0, 0.0),
-                Vec3::new(-8.0, 6.0, 0.0),
-                Vec3::new(-8.0, 10.0, 0.0),
-                Vec3::new(-8.0, 10.0, -4.0),
-                Vec3::new(-4.0, 10.0, -4.0),
-                Vec3::new(-4.0, 10.0, 0.0),
-            ],
-        ));
-    }
-
-    // spawn spinning platform
-    {
-        let mut cmd = commands.spawn_empty();
-
-        cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cylinder {
-                radius: 3.0,
-                height: 1.0,
-                resolution: 10,
-                segments: 10,
-            })),
-            material: materials.add(Color::BLUE.into()),
-            transform: Transform::from_xyz(-2.0, 2.0, 10.0),
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier")]
-        {
-            cmd.insert(rapier::Collider::cylinder(0.5, 3.0));
-            cmd.insert(Velocity::angular(Vec3::Y));
-            cmd.insert(rapier::RigidBody::KinematicVelocityBased);
-        }
-        #[cfg(feature = "xpbd")]
-        {
-            cmd.insert(xpbd::Collider::cylinder(1.0, 3.0));
-            cmd.insert(AngularVelocity(Vec3::Y));
-            cmd.insert(xpbd::RigidBody::Kinematic);
-        }
-    }
-}
-
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(SceneBundle {
@@ -298,13 +96,13 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(GltfSceneHandler {
         names_from: asset_server.load("player.glb"),
     });
-    #[cfg(feature = "rapier")]
+    #[cfg(feature = "rapier3d")]
     {
         cmd.insert(rapier::RigidBody::Dynamic);
         cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
         cmd.insert(TnuaRapier3dIOBundle::default());
     }
-    #[cfg(feature = "xpbd")]
+    #[cfg(feature = "xpbd3d")]
     {
         cmd.insert(xpbd::RigidBody::Dynamic);
         cmd.insert(xpbd::Collider::capsule(1.0, 0.5));
@@ -332,11 +130,11 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
-        #[cfg(feature = "rapier")]
+        #[cfg(feature = "rapier3d")]
         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
             0.0, 0.5,
         )));
-        #[cfg(feature = "xpbd")]
+        #[cfg(feature = "xpbd3d")]
         cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.5)));
     }));
     cmd.insert(TnuaGhostSensor::default());
@@ -351,62 +149,62 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 1,
                 &[
                     ("no", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier3d")]
                         cmd.remove::<TnuaRapier3dSensorShape>();
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd3d")]
                         cmd.remove::<TnuaXpbd3dSensorShape>();
                     }),
                     ("flat (underfit)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
                             0.0, 0.49,
                         )));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd3d")]
                         cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.49)));
                     }),
                     ("flat (exact)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
                             0.0, 0.5,
                         )));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd3d")]
                         cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.5)));
                     }),
                     ("flat (overfit)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
                             0.0, 0.51,
                         )));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd3d")]
                         cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.51)));
                     }),
                     ("ball (underfit)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::ball(0.49)));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd3d")]
                         cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::ball(0.49)));
                     }),
                     ("ball (exact)", |mut cmd| {
-                        #[cfg(feature = "rapier")]
+                        #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::ball(0.5)));
-                        #[cfg(feature = "xpbd")]
+                        #[cfg(feature = "xpbd3d")]
                         cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::ball(0.5)));
                     }),
                 ],
             )
             .with_checkbox("Lock Tilt", true, |mut cmd, lock_tilt| {
                 if lock_tilt {
-                    #[cfg(feature = "rapier")]
+                    #[cfg(feature = "rapier3d")]
                     cmd.insert(
                         rapier::LockedAxes::ROTATION_LOCKED_X
                             | rapier::LockedAxes::ROTATION_LOCKED_Z,
                     );
-                    #[cfg(feature = "xpbd")]
+                    #[cfg(feature = "xpbd3d")]
                     cmd.insert(xpbd::LockedAxes::new().lock_rotation_x().lock_rotation_z());
                 } else {
-                    #[cfg(feature = "rapier")]
+                    #[cfg(feature = "rapier3d")]
                     cmd.insert(rapier::LockedAxes::empty());
-                    #[cfg(feature = "xpbd")]
+                    #[cfg(feature = "xpbd3d")]
                     cmd.insert(xpbd::LockedAxes::new());
                 }
             })
@@ -414,7 +212,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 "Phase Through Collision Groups",
                 true,
                 |mut cmd, use_collision_groups| {
-                    #[cfg(feature = "rapier")]
+                    #[cfg(feature = "rapier3d")]
                     if use_collision_groups {
                         cmd.insert(CollisionGroups {
                             memberships: Group::GROUP_2,
@@ -426,7 +224,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                             filters: Group::ALL,
                         });
                     }
-                    #[cfg(feature = "xpbd")]
+                    #[cfg(feature = "xpbd3d")]
                     {
                         let player_layers: &[LayerNames] = if use_collision_groups {
                             &[LayerNames::Player]
@@ -437,7 +235,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     }
                 },
             );
-        #[cfg(feature = "rapier")]
+        #[cfg(feature = "rapier3d")]
         let command_altering_selectors = command_altering_selectors.with_checkbox(
             "Phase Through Solver Groups",
             true,
