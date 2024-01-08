@@ -20,8 +20,7 @@ use tnua_examples_crate::character_control_systems::platformer_control_systems::
 };
 use tnua_examples_crate::character_control_systems::Dimensionality;
 use tnua_examples_crate::ui::component_alterbation::CommandAlteringSelectors;
-use tnua_examples_crate::ui::plotting::{update_plot_data, PlotSource};
-use tnua_examples_crate::ui::update_physics_active_from_ui;
+use tnua_examples_crate::ui::plotting::PlotSource;
 use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatform, MovingPlatformPlugin};
 
 fn main() {
@@ -51,9 +50,7 @@ fn main() {
         Update,
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
-    app.add_systems(Update, update_plot_data);
     app.add_plugins(MovingPlatformPlugin);
-    app.add_systems(Update, update_physics_active_from_ui);
     #[cfg(feature = "rapier")]
     {
         app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {

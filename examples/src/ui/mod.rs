@@ -10,7 +10,7 @@ use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_tnua::TnuaToggle;
 
 use self::component_alterbation::CommandAlteringSelectors;
-use self::plotting::plot_source_rolling_update;
+use self::plotting::{plot_source_rolling_update, update_plot_data};
 
 use super::FallingThroughControlScheme;
 use plotting::PlotSource;
@@ -35,6 +35,8 @@ impl<C: Component + UiTunable> Plugin for ExampleUi<C> {
         app.add_systems(Update, ui_system::<C>);
         app.add_systems(Update, plot_source_rolling_update);
         app.add_plugins(FrameTimeDiagnosticsPlugin);
+        app.add_systems(Update, update_plot_data);
+        app.add_systems(Update, update_physics_active_from_ui);
     }
 }
 
@@ -138,7 +140,7 @@ fn ui_system<C: Component + UiTunable>(
     });
 }
 
-pub fn update_physics_active_from_ui(
+fn update_physics_active_from_ui(
     setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
     #[cfg(feature = "rapier2d")] mut config_rapier2d: ResMut<
         bevy_rapier2d::plugin::RapierConfiguration,
