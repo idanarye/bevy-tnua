@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 0.1.1 - 2024-01-14
+### Fixed
+- Use a proper `OR` syntax for the dual license.
+
 ## 0.1.0 - 2023-11-13
 ### Changed
 - Splitted out of the main bevy-tnua crate, so that physics backend integration

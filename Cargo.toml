@@ -13,7 +13,7 @@ keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
 [package]
 name = "bevy-tnua"
 description = "A floating character controller for bevy_rapier"
-version = "0.14.0"
+version = "0.14.1"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -31,7 +31,7 @@ autoexamples = false
 
 [dependencies]
 bevy = { version = "^0.12", default-features = false }
-bevy-tnua-physics-integration-layer = { version = "0.1.0", path = "physics-integration-layer" }
+bevy-tnua-physics-integration-layer = { version = "0.1.1", path = "physics-integration-layer" }
 thiserror = "1.0.53"
 
 [dev-dependencies]

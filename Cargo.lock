@@ -338,7 +338,7 @@ dependencies = [
 
 [[package]]
 name = "bevy-tnua"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "bevy",
  "bevy-tnua-physics-integration-layer",
@@ -347,14 +347,14 @@ dependencies = [
 
 [[package]]
 name = "bevy-tnua-physics-integration-layer"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bevy",
 ]
 
 [[package]]
 name = "bevy-tnua-rapier2d"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bevy",
  "bevy-tnua-physics-integration-layer",
@@ -363,7 +363,7 @@ dependencies = [
 
 [[package]]
 name = "bevy-tnua-rapier3d"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bevy",
  "bevy-tnua-physics-integration-layer",
@@ -372,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "bevy-tnua-xpbd2d"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bevy",
  "bevy-tnua-physics-integration-layer",
@@ -381,7 +381,7 @@ dependencies = [
 
 [[package]]
 name = "bevy-tnua-xpbd3d"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bevy",
  "bevy-tnua-physics-integration-layer",
