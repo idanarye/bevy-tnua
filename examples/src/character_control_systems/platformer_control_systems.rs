@@ -8,7 +8,6 @@ use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 
 use crate::ui::tuning::UiTunable;
-use crate::FallingThroughControlScheme;
 
 use super::Dimensionality;
 
@@ -33,12 +32,11 @@ pub fn apply_platformer_controls(
         &mut TnuaProximitySensor,
         // The ghost sensor detects ghost platforms - which are pass-through platforms marked with
         // the `TnuaGhostPlatform` component. Left alone it does not actually affect anything - a
-        // user control system (like this example you are reading right now) has to use the data
-        // from it and manipulate the proximity sensor.
+        // user control system (like this very example here) has to use the data from it and
+        // manipulate the proximity sensor.
         &TnuaGhostSensor,
         // This is an helper for implementing one-way platforms.
         &mut TnuaSimpleFallThroughPlatformsHelper,
-        &FallingThroughControlScheme,
         // This is an helper for implementing air actions. It counts all the air actions using a
         // single counter, so it cannot be used to implement, for example, one double jump and one
         // air dash per jump - only a single "pool" of air action "energy" shared by all air
@@ -63,7 +61,6 @@ pub fn apply_platformer_controls(
         mut sensor,
         ghost_sensor,
         mut fall_through_helper,
-        falling_through_control_scheme,
         mut air_actions_counter,
     ) in query.iter_mut()
     {
@@ -96,17 +93,17 @@ pub fn apply_platformer_controls(
 
         let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
-        let crouch: bool;
+        let crouch_pressed: bool;
         let crouch_just_pressed: bool;
         match config.dimensionality {
             Dimensionality::Dim2 => {
                 let crouch_buttons = [KeyCode::Down, KeyCode::ControlLeft, KeyCode::ControlRight];
-                crouch = keyboard.any_pressed(crouch_buttons);
+                crouch_pressed = keyboard.any_pressed(crouch_buttons);
                 crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
             }
             Dimensionality::Dim3 => {
                 let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
-                crouch = keyboard.any_pressed(crouch_buttons);
+                crouch_pressed = keyboard.any_pressed(crouch_buttons);
                 crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
             }
         }
@@ -119,15 +116,137 @@ pub fn apply_platformer_controls(
         // * Is any air action currently ongoing?
         air_actions_counter.update(controller.as_mut());
 
-        // TODO: move the various implementations to here, and document them.
-        let crouch = falling_through_control_scheme.perform_and_check_if_still_crouching(
-            crouch,
-            crouch_just_pressed,
-            fall_through_helper.as_mut(),
-            sensor.as_mut(),
-            ghost_sensor,
-            1.0,
-        );
+        // Here we will handle one-way platforms. It looks long and complex, but it's actual
+        // several schemes with observable changes in behavior, and each implementation is rather
+        // short and simple.
+        let crouch;
+        match config.falling_through {
+            // With this scheme, the player cannot make their character fall through by pressing
+            // the crouch button - the platforms are jump-through only.
+            FallingThroughControlScheme::JumpThroughOnly => {
+                crouch = crouch_pressed;
+                // To achieve this, we simply take the first platform detected by the ghost sensor,
+                // and treat it like a "real" platform.
+                for ghost_platform in ghost_sensor.iter() {
+                    // Because the ghots platforms don't interact with the character through the
+                    // physics engine, and because the ray that detected them starts from the
+                    // center of the character, we usually want to only look at platforms that
+                    // are at least a certain distance lower than that - to limit the point from
+                    // which the character climbs when they collide with the platform.
+                    if config.one_way_platforms_min_proximity <= ghost_platform.proximity {
+                        // By overriding the sensor's output, we make it pretend the ghost platform
+                        // is a real one - which makes Tnua make the character stand on it even
+                        // though the physics engine will not consider them colliding with each
+                        // other.
+                        sensor.output = Some(ghost_platform.clone());
+                        break;
+                    }
+                }
+            }
+            // With this scheme, the player can drop down one-way platforms by pressing the crouch
+            // button. Because it does not use `TnuaSimpleFallThroughPlatformsHelper`, it has
+            // certain limitations:
+            //
+            // 1. If the player releases the crouch button before the character has passed a
+            //    certain distance it'll climb back up on the platform.
+            // 2. If a ghost platform is too close above another platform (either ghost or solid),
+            //    such that when the character floats above the lower platform the higher platform
+            //    is detected at above-minimal proximity, the character will climb up to the higher
+            //    platform - even after explicitly dropping down from it to the lower one.
+            //
+            // Both limitations are greatly affected by the min proximity, but setting it tightly
+            // to minimize them may cause the character to sometimes fall through a ghost platform
+            // without explicitly being told to. To properly overcome these limitations - use
+            // `TnuaSimpleFallThroughPlatformsHelper`.
+            FallingThroughControlScheme::WithoutHelper => {
+                // With this scheme we only care about the first ghost platform the ghost sensor
+                // finds with a proximity higher than the defined minimum. We either treat it as a
+                // real platform, or ignore it and any other platform the sensor has found.
+                let relevant_platform = ghost_sensor.iter().find(|ghost_platform| {
+                    config.one_way_platforms_min_proximity <= ghost_platform.proximity
+                });
+                if crouch_pressed {
+                    // If there is a ghost platform, it means the player wants to fall through it -
+                    // so we "cancel" the crouch, and we don't pass any ghots platform to the
+                    // proximity sensor (because we want to character to fall through)
+                    //
+                    // If there is no ghost platform, it means the character is standing on a real
+                    // platform - so we make it crouch. We don't pass any ghost platform to the
+                    // proximity sensor here either - because there aren't any.
+                    crouch = relevant_platform.is_none();
+                } else {
+                    crouch = false;
+                    if let Some(ghost_platform) = relevant_platform {
+                        // Ghost platforms can only be detected _before_ fully solid platforms, so
+                        // if we detect one we can safely replace the proximity sensor's output
+                        // with it.
+                        //
+                        // Do take care to only do this when there is a ghost platform though -
+                        // otherwise it could replace an actual solid platform detection with a
+                        // `None`.
+                        sensor.output = Some(ghost_platform.clone());
+                    }
+                }
+            }
+            // This scheme uses `TnuaSimpleFallThroughPlatformsHelper` to properly handle fall
+            // through:
+            //
+            // * Pressing the crouch button while standing on a ghost platform will make the
+            //   character fall through it.
+            // * Even if the button is released immediately, the character will not climb back up.
+            //   It'll continue the fall.
+            // * Even if the button is held and there is another ghost platform below, the
+            //   character will only drop one "layer" of ghost platforms.
+            // * If the player drops from a ghost platform to a platform too close to it - the
+            //   character will not climb back up. The player can still climb back up by jumping,
+            //   of course.
+            FallingThroughControlScheme::SingleFall => {
+                // The fall through helper is operated by creating an handler.
+                let mut handler = fall_through_helper.with(
+                    &mut sensor,
+                    ghost_sensor,
+                    config.one_way_platforms_min_proximity,
+                );
+                if crouch_pressed {
+                    // Use `try_falling` to fall through the first ghost platform. It'll return
+                    // `true` if there really was a ghost platform to fall through - in which case
+                    // we want to cancel the crouch. If there was no ghost platform to fall
+                    // through, it returns `false` - in which case we do want to crouch.
+                    //
+                    // The boolean argument to `try_falling` determines if the character should
+                    // fall through "new" ghost platforms. When the player have just pressed the
+                    // crouch button, we pass `true` so that the fall can begin. But in the
+                    // following frames we pass `false` so that if there are more ghost platforms
+                    // below the character will not fall through them.
+                    crouch = !handler.try_falling(crouch_just_pressed);
+                } else {
+                    crouch = false;
+                    // Use `dont_fall` to not fall. If there are platforms that the character
+                    // already stared falling through, it'll continue the fall through and not
+                    // climb back up (like it would with the `WithoutHelper` scheme). Otherwise, it
+                    // will just copy the first ghost platform (above the min proximity) from the
+                    // ghost sensor to the proximity sensor.
+                    handler.dont_fall();
+                }
+            }
+            // This scheme is similar to `SingleFall`, with the exception that as long as the
+            // crouch button is pressed the character will keep falling through ghost platforms.
+            FallingThroughControlScheme::KeepFalling => {
+                let mut handler = fall_through_helper.with(
+                    &mut sensor,
+                    ghost_sensor,
+                    config.one_way_platforms_min_proximity,
+                );
+                if crouch_pressed {
+                    // This is done by passing `true` to `try_falling`, allowing it to keep falling
+                    // through new platforms even if the button was not _just_ pressed.
+                    crouch = !handler.try_falling(true);
+                } else {
+                    crouch = false;
+                    handler.dont_fall();
+                }
+            }
+        };
 
         let speed_factor =
             // `TnuaController::concrete_action` can be used to determine if an action is currently
@@ -224,6 +343,8 @@ pub struct CharacterMotionConfigForPlatformerExample {
     pub crouch: TnuaBuiltinCrouch,
     pub dash_distance: f32,
     pub dash: TnuaBuiltinDash,
+    pub one_way_platforms_min_proximity: f32,
+    pub falling_through: FallingThroughControlScheme,
 }
 
 impl UiTunable for CharacterMotionConfigForPlatformerExample {
@@ -243,5 +364,43 @@ impl UiTunable for CharacterMotionConfigForPlatformerExample {
         ui.collapsing("Crouching:", |ui| {
             self.crouch.tune(ui);
         });
+        ui.collapsing("One-way Platforms", |ui| {
+            ui.add(
+                egui::Slider::new(&mut self.one_way_platforms_min_proximity, 0.0..=2.0)
+                    .text("Min Proximity"),
+            );
+            self.falling_through.tune(ui);
+        });
+    }
+}
+
+#[derive(Component, Debug, PartialEq, Default)]
+pub enum FallingThroughControlScheme {
+    JumpThroughOnly,
+    WithoutHelper,
+    #[default]
+    SingleFall,
+    KeepFalling,
+}
+
+impl UiTunable for FallingThroughControlScheme {
+    fn tune(&mut self, ui: &mut egui::Ui) {
+        egui::ComboBox::from_label("Falling Through Control Scheme")
+            .selected_text(format!("{:?}", self))
+            .show_ui(ui, |ui| {
+                for variant in [
+                    FallingThroughControlScheme::JumpThroughOnly,
+                    FallingThroughControlScheme::WithoutHelper,
+                    FallingThroughControlScheme::SingleFall,
+                    FallingThroughControlScheme::KeepFalling,
+                ] {
+                    if ui
+                        .selectable_label(*self == variant, format!("{:?}", variant))
+                        .clicked()
+                    {
+                        *self = variant;
+                    }
+                }
+            });
     }
 }

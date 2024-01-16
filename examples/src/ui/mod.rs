@@ -12,7 +12,6 @@ use bevy_tnua::TnuaToggle;
 use self::component_alterbation::CommandAlteringSelectors;
 use self::plotting::{make_update_plot_data_system, plot_source_rolling_update};
 
-use super::FallingThroughControlScheme;
 use plotting::PlotSource;
 use tuning::UiTunable;
 
@@ -86,7 +85,6 @@ fn ui_system<C: Component + UiTunable>(
         &PlotSource,
         &mut TnuaToggle,
         Option<&mut C>,
-        &mut FallingThroughControlScheme,
         Option<&mut CommandAlteringSelectors>,
     )>,
     mut commands: Commands,
@@ -127,7 +125,6 @@ fn ui_system<C: Component + UiTunable>(
             plot_source,
             mut tnua_toggle,
             mut tunable,
-            mut falling_through_control_scheme,
             command_altering_selectors,
         ) in query.iter_mut()
         {
@@ -157,8 +154,6 @@ fn ui_system<C: Component + UiTunable>(
                             {
                                 command_altering_selectors.show_ui(ui, &mut commands, entity);
                             }
-
-                            falling_through_control_scheme.edit_with_ui(ui);
                         });
                         ui.vertical(|ui| {
                             plot_source.show(entity, ui);

@@ -20,6 +20,7 @@ use tnua_examples_crate::character_animating_systems::platformer_animating_syste
 };
 use tnua_examples_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
+    FallingThroughControlScheme,
 };
 use tnua_examples_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd3d")]
@@ -27,7 +28,7 @@ use tnua_examples_crate::levels_setup::for_3d_platformer::LayerNames;
 use tnua_examples_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_examples_crate::ui::plotting::PlotSource;
 use tnua_examples_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
-use tnua_examples_crate::{FallingThroughControlScheme, MovingPlatformPlugin};
+use tnua_examples_crate::MovingPlatformPlugin;
 
 fn main() {
     let mut app = App::new();
@@ -127,6 +128,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         dash_distance: 10.0,
         dash: Default::default(),
+        one_way_platforms_min_proximity: 1.0,
+        falling_through: FallingThroughControlScheme::SingleFall,
     });
     cmd.insert(TnuaToggle::default());
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
@@ -140,7 +143,6 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(TnuaGhostSensor::default());
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
     cmd.insert(TnuaSimpleAirActionsCounter::default());
-    cmd.insert(FallingThroughControlScheme::default());
     cmd.insert(TnuaAnimatingState::<AnimationState>::default());
     cmd.insert({
         let command_altering_selectors = CommandAlteringSelectors::default()
