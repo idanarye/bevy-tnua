@@ -33,18 +33,29 @@ use tnua_examples_crate::MovingPlatformPlugin;
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
+
     #[cfg(feature = "rapier3d")]
     {
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+        // To use Tnua with bevy_rapier3d, you need the `TnuaRapier3dPlugin` plugin from
+        // bevy-tnua-rapier3d.
         app.add_plugins(TnuaRapier3dPlugin);
     }
     #[cfg(feature = "xpbd3d")]
     {
         app.add_plugins(PhysicsPlugins::default());
+        // To use Tnua with bevy_xpbd_3d, you need the `TnuaXpbd3dPlugin` plugin from
+        // bevy-tnua-xpbd3d.
         app.add_plugins(TnuaXpbd3dPlugin);
     }
+
+    // This is Tnua's main plugin.
     app.add_plugins(TnuaControllerPlugin);
+
+    // This plugin supports `TnuaCrouchEnforcer`, which prevents the character from standing up
+    // while obstructed by an obstacle.
     app.add_plugins(TnuaCrouchEnforcerPlugin);
+
     app.add_plugins(tnua_examples_crate::ui::ExampleUi::<
         CharacterMotionConfigForPlatformerExample,
     >::default());
@@ -97,17 +108,31 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(GltfSceneHandler {
         names_from: asset_server.load("player.glb"),
     });
+
+    // The character entity must be configured as a dynamic rigid body of the physics backend.
     #[cfg(feature = "rapier3d")]
     {
         cmd.insert(rapier::RigidBody::Dynamic);
         cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
+        // For Rapier, an "IO" bundle needs to be added so that Tnua will have all the components
+        // it needs to interact with Rapier.
         cmd.insert(TnuaRapier3dIOBundle::default());
     }
     #[cfg(feature = "xpbd3d")]
     {
         cmd.insert(xpbd::RigidBody::Dynamic);
         cmd.insert(xpbd::Collider::capsule(1.0, 0.5));
+        // XPBD does not need an "IO" bundle.
     }
+
+    // This bundle container `TnuaController` - the main interface of Tnua with the user code - as
+    // well as the main components used as API between the main plugin and the physics backend
+    // integration. These components (and the IO bundle, in case of backends that need one like
+    // Rapier) are the only mandatory Tnua components - but this example will also add some
+    // components used for more advanced features.
+    //
+    // Read examples/src/character_control_systems/platformer_control_systems.rs to see how
+    // `TnuaController` is used in this example.
     cmd.insert(TnuaControllerBundle::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerExample {
@@ -131,21 +156,24 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         one_way_platforms_min_proximity: 1.0,
         falling_through: FallingThroughControlScheme::SingleFall,
     });
+
+    // An entity's Tnua behavior can be toggled individually with this component, if inserted.
     cmd.insert(TnuaToggle::default());
-    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
-        #[cfg(feature = "rapier3d")]
-        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-            0.0, 0.5,
-        )));
-        #[cfg(feature = "xpbd3d")]
-        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.5)));
-    }));
-    cmd.insert(TnuaGhostSensor::default());
-    cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
-    cmd.insert(TnuaSimpleAirActionsCounter::default());
+
+    // This is an helper component for deciding which animation to play. Tnua itself does not
+    // actually interact with `TnuaAnimatingState` - it's there so that animating systems could use
+    // the information from `TnuaController` to animate the character.
+    //
+    // Read examples/src/character_animating_systems/platformer_animating_systems.rs to see how
+    // `TnuaAnimatingState` is used in this example.
     cmd.insert(TnuaAnimatingState::<AnimationState>::default());
+
     cmd.insert({
         let command_altering_selectors = CommandAlteringSelectors::default()
+            // By default Tnua uses a raycast, but this could be a problem if the character stands
+            // just past the edge while part of its body is above the platform. To solve this, we
+            // need to cast a shape - which is physics-engine specific. We set the shape using a
+            // component.
             .with_combo(
                 "Sensor Shape",
                 1,
@@ -195,6 +223,9 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 ],
             )
             .with_checkbox("Lock Tilt", true, |mut cmd, lock_tilt| {
+                // Tnua will automatically apply angular impulses/forces to fix the tilt and make
+                // the character stand upward, but it is also possible to just let the physics
+                // engine prevent rotation (other than around the Y axis, for turning)
                 if lock_tilt {
                     #[cfg(feature = "rapier3d")]
                     cmd.insert(
@@ -257,6 +288,30 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         );
         command_altering_selectors
     });
+
+    // `TnuaCrouchEnforcer` can be used to prevent the character from standing up when obstructed.
+    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
+        #[cfg(feature = "rapier3d")]
+        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
+            0.0, 0.5,
+        )));
+        #[cfg(feature = "xpbd3d")]
+        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.5)));
+    }));
+
+    // The ghost sensor is used for detecting ghost platforms - platforms configured in the physics
+    // backend to not contact with the character (or detect the contact but not apply physical
+    // forces based on it) and marked with the `TnuaGhostPlatform` component. These can then be
+    // used as one-way platforms.
+    cmd.insert(TnuaGhostSensor::default());
+
+    // This helper is used to operate the ghost sensor and ghost platforms and implement
+    // fall-through behavior where the player can intentionally fall through a one-way platform.
+    cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
+
+    // This helper keeps track of air actions like jumps or air dashes.
+    cmd.insert(TnuaSimpleAirActionsCounter::default());
+
     cmd.insert(tnua_examples_crate::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
 }
