@@ -215,12 +215,26 @@ impl TnuaBasis for TnuaBuiltinWalk {
         };
         let max_acceleration = direction_change_factor * relevant_acceleration_limit;
 
-        let walk_acceleration =
-            (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
-        let walk_acceleration = if let Some(climb_vectors) = &climb_vectors {
-            climb_vectors.project(walk_acceleration)
+        let walk_vel_change = if self.desired_velocity == Vec3::ZERO {
+            // When stopping, prefer a boost to be able to reach a precise stop (see issue #39)
+            let walk_boost = desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration);
+            let walk_boost = if let Some(climb_vectors) = &climb_vectors {
+                climb_vectors.project(walk_boost)
+            } else {
+                walk_boost
+            };
+            TnuaVelChange::boost(walk_boost)
         } else {
-            walk_acceleration
+            // When accelerating, prefer an acceleration because the physics backends treat it
+            // better (see issue #34)
+            let walk_acceleration =
+                (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
+            let walk_acceleration = if let Some(climb_vectors) = &climb_vectors {
+                climb_vectors.project(walk_acceleration)
+            } else {
+                walk_acceleration
+            };
+            TnuaVelChange::acceleration(walk_acceleration)
         };
 
         state.vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
@@ -266,10 +280,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
             error!("Tnua could not decide on jump state");
             TnuaVelChange::ZERO
         };
-        motor.lin = TnuaVelChange {
-            acceleration: walk_acceleration,
-            boost: impulse_to_offset,
-        } + upward_impulse;
+        motor.lin = walk_vel_change + TnuaVelChange::boost(impulse_to_offset) + upward_impulse;
         let new_velocity = state.effective_velocity
             + motor.lin.boost
             + ctx.frame_duration * motor.lin.acceleration
