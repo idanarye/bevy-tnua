@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
+use bevy::window::{PresentMode, PrimaryWindow};
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_tnua::TnuaToggle;
 
@@ -88,6 +89,7 @@ fn ui_system<C: Component + UiTunable>(
         Option<&mut CommandAlteringSelectors>,
     )>,
     mut commands: Commands,
+    mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
     diagnostics_store: Res<DiagnosticsStore>,
 ) {
     for (entity, .., command_altering_selectors) in query.iter_mut() {
@@ -96,6 +98,19 @@ fn ui_system<C: Component + UiTunable>(
         }
     }
     egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
+        if let Ok(mut window) = primary_window_query.get_single_mut() {
+            egui::ComboBox::from_label("Present Mode (picking unsupported mode will crash the demo)")
+                .selected_text(format!("{:?}", window.present_mode))
+                .show_ui(ui, |ui| {
+                    let present_mode = &mut window.present_mode;
+                    ui.selectable_value(present_mode, PresentMode::AutoVsync, "AutoVsync");
+                    ui.selectable_value(present_mode, PresentMode::AutoNoVsync, "AutoNoVsync");
+                    ui.selectable_value(present_mode, PresentMode::Fifo, "Fifo");
+                    ui.selectable_value(present_mode, PresentMode::FifoRelaxed, "FifoRelaxed");
+                    ui.selectable_value(present_mode, PresentMode::Immediate, "Immediate");
+                    ui.selectable_value(present_mode, PresentMode::Mailbox, "Mailbox");
+                });
+        }
         for (diagnostic_id, range) in [
             (FrameTimeDiagnosticsPlugin::FPS, 0.0..120.0),
             (FrameTimeDiagnosticsPlugin::FRAME_TIME, 0.0..50.0),
