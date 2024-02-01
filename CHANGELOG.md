@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-xpbd](xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
+
+## 0.14.2 - 2024-02-02
 ### Fixed
 - Use boost for stopping in `TnuaBuiltinWalk` (fixes
   https://github.com/idanarye/bevy-tnua/issues/39)
