@@ -97,20 +97,28 @@ fn ui_system<C: Component + UiTunable>(
             command_altering_selectors.apply_set_to(&mut commands, entity);
         }
     }
-    egui::Window::new("Tnua").show(egui_context.ctx_mut(), |ui| {
-        if let Ok(mut window) = primary_window_query.get_single_mut() {
-            egui::ComboBox::from_label("Present Mode (picking unsupported mode will crash the demo)")
-                .selected_text(format!("{:?}", window.present_mode))
-                .show_ui(ui, |ui| {
-                    let present_mode = &mut window.present_mode;
-                    ui.selectable_value(present_mode, PresentMode::AutoVsync, "AutoVsync");
-                    ui.selectable_value(present_mode, PresentMode::AutoNoVsync, "AutoNoVsync");
-                    ui.selectable_value(present_mode, PresentMode::Fifo, "Fifo");
-                    ui.selectable_value(present_mode, PresentMode::FifoRelaxed, "FifoRelaxed");
-                    ui.selectable_value(present_mode, PresentMode::Immediate, "Immediate");
-                    ui.selectable_value(present_mode, PresentMode::Mailbox, "Mailbox");
-                });
-        }
+    let Ok(mut primary_window) = primary_window_query.get_single_mut() else {
+        return;
+    };
+    let mut egui_window = egui::Window::new("Tnua");
+    if !primary_window.cursor.visible {
+        egui_window = egui::Window::new("Tnua")
+            .interactable(false)
+            .movable(false)
+            .resizable(false);
+    }
+    egui_window.show(egui_context.ctx_mut(), |ui| {
+        egui::ComboBox::from_label("Present Mode (picking unsupported mode will crash the demo)")
+            .selected_text(format!("{:?}", primary_window.present_mode))
+            .show_ui(ui, |ui| {
+                let present_mode = &mut primary_window.present_mode;
+                ui.selectable_value(present_mode, PresentMode::AutoVsync, "AutoVsync");
+                ui.selectable_value(present_mode, PresentMode::AutoNoVsync, "AutoNoVsync");
+                ui.selectable_value(present_mode, PresentMode::Fifo, "Fifo");
+                ui.selectable_value(present_mode, PresentMode::FifoRelaxed, "FifoRelaxed");
+                ui.selectable_value(present_mode, PresentMode::Immediate, "Immediate");
+                ui.selectable_value(present_mode, PresentMode::Mailbox, "Mailbox");
+            });
         for (diagnostic_id, range) in [
             (FrameTimeDiagnosticsPlugin::FPS, 0.0..120.0),
             (FrameTimeDiagnosticsPlugin::FRAME_TIME, 0.0..50.0),
@@ -127,7 +135,8 @@ fn ui_system<C: Component + UiTunable>(
         egui::CollapsingHeader::new("Controls:")
             .default_open(false)
             .show(ui, |ui| {
-                ui.label("Move with the arrow keys");
+                ui.label("Move with the arrow keys or WASD");
+                ui.label("Left click to toggle mouse-controlled camera (shooter only)");
                 ui.label("Jump with Spacebar (Also with the up arrow also works in 2D)");
                 ui.label("Crouch or fall through pink platforms with Ctrl (Also with the down arrow key in 2D)");
                 ui.label("Turn in place with Alt (only in 3D)");

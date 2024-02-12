@@ -42,6 +42,9 @@ pub fn apply_platformer_controls(
         // air dash per jump - only a single "pool" of air action "energy" shared by all air
         // actions.
         &mut TnuaSimpleAirActionsCounter,
+        // This is used in the shooter-like example to control the forward direction of the
+        // character.
+        Option<&ForwardFromCamera>,
     )>,
 ) {
     if egui_context.ctx_mut().wants_keyboard_input() {
@@ -62,6 +65,7 @@ pub fn apply_platformer_controls(
         ghost_sensor,
         mut fall_through_helper,
         mut air_actions_counter,
+        forward_from_camera,
     ) in query.iter_mut()
     {
         // This part is just keyboard input processing. In a real game this would probably be done
@@ -69,35 +73,47 @@ pub fn apply_platformer_controls(
         let mut direction = Vec3::ZERO;
 
         if config.dimensionality == Dimensionality::Dim3 {
-            if keyboard.pressed(KeyCode::Up) {
+            if keyboard.any_pressed([KeyCode::Up, KeyCode::W]) {
                 direction -= Vec3::Z;
             }
-            if keyboard.pressed(KeyCode::Down) {
+            if keyboard.any_pressed([KeyCode::Down, KeyCode::S]) {
                 direction += Vec3::Z;
             }
         }
-        if keyboard.pressed(KeyCode::Left) {
+        if keyboard.any_pressed([KeyCode::Left, KeyCode::A]) {
             direction -= Vec3::X;
         }
-        if keyboard.pressed(KeyCode::Right) {
+        if keyboard.any_pressed([KeyCode::Right, KeyCode::D]) {
             direction += Vec3::X;
         }
 
         direction = direction.clamp_length_max(1.0);
 
+        if let Some(forward_from_camera) = forward_from_camera {
+            direction = Transform::default()
+                .looking_to(forward_from_camera.forward, Vec3::Y)
+                .transform_point(direction);
+        }
+
         let jump = match config.dimensionality {
-            Dimensionality::Dim2 => keyboard.any_pressed([KeyCode::Space, KeyCode::Up]),
+            Dimensionality::Dim2 => keyboard.any_pressed([KeyCode::Space, KeyCode::Up, KeyCode::W]),
             Dimensionality::Dim3 => keyboard.any_pressed([KeyCode::Space]),
         };
         let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
-        let turn_in_place = keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
+        let turn_in_place = forward_from_camera.is_none()
+            && keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
         let crouch_pressed: bool;
         let crouch_just_pressed: bool;
         match config.dimensionality {
             Dimensionality::Dim2 => {
-                let crouch_buttons = [KeyCode::Down, KeyCode::ControlLeft, KeyCode::ControlRight];
+                let crouch_buttons = [
+                    KeyCode::ControlLeft,
+                    KeyCode::ControlRight,
+                    KeyCode::Down,
+                    KeyCode::S,
+                ];
                 crouch_pressed = keyboard.any_pressed(crouch_buttons);
                 crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
             }
@@ -275,7 +291,14 @@ pub fn apply_platformer_controls(
             } else {
                 direction * speed_factor * config.speed
             },
-            desired_forward: direction.normalize_or_zero(),
+            desired_forward: if let Some(forward_from_camera) = forward_from_camera {
+                // With shooters, we want the character model to follow the camera.
+                forward_from_camera.forward
+            } else {
+                // For platformers, we only want ot change direction when the character tries to
+                // moves (or when the player explicitly wants to set the direction)
+                direction.normalize_or_zero()
+            },
             ..config.walk.clone()
         });
 
@@ -324,7 +347,13 @@ pub fn apply_platformer_controls(
                 // When set, the `desired_forward` of the dash action "overrides" the
                 // `desired_forward` of the walk basis. Like the displacement, it gets "frozen" -
                 // allowing to easily maintain a forward direction during the dash.
-                desired_forward: direction.normalize(),
+                desired_forward: if forward_from_camera.is_none() {
+                    direction.normalize()
+                } else {
+                    // For shooters, we want to allow rotating mid-dash if the player moves the
+                    // mouse.
+                    Vec3::ZERO
+                },
                 allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
                     <= config.actions_in_air,
                 ..config.dash.clone()
@@ -402,5 +431,18 @@ impl UiTunable for FallingThroughControlScheme {
                     }
                 }
             });
+    }
+}
+
+#[derive(Component)]
+pub struct ForwardFromCamera {
+    pub forward: Vec3,
+}
+
+impl Default for ForwardFromCamera {
+    fn default() -> Self {
+        Self {
+            forward: Vec3::NEG_Z,
+        }
     }
 }
