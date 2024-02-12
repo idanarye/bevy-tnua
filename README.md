@@ -71,6 +71,7 @@ Tnua is broken into different crates that update separately, so this is broken i
 | bevy | bevy-tnua-physics-integration-layer | bevy-tnua-rapier | bevy_rapier |
 |------|-------------------------------------|------------------|-------------|
 | 0.12 | 0.1                                 | 0.1              | 0.23        |
+| 0.12 | 0.1                                 | 0.2              | 0.24        |
 
 ### XPBD integration
 

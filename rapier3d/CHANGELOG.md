@@ -8,6 +8,10 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 
 ## [Unreleased]
 
+## 0.2.0 - 2024-02-12
+### Changelog
+- Upgrade bevy_rapier to 0.24.
+
 ## 0.1.1 - 2024-01-14
 ### Fixed
 - Use a proper `OR` syntax for the dual license.
