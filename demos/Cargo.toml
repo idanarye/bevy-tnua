@@ -1,5 +1,5 @@
 [package]
-name = "tnua-examples-crate"
+name = "tnua-demos-crate"
 version = "0.0.0"
 publish = false
 edition = "2021"

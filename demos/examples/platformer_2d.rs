@@ -1,52 +1,50 @@
 use bevy::prelude::*;
-#[cfg(feature = "rapier3d")]
-use bevy_rapier3d::{prelude as rapier, prelude::*};
+#[cfg(feature = "rapier2d")]
+use bevy_rapier2d::{prelude as rapier, prelude::*};
 use bevy_tnua::builtins::TnuaBuiltinCrouch;
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
     TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::prelude::*;
-use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
-#[cfg(feature = "rapier3d")]
-use bevy_tnua_rapier3d::*;
-#[cfg(feature = "xpbd3d")]
-use bevy_tnua_xpbd3d::*;
-#[cfg(feature = "xpbd3d")]
-use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
+use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
+#[cfg(feature = "rapier2d")]
+use bevy_tnua_rapier2d::*;
+#[cfg(feature = "xpbd2d")]
+use bevy_tnua_xpbd2d::*;
+#[cfg(feature = "xpbd2d")]
+use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
-use tnua_examples_crate::character_animating_systems::platformer_animating_systems::{
-    animate_platformer_character, AnimationState,
-};
-use tnua_examples_crate::character_control_systems::platformer_control_systems::{
+use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
     FallingThroughControlScheme,
 };
-use tnua_examples_crate::character_control_systems::Dimensionality;
-#[cfg(feature = "xpbd3d")]
-use tnua_examples_crate::levels_setup::for_3d_platformer::LayerNames;
-use tnua_examples_crate::ui::component_alterbation::CommandAlteringSelectors;
-use tnua_examples_crate::ui::plotting::PlotSource;
-use tnua_examples_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
-use tnua_examples_crate::MovingPlatformPlugin;
+use tnua_demos_crate::character_control_systems::Dimensionality;
+#[cfg(feature = "xpbd2d")]
+use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
+use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
+use tnua_demos_crate::ui::plotting::PlotSource;
+use tnua_demos_crate::MovingPlatformPlugin;
 
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
 
-    #[cfg(feature = "rapier3d")]
+    #[cfg(feature = "rapier2d")]
     {
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
-        // To use Tnua with bevy_rapier3d, you need the `TnuaRapier3dPlugin` plugin from
-        // bevy-tnua-rapier3d.
-        app.add_plugins(TnuaRapier3dPlugin);
+        app.add_plugins(RapierDebugRenderPlugin::default());
+        // To use Tnua with bevy_rapier2d, you need the `TnuaRapier2dPlugin` plugin from
+        // bevy-tnua-rapier2d.
+        app.add_plugins(TnuaRapier2dPlugin);
     }
-    #[cfg(feature = "xpbd3d")]
+    #[cfg(feature = "xpbd2d")]
     {
         app.add_plugins(PhysicsPlugins::default());
-        // To use Tnua with bevy_xpbd_3d, you need the `TnuaXpbd3dPlugin` plugin from
-        // bevy-tnua-xpbd3d.
-        app.add_plugins(TnuaXpbd3dPlugin);
+        app.add_plugins(PhysicsDebugPlugin::default());
+        // To use Tnua with bevy_xpbd_2d, you need the `TnuaXpbd2dPlugin` plugin from
+        // bevy-tnua-xpbd2d.
+        app.add_plugins(TnuaXpbd2dPlugin);
     }
 
     // This is Tnua's main plugin.
@@ -56,29 +54,35 @@ fn main() {
     // while obstructed by an obstacle.
     app.add_plugins(TnuaCrouchEnforcerPlugin);
 
-    app.add_plugins(tnua_examples_crate::ui::ExampleUi::<
+    app.add_plugins(tnua_demos_crate::ui::ExampleUi::<
         CharacterMotionConfigForPlatformerExample,
     >::default());
     app.add_systems(Startup, setup_camera);
     app.add_systems(
         Startup,
-        tnua_examples_crate::levels_setup::for_3d_platformer::setup_level,
+        tnua_demos_crate::levels_setup::for_2d_platformer::setup_level,
     );
     app.add_systems(Startup, setup_player);
     app.add_systems(
         Update,
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
-    app.add_systems(Update, animation_patcher_system);
-    app.add_systems(Update, animate_platformer_character);
     app.add_plugins(MovingPlatformPlugin);
+    #[cfg(feature = "rapier2d")]
+    {
+        app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
+            // For some odd reason, Rapier 2D defaults to a gravity of 98.1
+            cfg.gravity = Vec2::Y * -9.81;
+        });
+    }
     app.run();
 }
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 16.0, 40.0)
-            .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
+    commands.spawn(Camera2dBundle {
+        transform: Transform::from_xyz(0.0, 14.0, 30.0)
+            .with_scale((0.05 * Vec2::ONE).extend(1.0))
+            .looking_at(Vec3::new(0.0, 14.0, 0.0), Vec3::Y),
         ..Default::default()
     });
 
@@ -86,39 +90,25 @@ fn setup_camera(mut commands: Commands) {
         transform: Transform::from_xyz(5.0, 5.0, 5.0),
         ..default()
     });
-
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: 4000.0,
-            shadows_enabled: true,
-            ..Default::default()
-        },
-        transform: Transform::default().looking_at(-Vec3::Y, Vec3::Z),
-        ..Default::default()
-    });
 }
 
-fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_player(mut commands: Commands) {
     let mut cmd = commands.spawn_empty();
-    cmd.insert(SceneBundle {
-        scene: asset_server.load("player.glb#Scene0"),
-        transform: Transform::from_xyz(0.0, 10.0, 0.0),
-        ..Default::default()
-    });
-    cmd.insert(GltfSceneHandler {
-        names_from: asset_server.load("player.glb"),
-    });
+    cmd.insert(TransformBundle::from_transform(Transform::from_xyz(
+        0.0, 2.0, 0.0,
+    )));
+    cmd.insert(VisibilityBundle::default());
 
     // The character entity must be configured as a dynamic rigid body of the physics backend.
-    #[cfg(feature = "rapier3d")]
+    #[cfg(feature = "rapier2d")]
     {
         cmd.insert(rapier::RigidBody::Dynamic);
         cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
         // For Rapier, an "IO" bundle needs to be added so that Tnua will have all the components
         // it needs to interact with Rapier.
-        cmd.insert(TnuaRapier3dIOBundle::default());
+        cmd.insert(TnuaRapier2dIOBundle::default());
     }
-    #[cfg(feature = "xpbd3d")]
+    #[cfg(feature = "xpbd2d")]
     {
         cmd.insert(xpbd::RigidBody::Dynamic);
         cmd.insert(xpbd::Collider::capsule(1.0, 0.5));
@@ -136,8 +126,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(TnuaControllerBundle::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerExample {
-        dimensionality: Dimensionality::Dim3,
-        speed: 20.0,
+        dimensionality: Dimensionality::Dim2,
+        speed: 40.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,
             ..Default::default()
@@ -159,15 +149,6 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
     cmd.insert(TnuaToggle::default());
-
-    // This is an helper component for deciding which animation to play. Tnua itself does not
-    // actually interact with `TnuaAnimatingState` - it's there so that animating systems could use
-    // the information from `TnuaController` to animate the character.
-    //
-    // Read examples/src/character_animating_systems/platformer_animating_systems.rs to see how
-    // `TnuaAnimatingState` is used in this example.
-    cmd.insert(TnuaAnimatingState::<AnimationState>::default());
-
     cmd.insert({
         let command_altering_selectors = CommandAlteringSelectors::default()
             // By default Tnua uses a raycast, but this could be a problem if the character stands
@@ -178,66 +159,57 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 "Sensor Shape",
                 1,
                 &[
-                    ("no", |mut cmd| {
-                        #[cfg(feature = "rapier3d")]
-                        cmd.remove::<TnuaRapier3dSensorShape>();
-                        #[cfg(feature = "xpbd3d")]
-                        cmd.remove::<TnuaXpbd3dSensorShape>();
+                    ("Point", |mut cmd| {
+                        #[cfg(feature = "rapier2d")]
+                        cmd.remove::<TnuaRapier2dSensorShape>();
+                        #[cfg(feature = "xpbd2d")]
+                        cmd.remove::<TnuaXpbd2dSensorShape>();
                     }),
-                    ("flat (underfit)", |mut cmd| {
-                        #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-                            0.0, 0.49,
-                        )));
-                        #[cfg(feature = "xpbd3d")]
-                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.49)));
+                    ("Flat (underfit)", |mut cmd| {
+                        #[cfg(feature = "rapier2d")]
+                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.49, 0.0)));
+                        #[cfg(feature = "xpbd2d")]
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(0.99, 0.0)));
                     }),
-                    ("flat (exact)", |mut cmd| {
-                        #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-                            0.0, 0.5,
-                        )));
-                        #[cfg(feature = "xpbd3d")]
-                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.5)));
+                    ("Flat (exact)", |mut cmd| {
+                        #[cfg(feature = "rapier2d")]
+                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
+                        #[cfg(feature = "xpbd2d")]
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.0, 0.0)));
                     }),
                     ("flat (overfit)", |mut cmd| {
-                        #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-                            0.0, 0.51,
-                        )));
-                        #[cfg(feature = "xpbd3d")]
-                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.51)));
+                        #[cfg(feature = "rapier2d")]
+                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.51, 0.0)));
+                        #[cfg(feature = "xpbd2d")]
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.01, 0.0)));
                     }),
-                    ("ball (underfit)", |mut cmd| {
-                        #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::ball(0.49)));
-                        #[cfg(feature = "xpbd3d")]
-                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::ball(0.49)));
+                    ("Ball (underfit)", |mut cmd| {
+                        #[cfg(feature = "rapier2d")]
+                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.49)));
+                        #[cfg(feature = "xpbd2d")]
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::ball(0.49)));
                     }),
-                    ("ball (exact)", |mut cmd| {
-                        #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::ball(0.5)));
-                        #[cfg(feature = "xpbd3d")]
-                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::ball(0.5)));
+                    ("Ball (exact)", |mut cmd| {
+                        #[cfg(feature = "rapier2d")]
+                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.5)));
+                        #[cfg(feature = "xpbd2d")]
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::ball(0.5)));
                     }),
                 ],
             )
-            .with_checkbox("Lock Tilt", true, |mut cmd, lock_tilt| {
+            .with_checkbox("Lock Tilt", false, |mut cmd, lock_tilt| {
                 // Tnua will automatically apply angular impulses/forces to fix the tilt and make
                 // the character stand upward, but it is also possible to just let the physics
                 // engine prevent rotation (other than around the Y axis, for turning)
                 if lock_tilt {
-                    #[cfg(feature = "rapier3d")]
-                    cmd.insert(
-                        rapier::LockedAxes::ROTATION_LOCKED_X
-                            | rapier::LockedAxes::ROTATION_LOCKED_Z,
-                    );
-                    #[cfg(feature = "xpbd3d")]
-                    cmd.insert(xpbd::LockedAxes::new().lock_rotation_x().lock_rotation_z());
+                    #[cfg(feature = "rapier2d")]
+                    cmd.insert(rapier::LockedAxes::ROTATION_LOCKED);
+                    #[cfg(feature = "xpbd2d")]
+                    cmd.insert(xpbd::LockedAxes::new().lock_rotation());
                 } else {
-                    #[cfg(feature = "rapier3d")]
+                    #[cfg(feature = "rapier2d")]
                     cmd.insert(rapier::LockedAxes::empty());
-                    #[cfg(feature = "xpbd3d")]
+                    #[cfg(feature = "xpbd2d")]
                     cmd.insert(xpbd::LockedAxes::new());
                 }
             })
@@ -245,7 +217,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 "Phase Through Collision Groups",
                 true,
                 |mut cmd, use_collision_groups| {
-                    #[cfg(feature = "rapier3d")]
+                    #[cfg(feature = "rapier2d")]
                     if use_collision_groups {
                         cmd.insert(CollisionGroups {
                             memberships: Group::GROUP_2,
@@ -257,7 +229,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                             filters: Group::ALL,
                         });
                     }
-                    #[cfg(feature = "xpbd3d")]
+                    #[cfg(feature = "xpbd2d")]
                     {
                         let player_layers: &[LayerNames] = if use_collision_groups {
                             &[LayerNames::Player]
@@ -268,17 +240,19 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     }
                 },
             );
-        #[cfg(feature = "rapier3d")]
+        #[cfg(feature = "rapier2d")]
         let command_altering_selectors = command_altering_selectors.with_checkbox(
             "Phase Through Solver Groups",
             true,
             |mut cmd, use_solver_groups| {
                 if use_solver_groups {
+                    #[cfg(feature = "rapier2d")]
                     cmd.insert(SolverGroups {
                         memberships: Group::GROUP_2,
                         filters: Group::GROUP_2,
                     });
                 } else {
+                    #[cfg(feature = "rapier2d")]
                     cmd.insert(SolverGroups {
                         memberships: Group::ALL,
                         filters: Group::ALL,
@@ -291,12 +265,12 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // `TnuaCrouchEnforcer` can be used to prevent the character from standing up when obstructed.
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
-        #[cfg(feature = "rapier3d")]
-        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-            0.0, 0.5,
-        )));
-        #[cfg(feature = "xpbd3d")]
-        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::cylinder(0.0, 0.5)));
+        // It needs a sensor shape because it needs to do a shapecast upwards. Without a sensor shape
+        // it'd do a raycast.
+        #[cfg(feature = "rapier2d")]
+        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
+        #[cfg(feature = "xpbd2d")]
+        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.0, 0.0)));
     }));
 
     // The ghost sensor is used for detecting ghost platforms - platforms configured in the physics
@@ -312,6 +286,6 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // This helper keeps track of air actions like jumps or air dashes.
     cmd.insert(TnuaSimpleAirActionsCounter::default());
 
-    cmd.insert(tnua_examples_crate::ui::TrackedEntity("Player".to_owned()));
+    cmd.insert(tnua_demos_crate::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
 }

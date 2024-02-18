@@ -155,7 +155,7 @@ jobs:
         run: |-
           echo "PACKAGE_NAMES=$(
             cargo metadata --no-deps --format-version=1 \
-            | jq '.packages[].name | select(. != "tnua-examples-crate")' -r \
+            | jq '.packages[].name | select(. != "tnua-demos-crate")' -r \
             | sort -u \
             | xargs -L1 echo --package \
             | paste -sd ' '
@@ -170,7 +170,7 @@ jobs:
             | xargs -L1 echo --features \
             | paste -sd ' '
           )" >> "$GITHUB_OUTPUT"
-      - name: Build docs and examples
+      - name: Build docs and demos
         env:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -180,7 +180,7 @@ jobs:
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html
           for physics_backend in rapier xpbd; do
               cargo build \
-                  --package tnua-examples-crate \
+                  --package tnua-demos-crate \
                   --examples \
                   --release \
                   --features ${physics_backend}2d \
@@ -211,7 +211,7 @@ jobs:
           EOF
               done
           done
-          cp -R examples/assets/ target/doc/demos/
+          cp -R demos/assets/ target/doc/demos/
 
           # TODO: remove the aliases once a release is made and they are no longer needed
           function alias_to_old_example_name () {
