@@ -144,7 +144,7 @@ ECS, and clone them into the controller when they are needed.
 In the examples, this is done by declaring a new component:
 ```rust
 #[derive(Component)]
-pub struct CharacterMotionConfigForPlatformerExample {
+pub struct CharacterMotionConfigForPlatformerDemo {
     pub speed: f32,
     pub walk: TnuaBuiltinWalk,
     pub jump: TnuaBuiltinJump,
@@ -155,7 +155,7 @@ pub struct CharacterMotionConfigForPlatformerExample {
 which is then added to the character entity:
 
 ```rust
-cmd.insert(CharacterMotionConfigForPlatformerExample {
+cmd.insert(CharacterMotionConfigForPlatformerDemo {
     speed: 40.0,
     walk: TnuaBuiltinWalk {
         float_height: 2.0,

@@ -16,11 +16,11 @@ use self::plotting::{make_update_plot_data_system, plot_source_rolling_update};
 use plotting::PlotSource;
 use tuning::UiTunable;
 
-pub struct ExampleUi<C: Component + UiTunable> {
+pub struct DemoUi<C: Component + UiTunable> {
     _phantom: PhantomData<C>,
 }
 
-impl<C: Component + UiTunable> Default for ExampleUi<C> {
+impl<C: Component + UiTunable> Default for DemoUi<C> {
     fn default() -> Self {
         Self {
             _phantom: Default::default(),
@@ -28,10 +28,10 @@ impl<C: Component + UiTunable> Default for ExampleUi<C> {
     }
 }
 
-impl<C: Component + UiTunable> Plugin for ExampleUi<C> {
+impl<C: Component + UiTunable> Plugin for DemoUi<C> {
     fn build(&self, app: &mut App) {
         app.add_plugins(EguiPlugin);
-        app.insert_resource(ExampleUiPhysicsBackendActive(true));
+        app.insert_resource(DemoUiPhysicsBackendActive(true));
         app.add_systems(Update, ui_system::<C>);
         app.add_systems(Update, plot_source_rolling_update);
         app.add_plugins(FrameTimeDiagnosticsPlugin);
@@ -69,9 +69,9 @@ impl<C: Component + UiTunable> Plugin for ExampleUi<C> {
     }
 }
 
-// NOTE: The examples are responsible for updating the physics backend
+// NOTE: The demos are responsible for updating the physics backend
 #[derive(Resource)]
-pub struct ExampleUiPhysicsBackendActive(pub bool);
+pub struct DemoUiPhysicsBackendActive(pub bool);
 
 #[derive(Component)]
 pub struct TrackedEntity(pub String);
@@ -79,7 +79,7 @@ pub struct TrackedEntity(pub String);
 #[allow(clippy::type_complexity)]
 fn ui_system<C: Component + UiTunable>(
     mut egui_context: EguiContexts,
-    mut physics_backend_active: ResMut<ExampleUiPhysicsBackendActive>,
+    mut physics_backend_active: ResMut<DemoUiPhysicsBackendActive>,
     mut query: Query<(
         Entity,
         &TrackedEntity,
@@ -189,7 +189,7 @@ fn ui_system<C: Component + UiTunable>(
 }
 
 fn update_physics_active_from_ui(
-    setting_from_ui: Res<ExampleUiPhysicsBackendActive>,
+    setting_from_ui: Res<DemoUiPhysicsBackendActive>,
     #[cfg(feature = "rapier2d")] mut config_rapier2d: Option<
         ResMut<bevy_rapier2d::plugin::RapierConfiguration>,
     >,

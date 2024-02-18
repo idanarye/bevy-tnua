@@ -16,7 +16,7 @@ pub fn apply_platformer_controls(
     mut egui_context: EguiContexts,
     keyboard: Res<Input<KeyCode>>,
     mut query: Query<(
-        &CharacterMotionConfigForPlatformerExample,
+        &CharacterMotionConfigForPlatformerDemo,
         // This is the main component used for interacting with Tnua. It is used for both issuing
         // commands and querying the character's state.
         &mut TnuaController,
@@ -32,7 +32,7 @@ pub fn apply_platformer_controls(
         &mut TnuaProximitySensor,
         // The ghost sensor detects ghost platforms - which are pass-through platforms marked with
         // the `TnuaGhostPlatform` component. Left alone it does not actually affect anything - a
-        // user control system (like this very example here) has to use the data from it and
+        // user control system (like this very demo here) has to use the data from it and
         // manipulate the proximity sensor.
         &TnuaGhostSensor,
         // This is an helper for implementing one-way platforms.
@@ -42,7 +42,7 @@ pub fn apply_platformer_controls(
         // air dash per jump - only a single "pool" of air action "energy" shared by all air
         // actions.
         &mut TnuaSimpleAirActionsCounter,
-        // This is used in the shooter-like example to control the forward direction of the
+        // This is used in the shooter-like demo to control the forward direction of the
         // character.
         Option<&ForwardFromCamera>,
     )>,
@@ -363,7 +363,7 @@ pub fn apply_platformer_controls(
 }
 
 #[derive(Component)]
-pub struct CharacterMotionConfigForPlatformerExample {
+pub struct CharacterMotionConfigForPlatformerDemo {
     pub dimensionality: Dimensionality,
     pub speed: f32,
     pub walk: TnuaBuiltinWalk,
@@ -376,7 +376,7 @@ pub struct CharacterMotionConfigForPlatformerExample {
     pub falling_through: FallingThroughControlScheme,
 }
 
-impl UiTunable for CharacterMotionConfigForPlatformerExample {
+impl UiTunable for CharacterMotionConfigForPlatformerDemo {
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.collapsing("Walking:", |ui| {
             ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));

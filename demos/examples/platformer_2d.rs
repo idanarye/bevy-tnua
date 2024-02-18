@@ -16,7 +16,7 @@ use bevy_tnua_xpbd2d::*;
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
+    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo,
     FallingThroughControlScheme,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
@@ -54,8 +54,8 @@ fn main() {
     // while obstructed by an obstacle.
     app.add_plugins(TnuaCrouchEnforcerPlugin);
 
-    app.add_plugins(tnua_demos_crate::ui::ExampleUi::<
-        CharacterMotionConfigForPlatformerExample,
+    app.add_plugins(tnua_demos_crate::ui::DemoUi::<
+        CharacterMotionConfigForPlatformerDemo,
     >::default());
     app.add_systems(Startup, setup_camera);
     app.add_systems(
@@ -125,7 +125,7 @@ fn setup_player(mut commands: Commands) {
     // `TnuaController` is used in this example.
     cmd.insert(TnuaControllerBundle::default());
 
-    cmd.insert(CharacterMotionConfigForPlatformerExample {
+    cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim2,
         speed: 40.0,
         walk: TnuaBuiltinWalk {
