@@ -16,8 +16,7 @@ use bevy_tnua_xpbd2d::*;
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo,
-    FallingThroughControlScheme,
+    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd2d")]

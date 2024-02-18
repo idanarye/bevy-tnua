@@ -21,8 +21,8 @@ use tnua_demos_crate::character_animating_systems::platformer_animating_systems:
     animate_platformer_character, AnimationState,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo,
-    FallingThroughControlScheme, ForwardFromCamera,
+    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
+    ForwardFromCamera,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd3d")]
