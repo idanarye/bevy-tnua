@@ -28,6 +28,7 @@ use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd3d")]
 use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
+#[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
 use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
 use tnua_demos_crate::MovingPlatformPlugin;
@@ -319,11 +320,12 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(TnuaSimpleAirActionsCounter::default());
 
     cmd.insert(tnua_demos_crate::ui::TrackedEntity("Player".to_owned()));
+    #[cfg(feature = "egui")]
     cmd.insert(PlotSource::default());
 }
 
 fn grab_ungrab_mouse(
-    mut egui_context: bevy_egui::EguiContexts,
+    #[cfg(feature = "egui")] mut egui_context: bevy_egui::EguiContexts,
     mouse_buttons: Res<Input<MouseButton>>,
     keyboard: Res<Input<KeyCode>>,
     mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
@@ -333,11 +335,12 @@ fn grab_ungrab_mouse(
     };
     if window.cursor.visible {
         if mouse_buttons.just_pressed(MouseButton::Left) {
-            let ui = egui_context.ctx_mut();
-            if !ui.is_pointer_over_area() {
-                window.cursor.grab_mode = CursorGrabMode::Locked;
-                window.cursor.visible = false;
+            #[cfg(feature = "egui")]
+            if egui_context.ctx_mut().is_pointer_over_area() {
+                return;
             }
+            window.cursor.grab_mode = CursorGrabMode::Locked;
+            window.cursor.visible = false;
         }
     } else if keyboard.just_released(KeyCode::Escape)
         || mouse_buttons.just_pressed(MouseButton::Left)

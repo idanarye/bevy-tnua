@@ -1,14 +1,18 @@
+#[cfg(feature = "egui")]
 use std::ops::RangeInclusive;
 
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash};
 use bevy_tnua::prelude::*;
 
+#[cfg(feature = "egui")]
 use bevy_egui::egui;
 
 pub trait UiTunable {
+    #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui);
 }
 
+#[cfg(feature = "egui")]
 fn slider_or_infinity(
     ui: &mut egui::Ui,
     caption: &str,
@@ -50,6 +54,7 @@ fn slider_or_infinity(
     });
 }
 
+#[cfg(feature = "egui")]
 fn slider_or_none(
     ui: &mut egui::Ui,
     caption: &str,
@@ -92,6 +97,7 @@ fn slider_or_none(
 }
 
 impl UiTunable for TnuaBuiltinWalk {
+    #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.float_height, 0.0..=10.0).text("Float At"));
         ui.add(egui::Slider::new(&mut self.cling_distance, 0.0..=10.0).text("Cling Distance"));
@@ -134,6 +140,7 @@ impl UiTunable for TnuaBuiltinWalk {
 }
 
 impl UiTunable for TnuaBuiltinJump {
+    #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.height, 0.0..=10.0).text("Jump Height"));
         ui.add(
@@ -181,6 +188,7 @@ impl UiTunable for TnuaBuiltinJump {
     }
 }
 impl UiTunable for TnuaBuiltinCrouch {
+    #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(
             egui::Slider::new(&mut self.height_change_impulse_for_duration, 0.001..=0.2)
@@ -197,6 +205,7 @@ impl UiTunable for TnuaBuiltinCrouch {
 }
 
 impl UiTunable for TnuaBuiltinDash {
+    #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.speed, 0.0..=200.0).text("Dash Speed"));
         slider_or_infinity(

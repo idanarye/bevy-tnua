@@ -25,6 +25,7 @@ use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd3d")]
 use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
+#[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
 use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
 use tnua_demos_crate::MovingPlatformPlugin;
@@ -311,6 +312,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // This helper keeps track of air actions like jumps or air dashes.
     cmd.insert(TnuaSimpleAirActionsCounter::default());
 
+    #[cfg(feature = "egui")]
     cmd.insert(tnua_demos_crate::ui::TrackedEntity("Player".to_owned()));
+    #[cfg(feature = "egui")]
     cmd.insert(PlotSource::default());
 }
