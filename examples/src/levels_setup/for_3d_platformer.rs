@@ -24,11 +24,8 @@ pub fn setup_level(
 ) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane {
-            size: 128.0,
-            subdivisions: 0,
-        })),
-        material: materials.add(Color::WHITE.into()),
+        mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y).mesh().size(128.0, 128.0))),
+        material: materials.add(Color::WHITE),
         ..Default::default()
     });
     #[cfg(feature = "rapier3d")]
@@ -39,7 +36,7 @@ pub fn setup_level(
         cmd.insert(xpbd::Collider::halfspace(Vec3::Y));
     }
 
-    let obstacles_material = materials.add(Color::GRAY.into());
+    let obstacles_material = materials.add(Color::GRAY);
     for ([width, height, depth], transform) in [
         (
             [20.0, 0.1, 2.0],
@@ -51,7 +48,7 @@ pub fn setup_level(
     ] {
         let mut cmd = commands.spawn_empty();
         cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(width, height, depth))),
+            mesh: meshes.add(Mesh::from(Cuboid::new(width, height, depth))),
             material: obstacles_material.clone(),
             transform,
             ..Default::default()
@@ -70,11 +67,11 @@ pub fn setup_level(
     }
 
     // Fall-through platforms
-    let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8).into());
+    let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8));
     for y in [2.0, 4.5] {
         let mut cmd = commands.spawn_empty();
         cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(6.0, 0.5, 2.0))),
+            mesh: meshes.add(Mesh::from(Cuboid::new(6.0, 0.5, 2.0))),
             material: fall_through_obstacles_material.clone(),
             transform: Transform::from_xyz(6.0, y, 10.0),
             ..Default::default()
@@ -156,8 +153,8 @@ pub fn setup_level(
         let mut cmd = commands.spawn_empty();
 
         cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(4.0, 1.0, 4.0))),
-            material: materials.add(Color::BLUE.into()),
+            mesh: meshes.add(Mesh::from(Cuboid::new(4.0, 1.0, 4.0))),
+            material: materials.add(Color::BLUE),
             transform: Transform::from_xyz(-4.0, 6.0, 0.0),
             ..Default::default()
         });
@@ -190,13 +187,11 @@ pub fn setup_level(
         let mut cmd = commands.spawn_empty();
 
         cmd.insert(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cylinder {
+            mesh: meshes.add(Mesh::from(Cylinder {
                 radius: 3.0,
-                height: 1.0,
-                resolution: 10,
-                segments: 10,
+                half_height: 0.5,
             })),
-            material: materials.add(Color::BLUE.into()),
+            material: materials.add(Color::BLUE),
             transform: Transform::from_xyz(-2.0, 2.0, 10.0),
             ..Default::default()
         });

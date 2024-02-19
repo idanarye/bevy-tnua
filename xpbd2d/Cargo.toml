@@ -12,7 +12,7 @@ documentation = "https://docs.rs/bevy-tnua-xpbd2d"
 readme = "../README.md"
 
 [dependencies]
-bevy = { version = "^0.12", default-features = false }
+bevy = { version = "^0.13", default-features = false }
 bevy_xpbd_2d = "^0.3"
 bevy-tnua-physics-integration-layer = { version = "0.1.0", path = "../physics-integration-layer" }
 

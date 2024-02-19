@@ -30,12 +30,12 @@ autoexamples = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.12", default-features = false }
+bevy = { version = "^0.13", default-features = false }
 bevy-tnua-physics-integration-layer = { version = "0.1.1", path = "physics-integration-layer" }
 thiserror = "1.0.53"
 
 [dev-dependencies]
-bevy = { version = "^0.12", default-features = false, features = [
+bevy = { version = "^0.13", default-features = false, features = [
      "animation",
     "bevy_asset",
     # "bevy_audio",

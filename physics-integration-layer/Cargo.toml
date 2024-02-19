@@ -12,4 +12,4 @@ documentation = "https://docs.rs/bevy-tnua-physics-integration-layer"
 readme = "../README.md"
 
 [dependencies]
-bevy = { version = "^0.12", default-features = false }
+bevy = { version = "^0.13", default-features = false }
