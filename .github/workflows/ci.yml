@@ -181,15 +181,15 @@ jobs:
           for physics_backend in rapier xpbd; do
               cargo build \
                   --package tnua-demos-crate \
-                  --examples \
+                  --bins \
                   --release \
                   --features ${physics_backend}2d \
                   --features ${physics_backend}3d \
                   --features bevy/webgl2 \
                   --target wasm32-unknown-unknown
-              for demowasm in $(cd target/wasm32-unknown-unknown/release/examples; ls *.wasm | grep -v -); do
+              for demowasm in $(cd target/wasm32-unknown-unknown/release; ls *.wasm | grep -v -); do
                   variant=${demowasm%.*}-$physics_backend
-                  wasm-bindgen target/wasm32-unknown-unknown/release/examples/$demowasm --out-dir target/doc/demos/ --out-name $variant --target web
+                  wasm-bindgen target/wasm32-unknown-unknown/release/$demowasm --out-dir target/doc/demos/ --out-name $variant --target web
                   cat > target/doc/demos/$variant.html <<EOF
           <html lang="en-us">
               <head>
