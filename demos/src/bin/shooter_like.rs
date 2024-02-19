@@ -17,20 +17,20 @@ use bevy_tnua_xpbd3d::*;
 #[cfg(feature = "xpbd3d")]
 use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
 
-use tnua_examples_crate::character_animating_systems::platformer_animating_systems::{
+use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
     animate_platformer_character, AnimationState,
 };
-use tnua_examples_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CharacterMotionConfigForPlatformerExample,
-    FallingThroughControlScheme, ForwardFromCamera,
+use tnua_demos_crate::character_control_systems::platformer_control_systems::{
+    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
+    ForwardFromCamera,
 };
-use tnua_examples_crate::character_control_systems::Dimensionality;
+use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd3d")]
-use tnua_examples_crate::levels_setup::for_3d_platformer::LayerNames;
-use tnua_examples_crate::ui::component_alterbation::CommandAlteringSelectors;
-use tnua_examples_crate::ui::plotting::PlotSource;
-use tnua_examples_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
-use tnua_examples_crate::MovingPlatformPlugin;
+use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
+use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
+use tnua_demos_crate::ui::plotting::PlotSource;
+use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
+use tnua_demos_crate::MovingPlatformPlugin;
 
 fn main() {
     let mut app = App::new();
@@ -58,13 +58,13 @@ fn main() {
     // while obstructed by an obstacle.
     app.add_plugins(TnuaCrouchEnforcerPlugin);
 
-    app.add_plugins(tnua_examples_crate::ui::ExampleUi::<
-        CharacterMotionConfigForPlatformerExample,
+    app.add_plugins(tnua_demos_crate::ui::DemoUi::<
+        CharacterMotionConfigForPlatformerDemo,
     >::default());
     app.add_systems(Startup, setup_camera);
     app.add_systems(
         Startup,
-        tnua_examples_crate::levels_setup::for_3d_platformer::setup_level,
+        tnua_demos_crate::levels_setup::for_3d_platformer::setup_level,
     );
     app.add_systems(Startup, setup_player);
     app.add_systems(Update, (grab_ungrab_mouse, apply_camera_controls));
@@ -138,7 +138,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // `TnuaController` is used in this example.
     cmd.insert(TnuaControllerBundle::default());
 
-    cmd.insert(CharacterMotionConfigForPlatformerExample {
+    cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim3,
         speed: 20.0,
         walk: TnuaBuiltinWalk {
@@ -318,7 +318,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // This helper keeps track of air actions like jumps or air dashes.
     cmd.insert(TnuaSimpleAirActionsCounter::default());
 
-    cmd.insert(tnua_examples_crate::ui::TrackedEntity("Player".to_owned()));
+    cmd.insert(tnua_demos_crate::ui::TrackedEntity("Player".to_owned()));
     cmd.insert(PlotSource::default());
 }
 

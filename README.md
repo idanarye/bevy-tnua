@@ -31,30 +31,30 @@ Tnua can use [Rapier](https://rapier.rs/) or [XPBD](https://github.com/Jondolf/b
 * [Jump/fall through platforms](https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms)
 * Air actions
 
-## Examples:
+## Demos:
 
-| Example       | Rapier                                                          | XPBD                                                          |
+| Demo          | Rapier                                                          | XPBD                                                          |
 |---------------|-----------------------------------------------------------------|---------------------------------------------------------------|
 | 2D Platformer | https://idanarye.github.io/bevy-tnua/demos/platformer_2d-rapier | https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd |
 | 3D Platformer | https://idanarye.github.io/bevy-tnua/demos/platformer_3d-rapier | https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd |
 
-### Running the Examples Locally
+### Running the Demos Locally
 
 ```sh
-$ cargo run --example <example-name> --features <physics-backend>
+$ cargo run --bin <demo-name> --features <physics-backend>
 ```
 
-Where `<example-name>` is the name of the example file and `<physics-backend>` is either `rapier2d`, `rapier3d`, `xpbd2d` or `xpbd3d`. Make sure to match the dimensionality of the backend (2D or 3D) to that of the example. For example, to run the 3D platformer with XPBD, use this:
+Where `<demo-name>` is the name of the demo and `<physics-backend>` is either `rapier2d`, `rapier3d`, `xpbd2d` or `xpbd3d`. Make sure to match the dimensionality of the backend (2D or 3D) to that of the demo. For example, to run the 3D platformer with XPBD, use this:
 
 ```sh
-$ cargo run --example platformer_3d --features xpbd3d
+$ cargo run --bin platformer_3d --features xpbd3d
 ```
 
-### Interesting Parts of the Examples Code
+### Interesting Parts of the Demo Code
 
-* Check out [the examples entry points](examples/examples/) to see how the plugins and the player character entities are being set.
-* Check out [the character control systems](examples/src/character_control_systems/) to see how to control the character's motion and special movement actions.
-* Check out [the character animating systems](examples/src/character_animating_systems/) to see how to use information from Tnua for character animation.
+* Check out [the demos' entry points](demos/src/bin/) to see how the plugins and the player character entities are being set.
+* Check out [the character control systems](demos/src/character_control_systems/) to see how to control the character's motion and special movement actions.
+* Check out [the character animating systems](demos/src/character_animating_systems/) to see how to use information from Tnua for character animation.
 
 ## Versions
 
