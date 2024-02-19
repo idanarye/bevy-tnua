@@ -17,7 +17,7 @@ xpbd2d = ["xpbd", "dep:bevy_xpbd_2d", "dep:bevy-tnua-xpbd2d"]
 xpbd3d = ["xpbd", "dep:bevy_xpbd_3d", "dep:bevy-tnua-xpbd3d"]
 
 [dependencies]
-bevy = { version = "^0.13", default-features = false, features = [
+bevy = { version = "^0.13", features = [
      "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -39,10 +39,10 @@ bevy = { version = "^0.13", default-features = false, features = [
 bevy-tnua = { path = ".." }
 bevy-tnua-physics-integration-layer = { path = "../physics-integration-layer" }
 
-bevy_rapier2d = { version = "^0.24", features = ["debug-render-2d"], optional = true }
+bevy_rapier2d = { version = "^0.25", features = ["debug-render-2d"], optional = true }
 bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
 
-bevy_rapier3d = { version = "^0.24", features = ["debug-render-3d"], optional = true }
+bevy_rapier3d = { version = "^0.25", features = ["debug-render-3d"], optional = true }
 bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
 bevy_xpbd_2d = { version = "^0.3", optional = true }
