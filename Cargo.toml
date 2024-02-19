@@ -1,6 +1,6 @@
 [workspace]
 members = ["physics-integration-layer", "rapier2d", "rapier3d", "xpbd2d", "xpbd3d", "demos"]
-default-members = ["demos"]
+default-members = [".", "demos"]
 
 [workspace.package]
 edition = "2021"
@@ -53,6 +53,8 @@ bevy = { version = "^0.12", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
+bevy_xpbd_3d = { version = "^0.3" }
+bevy-tnua-xpbd3d = { path = "xpbd3d" }
 
 [package.metadata.docs.rs]
 all-features = true

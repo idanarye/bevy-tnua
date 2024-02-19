@@ -58,7 +58,7 @@ fn main() {
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
         CharacterMotionConfigForPlatformerDemo,
     >::default());
-    app.add_systems(Startup, setup_camera);
+    app.add_systems(Startup, setup_camera_and_lights);
     app.add_systems(
         Startup,
         tnua_demos_crate::levels_setup::for_3d_platformer::setup_level,
@@ -74,7 +74,7 @@ fn main() {
     app.run();
 }
 
-fn setup_camera(mut commands: Commands) {
+fn setup_camera_and_lights(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 16.0, 40.0)
             .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
