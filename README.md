@@ -14,6 +14,8 @@ Tnua can use [Rapier](https://rapier.rs/) or [XPBD](https://github.com/Jondolf/b
 * For XPBD 3D, add the [bevy-tnua-xpbd3d](https://crates.io/crates/bevy-tnua-xpbd3d) crate.
 * Third party integration crates. Such crates should depend on [bevy-tnua-physics-integration-layer](https://crates.io/crates/bevy-tnua-physics-integration-layer) and not the main bevy-tnua crate.
 
+Note that **both** integration crate (`bevy-tnua-<physics-backend>`) and the main `bevy-tnua` crate are required, and that the main plugin from both crates should be added.
+
 ## Features
 
 * Supports both 2D and 3D versions of [Rapier](https://rapier.rs/) and [XPBD](https://github.com/Jondolf/bevy_xpbd)
