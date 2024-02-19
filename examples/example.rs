@@ -108,6 +108,8 @@ fn setup_player(
         TnuaControllerBundle::default(),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
         TnuaXpbd3dSensorShape(Collider::cylinder(0.0, 0.49)),
+        // Tnua can fix the rotation, but the character will still get rotated before it can do so.
+        // By locking the rotation we can prevent this.
         LockedAxes::ROTATION_LOCKED,
     ));
     // NOTE: if this was Rapier, we'd also need `TnuaRapier3dIOBundle`. XPBD does not need it.
