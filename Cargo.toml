@@ -33,7 +33,7 @@ bevy-tnua-physics-integration-layer = { version = "0.1.1", path = "physics-integ
 thiserror = "1.0.53"
 
 [dev-dependencies]
-bevy = { version = "^0.13", default-features = false, features = [
+bevy = { version = "^0.13",  features = [
     "animation",
     "bevy_asset",
     # "bevy_audio",

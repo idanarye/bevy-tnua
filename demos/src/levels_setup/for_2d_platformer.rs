@@ -144,7 +144,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                     color: Color::WHITE,
                 },
             )
-            .with_alignment(TextAlignment::Center),
+            .with_justify(JustifyText::Center),
             transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
             ..Default::default()
         });

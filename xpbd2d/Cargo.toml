@@ -13,7 +13,7 @@ readme = "../README.md"
 
 [dependencies]
 bevy = { version = "^0.13" }
-bevy_xpbd_2d = "^0.3"
+bevy_xpbd_2d = "^0.4"
 bevy-tnua-physics-integration-layer = { version = "0.1.0", path = "../physics-integration-layer" }
 
 [package.metadata.docs.rs]

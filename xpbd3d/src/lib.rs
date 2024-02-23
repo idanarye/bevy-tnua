@@ -231,7 +231,7 @@ fn update_proximity_sensors_system(
                     shape,
                     cast_origin,
                     owner_rotation,
-                    cast_direction,
+                    Direction3d::new(cast_direction),
                     sensor.cast_range,
                     true,
                     query_filter,
@@ -247,7 +247,7 @@ fn update_proximity_sensors_system(
             } else {
                 spatial_query_pipeline.ray_hits_callback(
                     cast_origin,
-                    cast_direction,
+                    Direction3d::new(cast_direction),
                     sensor.cast_range,
                     true,
                     query_filter,

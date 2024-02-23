@@ -232,7 +232,7 @@ fn update_proximity_sensors_system(
                     shape,
                     cast_origin.truncate(),
                     rotation_z,
-                    cast_direction.truncate(),
+                    Direction2d::new(cast_direction.truncate()),
                     sensor.cast_range,
                     true,
                     query_filter,
@@ -248,7 +248,7 @@ fn update_proximity_sensors_system(
             } else {
                 spatial_query_pipeline.ray_hits_callback(
                     cast_origin.truncate(),
-                    cast_direction.truncate(),
+                    Direction2d::new(cast_direction.truncate()),
                     sensor.cast_range,
                     true,
                     query_filter,
