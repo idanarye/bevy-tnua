@@ -225,14 +225,14 @@ fn update_proximity_sensors_system(
                 }
             };
 
-            let query_filter = SpatialQueryFilter::new().without_entities([owner_entity]);
+            let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaXpbd2dSensorShape(shape)) = shape {
                 let (_, _, rotation_z) = owner_rotation.to_euler(EulerRot::XYZ);
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
                     cast_origin.truncate(),
                     rotation_z,
-                    Direction2d::new(cast_direction.truncate()),
+                    Direction2d::new(cast_direction.truncate()).unwrap(),
                     sensor.cast_range,
                     true,
                     query_filter,
@@ -248,7 +248,7 @@ fn update_proximity_sensors_system(
             } else {
                 spatial_query_pipeline.ray_hits_callback(
                     cast_origin.truncate(),
-                    Direction2d::new(cast_direction.truncate()),
+                    Direction2d::new(cast_direction.truncate()).unwrap(),
                     sensor.cast_range,
                     true,
                     query_filter,
