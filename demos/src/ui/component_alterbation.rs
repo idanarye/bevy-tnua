@@ -1,5 +1,6 @@
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
+#[cfg(feature = "egui")]
 use bevy_egui::egui;
 
 #[derive(Component, Default)]
@@ -8,12 +9,14 @@ pub struct CommandAlteringSelectors(Vec<CommandAlteringSelector>);
 enum CommandAlteringSelector {
     Combo {
         chosen: usize,
+        #[cfg_attr(not(feature = "egui"), allow(unused))]
         caption: String,
         options: Vec<(String, fn(EntityCommands))>,
         set_to: Option<usize>,
     },
     Checkbox {
         checked: bool,
+        #[cfg_attr(not(feature = "egui"), allow(unused))]
         caption: String,
         applier: fn(EntityCommands, bool),
         set_to: Option<bool>,
@@ -84,6 +87,7 @@ impl CommandAlteringSelectors {
         }
     }
 
+    #[cfg(feature = "egui")]
     pub fn show_ui(&mut self, ui: &mut egui::Ui, commands: &mut Commands, entity: Entity) {
         for selector in self.0.iter_mut() {
             match selector {

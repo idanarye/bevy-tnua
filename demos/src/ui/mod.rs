@@ -1,20 +1,26 @@
 pub mod component_alterbation;
+#[cfg(feature = "egui")]
 pub mod plotting;
 pub mod tuning;
 
 use std::marker::PhantomData;
 
+#[cfg(feature = "egui")]
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
+#[cfg(feature = "egui")]
 use bevy::window::{PresentMode, PrimaryWindow};
+#[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
+#[cfg(feature = "egui")]
 use bevy_tnua::TnuaToggle;
 
 
 use self::component_alterbation::CommandAlteringSelectors;
-use self::plotting::{plot_source_rolling_update,make_update_plot_data_system};
 
-use plotting::PlotSource;
+#[cfg(feature = "egui")]
+use self::plotting::{make_update_plot_data_system, plot_source_rolling_update};
+
 use tuning::UiTunable;
 
 pub struct DemoUi<C: Component + UiTunable> {
@@ -31,40 +37,48 @@ impl<C: Component + UiTunable> Default for DemoUi<C> {
 
 impl<C: Component + UiTunable> Plugin for DemoUi<C> {
     fn build(&self, app: &mut App) {
+        #[cfg(feature = "egui")]
         app.add_plugins(EguiPlugin);
         app.insert_resource(DemoUiPhysicsBackendActive(true));
+        app.add_systems(Update, apply_selectors);
+        #[cfg(feature = "egui")]
         app.add_systems(Update, ui_system::<C>);
+        #[cfg(feature = "egui")]
         app.add_systems(Update, plot_source_rolling_update);
+        #[cfg(feature = "egui")]
         app.add_plugins(FrameTimeDiagnosticsPlugin);
 
-        #[cfg(feature = "rapier2d")]
-        app.add_systems(
-            Update,
-            make_update_plot_data_system(|velocity: &bevy_rapier2d::prelude::Velocity| {
-                velocity.linvel.extend(0.0)
-            }),
-        );
-        #[cfg(feature = "rapier3d")]
-        app.add_systems(
-            Update,
-            make_update_plot_data_system(|velocity: &bevy_rapier3d::prelude::Velocity| {
-                velocity.linvel
-            }),
-        );
-        #[cfg(feature = "xpbd2d")]
-        app.add_systems(
-            Update,
-            make_update_plot_data_system(|velocity: &bevy_xpbd_2d::components::LinearVelocity| {
-                velocity.extend(0.0)
-            }),
-        );
-        #[cfg(feature = "xpbd3d")]
-        app.add_systems(
-            Update,
-            make_update_plot_data_system(|velocity: &bevy_xpbd_3d::components::LinearVelocity| {
-                **velocity
-            }),
-        );
+        #[cfg(feature = "egui")]
+        {
+            #[cfg(feature = "rapier2d")]
+            app.add_systems(
+                Update,
+                make_update_plot_data_system(|velocity: &bevy_rapier2d::prelude::Velocity| {
+                    velocity.linvel.extend(0.0)
+                }),
+            );
+            #[cfg(feature = "rapier3d")]
+            app.add_systems(
+                Update,
+                make_update_plot_data_system(|velocity: &bevy_rapier3d::prelude::Velocity| {
+                    velocity.linvel
+                }),
+            );
+            #[cfg(feature = "xpbd2d")]
+            app.add_systems(
+                Update,
+                make_update_plot_data_system(
+                    |velocity: &bevy_xpbd_2d::components::LinearVelocity| velocity.extend(0.0),
+                ),
+            );
+            #[cfg(feature = "xpbd3d")]
+            app.add_systems(
+                Update,
+                make_update_plot_data_system(
+                    |velocity: &bevy_xpbd_3d::components::LinearVelocity| **velocity,
+                ),
+            );
+        }
 
         app.add_systems(Update, update_physics_active_from_ui);
     }
@@ -77,6 +91,16 @@ pub struct DemoUiPhysicsBackendActive(pub bool);
 #[derive(Component)]
 pub struct TrackedEntity(pub String);
 
+fn apply_selectors(
+    mut query: Query<(Entity, &mut CommandAlteringSelectors)>,
+    mut commands: Commands,
+) {
+    for (entity, mut command_altering_selectors) in query.iter_mut() {
+        command_altering_selectors.apply_set_to(&mut commands, entity);
+    }
+}
+
+#[cfg(feature = "egui")]
 #[allow(clippy::type_complexity)]
 fn ui_system<C: Component + UiTunable>(
     mut egui_context: EguiContexts,
@@ -84,7 +108,7 @@ fn ui_system<C: Component + UiTunable>(
     mut query: Query<(
         Entity,
         &TrackedEntity,
-        &PlotSource,
+        &plotting::PlotSource,
         &mut TnuaToggle,
         Option<&mut C>,
         Option<&mut CommandAlteringSelectors>,
@@ -93,11 +117,6 @@ fn ui_system<C: Component + UiTunable>(
     mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
     diagnostics_store: Res<DiagnosticsStore>,
 ) {
-    for (entity, .., command_altering_selectors) in query.iter_mut() {
-        if let Some(mut command_altering_selectors) = command_altering_selectors {
-            command_altering_selectors.apply_set_to(&mut commands, entity);
-        }
-    }
     let Ok(mut primary_window) = primary_window_query.get_single_mut() else {
         return;
     };

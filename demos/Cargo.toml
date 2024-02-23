@@ -8,6 +8,11 @@ exclude = [
 ]
 
 [features]
+default = [
+    # Comment this out when Bevy gets upgraded and bevy_egui lags behind
+    "egui",
+]
+egui = ["dep:bevy_egui", "dep:egui_plot"]
 rapier = []
 rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
 rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
@@ -53,3 +58,4 @@ bevy-tnua-xpbd3d = { path = "../xpbd3d", optional = true }
 
 bevy_egui = "0.25"
 egui_plot = "0.26.2"
+

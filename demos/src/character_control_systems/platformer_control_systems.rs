@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+#[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts};
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash};
 use bevy_tnua::control_helpers::{
@@ -13,6 +14,7 @@ use super::Dimensionality;
 
 #[allow(clippy::type_complexity)]
 pub fn apply_platformer_controls(
+    #[cfg(feature = "egui")]
     mut egui_context: EguiContexts,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut query: Query<(
@@ -47,6 +49,7 @@ pub fn apply_platformer_controls(
         Option<&ForwardFromCamera>,
     )>,
 ) {
+    #[cfg(feature = "egui")]
     if egui_context.ctx_mut().wants_keyboard_input() {
         for (_, mut controller, ..) in query.iter_mut() {
             // The basis remembers its last frame status, so if we cannot feed it proper input this
@@ -377,6 +380,7 @@ pub struct CharacterMotionConfigForPlatformerDemo {
 }
 
 impl UiTunable for CharacterMotionConfigForPlatformerDemo {
+    #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.collapsing("Walking:", |ui| {
             ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));
@@ -413,6 +417,7 @@ pub enum FallingThroughControlScheme {
 }
 
 impl UiTunable for FallingThroughControlScheme {
+    #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         egui::ComboBox::from_label("Falling Through Control Scheme")
             .selected_text(format!("{:?}", self))

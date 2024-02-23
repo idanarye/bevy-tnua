@@ -22,6 +22,7 @@ use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd2d")]
 use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
+#[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
 use tnua_demos_crate::MovingPlatformPlugin;
 
@@ -56,7 +57,7 @@ fn main() {
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
         CharacterMotionConfigForPlatformerDemo,
     >::default());
-    app.add_systems(Startup, setup_camera);
+    app.add_systems(Startup, setup_camera_and_lights);
     app.add_systems(
         Startup,
         tnua_demos_crate::levels_setup::for_2d_platformer::setup_level,
@@ -77,7 +78,7 @@ fn main() {
     app.run();
 }
 
-fn setup_camera(mut commands: Commands) {
+fn setup_camera_and_lights(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(0.0, 14.0, 30.0)
             .with_scale((0.05 * Vec2::ONE).extend(1.0))
@@ -286,5 +287,6 @@ fn setup_player(mut commands: Commands) {
     cmd.insert(TnuaSimpleAirActionsCounter::default());
 
     cmd.insert(tnua_demos_crate::ui::TrackedEntity("Player".to_owned()));
+    #[cfg(feature = "egui")]
     cmd.insert(PlotSource::default());
 }
