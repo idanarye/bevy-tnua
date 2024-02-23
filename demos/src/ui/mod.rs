@@ -10,8 +10,9 @@ use bevy::window::{PresentMode, PrimaryWindow};
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_tnua::TnuaToggle;
 
+
 use self::component_alterbation::CommandAlteringSelectors;
-use self::plotting::plot_source_rolling_update;
+use self::plotting::{plot_source_rolling_update,make_update_plot_data_system};
 
 use plotting::PlotSource;
 use tuning::UiTunable;

@@ -1,11 +1,5 @@
 [workspace]
-members = [
-    "physics-integration-layer",
-    "rapier2d",
-    "rapier3d",
-    "xpbd2d",
-    "xpbd3d",
-    "demos",
+members = ["physics-integration-layer","rapier2d","rapier3d","xpbd2d","xpbd3d","demos",
 ]
 default-members = ["demos"]
 
@@ -39,7 +33,7 @@ bevy-tnua-physics-integration-layer = { version = "0.1.1", path = "physics-integ
 thiserror = "1.0.53"
 
 [dev-dependencies]
-bevy = { version = "^0.13", features = [
+bevy = { version = "^0.13", default-features = false, features = [
     "animation",
     "bevy_asset",
     # "bevy_audio",
