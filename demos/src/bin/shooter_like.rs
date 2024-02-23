@@ -324,8 +324,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn grab_ungrab_mouse(
     mut egui_context: bevy_egui::EguiContexts,
-    mouse_buttons: Res<Input<MouseButton>>,
-    keyboard: Res<Input<KeyCode>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     let Ok(mut window) = primary_window_query.get_single_mut() else {

@@ -110,7 +110,7 @@ fn update_proximity_sensors_system(
         Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
-    ghost_platforms_query: Query<With<TnuaGhostPlatform>>,
+    ghost_platforms_query: Query<Has<TnuaGhostPlatform>>,
     other_object_query: Query<(&GlobalTransform, &Velocity)>,
 ) {
     query.par_iter_mut().for_each(

@@ -51,5 +51,5 @@ bevy-tnua-xpbd2d = { path = "../xpbd2d", optional = true }
 bevy_xpbd_3d = { version = "^0.3", optional = true }
 bevy-tnua-xpbd3d = { path = "../xpbd3d", optional = true }
 
-bevy_egui = "0.24"
-egui_plot = "0.24"
+bevy_egui = "0.25"
+egui_plot = "0.26.2"
