@@ -1,5 +1,12 @@
 [workspace]
-members = ["physics-integration-layer", "rapier2d", "rapier3d", "xpbd2d", "xpbd3d", "demos"]
+members = [
+    "physics-integration-layer",
+    "rapier2d",
+    "rapier3d",
+    "xpbd2d",
+    "xpbd3d",
+    "demos",
+]
 default-members = ["demos"]
 
 [workspace.package]
@@ -22,20 +29,18 @@ categories.workspace = true
 keywords.workspace = true
 documentation = "https://docs.rs/bevy-tnua"
 readme = "README.md"
-exclude = [
-    "assets",
-]
+exclude = ["assets"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.13" }
+bevy = { version = "^0.13", default-features = false }
 bevy-tnua-physics-integration-layer = { version = "0.1.1", path = "physics-integration-layer" }
 thiserror = "1.0.53"
 
 [dev-dependencies]
 bevy = { version = "^0.13", features = [
-     "animation",
+    "animation",
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
