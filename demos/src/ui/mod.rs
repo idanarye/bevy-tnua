@@ -137,15 +137,15 @@ fn ui_system<C: Component + UiTunable>(
                 ui.selectable_value(present_mode, PresentMode::Immediate, "Immediate");
                 ui.selectable_value(present_mode, PresentMode::Mailbox, "Mailbox");
             });
-        for (diagnostic_id, range) in [
+        for (diagnostic_path, range) in [
             (FrameTimeDiagnosticsPlugin::FPS, 0.0..120.0),
             (FrameTimeDiagnosticsPlugin::FRAME_TIME, 0.0..50.0),
         ] {
-            if let Some(diagnostic) = diagnostics_store.get(&diagnostic_id) {
+            if let Some(diagnostic) = diagnostics_store.get(&diagnostic_path) {
                 if let Some(value) = diagnostic.smoothed() {
                     ui.add(
                         egui::widgets::ProgressBar::new((value as f32 - range.start) / (range.end - range.start))
-                        .text(format!("{}: {:.0}", diagnostic.suffix, value))
+                        .text(format!("{}: {:.0}", diagnostic_path, value))
                     );
                 }
             }
