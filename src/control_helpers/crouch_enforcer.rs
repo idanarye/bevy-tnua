@@ -148,7 +148,7 @@ fn update_crouch_enforcer(
 ) {
     for (owner_entity, mut controller, mut crouch_enforcer) in query.iter_mut() {
         struct SetSensor {
-            cast_direction: Vec3,
+            cast_direction: Direction3d,
             cast_range: f32,
         }
         let set_sensor: Option<SetSensor>;

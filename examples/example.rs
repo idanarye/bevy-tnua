@@ -57,11 +57,8 @@ fn setup_level(
     // Spawn the ground.
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane {
-                size: 128.0,
-                subdivisions: 0,
-            })),
-            material: materials.add(Color::WHITE.into()),
+            mesh: meshes.add(Plane3d::default().mesh().size(128.0, 128.0)),
+            material: materials.add(Color::WHITE),
             ..Default::default()
         },
         RigidBody::Static,
@@ -71,8 +68,8 @@ fn setup_level(
     // Spawn a little platform for the player to jump on.
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(4.0, 1.0, 4.0))),
-            material: materials.add(Color::GRAY.into()),
+            mesh: meshes.add(Cuboid::new(4.0, 1.0, 4.0)),
+            material: materials.add(Color::GRAY),
             transform: Transform::from_xyz(-6.0, 2.0, 0.0),
             ..Default::default()
         },
@@ -88,15 +85,11 @@ fn setup_player(
 ) {
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Capsule {
+            mesh: meshes.add(Capsule3d {
                 radius: 0.5,
-                rings: 10,
-                depth: 1.0,
-                latitudes: 10,
-                longitudes: 10,
-                uv_profile: Default::default(),
-            })),
-            material: materials.add(Color::CYAN.into()),
+                half_length: 0.5,
+            }),
+            material: materials.add(Color::CYAN),
             transform: Transform::from_xyz(0.0, 2.0, 0.0),
             ..Default::default()
         },
@@ -115,23 +108,23 @@ fn setup_player(
     // NOTE: if this was Rapier, we'd also need `TnuaRapier3dIOBundle`. XPBD does not need it.
 }
 
-fn apply_controls(keyboard: Res<Input<KeyCode>>, mut query: Query<&mut TnuaController>) {
+fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut TnuaController>) {
     let Ok(mut controller) = query.get_single_mut() else {
         return;
     };
 
     let mut direction = Vec3::ZERO;
 
-    if keyboard.pressed(KeyCode::Up) {
+    if keyboard.pressed(KeyCode::ArrowUp) {
         direction -= Vec3::Z;
     }
-    if keyboard.pressed(KeyCode::Down) {
+    if keyboard.pressed(KeyCode::ArrowDown) {
         direction += Vec3::Z;
     }
-    if keyboard.pressed(KeyCode::Left) {
+    if keyboard.pressed(KeyCode::ArrowLeft) {
         direction -= Vec3::X;
     }
-    if keyboard.pressed(KeyCode::Right) {
+    if keyboard.pressed(KeyCode::ArrowRight) {
         direction += Vec3::X;
     }
 

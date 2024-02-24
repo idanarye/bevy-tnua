@@ -67,7 +67,7 @@ pub trait TnuaBasis: 'static + Send + Sync {
     /// The direction the basis considers as "up".
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn up_direction(&self, state: &Self::State) -> Vec3;
+    fn up_direction(&self, state: &Self::State) -> Direction3d;
 
     /// The displacement of the character from where the basis wants it to be.
     ///
@@ -117,7 +117,7 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
     fn proximity_sensor_cast_range(&self) -> f32;
 
     /// Dynamically invokes [`TnuaBasis::up_direction`].
-    fn up_direction(&self) -> Vec3;
+    fn up_direction(&self) -> Direction3d;
 
     /// Dynamically invokes [`TnuaBasis::displacement`].
     fn displacement(&self) -> Option<Vec3>;
@@ -169,7 +169,7 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
         self.input.proximity_sensor_cast_range(&self.state)
     }
 
-    fn up_direction(&self) -> Vec3 {
+    fn up_direction(&self) -> Direction3d {
         self.input.up_direction(&self.state)
     }
 

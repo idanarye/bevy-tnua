@@ -110,7 +110,7 @@ fn update_proximity_sensors_system(
         Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
-    ghost_platforms_query: Query<With<TnuaGhostPlatform>>,
+    ghost_platforms_query: Query<(), With<TnuaGhostPlatform>>,
     other_object_query_query: Query<(&GlobalTransform, &Velocity)>,
 ) {
     query.par_iter_mut().for_each(
@@ -136,7 +136,9 @@ fn update_proximity_sensors_system(
                 entity: Entity,
                 proximity: f32,
                 intersection_point: Vec2,
-                normal: Vec2,
+                // Use 3D and not 2D because converting a direction from 2D to 3D is more painful
+                // than it should be.
+                normal: Direction3d,
             }
 
             let owner_entity = if let Some(subservient) = subservient {
@@ -203,7 +205,7 @@ fn update_proximity_sensors_system(
                     true
                 };
                 let query_filter = query_filter.predicate(&predicate);
-                let cast_origin = cast_origin + cast_range_skip * cast_direction;
+                let cast_origin = cast_origin + cast_range_skip * *cast_direction;
                 let cast_range = sensor.cast_range - cast_range_skip;
                 if let Some(TnuaRapier2dSensorShape(shape)) = shape {
                     let (_, _, rotation_z) = owner_rotation.to_euler(EulerRot::XYZ);
@@ -223,7 +225,8 @@ fn update_proximity_sensors_system(
                                 entity,
                                 proximity: toi.toi + cast_range_skip,
                                 intersection_point: details.witness1,
-                                normal: details.normal1,
+                                normal: Direction3d::new(details.normal1.extend(0.0))
+                                    .unwrap_or_else(|_| -cast_direction),
                             })
                         })
                 } else {
@@ -239,7 +242,8 @@ fn update_proximity_sensors_system(
                             entity,
                             proximity: toi.toi + cast_range_skip,
                             intersection_point: toi.point,
-                            normal: toi.normal,
+                            normal: Direction3d::new(toi.normal.extend(0.0))
+                                .unwrap_or_else(|_| -cast_direction),
                         })
                 }
             };
@@ -279,7 +283,7 @@ fn update_proximity_sensors_system(
                     let sensor_output = TnuaProximitySensorOutput {
                         entity,
                         proximity,
-                        normal: normal.extend(0.0),
+                        normal,
                         entity_linvel,
                         entity_angvel,
                     };

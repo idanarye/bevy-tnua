@@ -58,7 +58,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         #[cfg(feature = "xpbd2d")]
         {
             cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(width, height));
+            cmd.insert(xpbd::Collider::rectangle(width, height));
         }
     }
 
@@ -85,7 +85,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         #[cfg(feature = "xpbd2d")]
         {
             cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(6.0, 0.5));
+            cmd.insert(xpbd::Collider::rectangle(6.0, 0.5));
             cmd.insert(CollisionLayers::new(
                 [LayerNames::FallThrough],
                 [LayerNames::FallThrough],
@@ -107,7 +107,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         #[cfg(feature = "xpbd2d")]
         (
             xpbd::RigidBody::Static,
-            xpbd::Collider::ball(1.0),
+            xpbd::Collider::circle(1.0),
             CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
         ),
     ));
@@ -120,7 +120,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                 color: Color::WHITE,
             },
         )
-        .with_alignment(TextAlignment::Center),
+        .with_justify(JustifyText::Center),
         transform: Transform::from_xyz(10.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
         ..Default::default()
     });
@@ -144,7 +144,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                     color: Color::WHITE,
                 },
             )
-            .with_alignment(TextAlignment::Center),
+            .with_justify(JustifyText::Center),
             transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
             ..Default::default()
         });
@@ -157,7 +157,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         #[cfg(feature = "xpbd2d")]
         (
             xpbd::RigidBody::Static,
-            xpbd::Collider::ball(1.0),
+            xpbd::Collider::circle(1.0),
             xpbd::Sensor,
         ),
     ));
@@ -170,7 +170,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                 color: Color::WHITE,
             },
         )
-        .with_alignment(TextAlignment::Center),
+        .with_justify(JustifyText::Center),
         transform: Transform::from_xyz(20.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
         ..Default::default()
     });
@@ -195,7 +195,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         }
         #[cfg(feature = "xpbd2d")]
         {
-            cmd.insert(xpbd::Collider::cuboid(4.0, 1.0));
+            cmd.insert(xpbd::Collider::rectangle(4.0, 1.0));
             cmd.insert(xpbd::RigidBody::Kinematic);
         }
         cmd.insert(MovingPlatform::new(

@@ -15,7 +15,7 @@ use super::Dimensionality;
 #[allow(clippy::type_complexity)]
 pub fn apply_platformer_controls(
     #[cfg(feature = "egui")] mut egui_context: EguiContexts,
-    keyboard: Res<Input<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut query: Query<(
         &CharacterMotionConfigForPlatformerDemo,
         // This is the main component used for interacting with Tnua. It is used for both issuing
@@ -75,17 +75,17 @@ pub fn apply_platformer_controls(
         let mut direction = Vec3::ZERO;
 
         if config.dimensionality == Dimensionality::Dim3 {
-            if keyboard.any_pressed([KeyCode::Up, KeyCode::W]) {
+            if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
                 direction -= Vec3::Z;
             }
-            if keyboard.any_pressed([KeyCode::Down, KeyCode::S]) {
+            if keyboard.any_pressed([KeyCode::ArrowDown, KeyCode::KeyS]) {
                 direction += Vec3::Z;
             }
         }
-        if keyboard.any_pressed([KeyCode::Left, KeyCode::A]) {
+        if keyboard.any_pressed([KeyCode::ArrowLeft, KeyCode::KeyA]) {
             direction -= Vec3::X;
         }
-        if keyboard.any_pressed([KeyCode::Right, KeyCode::D]) {
+        if keyboard.any_pressed([KeyCode::ArrowRight, KeyCode::KeyD]) {
             direction += Vec3::X;
         }
 
@@ -98,7 +98,9 @@ pub fn apply_platformer_controls(
         }
 
         let jump = match config.dimensionality {
-            Dimensionality::Dim2 => keyboard.any_pressed([KeyCode::Space, KeyCode::Up, KeyCode::W]),
+            Dimensionality::Dim2 => {
+                keyboard.any_pressed([KeyCode::Space, KeyCode::ArrowUp, KeyCode::KeyW])
+            }
             Dimensionality::Dim3 => keyboard.any_pressed([KeyCode::Space]),
         };
         let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
@@ -113,8 +115,8 @@ pub fn apply_platformer_controls(
                 let crouch_buttons = [
                     KeyCode::ControlLeft,
                     KeyCode::ControlRight,
-                    KeyCode::Down,
-                    KeyCode::S,
+                    KeyCode::ArrowDown,
+                    KeyCode::KeyS,
                 ];
                 crouch_pressed = keyboard.any_pressed(crouch_buttons);
                 crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);

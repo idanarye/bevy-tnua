@@ -219,13 +219,13 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::ball(0.49)));
                         #[cfg(feature = "xpbd3d")]
-                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::ball(0.49)));
+                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::sphere(0.49)));
                     }),
                     ("ball (exact)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::ball(0.5)));
                         #[cfg(feature = "xpbd3d")]
-                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::ball(0.5)));
+                        cmd.insert(TnuaXpbd3dSensorShape(xpbd::Collider::sphere(0.5)));
                     }),
                 ],
             )
@@ -266,10 +266,10 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     }
                     #[cfg(feature = "xpbd3d")]
                     {
-                        let player_layers: &[LayerNames] = if use_collision_groups {
-                            &[LayerNames::Player]
+                        let player_layers: LayerMask = if use_collision_groups {
+                            [LayerNames::Player].into()
                         } else {
-                            &[LayerNames::Player, LayerNames::PhaseThrough]
+                            [LayerNames::Player, LayerNames::PhaseThrough].into()
                         };
                         cmd.insert(CollisionLayers::new(player_layers, player_layers));
                     }
@@ -326,8 +326,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn grab_ungrab_mouse(
     #[cfg(feature = "egui")] mut egui_context: bevy_egui::EguiContexts,
-    mouse_buttons: Res<Input<MouseButton>>,
-    keyboard: Res<Input<KeyCode>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     let Ok(mut window) = primary_window_query.get_single_mut() else {

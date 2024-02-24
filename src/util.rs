@@ -51,14 +51,14 @@ pub struct ProjectionPlaneForRotation {
 }
 
 impl ProjectionPlaneForRotation {
-    pub fn from_up_and_fowrard(up: Vec3, forward: Vec3) -> Self {
+    pub fn from_up_and_fowrard(up: Direction3d, forward: Vec3) -> Self {
         Self {
             forward,
             sideways: up.cross(forward),
         }
     }
 
-    pub fn from_up_using_default_forward(up: Vec3) -> Self {
+    pub fn from_up_using_default_forward(up: Direction3d) -> Self {
         Self::from_up_and_fowrard(up, Vec3::NEG_Z)
     }
 

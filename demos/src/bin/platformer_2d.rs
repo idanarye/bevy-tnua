@@ -169,31 +169,31 @@ fn setup_player(mut commands: Commands) {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.49, 0.0)));
                         #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(0.99, 0.0)));
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::rectangle(0.99, 0.0)));
                     }),
                     ("Flat (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
                         #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.0, 0.0)));
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::rectangle(1.0, 0.0)));
                     }),
                     ("flat (overfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.51, 0.0)));
                         #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.01, 0.0)));
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::rectangle(1.01, 0.0)));
                     }),
                     ("Ball (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.49)));
                         #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::ball(0.49)));
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::circle(0.49)));
                     }),
                     ("Ball (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.5)));
                         #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::ball(0.5)));
+                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::circle(0.5)));
                     }),
                 ],
             )
@@ -231,10 +231,10 @@ fn setup_player(mut commands: Commands) {
                     }
                     #[cfg(feature = "xpbd2d")]
                     {
-                        let player_layers: &[LayerNames] = if use_collision_groups {
-                            &[LayerNames::Player]
+                        let player_layers: LayerMask = if use_collision_groups {
+                            [LayerNames::Player].into()
                         } else {
-                            &[LayerNames::Player, LayerNames::PhaseThrough]
+                            [LayerNames::Player, LayerNames::PhaseThrough].into()
                         };
                         cmd.insert(CollisionLayers::new(player_layers, player_layers));
                     }
@@ -270,7 +270,7 @@ fn setup_player(mut commands: Commands) {
         #[cfg(feature = "rapier2d")]
         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
         #[cfg(feature = "xpbd2d")]
-        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::cuboid(1.0, 0.0)));
+        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::rectangle(1.0, 0.0)));
     }));
 
     // The ghost sensor is used for detecting ghost platforms - platforms configured in the physics

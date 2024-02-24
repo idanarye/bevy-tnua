@@ -66,7 +66,7 @@ pub struct TnuaProximitySensor {
     /// The cast origin in the entity's coord system.
     pub cast_origin: Vec3,
     /// The direction in world coord system (unmodified by the entity's transform)
-    pub cast_direction: Vec3,
+    pub cast_direction: Direction3d,
     /// Tnua will update this field according to its need. The backend only needs to read it.
     pub cast_range: f32,
     pub output: Option<TnuaProximitySensorOutput>,
@@ -96,7 +96,7 @@ impl Default for TnuaProximitySensor {
     fn default() -> Self {
         Self {
             cast_origin: Vec3::ZERO,
-            cast_direction: -Vec3::Y,
+            cast_direction: Direction3d::NEG_Y,
             cast_range: 0.0,
             output: None,
             intersection_match_prevention_cutoff: -0.5,
@@ -113,7 +113,7 @@ pub struct TnuaProximitySensorOutput {
     /// [`cast_direction`](TnuaProximitySensor::cast_direction).
     pub proximity: f32,
     /// The normal from the detected collider's surface where the ray hits.
-    pub normal: Vec3,
+    pub normal: Direction3d,
     /// The velocity of the detected entity,
     pub entity_linvel: Vec3,
     /// The angular velocity of the detected entity, given as the rotation axis multiplied by the

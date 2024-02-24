@@ -145,10 +145,10 @@ impl TnuaAction for TnuaBuiltinDash {
                         let rotation_along_up_axis = projection
                             .rotation_to_set_forward(current_forward, self.desired_forward);
                         let desired_angvel = rotation_along_up_axis / ctx.frame_duration;
-                        let existing_angvel = ctx.tracker.angvel.dot(up);
+                        let existing_angvel = ctx.tracker.angvel.dot(*up);
                         let torque_to_turn = desired_angvel - existing_angvel;
-                        motor.ang.cancel_on_axis(up);
-                        motor.ang.boost += torque_to_turn * up;
+                        motor.ang.cancel_on_axis(*up);
+                        motor.ang.boost += torque_to_turn * *up;
                     }
 
                     TnuaActionLifecycleDirective::StillActive

@@ -110,7 +110,7 @@ fn update_proximity_sensors_system(
         Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
-    ghost_platforms_query: Query<With<TnuaGhostPlatform>>,
+    ghost_platforms_query: Query<(), With<TnuaGhostPlatform>>,
     other_object_query: Query<(&GlobalTransform, &Velocity)>,
 ) {
     query.par_iter_mut().for_each(
@@ -136,7 +136,7 @@ fn update_proximity_sensors_system(
                 entity: Entity,
                 proximity: f32,
                 intersection_point: Vec3,
-                normal: Vec3,
+                normal: Direction3d,
             }
 
             let owner_entity = if let Some(subservient) = subservient {
@@ -193,7 +193,7 @@ fn update_proximity_sensors_system(
                                     manifold.local_n1()
                                 };
                                 if sensor.intersection_match_prevention_cutoff
-                                    < manifold_normal.dot(cast_direction)
+                                    < manifold_normal.dot(*cast_direction)
                                 {
                                     return false;
                                 }
@@ -203,14 +203,14 @@ fn update_proximity_sensors_system(
                     true
                 };
                 let query_filter = query_filter.predicate(&predicate);
-                let cast_origin = cast_origin + cast_range_skip * cast_direction;
+                let cast_origin = cast_origin + cast_range_skip * *cast_direction;
                 let cast_range = sensor.cast_range - cast_range_skip;
                 if let Some(TnuaRapier3dSensorShape(shape)) = shape {
                     rapier_context
                         .cast_shape(
                             cast_origin,
                             owner_rotation,
-                            cast_direction,
+                            *cast_direction,
                             shape,
                             cast_range,
                             true,
@@ -222,14 +222,15 @@ fn update_proximity_sensors_system(
                                 entity,
                                 proximity: toi.toi,
                                 intersection_point: details.witness1,
-                                normal: details.normal1,
+                                normal: Direction3d::new(details.normal1)
+                                    .unwrap_or_else(|_| -cast_direction),
                             })
                         })
                 } else {
                     rapier_context
                         .cast_ray_and_get_normal(
                             cast_origin,
-                            cast_direction,
+                            *cast_direction,
                             cast_range,
                             false,
                             query_filter,
@@ -238,7 +239,8 @@ fn update_proximity_sensors_system(
                             entity,
                             proximity: toi.toi,
                             intersection_point: toi.point,
-                            normal: toi.normal,
+                            normal: Direction3d::new(toi.normal)
+                                .unwrap_or_else(|_| -cast_direction),
                         })
                 }
             };

@@ -149,7 +149,7 @@ impl TnuaAction for TnuaBuiltinJump {
 
         if lifecycle_status.just_started() {
             let mut calculator = SegmentedJumpInitialVelocityCalculator::new(self.height);
-            let gravity = ctx.tracker.gravity.dot(-up);
+            let gravity = ctx.tracker.gravity.dot(*-up);
             let kinetic_energy = calculator
                 .add_segment(
                     gravity + self.peak_prevention_extra_gravity,
@@ -172,27 +172,27 @@ impl TnuaAction for TnuaBuiltinJump {
                 TnuaBuiltinJumpState::NoJump => panic!(),
                 TnuaBuiltinJumpState::StartingJump { desired_energy } => {
                     let extra_height = if let Some(displacement) = ctx.basis.displacement() {
-                        displacement.dot(up)
+                        displacement.dot(*up)
                     } else if !self.allow_in_air && ctx.basis.is_airborne() {
                         return self.directive_simple_or_reschedule(lifecycle_status);
                     } else {
                         // This means we are at Coyote time, so just jump from place.
                         0.0
                     };
-                    let gravity = ctx.tracker.gravity.dot(-up);
+                    let gravity = ctx.tracker.gravity.dot(*-up);
                     let energy_from_extra_height = extra_height * gravity;
                     let desired_kinetic_energy = *desired_energy - energy_from_extra_height;
                     let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
 
                     let relative_velocity =
-                        effective_velocity.dot(up) - ctx.basis.vertical_velocity().max(0.0);
+                        effective_velocity.dot(*up) - ctx.basis.vertical_velocity().max(0.0);
 
-                    motor.lin.cancel_on_axis(up);
-                    motor.lin.boost += (desired_upward_velocity - relative_velocity) * up;
+                    motor.lin.cancel_on_axis(*up);
+                    motor.lin.boost += (desired_upward_velocity - relative_velocity) * *up;
                     if 0.0 <= extra_height {
                         *state = TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
                             desired_energy: *desired_energy,
-                            zero_potential_energy_at: ctx.tracker.translation - extra_height * up,
+                            zero_potential_energy_at: ctx.tracker.translation - extra_height * *up,
                         };
                     }
                     self.directive_simple_or_reschedule(lifecycle_status)
@@ -209,10 +209,10 @@ impl TnuaAction for TnuaBuiltinJump {
                         *state = TnuaBuiltinJumpState::StoppedMaintainingJump;
                         continue;
                     }
-                    let relative_velocity = effective_velocity.dot(up);
+                    let relative_velocity = effective_velocity.dot(*up);
                     let extra_height =
-                        (ctx.tracker.translation - *zero_potential_energy_at).dot(up);
-                    let gravity = ctx.tracker.gravity.dot(-up);
+                        (ctx.tracker.translation - *zero_potential_energy_at).dot(*up);
+                    let gravity = ctx.tracker.gravity.dot(*-up);
                     let energy_from_extra_height = extra_height * gravity;
                     let desired_kinetic_energy = *desired_energy - energy_from_extra_height;
                     let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
@@ -224,22 +224,22 @@ impl TnuaAction for TnuaBuiltinJump {
                         if self.takeoff_above_velocity <= relative_velocity {
                             extra_gravity += self.takeoff_extra_gravity;
                         }
-                        motor.lin.cancel_on_axis(up);
-                        motor.lin.acceleration = -extra_gravity * up;
+                        motor.lin.cancel_on_axis(*up);
+                        motor.lin.acceleration = -extra_gravity * *up;
                         self.directive_simple_or_reschedule(lifecycle_status)
                     }
                 }
                 TnuaBuiltinJumpState::MaintainingJump => {
-                    let relevant_upward_velocity = effective_velocity.dot(up);
+                    let relevant_upward_velocity = effective_velocity.dot(*up);
                     if relevant_upward_velocity <= 0.0 {
                         *state = TnuaBuiltinJumpState::FallSection;
-                        motor.lin.cancel_on_axis(up);
+                        motor.lin.cancel_on_axis(*up);
                     } else {
-                        motor.lin.cancel_on_axis(up);
+                        motor.lin.cancel_on_axis(*up);
                         if relevant_upward_velocity < self.peak_prevention_at_upward_velocity {
-                            motor.lin.acceleration -= self.peak_prevention_extra_gravity * up;
+                            motor.lin.acceleration -= self.peak_prevention_extra_gravity * *up;
                         } else if self.takeoff_above_velocity <= relevant_upward_velocity {
-                            motor.lin.acceleration -= self.takeoff_extra_gravity * up;
+                            motor.lin.acceleration -= self.takeoff_extra_gravity * *up;
                         }
                     }
                     match lifecycle_status {
@@ -262,7 +262,7 @@ impl TnuaAction for TnuaBuiltinJump {
                         let landed = ctx
                             .basis
                             .displacement()
-                            .map_or(false, |displacement| displacement.dot(up) <= 0.0);
+                            .map_or(false, |displacement| displacement.dot(*up) <= 0.0);
                         if landed {
                             self.finish_or_reschedule()
                         } else {
@@ -278,8 +278,8 @@ impl TnuaAction for TnuaBuiltinJump {
                                 self.shorten_extra_gravity
                             };
 
-                            motor.lin.cancel_on_axis(up);
-                            motor.lin.acceleration -= extra_gravity * up;
+                            motor.lin.cancel_on_axis(*up);
+                            motor.lin.acceleration -= extra_gravity * *up;
                             TnuaActionLifecycleDirective::StillActive
                         }
                     }
@@ -288,14 +288,14 @@ impl TnuaAction for TnuaBuiltinJump {
                     let landed = ctx
                         .basis
                         .displacement()
-                        .map_or(false, |displacement| displacement.dot(up) <= 0.0);
+                        .map_or(false, |displacement| displacement.dot(*up) <= 0.0);
                     if landed
                         || matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto)
                     {
                         self.finish_or_reschedule()
                     } else {
-                        motor.lin.cancel_on_axis(up);
-                        motor.lin.acceleration -= self.fall_extra_gravity * up;
+                        motor.lin.cancel_on_axis(*up);
+                        motor.lin.acceleration -= self.fall_extra_gravity * *up;
                         TnuaActionLifecycleDirective::StillActive
                     }
                 }

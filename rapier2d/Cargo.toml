@@ -1,7 +1,7 @@
 [package]
 name = "bevy-tnua-rapier2d"
 description = "Rapier 2D integration for bevy-tnua"
-version = "0.2.0"
+version = "0.3.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -13,9 +13,9 @@ readme = "../README.md"
 
 [dependencies]
 # bevy_render is required because bevy_rapier uses bevy::render::primitives::Aabb
-bevy = { version = "^0.12", default-features = false, features = ["bevy_render"] }
-bevy_rapier2d = { version = "^0.24", default-features = false, features = ["dim2"]}
-bevy-tnua-physics-integration-layer = { version = "0.1.0", path = "../physics-integration-layer" }
+bevy = { version = "^0.13", default-features = false, features = ["bevy_render"] }
+bevy_rapier2d = { version = "^0.25", default-features = false, features = ["dim2"]}
+bevy-tnua-physics-integration-layer = { version = "^0.2", path = "../physics-integration-layer" }
 
 [package.metadata.docs.rs]
 all-features = true

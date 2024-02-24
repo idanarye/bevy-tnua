@@ -121,7 +121,7 @@ fn update_proximity_sensors_system(
                 entity: Entity,
                 proximity: f32,
                 intersection_point: Vec3,
-                normal: Vec3,
+                normal: Direction3d,
             }
 
             let owner_entity = if let Some(subservient) = subservient {
@@ -155,7 +155,7 @@ fn update_proximity_sensors_system(
                                 manifold.normal1
                             };
                             if sensor.intersection_match_prevention_cutoff
-                                < manifold_normal.dot(cast_direction)
+                                < manifold_normal.dot(cast_direction.into())
                             {
                                 return true;
                             }
@@ -225,7 +225,7 @@ fn update_proximity_sensors_system(
                 }
             };
 
-            let query_filter = SpatialQueryFilter::new().without_entities([owner_entity]);
+            let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaXpbd3dSensorShape(shape)) = shape {
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
@@ -240,7 +240,8 @@ fn update_proximity_sensors_system(
                             entity: shape_hit_data.entity,
                             proximity: shape_hit_data.time_of_impact,
                             intersection_point: shape_hit_data.point1,
-                            normal: shape_hit_data.normal1,
+                            normal: Direction3d::new(shape_hit_data.normal1)
+                                .unwrap_or_else(|_| -cast_direction),
                         })
                     },
                 );
@@ -256,8 +257,9 @@ fn update_proximity_sensors_system(
                             entity: ray_hit_data.entity,
                             proximity: ray_hit_data.time_of_impact,
                             intersection_point: cast_origin
-                                + ray_hit_data.time_of_impact * cast_direction,
-                            normal: ray_hit_data.normal,
+                                + ray_hit_data.time_of_impact * *cast_direction,
+                            normal: Direction3d::new(ray_hit_data.normal)
+                                .unwrap_or_else(|_| -cast_direction),
                         })
                     },
                 );

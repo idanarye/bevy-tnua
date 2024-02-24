@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: This changelog is shared between bevy-tnua-xpbd2d and bevy-tnua-xpbd3d.
 
 ## [Unreleased]
+### Changed
+- Upgrade to Bevy 0.13 and bevy_xpbd 0.4.
 
 ## 0.1.1 - 2024-01-14
 ### Fixed

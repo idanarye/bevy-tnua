@@ -126,8 +126,8 @@ impl TnuaAction for TnuaBuiltinCrouch {
         };
 
         let mut set_impulse = |impulse: f32| {
-            motor.lin.cancel_on_axis(walk_basis.up);
-            motor.lin += TnuaVelChange::boost(impulse * walk_basis.up);
+            motor.lin.cancel_on_axis(*walk_basis.up);
+            motor.lin += TnuaVelChange::boost(impulse * *walk_basis.up);
         };
 
         match state {

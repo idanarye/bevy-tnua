@@ -116,12 +116,16 @@ fn update_proximity_sensors_system(
             let cast_origin = transform.transform_point(sensor.cast_origin);
             let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
             let cast_direction = owner_rotation * sensor.cast_direction;
+            let cast_direction_2d = Direction2d::new(cast_direction.truncate())
+                .expect("cast direction must be on the XY plane");
 
             struct CastResult {
                 entity: Entity,
                 proximity: f32,
                 intersection_point: Vec2,
-                normal: Vec2,
+                // Use 3D and not 2D because converting a direction from 2D to 3D is more painful
+                // than it should be.
+                normal: Direction3d,
             }
 
             let owner_entity = if let Some(subservient) = subservient {
@@ -200,7 +204,7 @@ fn update_proximity_sensors_system(
                 let sensor_output = TnuaProximitySensorOutput {
                     entity,
                     proximity,
-                    normal: normal.extend(0.0),
+                    normal,
                     entity_linvel,
                     entity_angvel,
                 };
@@ -225,14 +229,14 @@ fn update_proximity_sensors_system(
                 }
             };
 
-            let query_filter = SpatialQueryFilter::new().without_entities([owner_entity]);
+            let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaXpbd2dSensorShape(shape)) = shape {
                 let (_, _, rotation_z) = owner_rotation.to_euler(EulerRot::XYZ);
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
                     cast_origin.truncate(),
                     rotation_z,
-                    cast_direction.truncate(),
+                    cast_direction_2d,
                     sensor.cast_range,
                     true,
                     query_filter,
@@ -241,14 +245,15 @@ fn update_proximity_sensors_system(
                             entity: shape_hit_data.entity,
                             proximity: shape_hit_data.time_of_impact,
                             intersection_point: shape_hit_data.point1,
-                            normal: shape_hit_data.normal1,
+                            normal: Direction3d::new(shape_hit_data.normal1.extend(0.0))
+                                .unwrap_or_else(|_| -cast_direction),
                         })
                     },
                 );
             } else {
                 spatial_query_pipeline.ray_hits_callback(
                     cast_origin.truncate(),
-                    cast_direction.truncate(),
+                    cast_direction_2d,
                     sensor.cast_range,
                     true,
                     query_filter,
@@ -257,8 +262,9 @@ fn update_proximity_sensors_system(
                             entity: ray_hit_data.entity,
                             proximity: ray_hit_data.time_of_impact,
                             intersection_point: cast_origin.truncate()
-                                + ray_hit_data.time_of_impact * cast_direction.truncate(),
-                            normal: ray_hit_data.normal,
+                                + ray_hit_data.time_of_impact * *cast_direction_2d,
+                            normal: Direction3d::new(ray_hit_data.normal.extend(0.0))
+                                .unwrap_or_else(|_| -cast_direction),
                         })
                     },
                 );

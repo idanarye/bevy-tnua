@@ -141,11 +141,11 @@ fn ui_system<C: Component + UiTunable>(
             (FrameTimeDiagnosticsPlugin::FPS, 0.0..120.0),
             (FrameTimeDiagnosticsPlugin::FRAME_TIME, 0.0..50.0),
         ] {
-            if let Some(diagnostic) = diagnostics_store.get(diagnostic_id) {
+            if let Some(diagnostic) = diagnostics_store.get(&diagnostic_id) {
                 if let Some(value) = diagnostic.smoothed() {
                     ui.add(
                         egui::widgets::ProgressBar::new((value as f32 - range.start) / (range.end - range.start))
-                        .text(format!("{}: {:.0}", diagnostic.name, value))
+                        .text(format!("{}: {:.0}", diagnostic.suffix, value))
                     );
                 }
             }
