@@ -52,6 +52,7 @@ use bevy::prelude::*;
 
 pub mod data_for_backends;
 pub mod subservient_sensors;
+pub mod math;
 
 /// Umbrella system set for [`TnuaPipelineStages`].
 ///
