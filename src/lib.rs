@@ -65,6 +65,7 @@
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # use bevy_tnua::prelude::*;
+//! # use bevy_tnua::math::TargetVec3;
 //! # #[derive(Component)]
 //! # struct PlayerInputComponent;
 //! # impl PlayerInputComponent {

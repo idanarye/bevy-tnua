@@ -16,6 +16,7 @@ use bevy::prelude::*;
 /// # use bevy::prelude::*;
 /// # use bevy_tnua::prelude::*;
 /// # use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
+/// # use bevy_tnua::math::TargetFloat;
 /// # #[derive(Resource)]
 /// # struct AnimationClips {
 /// #     standing: Handle<AnimationClip>,

@@ -13,7 +13,7 @@ use bevy_tnua_physics_integration_layer::data_for_backends::{
 };
 use bevy_tnua_physics_integration_layer::math::*;
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
-use bevy_xpbd_2d::math::AsF32;
+use bevy_xpbd_2d::math::{AdjustPrecision, AsF32};
 use bevy_xpbd_2d::prelude::*;
 
 use bevy_tnua_physics_integration_layer::*;
@@ -68,7 +68,7 @@ fn update_rigid_body_trackers_system(
         let (_, rotation, translation) = transform.to_scale_rotation_translation();
         *tracker = TnuaRigidBodyTracker {
             translation: translation.adjust_precision(),
-            rotation,
+            rotation: rotation.adjust_precision(),
             velocity: linaer_velocity.0.extend(0.0),
             angvel: TargetVec3::new(0.0, 0.0, angular_velocity.0),
             gravity: gravity.0.extend(0.0),
