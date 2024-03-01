@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
+use bevy_tnua_physics_integration_layer::math::TargetFloat;
 
 use crate::{TnuaGhostSensor, TnuaProximitySensor};
 
@@ -29,7 +30,7 @@ impl TnuaSimpleFallThroughPlatformsHelper {
         &'a mut self,
         proximity_sensor: &'a mut TnuaProximitySensor,
         ghost_sensor: &'a TnuaGhostSensor,
-        min_proximity: f32,
+        min_proximity: TargetFloat,
     ) -> TnuaHandleForSimpleFallThroughPlatformsHelper<'a> {
         TnuaHandleForSimpleFallThroughPlatformsHelper {
             parent: self,
@@ -48,7 +49,7 @@ pub struct TnuaHandleForSimpleFallThroughPlatformsHelper<'a> {
     parent: &'a mut TnuaSimpleFallThroughPlatformsHelper,
     proximity_sensor: &'a mut TnuaProximitySensor,
     ghost_sensor: &'a TnuaGhostSensor,
-    min_proximity: f32,
+    min_proximity: TargetFloat,
 }
 
 impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {

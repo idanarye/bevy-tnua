@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
-use bevy_tnua::TnuaGhostPlatform;
+use bevy_tnua::{math::TargetVec3, TnuaGhostPlatform};
 #[cfg(feature = "xpbd2d")]
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
@@ -201,10 +201,10 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         cmd.insert(MovingPlatform::new(
             4.0,
             &[
-                Vec3::new(-4.0, 6.0, 0.0),
-                Vec3::new(-8.0, 6.0, 0.0),
-                Vec3::new(-8.0, 10.0, 0.0),
-                Vec3::new(-4.0, 10.0, 0.0),
+                TargetVec3::new(-4.0, 6.0, 0.0),
+                TargetVec3::new(-8.0, 6.0, 0.0),
+                TargetVec3::new(-8.0, 10.0, 0.0),
+                TargetVec3::new(-4.0, 10.0, 0.0),
             ],
         ));
     }

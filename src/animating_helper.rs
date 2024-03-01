@@ -23,7 +23,7 @@ use bevy::prelude::*;
 /// # }
 /// enum AnimationState {
 ///     Standing,
-///     Running(f32),
+///     Running(TargetFloat),
 /// }
 ///
 /// fn animating_system(

@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, TargetFloat, TargetVec3};
 
 use crate::basis_action_traits::{
     TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
@@ -28,7 +29,7 @@ pub struct TnuaBuiltinJump {
     /// center of the character at the top of the jump. It _does not_ mean the height from the
     /// ground. The float height is calculated by the inspecting the character's current position
     /// and the basis' [`displacement`](crate::TnuaBasis::displacement).
-    pub height: f32,
+    pub height: TargetFloat,
 
     /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
@@ -39,7 +40,7 @@ pub struct TnuaBuiltinJump {
     /// slope. This may cause the jump to be too high, so this value is used to brake it.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub upslope_extra_gravity: f32,
+    pub upslope_extra_gravity: TargetFloat,
 
     /// Extra gravity for fast takeoff.
     ///
@@ -47,23 +48,23 @@ pub struct TnuaBuiltinJump {
     /// vertical velocity reaches below [`takeoff_above_velocity`](Self::takeoff_above_velocity),
     /// and increase the initial jump boost in order to compensate. This will make the jump feel
     /// more snappy.
-    pub takeoff_extra_gravity: f32,
+    pub takeoff_extra_gravity: TargetFloat,
 
     /// The range of upward velocity during [`takeoff_extra_gravity`](Self::takeoff_extra_gravity)
     /// is applied.
     ///
-    /// To disable, set this to [`f32::INFINITY`] rather than zero.
-    pub takeoff_above_velocity: f32,
+    /// To disable, set this to [`TargetFloat::INFINITY`] rather than zero.
+    pub takeoff_above_velocity: TargetFloat,
 
     /// Extra gravity for falling down after reaching the top of the jump.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub fall_extra_gravity: f32,
+    pub fall_extra_gravity: TargetFloat,
 
     /// Extra gravity for shortening a jump when the player releases the jump button.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub shorten_extra_gravity: f32,
+    pub shorten_extra_gravity: TargetFloat,
 
     /// Used to decrease the time the character spends "floating" at the peak of the jump.
     ///
@@ -73,12 +74,12 @@ pub struct TnuaBuiltinJump {
     ///
     /// This extra gravity is taken into account when calculating the initial jump speed, so the
     /// character is still supposed to reach its full jump [`height`](Self::height).
-    pub peak_prevention_at_upward_velocity: f32,
+    pub peak_prevention_at_upward_velocity: TargetFloat,
 
     /// Extra gravity for decreasing the time the character spends at the peak of the jump.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub peak_prevention_extra_gravity: f32,
+    pub peak_prevention_extra_gravity: TargetFloat,
 
     /// A duration, in seconds, after which the character would jump if the jump button was already
     /// pressed when the jump became available.
@@ -92,12 +93,12 @@ pub struct TnuaBuiltinJump {
     /// If the jump button is held but the jump input is still buffered (see
     /// [`input_buffer_time`](Self::input_buffer_time)), this setting will have no effect because
     /// the character will simply jump immediately.
-    pub reschedule_cooldown: Option<f32>,
+    pub reschedule_cooldown: Option<TargetFloat>,
 
     /// A duration, in seconds, where a player can press a jump button before a jump becomes
     /// possible (typically when a character is still in the air and about the land) and the jump
     /// action would still get registered and be executed once the jump is possible.
-    pub input_buffer_time: f32,
+    pub input_buffer_time: TargetFloat,
 }
 
 impl Default for TnuaBuiltinJump {
@@ -131,7 +132,7 @@ impl TnuaAction for TnuaBuiltinJump {
         if self.allow_in_air || !ctx.basis.is_airborne() {
             // Either not airborne, or air jumps are allowed
             TnuaActionInitiationDirective::Allow
-        } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
+        } else if (being_fed_for.elapsed().as_secs_f64() as TargetFloat) < self.input_buffer_time {
             TnuaActionInitiationDirective::Delay
         } else {
             TnuaActionInitiationDirective::Reject
@@ -145,18 +146,18 @@ impl TnuaAction for TnuaBuiltinJump {
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut crate::TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
-        let up = ctx.basis.up_direction();
+        let up = ctx.basis.up_direction().adjust_precision();
 
         if lifecycle_status.just_started() {
             let mut calculator = SegmentedJumpInitialVelocityCalculator::new(self.height);
-            let gravity = ctx.tracker.gravity.dot(*-up);
+            let gravity = ctx.tracker.gravity.dot(-up);
             let kinetic_energy = calculator
                 .add_segment(
                     gravity + self.peak_prevention_extra_gravity,
                     self.peak_prevention_at_upward_velocity,
                 )
                 .add_segment(gravity, self.takeoff_above_velocity)
-                .add_segment(gravity + self.takeoff_extra_gravity, f32::INFINITY)
+                .add_segment(gravity + self.takeoff_extra_gravity, TargetFloat::INFINITY)
                 .kinetic_energy();
             *state = TnuaBuiltinJumpState::StartingJump {
                 desired_energy: kinetic_energy,
@@ -172,27 +173,27 @@ impl TnuaAction for TnuaBuiltinJump {
                 TnuaBuiltinJumpState::NoJump => panic!(),
                 TnuaBuiltinJumpState::StartingJump { desired_energy } => {
                     let extra_height = if let Some(displacement) = ctx.basis.displacement() {
-                        displacement.dot(*up)
+                        displacement.dot(up)
                     } else if !self.allow_in_air && ctx.basis.is_airborne() {
                         return self.directive_simple_or_reschedule(lifecycle_status);
                     } else {
                         // This means we are at Coyote time, so just jump from place.
                         0.0
                     };
-                    let gravity = ctx.tracker.gravity.dot(*-up);
+                    let gravity = ctx.tracker.gravity.dot(-up);
                     let energy_from_extra_height = extra_height * gravity;
                     let desired_kinetic_energy = *desired_energy - energy_from_extra_height;
                     let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
 
                     let relative_velocity =
-                        effective_velocity.dot(*up) - ctx.basis.vertical_velocity().max(0.0);
+                        effective_velocity.dot(up) - ctx.basis.vertical_velocity().max(0.0);
 
-                    motor.lin.cancel_on_axis(*up);
-                    motor.lin.boost += (desired_upward_velocity - relative_velocity) * *up;
+                    motor.lin.cancel_on_axis(up);
+                    motor.lin.boost += (desired_upward_velocity - relative_velocity) * up;
                     if 0.0 <= extra_height {
                         *state = TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
                             desired_energy: *desired_energy,
-                            zero_potential_energy_at: ctx.tracker.translation - extra_height * *up,
+                            zero_potential_energy_at: ctx.tracker.translation - extra_height * up,
                         };
                     }
                     self.directive_simple_or_reschedule(lifecycle_status)
@@ -209,10 +210,10 @@ impl TnuaAction for TnuaBuiltinJump {
                         *state = TnuaBuiltinJumpState::StoppedMaintainingJump;
                         continue;
                     }
-                    let relative_velocity = effective_velocity.dot(*up);
+                    let relative_velocity = effective_velocity.dot(up);
                     let extra_height =
-                        (ctx.tracker.translation - *zero_potential_energy_at).dot(*up);
-                    let gravity = ctx.tracker.gravity.dot(*-up);
+                        (ctx.tracker.translation - *zero_potential_energy_at).dot(up);
+                    let gravity = ctx.tracker.gravity.dot(-up);
                     let energy_from_extra_height = extra_height * gravity;
                     let desired_kinetic_energy = *desired_energy - energy_from_extra_height;
                     let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
@@ -224,22 +225,22 @@ impl TnuaAction for TnuaBuiltinJump {
                         if self.takeoff_above_velocity <= relative_velocity {
                             extra_gravity += self.takeoff_extra_gravity;
                         }
-                        motor.lin.cancel_on_axis(*up);
-                        motor.lin.acceleration = -extra_gravity * *up;
+                        motor.lin.cancel_on_axis(up);
+                        motor.lin.acceleration = -extra_gravity * up;
                         self.directive_simple_or_reschedule(lifecycle_status)
                     }
                 }
                 TnuaBuiltinJumpState::MaintainingJump => {
-                    let relevant_upward_velocity = effective_velocity.dot(*up);
+                    let relevant_upward_velocity = effective_velocity.dot(up);
                     if relevant_upward_velocity <= 0.0 {
                         *state = TnuaBuiltinJumpState::FallSection;
-                        motor.lin.cancel_on_axis(*up);
+                        motor.lin.cancel_on_axis(up);
                     } else {
-                        motor.lin.cancel_on_axis(*up);
+                        motor.lin.cancel_on_axis(up);
                         if relevant_upward_velocity < self.peak_prevention_at_upward_velocity {
-                            motor.lin.acceleration -= self.peak_prevention_extra_gravity * *up;
+                            motor.lin.acceleration -= self.peak_prevention_extra_gravity * up;
                         } else if self.takeoff_above_velocity <= relevant_upward_velocity {
-                            motor.lin.acceleration -= self.takeoff_extra_gravity * *up;
+                            motor.lin.acceleration -= self.takeoff_extra_gravity * up;
                         }
                     }
                     match lifecycle_status {
@@ -262,7 +263,7 @@ impl TnuaAction for TnuaBuiltinJump {
                         let landed = ctx
                             .basis
                             .displacement()
-                            .map_or(false, |displacement| displacement.dot(*up) <= 0.0);
+                            .map_or(false, |displacement| displacement.dot(up) <= 0.0);
                         if landed {
                             self.finish_or_reschedule()
                         } else {
@@ -278,8 +279,8 @@ impl TnuaAction for TnuaBuiltinJump {
                                 self.shorten_extra_gravity
                             };
 
-                            motor.lin.cancel_on_axis(*up);
-                            motor.lin.acceleration -= extra_gravity * *up;
+                            motor.lin.cancel_on_axis(up);
+                            motor.lin.acceleration -= extra_gravity * up;
                             TnuaActionLifecycleDirective::StillActive
                         }
                     }
@@ -288,14 +289,14 @@ impl TnuaAction for TnuaBuiltinJump {
                     let landed = ctx
                         .basis
                         .displacement()
-                        .map_or(false, |displacement| displacement.dot(*up) <= 0.0);
+                        .map_or(false, |displacement| displacement.dot(up) <= 0.0);
                     if landed
                         || matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto)
                     {
                         self.finish_or_reschedule()
                     } else {
-                        motor.lin.cancel_on_axis(*up);
-                        motor.lin.acceleration -= self.fall_extra_gravity * *up;
+                        motor.lin.cancel_on_axis(up);
+                        motor.lin.acceleration -= self.fall_extra_gravity * up;
                         TnuaActionLifecycleDirective::StillActive
                     }
                 }
@@ -340,11 +341,11 @@ pub enum TnuaBuiltinJumpState {
         /// * The mass is 1
         /// Calculating the desired velocity based on energy is easier than using the ballistic
         /// formulas.
-        desired_energy: f32,
+        desired_energy: TargetFloat,
     },
     SlowDownTooFastSlopeJump {
-        desired_energy: f32,
-        zero_potential_energy_at: Vec3,
+        desired_energy: TargetFloat,
+        zero_potential_energy_at: TargetVec3,
     },
     MaintainingJump,
     StoppedMaintainingJump,

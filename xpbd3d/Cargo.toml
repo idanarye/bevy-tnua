@@ -14,7 +14,10 @@ readme = "../README.md"
 [dependencies]
 bevy = { version = "^0.13", default-features = false }
 bevy_xpbd_3d = "^0.4"
-bevy-tnua-physics-integration-layer = { version = "^0.2", path = "../physics-integration-layer" }
+bevy-tnua-physics-integration-layer = { version = "^0.2", path = "../physics-integration-layer", default-features = false }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[features]
+f64 = ["bevy-tnua-physics-integration-layer/f64"]

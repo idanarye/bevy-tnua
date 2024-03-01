@@ -5,6 +5,7 @@ use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltin
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
+use bevy_tnua::math::{AdjustPrecision, AsF32, TargetFloat, TargetVec3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 
@@ -13,6 +14,7 @@ use crate::ui::tuning::UiTunable;
 use super::Dimensionality;
 
 #[allow(clippy::type_complexity)]
+#[allow(clippy::useless_conversion)]
 pub fn apply_platformer_controls(
     #[cfg(feature = "egui")] mut egui_context: EguiContexts,
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -72,29 +74,30 @@ pub fn apply_platformer_controls(
     {
         // This part is just keyboard input processing. In a real game this would probably be done
         // with a third party plugin.
-        let mut direction = Vec3::ZERO;
+        let mut direction = TargetVec3::ZERO;
 
         if config.dimensionality == Dimensionality::Dim3 {
             if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
-                direction -= Vec3::Z;
+                direction -= TargetVec3::Z;
             }
             if keyboard.any_pressed([KeyCode::ArrowDown, KeyCode::KeyS]) {
-                direction += Vec3::Z;
+                direction += TargetVec3::Z;
             }
         }
         if keyboard.any_pressed([KeyCode::ArrowLeft, KeyCode::KeyA]) {
-            direction -= Vec3::X;
+            direction -= TargetVec3::X;
         }
         if keyboard.any_pressed([KeyCode::ArrowRight, KeyCode::KeyD]) {
-            direction += Vec3::X;
+            direction += TargetVec3::X;
         }
 
         direction = direction.clamp_length_max(1.0);
 
         if let Some(forward_from_camera) = forward_from_camera {
             direction = Transform::default()
-                .looking_to(forward_from_camera.forward, Vec3::Y)
-                .transform_point(direction);
+                .looking_to(forward_from_camera.forward.f32(), Vec3::Y)
+                .transform_point(direction.f32())
+                .adjust_precision();
         }
 
         let jump = match config.dimensionality {
@@ -291,7 +294,7 @@ pub fn apply_platformer_controls(
         // frame's input.
         controller.basis(TnuaBuiltinWalk {
             desired_velocity: if turn_in_place {
-                Vec3::ZERO
+                TargetVec3::ZERO
             } else {
                 direction * speed_factor * config.speed
             },
@@ -356,7 +359,7 @@ pub fn apply_platformer_controls(
                 } else {
                     // For shooters, we want to allow rotating mid-dash if the player moves the
                     // mouse.
-                    Vec3::ZERO
+                    TargetVec3::ZERO
                 },
                 allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
                     <= config.actions_in_air,
@@ -369,14 +372,14 @@ pub fn apply_platformer_controls(
 #[derive(Component)]
 pub struct CharacterMotionConfigForPlatformerDemo {
     pub dimensionality: Dimensionality,
-    pub speed: f32,
+    pub speed: TargetFloat,
     pub walk: TnuaBuiltinWalk,
     pub actions_in_air: usize,
     pub jump: TnuaBuiltinJump,
     pub crouch: TnuaBuiltinCrouch,
-    pub dash_distance: f32,
+    pub dash_distance: TargetFloat,
     pub dash: TnuaBuiltinDash,
-    pub one_way_platforms_min_proximity: f32,
+    pub one_way_platforms_min_proximity: TargetFloat,
     pub falling_through: FallingThroughControlScheme,
 }
 
@@ -442,13 +445,13 @@ impl UiTunable for FallingThroughControlScheme {
 
 #[derive(Component)]
 pub struct ForwardFromCamera {
-    pub forward: Vec3,
+    pub forward: TargetVec3,
 }
 
 impl Default for ForwardFromCamera {
     fn default() -> Self {
         Self {
-            forward: Vec3::NEG_Z,
+            forward: TargetVec3::NEG_Z,
         }
     }
 }

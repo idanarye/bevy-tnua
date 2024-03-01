@@ -8,6 +8,7 @@ use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
     TnuaSimpleFallThroughPlatformsHelper,
 };
+use bevy_tnua::math::{AdjustPrecision, AsF32, TargetFloat, TargetQuat, TargetVec3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "rapier3d")]
@@ -144,7 +145,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         speed: 20.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,
-            turning_angvel: f32::INFINITY,
+            turning_angvel: TargetFloat::INFINITY,
             ..Default::default()
         },
         actions_in_air: 1,
@@ -297,7 +298,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 
     // `TnuaCrouchEnforcer` can be used to prevent the character from standing up when obstructed.
-    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
+    cmd.insert(TnuaCrouchEnforcer::new(0.5 * TargetVec3::Y, |cmd| {
         #[cfg(feature = "rapier3d")]
         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
             0.0, 0.5,
@@ -365,7 +366,7 @@ fn apply_camera_controls(
         mouse_motion.clear();
         Vec2::ZERO
     };
-    let turning = Quat::from_rotation_y(-0.01 * total_delta.x);
+    let turning = TargetQuat::from_rotation_y(-0.01 * total_delta.x.adjust_precision());
     let Ok((player_transform, mut forward_from_camera)) = player_character_query.get_single_mut()
     else {
         return;
@@ -373,8 +374,9 @@ fn apply_camera_controls(
     forward_from_camera.forward = turning.mul_vec3(forward_from_camera.forward);
 
     for mut camera in camera_query.iter_mut() {
-        camera.translation =
-            player_transform.translation() + -5.0 * forward_from_camera.forward + 1.0 * Vec3::Y;
-        camera.look_to(forward_from_camera.forward, Vec3::Y);
+        camera.translation = player_transform.translation()
+            + -5.0 * forward_from_camera.forward.f32()
+            + 1.0 * Vec3::Y;
+        camera.look_to(forward_from_camera.forward.f32(), Vec3::Y);
     }
 }

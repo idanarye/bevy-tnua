@@ -68,7 +68,7 @@
 //! # #[derive(Component)]
 //! # struct PlayerInputComponent;
 //! # impl PlayerInputComponent {
-//! # fn direction_vector(&self) -> Vec3 { Vec3::ZERO }
+//! # fn direction_vector(&self) -> TargetVec3 { TargetVec3::ZERO }
 //! # fn jump_pressed(&self) -> bool { false }
 //! # }
 //! fn player_control_system(mut query: Query<(

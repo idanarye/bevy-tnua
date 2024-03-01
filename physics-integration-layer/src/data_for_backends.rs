@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign};
 
-use crate::math::{TargetFloat, TargetVec3};
+use crate::math::{TargetFloat, TargetQuat, TargetVec3};
 use bevy::prelude::*;
 
 /// Allows disabling Tnua for a specific entity.
@@ -37,10 +37,10 @@ pub enum TnuaToggle {
 #[derive(Component, Debug)]
 pub struct TnuaRigidBodyTracker {
     pub translation: TargetVec3,
-    pub rotation: Quat,
+    pub rotation: TargetQuat,
     pub velocity: TargetVec3,
     /// Angular velocity as the rotation axis multiplied by the rotation speed in radians per
-    /// second. Can be extracted from a quaternion using [`Quat::xyz`].
+    /// second. Can be extracted from a quaternion using [`TargetQuat::xyz`].
     pub angvel: TargetVec3,
     pub gravity: TargetVec3,
 }
@@ -49,7 +49,7 @@ impl Default for TnuaRigidBodyTracker {
     fn default() -> Self {
         Self {
             translation: TargetVec3::ZERO,
-            rotation: Quat::IDENTITY,
+            rotation: TargetQuat::IDENTITY,
             velocity: TargetVec3::ZERO,
             angvel: TargetVec3::ZERO,
             gravity: TargetVec3::ZERO,
@@ -119,7 +119,7 @@ pub struct TnuaProximitySensorOutput {
     pub entity_linvel: TargetVec3,
     /// The angular velocity of the detected entity, given as the rotation axis multiplied by the
     /// rotation speed in radians per second. Can be extracted from a quaternion using
-    /// [`Quat::xyz`].
+    /// [`TargetQuat::xyz`].
     pub entity_angvel: TargetVec3,
 }
 
@@ -202,7 +202,7 @@ pub struct TnuaMotor {
 
     /// How much angular velocity to add to the rigid body in the current frame, given as the
     /// rotation axis multiplied by the rotation speed in radians per second. Can be extracted from
-    /// a quaternion using [`Quat::xyz`].
+    /// a quaternion using [`TargetQuat::xyz`].
     pub ang: TnuaVelChange,
 }
 
