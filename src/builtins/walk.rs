@@ -257,7 +257,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     None => {
                         if let Some(sensor_output) = &ctx.proximity_sensor.output {
                             // not doing the jump calculation here
-                            let spring_offset = self.float_height - sensor_output.proximity;
+                            let spring_offset =
+                                self.float_height - sensor_output.proximity.adjust_precision();
                             state.standing_offset = -spring_offset;
                             let boost = self.spring_force_boost(state, &ctx, spring_offset);
                             break 'upward_impulse TnuaVelChange::boost(
@@ -273,7 +274,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     }
                     Some(_) => {
                         if let Some(sensor_output) = &ctx.proximity_sensor.output {
-                            if sensor_output.proximity <= self.float_height {
+                            if sensor_output.proximity.adjust_precision() <= self.float_height {
                                 state.airborne_timer = None;
                                 continue;
                             }

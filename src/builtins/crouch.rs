@@ -95,7 +95,7 @@ impl TnuaAction for TnuaBuiltinCrouch {
         let Some(sensor_output) = &ctx.proximity_sensor.output else {
             return TnuaActionLifecycleDirective::Reschedule { after_seconds: 0.0 };
         };
-        let spring_offset_up = walk_basis.float_height.adjust_precision() - sensor_output.proximity;
+        let spring_offset_up = walk_basis.float_height - sensor_output.proximity.adjust_precision();
         let spring_offset_down =
             spring_offset_up.adjust_precision() + self.float_offset.adjust_precision();
 

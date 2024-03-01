@@ -13,11 +13,12 @@ readme = "../README.md"
 
 [dependencies]
 bevy = { version = "^0.13", default-features = false }
-bevy_xpbd_3d = "^0.4"
-bevy-tnua-physics-integration-layer = { version = "^0.2", path = "../physics-integration-layer", default-features = false }
+bevy_xpbd_3d = {version = "^0.4", default-features = false, features = ["3d","debug-plugin", "parallel", "async-collider"] }
+bevy-tnua-physics-integration-layer = { version = "^0.2", path = "../physics-integration-layer" }
 
 [package.metadata.docs.rs]
 all-features = true
 
 [features]
-f64 = ["bevy-tnua-physics-integration-layer/f64"]
+default = [  "bevy_xpbd_3d/parry-f32" ]
+f64 = ["bevy_xpbd_3d/parry-f64", "bevy-tnua-physics-integration-layer/f64"]
