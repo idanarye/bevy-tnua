@@ -30,7 +30,7 @@ exclude = [
 
 [dependencies]
 bevy = { version = "^0.13", default-features = false }
-bevy-tnua-physics-integration-layer = { version = "0.2.0", path = "physics-integration-layer"}
+bevy-tnua-physics-integration-layer = { version = "0.2.0", path = "physics-integration-layer" }
 thiserror = "1.0.53"
 
 [dev-dependencies]
@@ -53,11 +53,11 @@ bevy = { version = "^0.13", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-bevy_xpbd_3d = {version = "^0.4", default-features = false, features = ["3d","debug-plugin", "parallel", "async-collider"] }
+bevy_xpbd_3d = { version = "^0.4", default-features = false, features = ["3d","debug-plugin", "parallel", "async-collider"] }
 bevy-tnua-xpbd3d = { path = "xpbd3d", default-features = false }
 
 [package.metadata.docs.rs]
-all-features = false
+all-features = true
 
 [features]
 default = [  "bevy_xpbd_3d/parry-f32" ]
