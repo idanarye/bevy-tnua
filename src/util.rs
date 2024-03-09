@@ -1,26 +1,22 @@
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::{
-    AdjustPrecision, TargetFloat, TargetQuat, TargetVec2, TargetVec3,
+    AdjustPrecision, Float, Quaternion, Vector2, Vector3,
 };
 
 pub struct SegmentedJumpInitialVelocityCalculator {
-    height: TargetFloat,
-    kinetic_energy: TargetFloat,
+    height: Float,
+    kinetic_energy: Float,
 }
 
 impl SegmentedJumpInitialVelocityCalculator {
-    pub fn new(total_height: TargetFloat) -> Self {
+    pub fn new(total_height: Float) -> Self {
         Self {
             height: total_height,
             kinetic_energy: 0.0,
         }
     }
 
-    pub fn add_segment(
-        &mut self,
-        gravity: TargetFloat,
-        velocity_threshold: TargetFloat,
-    ) -> &mut Self {
+    pub fn add_segment(&mut self, gravity: Float, velocity_threshold: Float) -> &mut Self {
         if self.height <= 0.0 {
             // No more height to jump
             return self;
@@ -47,18 +43,18 @@ impl SegmentedJumpInitialVelocityCalculator {
         self
     }
 
-    pub fn kinetic_energy(&self) -> TargetFloat {
+    pub fn kinetic_energy(&self) -> Float {
         self.kinetic_energy
     }
 }
 
 pub struct ProjectionPlaneForRotation {
-    pub forward: TargetVec3,
-    pub sideways: TargetVec3,
+    pub forward: Vector3,
+    pub sideways: Vector3,
 }
 
 impl ProjectionPlaneForRotation {
-    pub fn from_up_and_fowrard(up: Direction3d, forward: TargetVec3) -> Self {
+    pub fn from_up_and_fowrard(up: Direction3d, forward: Vector3) -> Self {
         Self {
             forward,
             sideways: up.adjust_precision().cross(forward),
@@ -66,19 +62,19 @@ impl ProjectionPlaneForRotation {
     }
 
     pub fn from_up_using_default_forward(up: Direction3d) -> Self {
-        Self::from_up_and_fowrard(up, TargetVec3::NEG_Z)
+        Self::from_up_and_fowrard(up, Vector3::NEG_Z)
     }
 
-    pub fn project_and_normalize(&self, vector: TargetVec3) -> TargetVec2 {
-        TargetVec2::new(vector.dot(self.forward), vector.dot(self.sideways)).normalize_or_zero()
+    pub fn project_and_normalize(&self, vector: Vector3) -> Vector2 {
+        Vector2::new(vector.dot(self.forward), vector.dot(self.sideways)).normalize_or_zero()
     }
 
     pub fn rotation_to_set_forward(
         &self,
-        current_forward: TargetVec3,
-        desired_forward: TargetVec3,
-    ) -> TargetFloat {
-        let rotation_to_set_forward = TargetQuat::from_rotation_arc_2d(
+        current_forward: Vector3,
+        desired_forward: Vector3,
+    ) -> Float {
+        let rotation_to_set_forward = Quaternion::from_rotation_arc_2d(
             self.project_and_normalize(current_forward),
             self.project_and_normalize(desired_forward),
         );

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, TargetFloat, TargetVec3};
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Vector3};
 
 use crate::basis_action_traits::{
     TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
@@ -29,7 +29,7 @@ pub struct TnuaBuiltinJump {
     /// center of the character at the top of the jump. It _does not_ mean the height from the
     /// ground. The float height is calculated by the inspecting the character's current position
     /// and the basis' [`displacement`](crate::TnuaBasis::displacement).
-    pub height: TargetFloat,
+    pub height: Float,
 
     /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
@@ -40,7 +40,7 @@ pub struct TnuaBuiltinJump {
     /// slope. This may cause the jump to be too high, so this value is used to brake it.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub upslope_extra_gravity: TargetFloat,
+    pub upslope_extra_gravity: Float,
 
     /// Extra gravity for fast takeoff.
     ///
@@ -48,23 +48,23 @@ pub struct TnuaBuiltinJump {
     /// vertical velocity reaches below [`takeoff_above_velocity`](Self::takeoff_above_velocity),
     /// and increase the initial jump boost in order to compensate. This will make the jump feel
     /// more snappy.
-    pub takeoff_extra_gravity: TargetFloat,
+    pub takeoff_extra_gravity: Float,
 
     /// The range of upward velocity during [`takeoff_extra_gravity`](Self::takeoff_extra_gravity)
     /// is applied.
     ///
-    /// To disable, set this to [`TargetFloat::INFINITY`] rather than zero.
-    pub takeoff_above_velocity: TargetFloat,
+    /// To disable, set this to [`Float::INFINITY`] rather than zero.
+    pub takeoff_above_velocity: Float,
 
     /// Extra gravity for falling down after reaching the top of the jump.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub fall_extra_gravity: TargetFloat,
+    pub fall_extra_gravity: Float,
 
     /// Extra gravity for shortening a jump when the player releases the jump button.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub shorten_extra_gravity: TargetFloat,
+    pub shorten_extra_gravity: Float,
 
     /// Used to decrease the time the character spends "floating" at the peak of the jump.
     ///
@@ -74,12 +74,12 @@ pub struct TnuaBuiltinJump {
     ///
     /// This extra gravity is taken into account when calculating the initial jump speed, so the
     /// character is still supposed to reach its full jump [`height`](Self::height).
-    pub peak_prevention_at_upward_velocity: TargetFloat,
+    pub peak_prevention_at_upward_velocity: Float,
 
     /// Extra gravity for decreasing the time the character spends at the peak of the jump.
     ///
     /// **NOTE**: This force will be added to the normal gravity.
-    pub peak_prevention_extra_gravity: TargetFloat,
+    pub peak_prevention_extra_gravity: Float,
 
     /// A duration, in seconds, after which the character would jump if the jump button was already
     /// pressed when the jump became available.
@@ -93,12 +93,12 @@ pub struct TnuaBuiltinJump {
     /// If the jump button is held but the jump input is still buffered (see
     /// [`input_buffer_time`](Self::input_buffer_time)), this setting will have no effect because
     /// the character will simply jump immediately.
-    pub reschedule_cooldown: Option<TargetFloat>,
+    pub reschedule_cooldown: Option<Float>,
 
     /// A duration, in seconds, where a player can press a jump button before a jump becomes
     /// possible (typically when a character is still in the air and about the land) and the jump
     /// action would still get registered and be executed once the jump is possible.
-    pub input_buffer_time: TargetFloat,
+    pub input_buffer_time: Float,
 }
 
 impl Default for TnuaBuiltinJump {
@@ -132,7 +132,7 @@ impl TnuaAction for TnuaBuiltinJump {
         if self.allow_in_air || !ctx.basis.is_airborne() {
             // Either not airborne, or air jumps are allowed
             TnuaActionInitiationDirective::Allow
-        } else if (being_fed_for.elapsed().as_secs_f64() as TargetFloat) < self.input_buffer_time {
+        } else if (being_fed_for.elapsed().as_secs_f64() as Float) < self.input_buffer_time {
             TnuaActionInitiationDirective::Delay
         } else {
             TnuaActionInitiationDirective::Reject
@@ -157,7 +157,7 @@ impl TnuaAction for TnuaBuiltinJump {
                     self.peak_prevention_at_upward_velocity,
                 )
                 .add_segment(gravity, self.takeoff_above_velocity)
-                .add_segment(gravity + self.takeoff_extra_gravity, TargetFloat::INFINITY)
+                .add_segment(gravity + self.takeoff_extra_gravity, Float::INFINITY)
                 .kinetic_energy();
             *state = TnuaBuiltinJumpState::StartingJump {
                 desired_energy: kinetic_energy,
@@ -341,11 +341,11 @@ pub enum TnuaBuiltinJumpState {
         /// * The mass is 1
         /// Calculating the desired velocity based on energy is easier than using the ballistic
         /// formulas.
-        desired_energy: TargetFloat,
+        desired_energy: Float,
     },
     SlowDownTooFastSlopeJump {
-        desired_energy: TargetFloat,
-        zero_potential_energy_at: TargetVec3,
+        desired_energy: Float,
+        zero_potential_energy_at: Vector3,
     },
     MaintainingJump,
     StoppedMaintainingJump,

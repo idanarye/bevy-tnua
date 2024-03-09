@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use bevy_tnua_physics_integration_layer::math::{TargetFloat, TargetVec3};
+use bevy_tnua_physics_integration_layer::math::{Float, Vector3};
 
 use std::any::Any;
 
@@ -9,7 +9,7 @@ use crate::{TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker};
 /// Various data passed to [`TnuaBasis::apply`].
 pub struct TnuaBasisContext<'a> {
     /// The duration of the current frame.
-    pub frame_duration: TargetFloat,
+    pub frame_duration: Float,
 
     /// A sensor that collects data about the rigid body from the physics backend.
     pub tracker: &'a TnuaRigidBodyTracker,
@@ -63,7 +63,7 @@ pub trait TnuaBasis: 'static + Send + Sync {
 
     /// A value to configure the range of the ground proximity sensor according to the basis'
     /// needs.
-    fn proximity_sensor_cast_range(&self, state: &Self::State) -> TargetFloat;
+    fn proximity_sensor_cast_range(&self, state: &Self::State) -> Float;
 
     /// The direction the basis considers as "up".
     ///
@@ -73,17 +73,17 @@ pub trait TnuaBasis: 'static + Send + Sync {
     /// The displacement of the character from where the basis wants it to be.
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn displacement(&self, state: &Self::State) -> Option<TargetVec3>;
+    fn displacement(&self, state: &Self::State) -> Option<Vector3>;
 
     /// The velocity of the character, relative the what the basis considers its frame of
     /// reference.
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn effective_velocity(&self, state: &Self::State) -> TargetVec3;
+    fn effective_velocity(&self, state: &Self::State) -> Vector3;
 
     /// The vertical velocity the character requires to stay the same height if it wants to move in
     /// [`effective_velocity`](Self::effective_velocity).
-    fn vertical_velocity(&self, state: &Self::State) -> TargetFloat;
+    fn vertical_velocity(&self, state: &Self::State) -> Float;
 
     /// Nullify the fields of the basis that represent user input.
     fn neutralize(&mut self);
@@ -115,19 +115,19 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
     fn apply(&mut self, ctx: TnuaBasisContext, motor: &mut TnuaMotor);
 
     /// Dynamically invokes [`TnuaBasis::proximity_sensor_cast_range`].
-    fn proximity_sensor_cast_range(&self) -> TargetFloat;
+    fn proximity_sensor_cast_range(&self) -> Float;
 
     /// Dynamically invokes [`TnuaBasis::up_direction`].
     fn up_direction(&self) -> Direction3d;
 
     /// Dynamically invokes [`TnuaBasis::displacement`].
-    fn displacement(&self) -> Option<TargetVec3>;
+    fn displacement(&self) -> Option<Vector3>;
 
     /// Dynamically invokes [`TnuaBasis::effective_velocity`].
-    fn effective_velocity(&self) -> TargetVec3;
+    fn effective_velocity(&self) -> Vector3;
 
     /// Dynamically invokes [`TnuaBasis::vertical_velocity`].
-    fn vertical_velocity(&self) -> TargetFloat;
+    fn vertical_velocity(&self) -> Float;
 
     /// Dynamically invokes [`TnuaBasis::neutralize`].
     fn neutralize(&mut self);
@@ -166,7 +166,7 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
         self.input.apply(&mut self.state, ctx, motor);
     }
 
-    fn proximity_sensor_cast_range(&self) -> TargetFloat {
+    fn proximity_sensor_cast_range(&self) -> Float {
         self.input.proximity_sensor_cast_range(&self.state)
     }
 
@@ -174,15 +174,15 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
         self.input.up_direction(&self.state)
     }
 
-    fn displacement(&self) -> Option<TargetVec3> {
+    fn displacement(&self) -> Option<Vector3> {
         self.input.displacement(&self.state)
     }
 
-    fn effective_velocity(&self) -> TargetVec3 {
+    fn effective_velocity(&self) -> Vector3 {
         self.input.effective_velocity(&self.state)
     }
 
-    fn vertical_velocity(&self) -> TargetFloat {
+    fn vertical_velocity(&self) -> Float {
         self.input.vertical_velocity(&self.state)
     }
 
@@ -202,7 +202,7 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
 /// Various data passed to [`TnuaAction::apply`].
 pub struct TnuaActionContext<'a> {
     /// The duration of the current frame.
-    pub frame_duration: TargetFloat,
+    pub frame_duration: Float,
 
     /// A sensor that collects data about the rigid body from the physics backend.
     pub tracker: &'a TnuaRigidBodyTracker,
@@ -269,7 +269,7 @@ impl TnuaActionLifecycleStatus {
     /// as long as more time than `after_seconds` has passed.
     pub fn directive_simple_reschedule(
         &self,
-        after_seconds: TargetFloat,
+        after_seconds: Float,
     ) -> TnuaActionLifecycleDirective {
         match self {
             TnuaActionLifecycleStatus::Initiated => TnuaActionLifecycleDirective::StillActive,
@@ -336,7 +336,7 @@ pub enum TnuaActionLifecycleDirective {
     /// run in the same frame, as long as the first is rescheduled (or [finished](Self::Finished))
     Reschedule {
         /// Only reschedule the action after this much time has passed.
-        after_seconds: TargetFloat,
+        after_seconds: Float,
     },
 }
 
@@ -410,7 +410,7 @@ pub trait TnuaAction: 'static + Send + Sync {
 
     /// A value to configure the range of the ground proximity sensor according to the action's
     /// needs.
-    fn proximity_sensor_cast_range(&self) -> TargetFloat {
+    fn proximity_sensor_cast_range(&self) -> Float {
         0.0
     }
 
@@ -440,7 +440,7 @@ pub trait DynamicAction: Send + Sync + Any + 'static {
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective;
-    fn proximity_sensor_cast_range(&self) -> TargetFloat;
+    fn proximity_sensor_cast_range(&self) -> Float;
     fn initiation_decision(
         &self,
         ctx: TnuaActionContext,
@@ -482,7 +482,7 @@ impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
             .apply(&mut self.state, ctx, lifecycle_status, motor)
     }
 
-    fn proximity_sensor_cast_range(&self) -> TargetFloat {
+    fn proximity_sensor_cast_range(&self) -> Float {
         self.input.proximity_sensor_cast_range()
     }
 

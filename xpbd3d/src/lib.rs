@@ -9,8 +9,8 @@
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::AdjustPrecision;
 use bevy_tnua_physics_integration_layer::math::AsF32;
-use bevy_tnua_physics_integration_layer::math::TargetFloat;
-use bevy_tnua_physics_integration_layer::math::TargetVec3;
+use bevy_tnua_physics_integration_layer::math::Float;
+use bevy_tnua_physics_integration_layer::math::Vector3;
 use bevy_xpbd_3d::prelude::*;
 
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
@@ -124,7 +124,7 @@ fn update_proximity_sensors_system(
             struct CastResult {
                 entity: Entity,
                 proximity: f32,
-                intersection_point: TargetVec3,
+                intersection_point: Vector3,
                 normal: Direction3d,
             }
 
@@ -195,11 +195,11 @@ fn update_proximity_sensors_system(
                             // product.
                             entity_angvel.cross(relative_point)
                         } else {
-                            TargetVec3::ZERO
+                            Vector3::ZERO
                         };
                 } else {
-                    entity_angvel = TargetVec3::ZERO;
-                    entity_linvel = TargetVec3::ZERO;
+                    entity_angvel = Vector3::ZERO;
+                    entity_linvel = Vector3::ZERO;
                 }
                 let sensor_output = TnuaProximitySensorOutput {
                     entity,

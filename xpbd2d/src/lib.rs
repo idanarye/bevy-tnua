@@ -70,7 +70,7 @@ fn update_rigid_body_trackers_system(
             translation: translation.adjust_precision(),
             rotation: rotation.adjust_precision(),
             velocity: linaer_velocity.0.extend(0.0),
-            angvel: TargetVec3::new(0.0, 0.0, angular_velocity.0),
+            angvel: Vector3::new(0.0, 0.0, angular_velocity.0),
             gravity: gravity.0.extend(0.0),
         };
     }
@@ -120,8 +120,8 @@ fn update_proximity_sensors_system(
 
             struct CastResult {
                 entity: Entity,
-                proximity: TargetFloat,
-                intersection_point: TargetVec2,
+                proximity: Float,
+                intersection_point: Vector2,
                 // Use 3D and not 2D because converting a direction from 2D to 3D is more painful
                 // than it should be.
                 normal: Direction3d,
@@ -185,7 +185,7 @@ fn update_proximity_sensors_system(
                 if let Some((entity_transform, entity_linear_velocity, entity_angular_velocity)) =
                     entity_kinematic_data
                 {
-                    entity_angvel = TargetVec3::new(0.0, 0.0, entity_angular_velocity.0);
+                    entity_angvel = Vector3::new(0.0, 0.0, entity_angular_velocity.0);
                     entity_linvel = entity_linear_velocity.0.extend(0.0)
                         + if 0.0 < entity_angvel.length_squared() {
                             let relative_point = intersection_point
@@ -195,11 +195,11 @@ fn update_proximity_sensors_system(
                             // product.
                             entity_angvel.cross(relative_point.extend(0.0))
                         } else {
-                            TargetVec3::ZERO
+                            Vector3::ZERO
                         };
                 } else {
-                    entity_angvel = TargetVec3::ZERO;
-                    entity_linvel = TargetVec3::ZERO;
+                    entity_angvel = Vector3::ZERO;
+                    entity_linvel = Vector3::ZERO;
                 }
                 let sensor_output = TnuaProximitySensorOutput {
                     entity,

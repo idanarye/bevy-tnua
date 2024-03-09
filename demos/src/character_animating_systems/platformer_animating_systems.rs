@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState};
-use bevy_tnua::math::TargetFloat;
+use bevy_tnua::math::Float;
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 
@@ -9,11 +9,11 @@ use crate::util::animating::AnimationsHandler;
 #[derive(Debug)]
 pub enum AnimationState {
     Standing,
-    Running(TargetFloat),
+    Running(Float),
     Jumping,
     Falling,
     Crouching,
-    Crawling(TargetFloat),
+    Crawling(Float),
     Dashing,
 }
 

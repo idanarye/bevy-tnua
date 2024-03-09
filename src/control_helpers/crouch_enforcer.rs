@@ -2,7 +2,7 @@ use std::any::Any;
 
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{TargetFloat, TargetVec3};
+use bevy_tnua_physics_integration_layer::math::{Float, Vector3};
 
 use crate::controller::TnuaController;
 use crate::subservient_sensors::TnuaSubservientSensor;
@@ -47,7 +47,7 @@ impl Plugin for TnuaCrouchEnforcerPlugin {
 #[derive(Component)]
 pub struct TnuaCrouchEnforcer {
     sensor_entity: Option<Entity>,
-    offset: TargetVec3,
+    offset: Vector3,
     modify_sensor: Box<dyn Send + Sync + Fn(&mut EntityCommands)>,
     enforced_action: Option<(Box<dyn DynamicCrouchEnforcedAction>, bool)>,
     currently_enforcing: bool,
@@ -66,7 +66,7 @@ impl TnuaCrouchEnforcer {
     ///   function has the opportunity to add things to the sensor entity - mostly cast-shape
     ///   components.
     pub fn new(
-        offset: TargetVec3,
+        offset: Vector3,
         modify_sensor: impl 'static + Send + Sync + Fn(&mut EntityCommands),
     ) -> Self {
         Self {
@@ -103,7 +103,7 @@ impl TnuaCrouchEnforcer {
 pub trait TnuaCrouchEnforcedAction: TnuaAction + Clone {
     /// The range, from the sensor's offset (as set by [`TnuaCrouchEnforcer::new`]), to check for a
     /// ceiling. If the sensor finds anything within that range - the crouch will be enforced.
-    fn range_to_cast_up(&self, state: &Self::State) -> TargetFloat;
+    fn range_to_cast_up(&self, state: &Self::State) -> Float;
 
     /// Modify the action so that it won't be cancellable by another action.
     fn prevent_cancellation(&mut self);
@@ -112,7 +112,7 @@ pub trait TnuaCrouchEnforcedAction: TnuaAction + Clone {
 trait DynamicCrouchEnforcedAction: Send + Sync {
     fn overwrite(&mut self, value: &dyn Any) -> Result<(), ()>;
     fn feed_to_controller(&mut self, controller: &mut TnuaController);
-    fn range_to_cast_up(&self, controller: &TnuaController) -> Option<TargetFloat>;
+    fn range_to_cast_up(&self, controller: &TnuaController) -> Option<Float>;
 }
 
 struct BoxableCrouchEnforcedAction<A: TnuaCrouchEnforcedAction>(A);
@@ -133,7 +133,7 @@ impl<A: TnuaCrouchEnforcedAction> DynamicCrouchEnforcedAction for BoxableCrouchE
         controller.action(action);
     }
 
-    fn range_to_cast_up(&self, controller: &TnuaController) -> Option<TargetFloat> {
+    fn range_to_cast_up(&self, controller: &TnuaController) -> Option<Float> {
         if let Some((action, state)) = controller.concrete_action::<A>() {
             Some(action.range_to_cast_up(state))
         } else {
@@ -150,7 +150,7 @@ fn update_crouch_enforcer(
     for (owner_entity, mut controller, mut crouch_enforcer) in query.iter_mut() {
         struct SetSensor {
             cast_direction: Direction3d,
-            cast_range: TargetFloat,
+            cast_range: Float,
         }
         let set_sensor: Option<SetSensor>;
         if let Some((enforced_action, fed_this_frame)) = crouch_enforcer.enforced_action.as_mut() {

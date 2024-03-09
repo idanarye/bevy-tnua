@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_tnua::math::{AdjustPrecision, TargetFloat, TargetVec3};
+use bevy_tnua::math::{AdjustPrecision, Float, Vector3};
 
 pub struct MovingPlatformPlugin;
 
@@ -9,7 +9,7 @@ impl Plugin for MovingPlatformPlugin {
         app.add_systems(
             Update,
             MovingPlatform::make_system(
-                |velocity: &mut bevy_rapier2d::prelude::Velocity, linvel: TargetVec3| {
+                |velocity: &mut bevy_rapier2d::prelude::Velocity, linvel: Vector3| {
                     velocity.linvel = linvel.truncate();
                 },
             ),
@@ -18,7 +18,7 @@ impl Plugin for MovingPlatformPlugin {
         app.add_systems(
             Update,
             MovingPlatform::make_system(
-                |velocity: &mut bevy_rapier3d::prelude::Velocity, linvel: TargetVec3| {
+                |velocity: &mut bevy_rapier3d::prelude::Velocity, linvel: Vector3| {
                     velocity.linvel = linvel;
                 },
             ),
@@ -27,7 +27,7 @@ impl Plugin for MovingPlatformPlugin {
         app.add_systems(
             Update,
             MovingPlatform::make_system(
-                |velocity: &mut bevy_xpbd_2d::prelude::LinearVelocity, linvel: TargetVec3| {
+                |velocity: &mut bevy_xpbd_2d::prelude::LinearVelocity, linvel: Vector3| {
                     velocity.0 = linvel.truncate();
                 },
             ),
@@ -36,7 +36,7 @@ impl Plugin for MovingPlatformPlugin {
         app.add_systems(
             Update,
             MovingPlatform::make_system(
-                |velocity: &mut bevy_xpbd_3d::prelude::LinearVelocity, linvel: TargetVec3| {
+                |velocity: &mut bevy_xpbd_3d::prelude::LinearVelocity, linvel: Vector3| {
                     velocity.0 = linvel;
                 },
             ),
@@ -47,12 +47,12 @@ impl Plugin for MovingPlatformPlugin {
 #[derive(Component)]
 pub struct MovingPlatform {
     pub current_leg: usize,
-    pub speed: TargetFloat,
-    pub locations: Vec<TargetVec3>,
+    pub speed: Float,
+    pub locations: Vec<Vector3>,
 }
 
 impl MovingPlatform {
-    pub fn new(speed: TargetFloat, locations: &[TargetVec3]) -> Self {
+    pub fn new(speed: Float, locations: &[Vector3]) -> Self {
         Self {
             current_leg: 0,
             speed,
@@ -61,7 +61,7 @@ impl MovingPlatform {
     }
 
     fn make_system<V: Component>(
-        mut updater: impl 'static + Send + Sync + FnMut(&mut V, TargetVec3),
+        mut updater: impl 'static + Send + Sync + FnMut(&mut V, Vector3),
     ) -> bevy::ecs::schedule::SystemConfigs {
         (move |time: Res<Time>,
                mut query: Query<(&mut MovingPlatform, &GlobalTransform, &mut V)>| {

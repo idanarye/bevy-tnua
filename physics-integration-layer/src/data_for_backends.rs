@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign};
 
-use crate::math::{TargetFloat, TargetQuat, TargetVec3};
+use crate::math::{Float, Quaternion, Vector3};
 use bevy::prelude::*;
 
 /// Allows disabling Tnua for a specific entity.
@@ -36,23 +36,23 @@ pub enum TnuaToggle {
 /// [`TnuaPipelineStages::Sensors`](crate::TnuaPipelineStages::Sensors).
 #[derive(Component, Debug)]
 pub struct TnuaRigidBodyTracker {
-    pub translation: TargetVec3,
-    pub rotation: TargetQuat,
-    pub velocity: TargetVec3,
+    pub translation: Vector3,
+    pub rotation: Quaternion,
+    pub velocity: Vector3,
     /// Angular velocity as the rotation axis multiplied by the rotation speed in radians per
-    /// second. Can be extracted from a quaternion using [`TargetQuat::xyz`].
-    pub angvel: TargetVec3,
-    pub gravity: TargetVec3,
+    /// second. Can be extracted from a quaternion using [`Quaternion::xyz`].
+    pub angvel: Vector3,
+    pub gravity: Vector3,
 }
 
 impl Default for TnuaRigidBodyTracker {
     fn default() -> Self {
         Self {
-            translation: TargetVec3::ZERO,
-            rotation: TargetQuat::IDENTITY,
-            velocity: TargetVec3::ZERO,
-            angvel: TargetVec3::ZERO,
-            gravity: TargetVec3::ZERO,
+            translation: Vector3::ZERO,
+            rotation: Quaternion::IDENTITY,
+            velocity: Vector3::ZERO,
+            angvel: Vector3::ZERO,
+            gravity: Vector3::ZERO,
         }
     }
 }
@@ -65,11 +65,11 @@ impl Default for TnuaRigidBodyTracker {
 #[derive(Component, Debug)]
 pub struct TnuaProximitySensor {
     /// The cast origin in the entity's coord system.
-    pub cast_origin: TargetVec3,
+    pub cast_origin: Vector3,
     /// The direction in world coord system (unmodified by the entity's transform)
     pub cast_direction: Direction3d,
     /// Tnua will update this field according to its need. The backend only needs to read it.
-    pub cast_range: TargetFloat,
+    pub cast_range: Float,
     pub output: Option<TnuaProximitySensorOutput>,
 
     /// Used to prevent collision with obstacles the character squeezed into sideways.
@@ -90,13 +90,13 @@ pub struct TnuaProximitySensor {
     ///
     /// Positive dot products should not happen (hitting the ceiling?), but it's trivial to
     /// consider them as invalid.
-    pub intersection_match_prevention_cutoff: TargetFloat,
+    pub intersection_match_prevention_cutoff: Float,
 }
 
 impl Default for TnuaProximitySensor {
     fn default() -> Self {
         Self {
-            cast_origin: TargetVec3::ZERO,
+            cast_origin: Vector3::ZERO,
             cast_direction: Direction3d::NEG_Y,
             cast_range: 0.0,
             output: None,
@@ -112,15 +112,15 @@ pub struct TnuaProximitySensorOutput {
     pub entity: Entity,
     /// The distance to the collider from [`cast_origin`](TnuaProximitySensor::cast_origin) along the
     /// [`cast_direction`](TnuaProximitySensor::cast_direction).
-    pub proximity: TargetFloat,
+    pub proximity: Float,
     /// The normal from the detected collider's surface where the ray hits.
     pub normal: Direction3d,
     /// The velocity of the detected entity,
-    pub entity_linvel: TargetVec3,
+    pub entity_linvel: Vector3,
     /// The angular velocity of the detected entity, given as the rotation axis multiplied by the
     /// rotation speed in radians per second. Can be extracted from a quaternion using
-    /// [`TargetQuat::xyz`].
-    pub entity_angvel: TargetVec3,
+    /// [`Quaternion::xyz`].
+    pub entity_angvel: Vector3,
 }
 
 /// Represents a change to velocity (linear or angular)
@@ -130,34 +130,34 @@ pub struct TnuaVelChange {
     //
     // In Rapier, this is applied using `ExternalForce` so that the simulation will apply in
     // smoothly over time and won't be sensitive to frame rate.
-    pub acceleration: TargetVec3,
+    pub acceleration: Vector3,
     // The part of the velocity change that gets added to the velocity as-is.
     //
     // In Rapier, this is added directly to the `Velocity` component.
-    pub boost: TargetVec3,
+    pub boost: Vector3,
 }
 
 impl TnuaVelChange {
     pub const ZERO: Self = Self {
-        acceleration: TargetVec3::ZERO,
-        boost: TargetVec3::ZERO,
+        acceleration: Vector3::ZERO,
+        boost: Vector3::ZERO,
     };
 
-    pub fn acceleration(acceleration: TargetVec3) -> Self {
+    pub fn acceleration(acceleration: Vector3) -> Self {
         Self {
             acceleration,
-            boost: TargetVec3::ZERO,
+            boost: Vector3::ZERO,
         }
     }
 
-    pub fn boost(boost: TargetVec3) -> Self {
+    pub fn boost(boost: Vector3) -> Self {
         Self {
-            acceleration: TargetVec3::ZERO,
+            acceleration: Vector3::ZERO,
             boost,
         }
     }
 
-    pub fn cancel_on_axis(&mut self, axis: TargetVec3) {
+    pub fn cancel_on_axis(&mut self, axis: Vector3) {
         self.acceleration = self.acceleration.reject_from(axis);
         self.boost = self.boost.reject_from(axis);
     }
@@ -202,7 +202,7 @@ pub struct TnuaMotor {
 
     /// How much angular velocity to add to the rigid body in the current frame, given as the
     /// rotation axis multiplied by the rotation speed in radians per second. Can be extracted from
-    /// a quaternion using [`TargetQuat::xyz`].
+    /// a quaternion using [`Quaternion::xyz`].
     pub ang: TnuaVelChange,
 }
 

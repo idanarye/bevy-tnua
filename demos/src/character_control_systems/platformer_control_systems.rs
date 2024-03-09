@@ -5,7 +5,7 @@ use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltin
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::math::{AdjustPrecision, AsF32, TargetFloat, TargetVec3};
+use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 
@@ -74,21 +74,21 @@ pub fn apply_platformer_controls(
     {
         // This part is just keyboard input processing. In a real game this would probably be done
         // with a third party plugin.
-        let mut direction = TargetVec3::ZERO;
+        let mut direction = Vector3::ZERO;
 
         if config.dimensionality == Dimensionality::Dim3 {
             if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
-                direction -= TargetVec3::Z;
+                direction -= Vector3::Z;
             }
             if keyboard.any_pressed([KeyCode::ArrowDown, KeyCode::KeyS]) {
-                direction += TargetVec3::Z;
+                direction += Vector3::Z;
             }
         }
         if keyboard.any_pressed([KeyCode::ArrowLeft, KeyCode::KeyA]) {
-            direction -= TargetVec3::X;
+            direction -= Vector3::X;
         }
         if keyboard.any_pressed([KeyCode::ArrowRight, KeyCode::KeyD]) {
-            direction += TargetVec3::X;
+            direction += Vector3::X;
         }
 
         direction = direction.clamp_length_max(1.0);
@@ -294,7 +294,7 @@ pub fn apply_platformer_controls(
         // frame's input.
         controller.basis(TnuaBuiltinWalk {
             desired_velocity: if turn_in_place {
-                TargetVec3::ZERO
+                Vector3::ZERO
             } else {
                 direction * speed_factor * config.speed
             },
@@ -359,7 +359,7 @@ pub fn apply_platformer_controls(
                 } else {
                     // For shooters, we want to allow rotating mid-dash if the player moves the
                     // mouse.
-                    TargetVec3::ZERO
+                    Vector3::ZERO
                 },
                 allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
                     <= config.actions_in_air,
@@ -372,14 +372,14 @@ pub fn apply_platformer_controls(
 #[derive(Component)]
 pub struct CharacterMotionConfigForPlatformerDemo {
     pub dimensionality: Dimensionality,
-    pub speed: TargetFloat,
+    pub speed: Float,
     pub walk: TnuaBuiltinWalk,
     pub actions_in_air: usize,
     pub jump: TnuaBuiltinJump,
     pub crouch: TnuaBuiltinCrouch,
-    pub dash_distance: TargetFloat,
+    pub dash_distance: Float,
     pub dash: TnuaBuiltinDash,
-    pub one_way_platforms_min_proximity: TargetFloat,
+    pub one_way_platforms_min_proximity: Float,
     pub falling_through: FallingThroughControlScheme,
 }
 
@@ -445,13 +445,13 @@ impl UiTunable for FallingThroughControlScheme {
 
 #[derive(Component)]
 pub struct ForwardFromCamera {
-    pub forward: TargetVec3,
+    pub forward: Vector3,
 }
 
 impl Default for ForwardFromCamera {
     fn default() -> Self {
         Self {
-            forward: TargetVec3::NEG_Z,
+            forward: Vector3::NEG_Z,
         }
     }
 }

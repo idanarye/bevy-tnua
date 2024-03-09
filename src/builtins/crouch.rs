@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, TargetFloat};
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float};
 
 use crate::basis_action_traits::{
     TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
@@ -30,7 +30,7 @@ pub struct TnuaBuiltinCrouch {
     /// This field should typically have a negative value. A positive value will cause the
     /// character to "crouch" upward - which may be an interesting gameplay action, but not
     /// what one would call a "crouch".
-    pub float_offset: TargetFloat,
+    pub float_offset: Float,
 
     /// A duration, in seconds, that it should take for the character to change its floating height
     /// to start or stop the crouch.
@@ -39,10 +39,10 @@ pub struct TnuaBuiltinCrouch {
     /// some distance for the
     /// [`spring_dampening`](crate::builtins::TnuaBuiltinWalk::spring_dampening) force to reduce
     /// its vertical velocity.
-    pub height_change_impulse_for_duration: TargetFloat,
+    pub height_change_impulse_for_duration: Float,
 
     /// The maximum impulse to apply when starting or stopping the crouch.
-    pub height_change_impulse_limit: TargetFloat,
+    pub height_change_impulse_limit: Float,
 
     /// If set to `true`, this action will not yield to other action who try to take control.
     ///
@@ -113,11 +113,11 @@ impl TnuaAction for TnuaBuiltinCrouch {
             }
         }
 
-        let spring_force_boost = |spring_offset: TargetFloat| -> TargetFloat {
+        let spring_force_boost = |spring_offset: Float| -> Float {
             walk_basis.spring_force_boost(walk_state, &ctx.as_basis_context(), spring_offset)
         };
 
-        let impulse_or_spring_force_boost = |spring_offset: TargetFloat| -> TargetFloat {
+        let impulse_or_spring_force_boost = |spring_offset: Float| -> Float {
             let spring_force_boost = spring_force_boost(spring_offset);
             let impulse_boost = self.impulse_boost(spring_offset);
             if spring_force_boost.abs() < impulse_boost.abs() {
@@ -127,7 +127,7 @@ impl TnuaAction for TnuaBuiltinCrouch {
             }
         };
 
-        let mut set_impulse = |impulse: TargetFloat| {
+        let mut set_impulse = |impulse: Float| {
             motor.lin.cancel_on_axis(walk_basis.up.adjust_precision());
             motor.lin +=
                 TnuaVelChange::boost(impulse.adjust_precision() * walk_basis.up.adjust_precision());
@@ -168,7 +168,7 @@ impl TnuaAction for TnuaBuiltinCrouch {
 }
 
 impl TnuaBuiltinCrouch {
-    fn impulse_boost(&self, spring_offset: TargetFloat) -> TargetFloat {
+    fn impulse_boost(&self, spring_offset: Float) -> Float {
         let velocity_to_get_to_new_float_height =
             spring_offset / self.height_change_impulse_for_duration;
         velocity_to_get_to_new_float_height.clamp(
@@ -190,7 +190,7 @@ pub enum TnuaBuiltinCrouchState {
 }
 
 impl TnuaCrouchEnforcedAction for TnuaBuiltinCrouch {
-    fn range_to_cast_up(&self, _state: &Self::State) -> TargetFloat {
+    fn range_to_cast_up(&self, _state: &Self::State) -> Float {
         -self.float_offset
     }
 
