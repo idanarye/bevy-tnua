@@ -2,7 +2,10 @@ use bevy::prelude::*;
 
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
-use bevy_tnua::{math::TargetVec3, TnuaGhostPlatform};
+use bevy_tnua::{
+    math::{AdjustPrecision, TargetVec2, TargetVec3},
+    TnuaGhostPlatform,
+};
 #[cfg(feature = "xpbd2d")]
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
@@ -31,7 +34,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(feature = "xpbd2d")]
     {
         cmd.insert(xpbd::RigidBody::Static);
-        cmd.insert(xpbd::Collider::halfspace(Vec2::Y));
+        cmd.insert(xpbd::Collider::halfspace(TargetVec2::Y));
     }
 
     for ([width, height], transform) in [
@@ -58,7 +61,10 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         #[cfg(feature = "xpbd2d")]
         {
             cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::rectangle(width, height));
+            cmd.insert(xpbd::Collider::rectangle(
+                width.adjust_precision(),
+                height.adjust_precision(),
+            ));
         }
     }
 
