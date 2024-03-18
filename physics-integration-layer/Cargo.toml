@@ -13,3 +13,6 @@ readme = "../README.md"
 
 [dependencies]
 bevy = { version = "^0.13", default-features = false }
+
+[features]
+f64 = []

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy::utils::{Entry, HashMap};
+use bevy_tnua_physics_integration_layer::math::Float;
 
 use crate::basis_action_traits::{
     BoxableAction, BoxableBasis, DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext,
@@ -352,7 +353,7 @@ fn apply_controller_system(
         Option<&TnuaToggle>,
     )>,
 ) {
-    let frame_duration = time.delta().as_secs_f32();
+    let frame_duration = time.delta().as_secs_f64() as Float;
     if frame_duration == 0.0 {
         return;
     }
@@ -448,10 +449,10 @@ fn apply_controller_system(
                 }
                 let reschedule_action =
                     |actions_being_fed: &mut HashMap<&'static str, FedEntry>,
-                     after_seconds: f32| {
+                     after_seconds: Float| {
                         if let Some(fed_entry) = actions_being_fed.get_mut(name) {
                             fed_entry.rescheduled_in =
-                                Some(Timer::from_seconds(after_seconds, TimerMode::Once));
+                                Some(Timer::from_seconds(after_seconds as f32, TimerMode::Once));
                         }
                     };
                 match directive {

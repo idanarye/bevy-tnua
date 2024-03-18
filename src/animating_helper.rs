@@ -16,6 +16,7 @@ use bevy::prelude::*;
 /// # use bevy::prelude::*;
 /// # use bevy_tnua::prelude::*;
 /// # use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
+/// # use bevy_tnua::math::Float;
 /// # #[derive(Resource)]
 /// # struct AnimationClips {
 /// #     standing: Handle<AnimationClip>,
@@ -23,7 +24,7 @@ use bevy::prelude::*;
 /// # }
 /// enum AnimationState {
 ///     Standing,
-///     Running(f32),
+///     Running(Float),
 /// }
 ///
 /// fn animating_system(

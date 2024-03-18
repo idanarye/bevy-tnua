@@ -53,8 +53,11 @@ bevy = { version = "^0.13", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-bevy_xpbd_3d = { version = "^0.4" }
+bevy_xpbd_3d = { version = "^0.4", features = ["3d","debug-plugin", "parallel", "async-collider", "parry-f32"] }
 bevy-tnua-xpbd3d = { path = "xpbd3d" }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[features]
+f64 = ["bevy-tnua-physics-integration-layer/f64"]

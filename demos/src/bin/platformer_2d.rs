@@ -6,6 +6,7 @@ use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
     TnuaSimpleFallThroughPlatformsHelper,
 };
+use bevy_tnua::math::{AsF32, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "rapier2d")]
@@ -264,7 +265,7 @@ fn setup_player(mut commands: Commands) {
     });
 
     // `TnuaCrouchEnforcer` can be used to prevent the character from standing up when obstructed.
-    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
+    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vector3::Y, |cmd| {
         // It needs a sensor shape because it needs to do a shapecast upwards. Without a sensor shape
         // it'd do a raycast.
         #[cfg(feature = "rapier2d")]

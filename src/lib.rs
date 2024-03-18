@@ -65,10 +65,11 @@
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # use bevy_tnua::prelude::*;
+//! # use bevy_tnua::math::Vector3;
 //! # #[derive(Component)]
 //! # struct PlayerInputComponent;
 //! # impl PlayerInputComponent {
-//! # fn direction_vector(&self) -> Vec3 { Vec3::ZERO }
+//! # fn direction_vector(&self) -> Vector3 { Vector3::ZERO }
 //! # fn jump_pressed(&self) -> bool { false }
 //! # }
 //! fn player_control_system(mut query: Query<(

@@ -5,6 +5,11 @@ use bevy_xpbd_3d::prelude::*;
 use bevy_tnua::prelude::*;
 use bevy_tnua_xpbd3d::*;
 
+#[cfg(all(feature = "bevy_xpbd_2d/parry-f32", feature = "f64"))]
+compile_error!(
+    "Default Feature (f32) and f64 are mutually exclusive and cannot be enabled together"
+);
+
 fn main() {
     App::new()
         .add_plugins((

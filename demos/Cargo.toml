@@ -11,11 +11,14 @@ exclude = [
 default = [
     # Comment this out when Bevy gets upgraded and bevy_egui lags behind
     "egui",
+    "bevy_xpbd_3d?/parry-f32",
+    "bevy_xpbd_2d?/parry-f32",
 ]
 egui = ["dep:bevy_egui", "dep:egui_plot"]
 rapier = []
 rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
 rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
+f64 = ["bevy_xpbd_3d?/parry-f64", "bevy_xpbd_2d?/parry-f64", "bevy-tnua-physics-integration-layer/f64", "bevy-tnua/f64"]
 
 xpbd = []
 xpbd2d = ["xpbd", "dep:bevy_xpbd_2d", "dep:bevy-tnua-xpbd2d"]
@@ -50,11 +53,13 @@ bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
 bevy_rapier3d = { version = "^0.25", features = ["debug-render-3d"], optional = true }
 bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
-bevy_xpbd_2d = { version = "^0.4", optional = true }
-bevy-tnua-xpbd2d = { path = "../xpbd2d", optional = true }
+bevy_xpbd_2d = {version = "^0.4", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
+bevy-tnua-xpbd2d = { path = "../xpbd2d", default-features = false, optional = true }
 
-bevy_xpbd_3d = { version = "^0.4", optional = true }
-bevy-tnua-xpbd3d = { path = "../xpbd3d", optional = true }
+bevy_xpbd_3d = {version = "^0.4", default-features = false, features = ["3d","debug-plugin", "parallel", "async-collider"], optional = true }
+bevy-tnua-xpbd3d = { path = "../xpbd3d", default-features = false, optional = true }
 
 bevy_egui = { version = "0.25", optional = true }
 egui_plot = { version = "0.26", optional = true }
+
+

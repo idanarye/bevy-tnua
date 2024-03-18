@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState};
+use bevy_tnua::math::Float;
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 
@@ -8,14 +9,15 @@ use crate::util::animating::AnimationsHandler;
 #[derive(Debug)]
 pub enum AnimationState {
     Standing,
-    Running(f32),
+    Running(Float),
     Jumping,
     Falling,
     Crouching,
-    Crawling(f32),
+    Crawling(Float),
     Dashing,
 }
 
+#[allow(clippy::unnecessary_cast)]
 pub fn animate_platformer_character(
     mut animations_handlers_query: Query<(
         // `TnuaAnimatingState` is a helper for controlling the animations. The user system is
@@ -112,7 +114,7 @@ pub fn animate_platformer_character(
                 // animation (without necessarily replacing it). In this case - control the speed
                 // of the animation based on the speed of the movement.
                 AnimationState::Running(speed) | AnimationState::Crawling(speed) => {
-                    player.set_speed(*speed);
+                    player.set_speed(*speed as f32);
                 }
                 // Jumping and dashing can be chained, we want to start a new jump/dash animation
                 // when one jump/dash is chained to another.
@@ -142,7 +144,7 @@ pub fn animate_platformer_character(
                 AnimationState::Running(speed) => {
                     player
                         .start(handler.animations["Running"].clone_weak())
-                        .set_speed(*speed)
+                        .set_speed(*speed as f32)
                         .repeat();
                 }
                 AnimationState::Jumping => {
@@ -164,7 +166,7 @@ pub fn animate_platformer_character(
                 AnimationState::Crawling(speed) => {
                     player
                         .start(handler.animations["Crawling"].clone_weak())
-                        .set_speed(*speed)
+                        .set_speed(*speed as f32)
                         .repeat();
                 }
                 AnimationState::Dashing => {

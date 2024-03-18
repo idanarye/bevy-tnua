@@ -6,6 +6,7 @@ use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
     TnuaSimpleFallThroughPlatformsHelper,
 };
+use bevy_tnua::math::{AsF32, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "rapier3d")]
@@ -290,7 +291,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 
     // `TnuaCrouchEnforcer` can be used to prevent the character from standing up when obstructed.
-    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vec3::Y, |cmd| {
+    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vector3::Y, |cmd| {
         #[cfg(feature = "rapier3d")]
         cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
             0.0, 0.5,

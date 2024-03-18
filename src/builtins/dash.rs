@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Vector3};
 
 use crate::util::ProjectionPlaneForRotation;
 use crate::{
@@ -14,43 +15,43 @@ pub struct TnuaBuiltinDash {
     /// This input parameter is cached when the action starts. This means that the control system
     /// does not have to make sure the direction reamins the same even if the player changes it
     /// mid-dash.
-    pub displacement: Vec3,
+    pub displacement: Vector3,
 
     /// Point the negative Z axis of the characetr model in that direction during the dash.
     ///
     /// This input parameter is cached when the action starts. This means that the control system
     /// does not have to make sure the direction reamins the same even if the player changes it
     /// mid-dash.
-    pub desired_forward: Vec3,
+    pub desired_forward: Vector3,
 
     /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
 
     /// The speed the character will move in during the dash.
-    pub speed: f32,
+    pub speed: Float,
 
     /// After the dash, the character will brake until its speed is below that number.
-    pub brake_to_speed: f32,
+    pub brake_to_speed: Float,
 
     /// The maximum acceleration when starting the jump.
-    pub acceleration: f32,
+    pub acceleration: Float,
 
     /// The maximum acceleration when braking after the jump.
     ///
     /// Irrelevant if [`brake_to_speed`](Self::brake_to_speed) is set to infinity.
-    pub brake_acceleration: f32,
+    pub brake_acceleration: Float,
 
     /// A duration, in seconds, where a player can press a dash button before a dash becomes
     /// possible (typically when a character is still in the air and about the land) and the dash
     /// action would still get registered and be executed once the dash is possible.
-    pub input_buffer_time: f32,
+    pub input_buffer_time: Float,
 }
 
 impl Default for TnuaBuiltinDash {
     fn default() -> Self {
         Self {
-            displacement: Vec3::ZERO,
-            desired_forward: Vec3::ZERO,
+            displacement: Vector3::ZERO,
+            desired_forward: Vector3::ZERO,
             allow_in_air: false,
             speed: 80.0,
             brake_to_speed: 20.0,
@@ -71,12 +72,12 @@ impl TnuaAction for TnuaBuiltinDash {
         ctx: crate::TnuaActionContext,
         being_fed_for: &bevy::time::Stopwatch,
     ) -> crate::TnuaActionInitiationDirective {
-        if !self.displacement.is_finite() || self.displacement == Vec3::ZERO {
+        if !self.displacement.is_finite() || self.displacement == Vector3::ZERO {
             TnuaActionInitiationDirective::Reject
         } else if self.allow_in_air || !ctx.basis.is_airborne() {
             // Either not airborne, or air jumps are allowed
             TnuaActionInitiationDirective::Allow
-        } else if being_fed_for.elapsed().as_secs_f32() < self.input_buffer_time {
+        } else if (being_fed_for.elapsed().as_secs_f64() as Float) < self.input_buffer_time {
             TnuaActionInitiationDirective::Delay
         } else {
             TnuaActionInitiationDirective::Reject
@@ -95,14 +96,14 @@ impl TnuaAction for TnuaBuiltinDash {
             return match state {
                 TnuaBuiltinDashState::PreDash => {
                     // Probably unneeded because of the `initiation_decision`, but still
-                    if !self.displacement.is_finite() || self.displacement == Vec3::ZERO {
+                    if !self.displacement.is_finite() || self.displacement == Vector3::ZERO {
                         return TnuaActionLifecycleDirective::Finished;
                     }
                     *state = TnuaBuiltinDashState::During {
                         direction: self.displacement.normalize(),
                         destination: ctx.tracker.translation + self.displacement,
                         desired_forward: self.desired_forward,
-                        consider_blocked_if_speed_is_less_than: f32::NEG_INFINITY,
+                        consider_blocked_if_speed_is_less_than: Float::NEG_INFINITY,
                     };
                     continue;
                 }
@@ -141,14 +142,15 @@ impl TnuaAction for TnuaBuiltinDash {
                         let up = ctx.basis.up_direction();
                         let projection =
                             ProjectionPlaneForRotation::from_up_using_default_forward(up);
+                        let up = up.adjust_precision();
                         let current_forward = ctx.tracker.rotation.mul_vec3(projection.forward);
                         let rotation_along_up_axis = projection
                             .rotation_to_set_forward(current_forward, self.desired_forward);
                         let desired_angvel = rotation_along_up_axis / ctx.frame_duration;
-                        let existing_angvel = ctx.tracker.angvel.dot(*up);
+                        let existing_angvel = ctx.tracker.angvel.dot(up);
                         let torque_to_turn = desired_angvel - existing_angvel;
-                        motor.ang.cancel_on_axis(*up);
-                        motor.ang.boost += torque_to_turn * *up;
+                        motor.ang.cancel_on_axis(up);
+                        motor.ang.boost += torque_to_turn * up;
                     }
 
                     TnuaActionLifecycleDirective::StillActive
@@ -175,12 +177,12 @@ pub enum TnuaBuiltinDashState {
     #[default]
     PreDash,
     During {
-        direction: Vec3,
-        destination: Vec3,
-        desired_forward: Vec3,
-        consider_blocked_if_speed_is_less_than: f32,
+        direction: Vector3,
+        destination: Vector3,
+        desired_forward: Vector3,
+        consider_blocked_if_speed_is_less_than: Float,
     },
     Braking {
-        direction: Vec3,
+        direction: Vector3,
     },
 }
