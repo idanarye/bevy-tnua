@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy::utils::{Entry, HashMap};
-use bevy_tnua_physics_integration_layer::math::Float;
+use bevy_tnua_physics_integration_layer::math::{AsF32, Float};
 
 use crate::basis_action_traits::{
     BoxableAction, BoxableBasis, DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext,
@@ -452,7 +452,7 @@ fn apply_controller_system(
                      after_seconds: Float| {
                         if let Some(fed_entry) = actions_being_fed.get_mut(name) {
                             fed_entry.rescheduled_in =
-                                Some(Timer::from_seconds(after_seconds as f32, TimerMode::Once));
+                                Some(Timer::from_seconds(after_seconds.f32(), TimerMode::Once));
                         }
                     };
                 match directive {

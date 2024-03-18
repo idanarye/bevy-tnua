@@ -2,6 +2,7 @@
 use std::ops::RangeInclusive;
 
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash};
+use bevy_tnua::math::Float;
 use bevy_tnua::prelude::*;
 
 #[cfg(feature = "egui")]
@@ -16,11 +17,11 @@ pub trait UiTunable {
 fn slider_or_infinity(
     ui: &mut egui::Ui,
     caption: &str,
-    value: &mut f32,
-    range: RangeInclusive<f32>,
+    value: &mut Float,
+    range: RangeInclusive<Float>,
 ) {
     #[derive(Clone)]
-    struct CachedValue(f32);
+    struct CachedValue(Float);
 
     ui.horizontal(|ui| {
         let mut infinite = !value.is_finite();
@@ -28,7 +29,7 @@ fn slider_or_infinity(
         if resp.clicked() {
             if infinite {
                 ui.memory_mut(|memory| memory.data.insert_temp(resp.id, CachedValue(*value)));
-                *value = f32::INFINITY
+                *value = Float::INFINITY
             } else if let Some(CachedValue(saved_value)) =
                 ui.memory_mut(|memory| memory.data.get_temp(resp.id))
             {
@@ -58,11 +59,11 @@ fn slider_or_infinity(
 fn slider_or_none(
     ui: &mut egui::Ui,
     caption: &str,
-    value: &mut Option<f32>,
-    range: RangeInclusive<f32>,
+    value: &mut Option<Float>,
+    range: RangeInclusive<Float>,
 ) {
     #[derive(Clone)]
-    struct CachedValue(f32);
+    struct CachedValue(Float);
 
     ui.horizontal(|ui| {
         let mut is_none = value.is_none();

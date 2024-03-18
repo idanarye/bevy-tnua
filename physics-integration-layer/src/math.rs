@@ -3,7 +3,6 @@ pub type Float = f64;
 #[cfg(not(feature = "f64"))]
 pub type Float = f32;
 
-#[cfg(feature = "f64")]
 use bevy::math::{DQuat, DVec2, DVec3};
 use bevy::math::{Quat, Vec2, Vec3};
 
@@ -123,7 +122,20 @@ pub trait AsF32 {
     fn f32(&self) -> Self::F32;
 }
 
-#[cfg(feature = "f64")]
+impl AsF32 for f32 {
+    type F32 = f32;
+    fn f32(&self) -> Self::F32 {
+        *self
+    }
+}
+
+impl AsF32 for f64 {
+    type F32 = f32;
+    fn f32(&self) -> Self::F32 {
+        *self as f32
+    }
+}
+
 impl AsF32 for DVec3 {
     type F32 = Vec3;
     fn f32(&self) -> Self::F32 {
@@ -138,7 +150,6 @@ impl AsF32 for Vec3 {
     }
 }
 
-#[cfg(feature = "f64")]
 impl AsF32 for DVec2 {
     type F32 = Vec2;
     fn f32(&self) -> Self::F32 {
@@ -150,5 +161,12 @@ impl AsF32 for Vec2 {
     type F32 = Self;
     fn f32(&self) -> Self::F32 {
         *self
+    }
+}
+
+impl AsF32 for DQuat {
+    type F32 = Quat;
+    fn f32(&self) -> Self::F32 {
+        self.as_quat()
     }
 }

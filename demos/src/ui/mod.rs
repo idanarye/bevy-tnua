@@ -12,6 +12,8 @@ use bevy::prelude::*;
 use bevy::window::{PresentMode, PrimaryWindow};
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
+#[allow(unused_imports)]
+use bevy_tnua::math::AsF32;
 #[cfg(feature = "egui")]
 use bevy_tnua::TnuaToggle;
 
@@ -66,14 +68,16 @@ impl<C: Component + UiTunable> Plugin for DemoUi<C> {
             app.add_systems(
                 Update,
                 make_update_plot_data_system(
-                    |velocity: &bevy_xpbd_2d::components::LinearVelocity| velocity.extend(0.0),
+                    |velocity: &bevy_xpbd_2d::components::LinearVelocity| {
+                        (**velocity).f32().extend(0.0)
+                    },
                 ),
             );
             #[cfg(feature = "xpbd3d")]
             app.add_systems(
                 Update,
                 make_update_plot_data_system(
-                    |velocity: &bevy_xpbd_3d::components::LinearVelocity| **velocity,
+                    |velocity: &bevy_xpbd_3d::components::LinearVelocity| (**velocity).f32(),
                 ),
             );
         }

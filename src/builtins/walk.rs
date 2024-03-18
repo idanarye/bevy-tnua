@@ -150,6 +150,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
     fn apply(&self, state: &mut Self::State, ctx: TnuaBasisContext, motor: &mut crate::TnuaMotor) {
         if let Some(stopwatch) = &mut state.airborne_timer {
+            #[allow(clippy::unnecessary_cast)]
             stopwatch.tick(Duration::from_secs_f64(ctx.frame_duration as f64));
         }
 

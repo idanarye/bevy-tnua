@@ -6,6 +6,7 @@ use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
     TnuaSimpleFallThroughPlatformsHelper,
 };
+#[allow(unused_imports)]
 use bevy_tnua::math::{AsF32, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostSensor, TnuaToggle};

@@ -2,10 +2,9 @@ use bevy::prelude::*;
 
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
-use bevy_tnua::{
-    math::{AdjustPrecision, Vector2, Vector3},
-    TnuaGhostPlatform,
-};
+#[allow(unused_imports)]
+use bevy_tnua::math::{AdjustPrecision, Vector2, Vector3};
+use bevy_tnua::TnuaGhostPlatform;
 #[cfg(feature = "xpbd2d")]
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 

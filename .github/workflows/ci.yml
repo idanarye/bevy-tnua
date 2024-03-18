@@ -178,17 +178,26 @@ jobs:
           set -ex
           cargo doc --verbose ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} 
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html
-          for physics_backend in rapier xpbd; do
+
+          function build_for_backend () {
+              physics_backend=$1
+              if [ -z ${2+x} ]; then
+                  demo_suffix=$physics_backend
+              else
+                  demo_suffix=$physics_backend-$2
+              fi
+              special_flags=${@:3}
               cargo build \
                   --package tnua-demos-crate \
                   --bins \
                   --release \
+                  $special_flags \
                   --features ${physics_backend}2d \
                   --features ${physics_backend}3d \
                   --features bevy/webgl2 \
                   --target wasm32-unknown-unknown
               for demowasm in $(cd target/wasm32-unknown-unknown/release; ls *.wasm | grep -v -); do
-                  variant=${demowasm%.*}-$physics_backend
+                  variant=${demowasm%.*}-$demo_suffix
                   wasm-bindgen target/wasm32-unknown-unknown/release/$demowasm --out-dir target/doc/demos/ --out-name $variant --target web
                   cat > target/doc/demos/$variant.html <<EOF
           <html lang="en-us">
@@ -210,17 +219,11 @@ jobs:
           </html>
           EOF
               done
-          done
-          cp -R demos/assets/ target/doc/demos/
-
-          # TODO: remove the aliases once a release is made and they are no longer needed
-          function alias_to_old_example_name () {
-              cp target/doc/demos/$1.html target/doc/demos/$2.html
           }
-          alias_to_old_example_name platformer_2d-rapier platformer_rapier2d
-          alias_to_old_example_name platformer_2d-xpbd platformer_xpbd2d
-          alias_to_old_example_name platformer_3d-rapier platformer_rapier3d
-          alias_to_old_example_name platformer_3d-xpbd platformer_xpbd3d
+          build_for_backend rapier
+          build_for_backend xpbd
+          build_for_backend xpbd 64 --no-default-features --feature egui --feature f64
+          cp -R demos/assets/ target/doc/demos/
       - name: Add read permissions
         run: |-
           chmod --recursive +r target/doc

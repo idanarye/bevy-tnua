@@ -117,13 +117,19 @@ fn update_proximity_sensors_system(
                 TnuaToggle::SenseOnly => {}
                 TnuaToggle::Enabled => {}
             }
-            let cast_origin = transform.transform_point(sensor.cast_origin.f32());
+
+            // TODO: is there any point in doing these transformations as f64 when that feature
+            // flag is active?
+            let cast_origin = transform
+                .transform_point(sensor.cast_origin.f32())
+                .adjust_precision();
             let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
             let cast_direction = owner_rotation * sensor.cast_direction;
+            let owner_rotation = owner_rotation.adjust_precision();
 
             struct CastResult {
                 entity: Entity,
-                proximity: f32,
+                proximity: Float,
                 intersection_point: Vector3,
                 normal: Direction3d,
             }
@@ -244,7 +250,7 @@ fn update_proximity_sensors_system(
                             entity: shape_hit_data.entity,
                             proximity: shape_hit_data.time_of_impact,
                             intersection_point: shape_hit_data.point1,
-                            normal: Direction3d::new(shape_hit_data.normal1)
+                            normal: Direction3d::new(shape_hit_data.normal1.f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },
@@ -261,8 +267,8 @@ fn update_proximity_sensors_system(
                             entity: ray_hit_data.entity,
                             proximity: ray_hit_data.time_of_impact,
                             intersection_point: cast_origin
-                                + ray_hit_data.time_of_impact * *cast_direction,
-                            normal: Direction3d::new(ray_hit_data.normal)
+                                + ray_hit_data.time_of_impact * cast_direction.adjust_precision(),
+                            normal: Direction3d::new(ray_hit_data.normal.f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },

@@ -2,7 +2,9 @@ use bevy::prelude::*;
 
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
-use bevy_tnua::{math::Vector3, TnuaGhostPlatform};
+#[allow(unused_imports)]
+use bevy_tnua::math::{AdjustPrecision, Vector3};
+use bevy_tnua::TnuaGhostPlatform;
 #[cfg(feature = "xpbd3d")]
 use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
 
@@ -33,7 +35,7 @@ pub fn setup_level(
     #[cfg(feature = "xpbd3d")]
     {
         cmd.insert(xpbd::RigidBody::Static);
-        cmd.insert(xpbd::Collider::halfspace(Vec3::Y));
+        cmd.insert(xpbd::Collider::halfspace(Vector3::Y));
     }
 
     let obstacles_material = materials.add(Color::GRAY);
@@ -62,7 +64,11 @@ pub fn setup_level(
         #[cfg(feature = "xpbd3d")]
         {
             cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(width, height, depth));
+            cmd.insert(xpbd::Collider::cuboid(
+                width.adjust_precision(),
+                height.adjust_precision(),
+                depth.adjust_precision(),
+            ));
         }
     }
 
@@ -204,7 +210,7 @@ pub fn setup_level(
         #[cfg(feature = "xpbd3d")]
         {
             cmd.insert(xpbd::Collider::cylinder(1.0, 3.0));
-            cmd.insert(AngularVelocity(Vec3::Y));
+            cmd.insert(AngularVelocity(Vector3::Y));
             cmd.insert(xpbd::RigidBody::Kinematic);
         }
     }
