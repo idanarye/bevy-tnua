@@ -222,7 +222,7 @@ jobs:
           }
           build_for_backend rapier
           build_for_backend xpbd
-          build_for_backend xpbd 64 --no-default-features --feature egui --feature f64
+          build_for_backend xpbd 64 --no-default-features --features egui --features f64
           cp -R demos/assets/ target/doc/demos/
       - name: Add read permissions
         run: |-
