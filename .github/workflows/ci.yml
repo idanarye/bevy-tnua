@@ -110,7 +110,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --doc --all-features
+          args: --doc 
       - name: Get package names
         id: get-package-names
         run: |-
@@ -135,7 +135,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: doc
-          args: --no-deps ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }}
+          args: --no-deps ${{ steps.get-package-names.outputs.PACKAGE_NAMES }}
   docs-and-demos-ghpages:
     name: Update Docs and Demos in GitHub Pages
     runs-on: ubuntu-latest
@@ -176,7 +176,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |-
           set -ex
-          cargo doc --verbose ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} --all-features ${{ steps.get-features-for-docs.outputs.FEATURES_FOR_DOCS }}
+          cargo doc --verbose ${{ steps.get-package-names.outputs.PACKAGE_NAMES }} 
           echo "<meta http-equiv=refresh content=0;url=bevy_tnua/index.html>" > target/doc/index.html
           for physics_backend in rapier xpbd; do
               cargo build \
