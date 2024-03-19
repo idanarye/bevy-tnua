@@ -14,7 +14,10 @@ Tnua can use [Rapier](https://rapier.rs/) or [XPBD](https://github.com/Jondolf/b
 * For XPBD 3D, add the [bevy-tnua-xpbd3d](https://crates.io/crates/bevy-tnua-xpbd3d) crate.
 * Third party integration crates. Such crates should depend on [bevy-tnua-physics-integration-layer](https://crates.io/crates/bevy-tnua-physics-integration-layer) and not the main bevy-tnua crate.
 
-Note that **both** integration crate (`bevy-tnua-<physics-backend>`) and the main `bevy-tnua` crate are required, and that the main plugin from both crates should be added.
+Note that:
+
+* **Both** integration crate (`bevy-tnua-<physics-backend>`) and the main `bevy-tnua` crate are required, and that the main plugin from both crates should be added.
+* If you use a physics backend with double precision (like XPBD with the `f64` flag), you need to add the `f64` flag to all the Tnua crates. This applies to double precision data that gets defined by the physics backend - Bevy itself will still use single precision, and this is the precision the position and rotation will use.
 
 ## Features
 
@@ -35,13 +38,13 @@ Note that **both** integration crate (`bevy-tnua-<physics-backend>`) and the mai
 
 ## Demos:
 
-* 2D Platformer
-  [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-rapier)
-  [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd)
+* 2D Platformer:
+  [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-rapier),
+  [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd),
   [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd-64)
-* 3D Platformer
-  [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-rapier)
-  [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd)
+* 3D Platformer:
+  [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-rapier),
+  [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd),
   [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd-64)
 
 ### Running the Demos Locally
