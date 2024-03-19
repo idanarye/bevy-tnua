@@ -35,10 +35,14 @@ Note that **both** integration crate (`bevy-tnua-<physics-backend>`) and the mai
 
 ## Demos:
 
-| Demo          | Rapier                                                          | XPBD                                                          |
-|---------------|-----------------------------------------------------------------|---------------------------------------------------------------|
-| 2D Platformer | https://idanarye.github.io/bevy-tnua/demos/platformer_2d-rapier | https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd |
-| 3D Platformer | https://idanarye.github.io/bevy-tnua/demos/platformer_3d-rapier | https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd |
+* 2D Platformer
+  [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-rapier)
+  [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd)
+  [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd-64)
+* 3D Platformer
+  [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-rapier)
+  [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd)
+  [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd-64)
 
 ### Running the Demos Locally
 
