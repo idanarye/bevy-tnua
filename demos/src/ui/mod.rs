@@ -118,6 +118,9 @@ fn ui_system<C: Component + UiTunable>(
     mut commands: Commands,
     mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
     diagnostics_store: Res<DiagnosticsStore>,
+    #[cfg(target_arch = "wasm32")] app_setup_configuration: Res<
+        crate::app_setup_options::AppSetupConfiguration,
+    >,
 ) {
     let Ok(mut primary_window) = primary_window_query.get_single_mut() else {
         return;
@@ -130,6 +133,18 @@ fn ui_system<C: Component + UiTunable>(
             .resizable(false);
     }
     egui_window.show(egui_context.ctx_mut(), |ui| {
+        //if let Some(window) = web_sys::window() {
+            //ui.label(format!("URL {:?}", window.location().search()));
+            //if ui.button("change").clicked() {
+                //let _ = window.location().set_search("yes=no");
+            //}
+        //}
+        #[cfg(target_arch = "wasm32")]
+        if let Some(new_schedule) = app_setup_configuration.schedule_to_use.pick_different_option(ui) {
+            app_setup_configuration.change_and_reload_page(|cfg| {
+                cfg.schedule_to_use = new_schedule;
+            });
+        }
         egui::ComboBox::from_label("Present Mode (picking unsupported mode will crash the demo)")
             .selected_text(format!("{:?}", primary_window.present_mode))
             .show_ui(ui, |ui| {

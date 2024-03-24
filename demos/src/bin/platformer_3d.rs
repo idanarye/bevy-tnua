@@ -17,6 +17,7 @@ use bevy_tnua_xpbd3d::*;
 #[cfg(feature = "xpbd3d")]
 use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
 
+use tnua_demos_crate::app_setup_options::AppSetupConfiguration;
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
     animate_platformer_character, AnimationState,
 };
@@ -35,6 +36,9 @@ use tnua_demos_crate::MovingPlatformPlugin;
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
+
+    let app_setup_configuration = AppSetupConfiguration::from_environment();
+    app.insert_resource(app_setup_configuration.clone());
 
     #[cfg(feature = "rapier3d")]
     {

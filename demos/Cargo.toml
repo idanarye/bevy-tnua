@@ -62,4 +62,7 @@ bevy-tnua-xpbd3d = { path = "../xpbd3d", default-features = false, optional = tr
 bevy_egui = { version = "0.25", optional = true }
 egui_plot = { version = "0.26", optional = true }
 
+clap = { version = "^4", features = ["derive"] }
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "^0.3", features = ["Window", "Location", "Url", "UrlSearchParams"] }
