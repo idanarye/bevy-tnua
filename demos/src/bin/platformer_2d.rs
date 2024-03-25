@@ -17,6 +17,7 @@ use bevy_tnua_xpbd2d::*;
 #[cfg(feature = "xpbd2d")]
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
+use tnua_demos_crate::app_setup_options::AppSetupConfiguration;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
 };
@@ -31,6 +32,9 @@ use tnua_demos_crate::MovingPlatformPlugin;
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
+
+    let app_setup_configuration = AppSetupConfiguration::from_environment();
+    app.insert_resource(app_setup_configuration.clone());
 
     #[cfg(feature = "rapier2d")]
     {
