@@ -1,5 +1,6 @@
 use std::any::Any;
 
+use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::{Float, Vector3};
@@ -8,13 +9,29 @@ use crate::controller::TnuaController;
 use crate::subservient_sensors::TnuaSubservientSensor;
 use crate::{TnuaAction, TnuaPipelineStages, TnuaProximitySensor};
 
-pub struct TnuaCrouchEnforcerPlugin;
+pub struct TnuaCrouchEnforcerPlugin {
+    schedule: InternedScheduleLabel,
+}
+
+impl TnuaCrouchEnforcerPlugin {
+    pub fn new(schedule: impl ScheduleLabel) -> Self {
+        Self {
+            schedule: schedule.intern(),
+        }
+    }
+}
+
+impl Default for TnuaCrouchEnforcerPlugin {
+    fn default() -> Self {
+        Self::new(Update)
+    }
+}
 
 /// A plugin required for making [`TnuaCrouchEnforcer`] work.
 impl Plugin for TnuaCrouchEnforcerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Update,
+            self.schedule,
             update_crouch_enforcer.in_set(TnuaPipelineStages::SubservientSensors),
         );
     }

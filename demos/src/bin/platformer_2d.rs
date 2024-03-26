@@ -1,3 +1,4 @@
+use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
@@ -17,7 +18,7 @@ use bevy_tnua_xpbd2d::*;
 #[cfg(feature = "xpbd2d")]
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
-use tnua_demos_crate::app_setup_options::AppSetupConfiguration;
+use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
 };
@@ -38,27 +39,53 @@ fn main() {
 
     #[cfg(feature = "rapier2d")]
     {
-        app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
         app.add_plugins(RapierDebugRenderPlugin::default());
-        // To use Tnua with bevy_rapier2d, you need the `TnuaRapier2dPlugin` plugin from
-        // bevy-tnua-rapier2d.
-        app.add_plugins(TnuaRapier2dPlugin);
+        match app_setup_configuration.schedule_to_use {
+            ScheduleToUse::Update => {
+                app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+                // To use Tnua with bevy_rapier2d, you need the `TnuaRapier2dPlugin` plugin from
+                // bevy-tnua-rapier2d.
+                app.add_plugins(TnuaRapier2dPlugin::default());
+            }
+            ScheduleToUse::FixedUpdate => {
+                app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule());
+                // To use Tnua with bevy_rapier2d, you need the `TnuaRapier2dPlugin` plugin from
+                // bevy-tnua-rapier2d.
+                app.add_plugins(TnuaRapier2dPlugin::new(FixedUpdate));
+            }
+        }
     }
     #[cfg(feature = "xpbd2d")]
     {
-        app.add_plugins(PhysicsPlugins::default());
         app.add_plugins(PhysicsDebugPlugin::default());
-        // To use Tnua with bevy_xpbd_2d, you need the `TnuaXpbd2dPlugin` plugin from
-        // bevy-tnua-xpbd2d.
-        app.add_plugins(TnuaXpbd2dPlugin);
+        match app_setup_configuration.schedule_to_use {
+            ScheduleToUse::Update => {
+                app.add_plugins(PhysicsPlugins::default());
+                // To use Tnua with bevy_xpbd_2d, you need the `TnuaXpbd2dPlugin` plugin from
+                // bevy-tnua-xpbd2d.
+                app.add_plugins(TnuaXpbd2dPlugin::default());
+            }
+            ScheduleToUse::FixedUpdate => {
+                app.add_plugins(PhysicsPlugins::new(FixedUpdate));
+                app.add_plugins(TnuaXpbd2dPlugin::new(FixedUpdate));
+            }
+        }
     }
 
-    // This is Tnua's main plugin.
-    app.add_plugins(TnuaControllerPlugin);
+    match app_setup_configuration.schedule_to_use {
+        ScheduleToUse::Update => {
+            // This is Tnua's main plugin.
+            app.add_plugins(TnuaControllerPlugin::default());
 
-    // This plugin supports `TnuaCrouchEnforcer`, which prevents the character from standing up
-    // while obstructed by an obstacle.
-    app.add_plugins(TnuaCrouchEnforcerPlugin);
+            // This plugin supports `TnuaCrouchEnforcer`, which prevents the character from standing up
+            // while obstructed by an obstacle.
+            app.add_plugins(TnuaCrouchEnforcerPlugin::default());
+        }
+        ScheduleToUse::FixedUpdate => {
+            app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
+            app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
+        }
+    }
 
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
         CharacterMotionConfigForPlatformerDemo,
@@ -70,7 +97,10 @@ fn main() {
     );
     app.add_systems(Startup, setup_player);
     app.add_systems(
-        Update,
+        match app_setup_configuration.schedule_to_use {
+            ScheduleToUse::Update => Update.intern(),
+            ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
+        },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
     app.add_plugins(MovingPlatformPlugin);

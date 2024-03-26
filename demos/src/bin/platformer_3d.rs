@@ -1,3 +1,4 @@
+use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
@@ -17,7 +18,7 @@ use bevy_tnua_xpbd3d::*;
 #[cfg(feature = "xpbd3d")]
 use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
 
-use tnua_demos_crate::app_setup_options::AppSetupConfiguration;
+use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
     animate_platformer_character, AnimationState,
 };
@@ -42,25 +43,49 @@ fn main() {
 
     #[cfg(feature = "rapier3d")]
     {
-        app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
-        // To use Tnua with bevy_rapier3d, you need the `TnuaRapier3dPlugin` plugin from
-        // bevy-tnua-rapier3d.
-        app.add_plugins(TnuaRapier3dPlugin);
+        match app_setup_configuration.schedule_to_use {
+            ScheduleToUse::Update => {
+                app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+                // To use Tnua with bevy_rapier3d, you need the `TnuaRapier3dPlugin` plugin from
+                // bevy-tnua-rapier3d.
+                app.add_plugins(TnuaRapier3dPlugin::default());
+            }
+            ScheduleToUse::FixedUpdate => {
+                app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule());
+                app.add_plugins(TnuaRapier3dPlugin::new(FixedUpdate));
+            }
+        }
     }
     #[cfg(feature = "xpbd3d")]
     {
-        app.add_plugins(PhysicsPlugins::default());
-        // To use Tnua with bevy_xpbd_3d, you need the `TnuaXpbd3dPlugin` plugin from
-        // bevy-tnua-xpbd3d.
-        app.add_plugins(TnuaXpbd3dPlugin);
+        match app_setup_configuration.schedule_to_use {
+            ScheduleToUse::Update => {
+                app.add_plugins(PhysicsPlugins::default());
+                // To use Tnua with bevy_xpbd_3d, you need the `TnuaXpbd3dPlugin` plugin from
+                // bevy-tnua-xpbd3d.
+                app.add_plugins(TnuaXpbd3dPlugin::default());
+            }
+            ScheduleToUse::FixedUpdate => {
+                app.add_plugins(PhysicsPlugins::new(FixedUpdate));
+                app.add_plugins(TnuaXpbd3dPlugin::new(FixedUpdate));
+            }
+        }
     }
 
-    // This is Tnua's main plugin.
-    app.add_plugins(TnuaControllerPlugin);
+    match app_setup_configuration.schedule_to_use {
+        ScheduleToUse::Update => {
+            // This is Tnua's main plugin.
+            app.add_plugins(TnuaControllerPlugin::default());
 
-    // This plugin supports `TnuaCrouchEnforcer`, which prevents the character from standing up
-    // while obstructed by an obstacle.
-    app.add_plugins(TnuaCrouchEnforcerPlugin);
+            // This plugin supports `TnuaCrouchEnforcer`, which prevents the character from standing up
+            // while obstructed by an obstacle.
+            app.add_plugins(TnuaCrouchEnforcerPlugin::default());
+        }
+        ScheduleToUse::FixedUpdate => {
+            app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
+            app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
+        }
+    }
 
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
         CharacterMotionConfigForPlatformerDemo,
@@ -72,7 +97,10 @@ fn main() {
     );
     app.add_systems(Startup, setup_player);
     app.add_systems(
-        Update,
+        match app_setup_configuration.schedule_to_use {
+            ScheduleToUse::Update => Update.intern(),
+            ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
+        },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
     app.add_systems(Update, animation_patcher_system);

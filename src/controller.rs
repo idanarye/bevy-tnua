@@ -1,3 +1,4 @@
+use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy::utils::{Entry, HashMap};
@@ -17,12 +18,28 @@ use crate::{
 ///
 /// Will not work without a physics backend plugin (like `TnuaRapier2dPlugin` or
 /// `TnuaRapier3dPlugin`)
-pub struct TnuaControllerPlugin;
+pub struct TnuaControllerPlugin {
+    schedule: InternedScheduleLabel,
+}
+
+impl TnuaControllerPlugin {
+    pub fn new(schedule: impl ScheduleLabel) -> Self {
+        Self {
+            schedule: schedule.intern(),
+        }
+    }
+}
+
+impl Default for TnuaControllerPlugin {
+    fn default() -> Self {
+        Self::new(Update)
+    }
+}
 
 impl Plugin for TnuaControllerPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(
-            Update,
+            self.schedule,
             (
                 TnuaPipelineStages::Sensors,
                 TnuaPipelineStages::SubservientSensors,
@@ -34,7 +51,7 @@ impl Plugin for TnuaControllerPlugin {
                 .in_set(TnuaSystemSet),
         );
         app.add_systems(
-            Update,
+            self.schedule,
             apply_controller_system.in_set(TnuaPipelineStages::Logic),
         );
     }

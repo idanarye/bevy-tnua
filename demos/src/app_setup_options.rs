@@ -55,7 +55,6 @@ impl AppSetupConfiguration {
 #[derive(Debug, Clone, PartialEq, ValueEnum)]
 pub enum ScheduleToUse {
     Update,
-    #[cfg(any(feature = "rapier", feature = "xpbd"))]
     FixedUpdate,
 }
 
