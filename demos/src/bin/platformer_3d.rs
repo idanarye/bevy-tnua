@@ -16,7 +16,7 @@ use bevy_tnua_rapier3d::*;
 #[cfg(feature = "xpbd3d")]
 use bevy_tnua_xpbd3d::*;
 #[cfg(feature = "xpbd3d")]
-use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
+use bevy_xpbd_3d::{prelude as xpbd, prelude::*, PhysicsSchedule};
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
@@ -54,6 +54,10 @@ fn main() {
                 app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule());
                 app.add_plugins(TnuaRapier3dPlugin::new(FixedUpdate));
             }
+            #[cfg(feature = "xpbd")]
+            ScheduleToUse::PhysicsSchedule => {
+                panic!("Cannot happen - XPBD and Rapier used together");
+            }
         }
     }
     #[cfg(feature = "xpbd3d")]
@@ -68,6 +72,11 @@ fn main() {
             ScheduleToUse::FixedUpdate => {
                 app.add_plugins(PhysicsPlugins::new(FixedUpdate));
                 app.add_plugins(TnuaXpbd3dPlugin::new(FixedUpdate));
+            }
+            ScheduleToUse::PhysicsSchedule => {
+                app.add_plugins(PhysicsPlugins::default());
+                app.insert_resource(Time::new_with(Physics::fixed_hz(144.0)));
+                app.add_plugins(TnuaXpbd3dPlugin::new(PhysicsSchedule));
             }
         }
     }
@@ -85,6 +94,11 @@ fn main() {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
         }
+        #[cfg(feature = "xpbd")]
+        ScheduleToUse::PhysicsSchedule => {
+            app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
+            app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
+        }
     }
 
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
@@ -100,6 +114,8 @@ fn main() {
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
+            #[cfg(feature = "xpbd")]
+            ScheduleToUse::PhysicsSchedule => PhysicsSchedule.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );

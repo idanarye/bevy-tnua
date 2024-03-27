@@ -56,6 +56,8 @@ impl AppSetupConfiguration {
 pub enum ScheduleToUse {
     Update,
     FixedUpdate,
+    #[cfg(feature = "xpbd")]
+    PhysicsSchedule,
 }
 
 impl ScheduleToUse {

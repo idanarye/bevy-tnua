@@ -15,7 +15,7 @@ use bevy_tnua_physics_integration_layer::data_for_backends::{
 use bevy_tnua_physics_integration_layer::math::*;
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
 use bevy_xpbd_2d::math::{AdjustPrecision, AsF32};
-use bevy_xpbd_2d::prelude::*;
+use bevy_xpbd_2d::{prelude::*, PhysicsStepSet};
 
 use bevy_tnua_physics_integration_layer::*;
 
@@ -46,6 +46,7 @@ impl Plugin for TnuaXpbd2dPlugin {
             self.schedule,
             TnuaSystemSet
                 .before(PhysicsSet::Prepare)
+                .before(PhysicsStepSet::BroadPhase)
                 .run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
         );
         app.add_systems(
