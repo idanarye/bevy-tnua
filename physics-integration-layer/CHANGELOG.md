@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- `f64` flag to run in double precision mod (used by the XPBD backend)
+
 ## 0.2.0 - 2024-02-24
 ### Changed
 - Upgrade to Bevy 0.13.
