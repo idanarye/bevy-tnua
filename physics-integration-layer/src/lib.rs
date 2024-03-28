@@ -42,6 +42,18 @@
 //!   Here, too, if it makes sense to split this work into multiple systems the integration crate
 //!   may do so at its own discretion.
 //!
+//! * Ensure that [`TnuaSystemSet`] runs before the integration backend's systems.
+//!
+//! The integration backend's systems must run with the same timing as the physics backend. If the
+//! physics backend supports running in a different schedule, the integration plugin should also
+//! support it by adding a `::new()` method that accepts a schedule and registers all the systems
+//! there. It should also implement `Default` to make it run in the default schedule (usually
+//! `Update`)
+//!
+//! Note that a physics backend may run its systems under `PostUpdate` instead of `Update` (both
+//! Rapier and XPBD do this by default). In this case, it's still okay for the integration backend
+//! to run under `Update`, because they use the same timing.
+//!
 //! If the integration crate needs the character entity to have more components from the physics
 //! engine crate, that one would not naturally add to it, it should define a bundle named
 //! `Tnua<physics-engine-name>IOBundle` that adds these components. One would naturally add a rigid
