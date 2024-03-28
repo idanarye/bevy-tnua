@@ -8,6 +8,11 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+### Added
+- `f64` flag to run in double precision mod (used by the XPBD backend)
+- Allow plugins to register their systems in different schedules. See the
+  [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-016).
+
 ## 0.15.0 - 2024-02-24
 ### Changed
 - Upgrade to Bevy 0.13.

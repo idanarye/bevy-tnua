@@ -1,3 +1,19 @@
+# Migrating to Tnua 0.16
+
+All plugins now support specifying a schedule, which means that they are no
+longer unit structs. They all now implement `Default` to retain the same
+behavior, and have a `new()` method that accepts a Bevy `ScheduleLabel`.
+
+Only use `new()` if you are changing the scheduling of of the physics backend:
+
+- When using Rapier's `in_fixed_schedule()` or XPBD's equivalent
+  `PhysicsPlugins::new(FixedUpdate)`, use `new(FixedUpdate)` for the Tnua
+  plugins.
+- When using XPBD's `Physics::fixed_hz` timer, use `new(PhysicsSchedule)` for
+  the Tnua plugins.
+- Either way - add the player controller system in the same schedule as the
+  Tnua plugins (defaults to `Update`)
+
 # Migrating to Tnua 0.13
 
 - Instead of using the `rapier_2d` or the `rapier_3d` features, add the
@@ -9,8 +25,8 @@
 
 ## Basic ECS initialization
 
-* Instead of `TnuaPlatformerPlugin`, add `TnuaControllerPlugin`.
-* Instead of `TnuaPlatformerBundle`, add `TnuaControllerBundle`. Note that
+- Instead of `TnuaPlatformerPlugin`, add `TnuaControllerPlugin`.
+- Instead of `TnuaPlatformerBundle`, add `TnuaControllerBundle`. Note that
   `TnuaControllerBundle` does not need to be configured - the entire
   configuration is passed with the basis and the actions.
 

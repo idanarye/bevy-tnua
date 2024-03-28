@@ -8,6 +8,11 @@ NOTE: This changelog is shared between bevy-tnua-xpbd2d and bevy-tnua-xpbd3d.
 
 ## [Unreleased]
 
+### Changed
+- `f64` flag to run in double precision mod.
+- Allow `TnuaXpbd2dPlugin` and `TnuaXpbd3dPlugin` to register their systems in
+  different schedules.
+
 ## 0.2.0 - 2024-02-24
 ### Changed
 - Upgrade to Bevy 0.13 and bevy_xpbd 0.4.

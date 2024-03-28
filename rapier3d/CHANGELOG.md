@@ -8,6 +8,10 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 
 ## [Unreleased]
 
+### Changed
+- Allow `TnuaRapier2dPlugin` and `TnuaRapier3dPlugin` to register their systems
+  in different schedules.
+
 ## 0.3.0 - 2024-02-24
 ### Changed
 - Upgrade to Bevy 0.13 and bevy_rapier 0.25.
