@@ -17,6 +17,11 @@
 //!
 //! Each physics integration crate has basic usage instructions for adding it in its documentation.
 //!
+//! When using a physics backend with double precision (like XPBD with the `f64` flag), the `f64`
+//! flag should be added to all the Tnua crates. This applies to double precision data that gets
+//! defined by the physics backend - Bevy itself will still use single precision, and this is the
+//! precision the position and rotation will use.
+//!
 //! In addition to the physics integration plugin, the
 //! [`TnuaControllerPlugin`](prelude::TnuaControllerPlugin) should also be added.
 //!
