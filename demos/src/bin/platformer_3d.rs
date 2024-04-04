@@ -152,7 +152,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(SceneBundle {
         scene: asset_server.load("player.glb#Scene0"),
-        transform: Transform::from_xyz(0.0, 10.0, 0.0),
+        transform: Transform::from_xyz(0.0, 10.0, 0.0)
+            .with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)),
         ..Default::default()
     });
     cmd.insert(GltfSceneHandler {
@@ -190,6 +191,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         speed: 20.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,
+            tilt_offset_angvel: 0.0,
+            tilt_offset_angacl: 0.0,
             ..Default::default()
         },
         actions_in_air: 1,

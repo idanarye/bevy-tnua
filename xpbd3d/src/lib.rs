@@ -143,9 +143,7 @@ fn update_proximity_sensors_system(
             let cast_origin = transform
                 .transform_point(sensor.cast_origin.f32())
                 .adjust_precision();
-            let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
-            let cast_direction = owner_rotation * sensor.cast_direction;
-            let owner_rotation = owner_rotation.adjust_precision();
+            let cast_direction = sensor.cast_direction;
 
             struct CastResult {
                 entity: Entity,
@@ -257,10 +255,15 @@ fn update_proximity_sensors_system(
 
             let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaXpbd3dSensorShape(shape)) = shape {
+                let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
+                let owner_rotation = Quat::from_axis_angle(
+                    *cast_direction,
+                    owner_rotation.to_scaled_axis().dot(*cast_direction),
+                );
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
                     cast_origin,
-                    owner_rotation,
+                    owner_rotation.adjust_precision(),
                     cast_direction,
                     sensor.cast_range,
                     true,

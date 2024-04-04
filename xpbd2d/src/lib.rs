@@ -133,8 +133,7 @@ fn update_proximity_sensors_system(
                 TnuaToggle::Enabled => {}
             }
             let cast_origin = transform.transform_point(sensor.cast_origin.f32());
-            let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
-            let cast_direction = owner_rotation * sensor.cast_direction;
+            let cast_direction = sensor.cast_direction;
             let cast_direction_2d = Direction2d::new(cast_direction.truncate())
                 .expect("cast direction must be on the XY plane");
 
@@ -251,11 +250,10 @@ fn update_proximity_sensors_system(
 
             let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaXpbd2dSensorShape(shape)) = shape {
-                let (_, _, rotation_z) = owner_rotation.to_euler(EulerRot::XYZ);
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
                     cast_origin.truncate().adjust_precision(),
-                    rotation_z.adjust_precision(),
+                    0.0,
                     cast_direction_2d,
                     sensor.cast_range,
                     true,

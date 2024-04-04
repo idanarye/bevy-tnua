@@ -95,7 +95,8 @@ fn setup_player(
                 half_length: 0.5,
             }),
             material: materials.add(Color::CYAN),
-            transform: Transform::from_xyz(0.0, 2.0, 0.0),
+            transform: Transform::from_xyz(0.0, 2.0, 0.0)
+                .with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)),
             ..Default::default()
         },
         // The player character needs to be configured as a dynamic rigid body of the physics
@@ -144,6 +145,8 @@ fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Tnu
         float_height: 1.5,
         // `TnuaBuiltinWalk` has many other fields for customizing the movement - but they have
         // sensible defaults. Refer to the `TnuaBuiltinWalk`'s documentation to learn what they do.
+        tilt_offset_angvel: 0.0,
+        tilt_offset_angacl: 0.0,
         ..Default::default()
     });
 
