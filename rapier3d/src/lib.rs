@@ -146,8 +146,7 @@ fn update_proximity_sensors_system(
                 TnuaToggle::Enabled => {}
             }
             let cast_origin = transform.transform_point(sensor.cast_origin);
-            let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
-            let cast_direction = owner_rotation * sensor.cast_direction;
+            let cast_direction = sensor.cast_direction;
 
             struct CastResult {
                 entity: Entity,
@@ -223,6 +222,10 @@ fn update_proximity_sensors_system(
                 let cast_origin = cast_origin + cast_range_skip * *cast_direction;
                 let cast_range = sensor.cast_range - cast_range_skip;
                 if let Some(TnuaRapier3dSensorShape(shape)) = shape {
+                    let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
+                    let owner_rotation = Quat::from_scaled_axis(
+                        owner_rotation.to_scaled_axis().dot(*cast_direction) * *cast_direction,
+                    );
                     rapier_context
                         .cast_shape(
                             cast_origin,

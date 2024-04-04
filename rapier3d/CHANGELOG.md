@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d.
 
 ## [Unreleased]
+### Changed
+- [**BREAKING**] Ray is always cast in the specified direction, regardless of
+  the entity's rotation.
 
 ## 0.4.0 - 2024-04-02
 ### Changed
