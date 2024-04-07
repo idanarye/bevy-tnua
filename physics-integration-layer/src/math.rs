@@ -3,6 +3,11 @@ pub type Float = f64;
 #[cfg(not(feature = "f64"))]
 pub type Float = f32;
 
+#[cfg(not(feature = "f64"))]
+pub use std::f32::consts as float_consts;
+#[cfg(feature = "f64")]
+pub use std::f64::consts as float_consts;
+
 use bevy::math::{DQuat, DVec2, DVec3};
 use bevy::math::{Quat, Vec2, Vec3};
 

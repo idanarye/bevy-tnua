@@ -446,12 +446,14 @@ impl UiTunable for FallingThroughControlScheme {
 #[derive(Component)]
 pub struct ForwardFromCamera {
     pub forward: Vector3,
+    pub pitch_angle: Float,
 }
 
 impl Default for ForwardFromCamera {
     fn default() -> Self {
         Self {
             forward: Vector3::NEG_Z,
+            pitch_angle: 0.0,
         }
     }
 }

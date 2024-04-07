@@ -9,7 +9,7 @@ use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
     TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
+use bevy_tnua::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "rapier3d")]
@@ -414,17 +414,27 @@ fn apply_camera_controls(
         mouse_motion.clear();
         Vec2::ZERO
     };
-    let turning = Quaternion::from_rotation_y(-0.01 * total_delta.x.adjust_precision());
     let Ok((player_transform, mut forward_from_camera)) = player_character_query.get_single_mut()
     else {
         return;
     };
-    forward_from_camera.forward = turning.mul_vec3(forward_from_camera.forward);
+
+    let yaw = Quaternion::from_rotation_y(-0.01 * total_delta.x.adjust_precision());
+    forward_from_camera.forward = yaw.mul_vec3(forward_from_camera.forward);
+
+    let pitch = 0.005 * total_delta.y.adjust_precision();
+    forward_from_camera.pitch_angle = (forward_from_camera.pitch_angle + pitch)
+        .clamp(-float_consts::FRAC_PI_2, float_consts::FRAC_PI_2);
 
     for mut camera in camera_query.iter_mut() {
         camera.translation = player_transform.translation()
             + -5.0 * forward_from_camera.forward.f32()
             + 1.0 * Vec3::Y;
         camera.look_to(forward_from_camera.forward.f32(), Vec3::Y);
+        let pitch_axis = camera.left();
+        camera.rotate_around(
+            player_transform.translation(),
+            Quat::from_axis_angle(*pitch_axis, forward_from_camera.pitch_angle.f32()),
+        );
     }
 }
