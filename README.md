@@ -46,6 +46,10 @@ Note that:
   [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-rapier),
   [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd),
   [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd-64)
+* 3D Shooter:
+  [Rapier](https://idanarye.github.io/bevy-tnua/demos/shooter_like-rapier),
+  [XPBD](https://idanarye.github.io/bevy-tnua/demos/shooter_like-xpbd),
+  [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/shooter_like-xpbd-64)
 
 ### Running the Demos Locally
 
