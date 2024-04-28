@@ -112,7 +112,15 @@ fn main() {
         tnua_demos_crate::levels_setup::for_3d_platformer::setup_level,
     );
     app.add_systems(Startup, setup_player);
-    app.add_systems(Update, (grab_ungrab_mouse, apply_camera_controls));
+    app.add_systems(Update, grab_ungrab_mouse);
+    app.add_systems(PostUpdate, {
+        let system = apply_camera_controls;
+        #[cfg(feature = "rapier")]
+        let system = system.after(PhysicsSet::SyncBackend);
+        #[cfg(feature = "xpbd")]
+        let system = system.after(PhysicsSet::Sync);
+        system.before(bevy::transform::TransformSystem::TransformPropagate)
+    });
     app.add_systems(
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
