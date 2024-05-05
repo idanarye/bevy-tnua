@@ -131,7 +131,7 @@ mod basis_action_traits;
 pub mod builtins;
 pub mod control_helpers;
 pub mod controller;
-mod util;
+pub mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
     DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext, TnuaActionInitiationDirective,

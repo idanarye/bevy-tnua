@@ -1,5 +1,5 @@
+use crate::math::{AdjustPrecision, Float, Vector3};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Vector3};
 
 use crate::util::ProjectionPlaneForRotation;
 use crate::{

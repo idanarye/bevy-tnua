@@ -1,12 +1,12 @@
+use crate::math::{AdjustPrecision, Float};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float};
 
-use crate::basis_action_traits::{
+use crate::control_helpers::TnuaCrouchEnforcedAction;
+use crate::{TnuaAction, TnuaMotor, TnuaVelChange};
+use crate::{
     TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus,
 };
-use crate::control_helpers::TnuaCrouchEnforcedAction;
-use crate::{TnuaAction, TnuaMotor, TnuaVelChange};
 
 use super::TnuaBuiltinWalk;
 

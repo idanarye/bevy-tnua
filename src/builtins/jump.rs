@@ -1,11 +1,11 @@
+use crate::math::{AdjustPrecision, Float, Vector3};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Vector3};
 
-use crate::basis_action_traits::{
+use crate::util::SegmentedJumpInitialVelocityCalculator;
+use crate::{
     TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus,
 };
-use crate::util::SegmentedJumpInitialVelocityCalculator;
 
 /// The basic jump [action](TnuaAction).
 ///

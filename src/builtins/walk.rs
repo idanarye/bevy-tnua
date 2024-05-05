@@ -1,10 +1,10 @@
 use std::time::Duration;
 
+use crate::math::{AdjustPrecision, Float, Quaternion, Vector3};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Quaternion, Vector3};
 
-use crate::basis_action_traits::TnuaBasisContext;
 use crate::util::ProjectionPlaneForRotation;
+use crate::TnuaBasisContext;
 use crate::{TnuaBasis, TnuaVelChange};
 
 /// The most common [basis](TnuaBasis) - walk around as a floating capsule.
