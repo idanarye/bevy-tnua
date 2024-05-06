@@ -141,7 +141,7 @@ impl TnuaAction for TnuaBuiltinDash {
                     if 0.0 < desired_forward.length_squared() {
                         let up = ctx.basis.up_direction();
                         let projection =
-                            ProjectionPlaneForRotation::from_up_using_default_forward(up);
+                            ProjectionPlaneForRotation::from_up_and_fowrard(up, Vector3::NEG_Z);
                         let up = up.adjust_precision();
                         let current_forward = ctx.tracker.rotation.mul_vec3(projection.forward);
                         let rotation_along_up_axis = projection

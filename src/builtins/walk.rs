@@ -315,7 +315,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
         // Turning
 
         let desired_angvel = if 0.0 < self.desired_forward.length_squared() {
-            let projection = ProjectionPlaneForRotation::from_up_using_default_forward(self.up);
+            let projection =
+                ProjectionPlaneForRotation::from_up_and_fowrard(self.up, Vector3::NEG_Z);
             let current_forward = ctx.tracker.rotation.mul_vec3(projection.forward);
             let rotation_along_up_axis =
                 projection.rotation_to_set_forward(current_forward, self.desired_forward);

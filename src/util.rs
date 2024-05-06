@@ -128,12 +128,17 @@ impl SegmentedJumpInitialVelocityCalculator {
     }
 }
 
+/// Represent a model's orientation in order to derive rotation instruction.
 pub struct ProjectionPlaneForRotation {
+    /// The direction where the character is facing in the model.
     pub forward: Vector3,
+    /// The direction in the model that is the character's left.
     pub sideways: Vector3,
 }
 
 impl ProjectionPlaneForRotation {
+    /// A projection plane for a model by "up" direction and "forward" direction (where the
+    /// character is facing)
     pub fn from_up_and_fowrard(up: Direction3d, forward: Vector3) -> Self {
         Self {
             forward,
@@ -141,14 +146,14 @@ impl ProjectionPlaneForRotation {
         }
     }
 
-    pub fn from_up_using_default_forward(up: Direction3d) -> Self {
-        Self::from_up_and_fowrard(up, Vector3::NEG_Z)
-    }
-
+    /// Project a 3D vector to this plane as a 2D vector using a coordinate system where
+    /// [`forward`](Self::forward) is the X axis.
     pub fn project_and_normalize(&self, vector: Vector3) -> Vector2 {
         Vector2::new(vector.dot(self.forward), vector.dot(self.sideways)).normalize_or_zero()
     }
 
+    /// Assuming the character is currently facing `current_forward`, create a rotation on the
+    /// plane that will cause it to face `desired_forward`.
     pub fn rotation_to_set_forward(
         &self,
         current_forward: Vector3,
