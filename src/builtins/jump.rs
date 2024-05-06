@@ -157,8 +157,9 @@ impl TnuaAction for TnuaBuiltinJump {
                     self.peak_prevention_at_upward_velocity,
                 )
                 .add_segment(gravity, self.takeoff_above_velocity)
-                .add_segment(gravity + self.takeoff_extra_gravity, Float::INFINITY)
-                .kinetic_energy();
+                .add_final_segment(gravity + self.takeoff_extra_gravity)
+                .kinetic_energy()
+                .expect("`add_final_segment` should have covered remaining height");
             *state = TnuaBuiltinJumpState::StartingJump {
                 desired_energy: kinetic_energy,
             };
@@ -183,7 +184,10 @@ impl TnuaAction for TnuaBuiltinJump {
                     let gravity = ctx.tracker.gravity.dot(-up);
                     let energy_from_extra_height = extra_height * gravity;
                     let desired_kinetic_energy = *desired_energy - energy_from_extra_height;
-                    let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
+                    let desired_upward_velocity =
+                        SegmentedJumpInitialVelocityCalculator::kinetic_energy_to_velocity(
+                            desired_kinetic_energy,
+                        );
 
                     let relative_velocity =
                         effective_velocity.dot(up) - ctx.basis.vertical_velocity().max(0.0);
@@ -216,7 +220,10 @@ impl TnuaAction for TnuaBuiltinJump {
                     let gravity = ctx.tracker.gravity.dot(-up);
                     let energy_from_extra_height = extra_height * gravity;
                     let desired_kinetic_energy = *desired_energy - energy_from_extra_height;
-                    let desired_upward_velocity = (2.0 * desired_kinetic_energy).sqrt();
+                    let desired_upward_velocity =
+                        SegmentedJumpInitialVelocityCalculator::kinetic_energy_to_velocity(
+                            desired_kinetic_energy,
+                        );
                     if relative_velocity <= desired_upward_velocity {
                         *state = TnuaBuiltinJumpState::MaintainingJump;
                         continue;
