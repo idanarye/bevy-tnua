@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-xpbd](xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
+- Make the `bevy_tnua::util` module public. It contains two helper utilities:
+  - `SegmentedJumpInitialVelocityCalculator` for calculating the initial
+    velocity required for a jump with varying gravity.
+  - `ProjectionPlaneForRotation` for calculating a character's rotation.
+- Re-export `bevy_tnua_physics_integration_layer::math` as `bevy_tnua::math`.
 
+## 0.16.0 - 2024-04-02
 ### Added
 - `f64` flag to run in double precision mod (used by the XPBD backend)
 - Allow plugins to register their systems in different schedules. See the
