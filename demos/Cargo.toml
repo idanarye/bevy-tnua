@@ -59,7 +59,7 @@ bevy-tnua-xpbd2d = { path = "../xpbd2d", default-features = false, optional = tr
 bevy_xpbd_3d = {version = "^0.4", default-features = false, features = ["3d","debug-plugin", "parallel", "async-collider"], optional = true }
 bevy-tnua-xpbd3d = { path = "../xpbd3d", default-features = false, optional = true }
 
-bevy_egui = { version = "0.27", optional = true }
+bevy_egui = { version = "0.27", optional = true, default-features = false, features = ["default_fonts", "render"] }
 egui_plot = { version = "0.27", optional = true }
 
 clap = { version = "^4", features = ["derive"] }
