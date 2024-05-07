@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-xpbd](xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Removed
+- [**BREAKING**] `TnuaBuiltinWalk` no longer has an `up` field. The up
+  direction is fixed to `Direction3d::Y` (up until now, it problably wouln't
+  work well with other up directions anyway). This has some other implications,
+  which are mostly internal:
+  - `DynamicBasis::up_direction()` has been removed. Actions should take their
+    up direction from the new `TnuaActionContext::up_direction()`.
+    `TnuaBasisContext` also got an `up_direction()` method, for the same
+    purpose. For now, they always point up.
+  - `TnuaBuiltinWalk::standing_offset` is now a vector instead of a number (it
+    was easier to make it that way)
+
+### Added
 - Make the `bevy_tnua::util` module public. It contains two helper utilities:
   - `SegmentedJumpInitialVelocityCalculator` for calculating the initial
     velocity required for a jump with varying gravity.

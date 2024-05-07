@@ -75,7 +75,7 @@ pub fn animate_platformer_character(
                     };
                     let speed =
                         Some(basis_state.running_velocity.length()).filter(|speed| 0.01 < *speed);
-                    let is_crouching = basis_state.standing_offset < -0.4;
+                    let is_crouching = basis_state.standing_offset.y < -0.4;
                     match (speed, is_crouching) {
                         (None, false) => AnimationState::Standing,
                         (None, true) => AnimationState::Crouching,

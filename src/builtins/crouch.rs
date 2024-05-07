@@ -128,9 +128,12 @@ impl TnuaAction for TnuaBuiltinCrouch {
         };
 
         let mut set_impulse = |impulse: Float| {
-            motor.lin.cancel_on_axis(walk_basis.up.adjust_precision());
-            motor.lin +=
-                TnuaVelChange::boost(impulse.adjust_precision() * walk_basis.up.adjust_precision());
+            motor
+                .lin
+                .cancel_on_axis(ctx.up_direction().adjust_precision());
+            motor.lin += TnuaVelChange::boost(
+                impulse.adjust_precision() * ctx.up_direction().adjust_precision(),
+            );
         };
 
         match state {

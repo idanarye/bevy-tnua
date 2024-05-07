@@ -18,6 +18,13 @@ pub struct TnuaBasisContext<'a> {
     pub proximity_sensor: &'a TnuaProximitySensor,
 }
 
+impl TnuaBasisContext<'_> {
+    /// The direction considered as "up".
+    pub fn up_direction(&self) -> Direction3d {
+        Direction3d::Y
+    }
+}
+
 /// The main movement command of a character.
 ///
 /// A basis handles the character's motion when the user is not feeding it any input, or when it
@@ -65,11 +72,6 @@ pub trait TnuaBasis: 'static + Send + Sync {
     /// needs.
     fn proximity_sensor_cast_range(&self, state: &Self::State) -> Float;
 
-    /// The direction the basis considers as "up".
-    ///
-    /// This is a query method, used by the action to determine what the basis thinks.
-    fn up_direction(&self, state: &Self::State) -> Direction3d;
-
     /// The displacement of the character from where the basis wants it to be.
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
@@ -116,9 +118,6 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
 
     /// Dynamically invokes [`TnuaBasis::proximity_sensor_cast_range`].
     fn proximity_sensor_cast_range(&self) -> Float;
-
-    /// Dynamically invokes [`TnuaBasis::up_direction`].
-    fn up_direction(&self) -> Direction3d;
 
     /// Dynamically invokes [`TnuaBasis::displacement`].
     fn displacement(&self) -> Option<Vector3>;
@@ -168,10 +167,6 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
 
     fn proximity_sensor_cast_range(&self) -> Float {
         self.input.proximity_sensor_cast_range(&self.state)
-    }
-
-    fn up_direction(&self) -> Direction3d {
-        self.input.up_direction(&self.state)
     }
 
     fn displacement(&self) -> Option<Vector3> {
@@ -233,6 +228,11 @@ impl<'a> TnuaActionContext<'a> {
             tracker: self.tracker,
             proximity_sensor: self.proximity_sensor,
         }
+    }
+
+    /// The direction considered as "up".
+    pub fn up_direction(&self) -> Direction3d {
+        Direction3d::Y
     }
 }
 

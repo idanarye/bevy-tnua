@@ -161,7 +161,7 @@ impl<A: TnuaCrouchEnforcedAction> DynamicCrouchEnforcedAction for BoxableCrouchE
 
 fn update_crouch_enforcer(
     mut query: Query<(Entity, &mut TnuaController, &mut TnuaCrouchEnforcer)>,
-    mut sensors_query: Query<&mut TnuaProximitySensor, With<TnuaSubservientSensor>>,
+    mut sensors_query: Query<(&mut TnuaProximitySensor, Has<TnuaSubservientSensor>)>,
     mut commands: Commands,
 ) {
     for (owner_entity, mut controller, mut crouch_enforcer) in query.iter_mut() {
@@ -175,9 +175,9 @@ fn update_crouch_enforcer(
                 set_sensor = enforced_action
                     .range_to_cast_up(controller.as_mut())
                     .and_then(|cast_range| {
-                        let cast_direction = controller.dynamic_basis()?.up_direction();
+                        let (main_sensor, _) = sensors_query.get(owner_entity).ok()?;
                         Some(SetSensor {
-                            cast_direction,
+                            cast_direction: -main_sensor.cast_direction,
                             cast_range,
                         })
                     });
@@ -195,7 +195,7 @@ fn update_crouch_enforcer(
             cast_range,
         }) = set_sensor
         {
-            if let Some(mut subservient_sensor) = crouch_enforcer
+            if let Some((mut subservient_sensor, true)) = crouch_enforcer
                 .sensor_entity
                 .and_then(|entity| sensors_query.get_mut(entity).ok())
             {
@@ -220,7 +220,7 @@ fn update_crouch_enforcer(
                 let sensor_entity = cmd.id();
                 crouch_enforcer.sensor_entity = Some(sensor_entity);
             }
-        } else if let Some(mut subservient_sensor) = crouch_enforcer
+        } else if let Some((mut subservient_sensor, true)) = crouch_enforcer
             .sensor_entity
             .and_then(|entity| sensors_query.get_mut(entity).ok())
         {
@@ -229,7 +229,10 @@ fn update_crouch_enforcer(
         }
         if let Some((enforced_action, fed_this_frame)) =
             crouch_enforcer.sensor_entity.and_then(|entity| {
-                if sensors_query.get_mut(entity).ok()?.output.is_some() {
+                let Ok((sensor, true)) = sensors_query.get_mut(entity) else {
+                    return None;
+                };
+                if sensor.output.is_some() {
                     crouch_enforcer.enforced_action.as_mut()
                 } else {
                     None
