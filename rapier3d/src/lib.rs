@@ -232,15 +232,19 @@ fn update_proximity_sensors_system(
                             owner_rotation,
                             *cast_direction,
                             shape,
-                            cast_range,
-                            true,
+                            ShapeCastOptions {
+                                max_time_of_impact: cast_range,
+                                target_distance: 0.0,
+                                stop_at_penetration: false,
+                                compute_impact_geometry_on_penetration: false,
+                            },
                             query_filter,
                         )
-                        .and_then(|(entity, toi)| {
-                            let details = toi.details?;
+                        .and_then(|(entity, hit)| {
+                            let details = hit.details?;
                             Some(CastResult {
                                 entity,
-                                proximity: toi.toi,
+                                proximity: hit.time_of_impact,
                                 intersection_point: details.witness1,
                                 normal: Direction3d::new(details.normal1)
                                     .unwrap_or_else(|_| -cast_direction),
@@ -255,11 +259,11 @@ fn update_proximity_sensors_system(
                             false,
                             query_filter,
                         )
-                        .map(|(entity, toi)| CastResult {
+                        .map(|(entity, hit)| CastResult {
                             entity,
-                            proximity: toi.toi,
-                            intersection_point: toi.point,
-                            normal: Direction3d::new(toi.normal)
+                            proximity: hit.time_of_impact,
+                            intersection_point: hit.point,
+                            normal: Direction3d::new(hit.normal)
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                 }

@@ -230,15 +230,19 @@ fn update_proximity_sensors_system(
                             0.0,
                             cast_direction.truncate(),
                             shape,
-                            cast_range,
-                            false,
+                            ShapeCastOptions {
+                                max_time_of_impact: cast_range,
+                                target_distance: 0.0,
+                                stop_at_penetration: false,
+                                compute_impact_geometry_on_penetration: false,
+                            },
                             query_filter,
                         )
-                        .and_then(|(entity, toi)| {
-                            let details = toi.details?;
+                        .and_then(|(entity, hit)| {
+                            let details = hit.details?;
                             Some(CastResult {
                                 entity,
-                                proximity: toi.toi + cast_range_skip,
+                                proximity: hit.time_of_impact + cast_range_skip,
                                 intersection_point: details.witness1,
                                 normal: Direction3d::new(details.normal1.extend(0.0))
                                     .unwrap_or_else(|_| -cast_direction),
@@ -253,11 +257,11 @@ fn update_proximity_sensors_system(
                             false,
                             query_filter,
                         )
-                        .map(|(entity, toi)| CastResult {
+                        .map(|(entity, hit)| CastResult {
                             entity,
-                            proximity: toi.toi + cast_range_skip,
-                            intersection_point: toi.point,
-                            normal: Direction3d::new(toi.normal.extend(0.0))
+                            proximity: hit.time_of_impact + cast_range_skip,
+                            intersection_point: hit.point,
+                            normal: Direction3d::new(hit.normal.extend(0.0))
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                 }

@@ -8,6 +8,10 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 
 ## [Unreleased]
 
+## 0.6.0 - 2024-05-07
+### Changed
+- Upgrade to bevy_rapier 0.26.
+
 ## 0.5.0 - 2024-04-04
 ### Changed
 - [**BREAKING**] Ray is always cast in the specified direction, regardless of
