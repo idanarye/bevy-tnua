@@ -3,7 +3,7 @@ use std::time::Duration;
 use crate::math::{AdjustPrecision, Float, Quaternion, Vector3};
 use bevy::prelude::*;
 
-use crate::util::ProjectionPlaneForRotation;
+use crate::util::rotation_arc_around_axis;
 use crate::TnuaBasisContext;
 use crate::{TnuaBasis, TnuaVelChange};
 
@@ -315,11 +315,10 @@ impl TnuaBasis for TnuaBuiltinWalk {
         // Turning
 
         let desired_angvel = if 0.0 < self.desired_forward.length_squared() {
-            let projection =
-                ProjectionPlaneForRotation::from_up_and_fowrard(self.up, Vector3::NEG_Z);
-            let current_forward = ctx.tracker.rotation.mul_vec3(projection.forward);
+            let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
             let rotation_along_up_axis =
-                projection.rotation_to_set_forward(current_forward, self.desired_forward);
+                rotation_arc_around_axis(Direction3d::Y, current_forward, self.desired_forward)
+                    .unwrap_or(0.0);
             (rotation_along_up_axis / ctx.frame_duration)
                 .clamp(-self.turning_angvel, self.turning_angvel)
         } else {

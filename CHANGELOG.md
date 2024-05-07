@@ -10,7 +10,7 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 - Make the `bevy_tnua::util` module public. It contains two helper utilities:
   - `SegmentedJumpInitialVelocityCalculator` for calculating the initial
     velocity required for a jump with varying gravity.
-  - `ProjectionPlaneForRotation` for calculating a character's rotation.
+  - `rotation_arc_around_axis` for calculating a character's rotation.
 - Re-export `bevy_tnua_physics_integration_layer::math` as `bevy_tnua::math`.
 
 ## 0.16.0 - 2024-04-02

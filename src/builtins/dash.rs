@@ -1,7 +1,7 @@
 use crate::math::{AdjustPrecision, Float, Vector3};
 use bevy::prelude::*;
 
-use crate::util::ProjectionPlaneForRotation;
+use crate::util::rotation_arc_around_axis;
 use crate::{
     prelude::*, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor,
@@ -140,12 +140,14 @@ impl TnuaAction for TnuaBuiltinDash {
 
                     if 0.0 < desired_forward.length_squared() {
                         let up = ctx.basis.up_direction();
-                        let projection =
-                            ProjectionPlaneForRotation::from_up_and_fowrard(up, Vector3::NEG_Z);
                         let up = up.adjust_precision();
-                        let current_forward = ctx.tracker.rotation.mul_vec3(projection.forward);
-                        let rotation_along_up_axis = projection
-                            .rotation_to_set_forward(current_forward, self.desired_forward);
+                        let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
+                        let rotation_along_up_axis = rotation_arc_around_axis(
+                            Direction3d::Y,
+                            current_forward,
+                            self.desired_forward,
+                        )
+                        .unwrap_or(0.0);
                         let desired_angvel = rotation_along_up_axis / ctx.frame_duration;
                         let existing_angvel = ctx.tracker.angvel.dot(up);
                         let torque_to_turn = desired_angvel - existing_angvel;
