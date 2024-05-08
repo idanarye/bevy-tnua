@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::math::{AdjustPrecision, Float, Quaternion, Vector3};
+use crate::math::{float_consts, AdjustPrecision, Float, Quaternion, Vector3};
 use bevy::prelude::*;
 
 use crate::util::rotation_arc_around_axis;
@@ -116,6 +116,9 @@ pub struct TnuaBuiltinWalk {
 
     /// The maximum angular velocity used for turning the character when the direction changes.
     pub turning_angvel: Float,
+
+    /// The maximum slope, in radians, that the character can stand on without slipping.
+    pub max_slope: Float,
 }
 
 impl Default for TnuaBuiltinWalk {
@@ -134,6 +137,7 @@ impl Default for TnuaBuiltinWalk {
             tilt_offset_angvel: 5.0,
             tilt_offset_angacl: 500.0,
             turning_angvel: 10.0,
+            max_slope: float_consts::FRAC_PI_2,
         }
     }
 }
@@ -151,6 +155,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         let climb_vectors: Option<ClimbVectors>;
         let considered_in_air: bool;
         let impulse_to_offset: Vector3;
+        let slipping_direcetion: Option<Direction3d>;
 
         if let Some(sensor_output) = &ctx.proximity_sensor.output {
             state.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
@@ -169,9 +174,10 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     sideways: sideways_unnormalized.normalize_or_zero().adjust_precision(),
                 });
             }
-            considered_in_air = state.airborne_timer.is_some();
-            if considered_in_air {
+            if state.airborne_timer.is_some() {
+                considered_in_air = true;
                 impulse_to_offset = Vector3::ZERO;
+                slipping_direcetion = None;
                 state.standing_on = None;
             } else {
                 if let Some(standing_on_state) = &state.standing_on {
@@ -184,16 +190,27 @@ impl TnuaBasis for TnuaBuiltinWalk {
                 } else {
                     impulse_to_offset = Vector3::ZERO;
                 }
-                state.standing_on = Some(StandingOnState {
-                    entity: sensor_output.entity,
-                    entity_linvel: sensor_output.entity_linvel,
-                });
+
+                let angle_with_floor = sensor_output.normal.angle_between(*ctx.up_direction()).adjust_precision();
+                if angle_with_floor <= self.max_slope {
+                    considered_in_air = false;
+                    slipping_direcetion = None;
+                    state.standing_on = Some(StandingOnState {
+                        entity: sensor_output.entity,
+                        entity_linvel: sensor_output.entity_linvel,
+                    });
+                } else {
+                    considered_in_air = true;
+                    slipping_direcetion = Direction3d::new(sensor_output.normal.reject_from(*ctx.up_direction())).ok();
+                    state.standing_on = None;
+                }
             }
         } else {
             state.effective_velocity = ctx.tracker.velocity;
             climb_vectors = None;
             considered_in_air = true;
             impulse_to_offset = Vector3::ZERO;
+            slipping_direcetion = None;
             state.standing_on = None;
         }
         state.effective_velocity += impulse_to_offset;
@@ -253,7 +270,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                 #[allow(clippy::unnecessary_cast)]
                 match &mut state.airborne_timer {
                     None => {
-                        if let Some(sensor_output) = &ctx.proximity_sensor.output {
+                        if let (None, Some(sensor_output)) = (slipping_direcetion, &ctx.proximity_sensor.output) {
                             // not doing the jump calculation here
                             let spring_offset =
                                 self.float_height - sensor_output.proximity.adjust_precision();
@@ -272,7 +289,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                         }
                     }
                     Some(_) => {
-                        if let Some(sensor_output) = &ctx.proximity_sensor.output {
+                        if let (None, Some(sensor_output)) = (slipping_direcetion, &ctx.proximity_sensor.output) {
                             if sensor_output.proximity.adjust_precision() <= self.float_height {
                                 state.airborne_timer = None;
                                 continue;

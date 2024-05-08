@@ -44,6 +44,10 @@ pub fn setup_level(
             [20.0, 0.1, 2.0],
             Transform::from_xyz(10.0, 10.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
         ),
+        (
+            [20.0, 0.1, 2.0],
+            Transform::from_xyz(10.0, 10.0, -5.0).with_rotation(Quat::from_rotation_z(1.0)),
+        ),
         ([4.0, 2.0, 2.0], Transform::from_xyz(-4.0, 1.0, 0.0)),
         ([6.0, 1.0, 2.0], Transform::from_xyz(-10.0, 4.0, 0.0)),
         ([6.0, 1.0, 2.0], Transform::from_xyz(0.0, 2.6, -5.0)),
