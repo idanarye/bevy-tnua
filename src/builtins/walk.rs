@@ -269,12 +269,28 @@ impl TnuaBasis for TnuaBuiltinWalk {
             };
             TnuaVelChange::boost(walk_boost)
         } else {
+            // When accelerating, prefer an acceleration because the physics backends treat it
+            // better (see issue #34)
+            let walk_acceleration =
+                (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
+            let walk_acceleration =
+                if let (Some(climb_vectors), None) = (&climb_vectors, slipping_vector) {
+                    climb_vectors.project(walk_acceleration)
+                } else {
+                    walk_acceleration
+                };
+
             let slipping_boost = 'slipping_boost: {
                 let Some(slipping_vector) = slipping_vector else {
                     break 'slipping_boost Vector3::ZERO;
                 };
-                if 0.0 <= state.vertical_velocity {
-                    break 'slipping_boost Vector3::ZERO;
+                let vertical_velocity = if 0.0 <= state.vertical_velocity {
+                    ctx.tracker
+                        .gravity
+                        .dot(ctx.up_direction().adjust_precision())
+                        * ctx.frame_duration
+                } else {
+                    state.vertical_velocity
                 };
 
                 let Ok((slipping_direction, slipping_per_vertical_unit)) =
@@ -282,26 +298,21 @@ impl TnuaBasis for TnuaBuiltinWalk {
                 else {
                     break 'slipping_boost Vector3::ZERO;
                 };
-                let required_component =
-                    slipping_per_vertical_unit.adjust_precision() * -state.vertical_velocity;
-                let original_component = self
-                    .desired_velocity
-                    .dot(slipping_direction.adjust_precision());
-                let diff_component = required_component - original_component;
 
-                if diff_component <= 0.0 {
+                let required_veloicty_in_slipping_direction =
+                    slipping_per_vertical_unit.adjust_precision() * -vertical_velocity;
+                let expected_velocity = velocity_on_plane + walk_acceleration * ctx.frame_duration;
+                let expected_velocity_in_slipping_direction =
+                    expected_velocity.dot(slipping_direction.adjust_precision());
+
+                let diff = required_veloicty_in_slipping_direction
+                    - expected_velocity_in_slipping_direction;
+
+                if diff <= 0.0 {
                     break 'slipping_boost Vector3::ZERO;
                 }
-                slipping_direction.adjust_precision() * diff_component
-            };
-            // When accelerating, prefer an acceleration because the physics backends treat it
-            // better (see issue #34)
-            let walk_acceleration =
-                (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
-            let walk_acceleration = if let (Some(climb_vectors), None) = (&climb_vectors, slipping_vector) {
-                climb_vectors.project(walk_acceleration)
-            } else {
-                walk_acceleration
+
+                slipping_direction.adjust_precision() * diff
             };
             TnuaVelChange {
                 acceleration: walk_acceleration,
@@ -310,12 +321,14 @@ impl TnuaBasis for TnuaBuiltinWalk {
         };
 
         let upward_impulse: TnuaVelChange = 'upward_impulse: {
+            let should_disable_due_to_slipping =
+                slipping_vector.is_some() && state.vertical_velocity <= 0.0;
             for _ in 0..2 {
                 #[allow(clippy::unnecessary_cast)]
                 match &mut state.airborne_timer {
                     None => {
-                        if let (None, Some(sensor_output)) =
-                            (slipping_vector, &ctx.proximity_sensor.output)
+                        if let (false, Some(sensor_output)) =
+                            (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
                         {
                             // not doing the jump calculation here
                             let spring_offset =
@@ -335,8 +348,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
                         }
                     }
                     Some(_) => {
-                        if let (None, Some(sensor_output)) =
-                            (slipping_vector, &ctx.proximity_sensor.output)
+                        if let (false, Some(sensor_output)) =
+                            (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
                         {
                             if sensor_output.proximity.adjust_precision() <= self.float_height {
                                 state.airborne_timer = None;
