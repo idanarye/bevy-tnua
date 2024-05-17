@@ -41,8 +41,12 @@ pub fn setup_level(
     let obstacles_material = materials.add(Color::GRAY);
     for ([width, height, depth], transform) in [
         (
-            [20.0, 0.1, 2.0],
-            Transform::from_xyz(10.0, 10.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
+            [10.0, 0.1, 2.0],
+            Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
+        ),
+        (
+            [10.0, 0.1, 2.0],
+            Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
         ),
         ([4.0, 2.0, 2.0], Transform::from_xyz(-4.0, 1.0, 0.0)),
         ([6.0, 1.0, 2.0], Transform::from_xyz(-10.0, 4.0, 0.0)),

@@ -8,7 +8,7 @@ use bevy_tnua::control_helpers::{
     TnuaSimpleFallThroughPlatformsHelper,
 };
 #[allow(unused_imports)]
-use bevy_tnua::math::{AsF32, Vector3};
+use bevy_tnua::math::{float_consts, AsF32, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "rapier3d")]
@@ -190,6 +190,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         speed: 20.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,
+            max_slope: float_consts::FRAC_PI_4,
             ..Default::default()
         },
         actions_in_air: 1,

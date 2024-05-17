@@ -1,7 +1,8 @@
 use std::time::Duration;
 
-use crate::math::{AdjustPrecision, Float, Quaternion, Vector3};
+use crate::math::{float_consts, AdjustPrecision, Float, Quaternion, Vector3};
 use bevy::prelude::*;
+use bevy_tnua_physics_integration_layer::math::AsF32;
 
 use crate::util::rotation_arc_around_axis;
 use crate::TnuaBasisContext;
@@ -116,6 +117,9 @@ pub struct TnuaBuiltinWalk {
 
     /// The maximum angular velocity used for turning the character when the direction changes.
     pub turning_angvel: Float,
+
+    /// The maximum slope, in radians, that the character can stand on without slipping.
+    pub max_slope: Float,
 }
 
 impl Default for TnuaBuiltinWalk {
@@ -134,6 +138,7 @@ impl Default for TnuaBuiltinWalk {
             tilt_offset_angvel: 5.0,
             tilt_offset_angacl: 500.0,
             turning_angvel: 10.0,
+            max_slope: float_consts::FRAC_PI_2,
         }
     }
 }
@@ -151,6 +156,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         let climb_vectors: Option<ClimbVectors>;
         let considered_in_air: bool;
         let impulse_to_offset: Vector3;
+        let slipping_vector: Option<Vector3>;
 
         if let Some(sensor_output) = &ctx.proximity_sensor.output {
             state.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
@@ -169,8 +175,26 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     sideways: sideways_unnormalized.normalize_or_zero().adjust_precision(),
                 });
             }
-            considered_in_air = state.airborne_timer.is_some();
-            if considered_in_air {
+
+            slipping_vector = {
+                let angle_with_floor = sensor_output
+                    .normal
+                    .angle_between(*ctx.up_direction())
+                    .adjust_precision();
+                if angle_with_floor <= self.max_slope {
+                    None
+                } else {
+                    Some(
+                        sensor_output
+                            .normal
+                            .reject_from(*ctx.up_direction())
+                            .adjust_precision(),
+                    )
+                }
+            };
+
+            if state.airborne_timer.is_some() {
+                considered_in_air = true;
                 impulse_to_offset = Vector3::ZERO;
                 state.standing_on = None;
             } else {
@@ -184,16 +208,24 @@ impl TnuaBasis for TnuaBuiltinWalk {
                 } else {
                     impulse_to_offset = Vector3::ZERO;
                 }
-                state.standing_on = Some(StandingOnState {
-                    entity: sensor_output.entity,
-                    entity_linvel: sensor_output.entity_linvel,
-                });
+
+                if slipping_vector.is_none() {
+                    considered_in_air = false;
+                    state.standing_on = Some(StandingOnState {
+                        entity: sensor_output.entity,
+                        entity_linvel: sensor_output.entity_linvel,
+                    });
+                } else {
+                    considered_in_air = true;
+                    state.standing_on = None;
+                }
             }
         } else {
             state.effective_velocity = ctx.tracker.velocity;
             climb_vectors = None;
             considered_in_air = true;
             impulse_to_offset = Vector3::ZERO;
+            slipping_vector = None;
             state.standing_on = None;
         }
         state.effective_velocity += impulse_to_offset;
@@ -217,7 +249,17 @@ impl TnuaBasis for TnuaBuiltinWalk {
         };
         let max_acceleration = direction_change_factor * relevant_acceleration_limit;
 
-        let walk_vel_change = if self.desired_velocity == Vector3::ZERO {
+        state.vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
+            state.effective_velocity.dot(climb_vectors.direction)
+                * climb_vectors
+                    .direction
+                    .dot(ctx.up_direction().adjust_precision())
+        } else {
+            0.0
+        };
+
+        let walk_vel_change = if self.desired_velocity == Vector3::ZERO && slipping_vector.is_none()
+        {
             // When stopping, prefer a boost to be able to reach a precise stop (see issue #39)
             let walk_boost = desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration);
             let walk_boost = if let Some(climb_vectors) = &climb_vectors {
@@ -231,29 +273,63 @@ impl TnuaBasis for TnuaBuiltinWalk {
             // better (see issue #34)
             let walk_acceleration =
                 (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
-            let walk_acceleration = if let Some(climb_vectors) = &climb_vectors {
-                climb_vectors.project(walk_acceleration)
-            } else {
-                walk_acceleration
-            };
-            TnuaVelChange::acceleration(walk_acceleration)
-        };
+            let walk_acceleration =
+                if let (Some(climb_vectors), None) = (&climb_vectors, slipping_vector) {
+                    climb_vectors.project(walk_acceleration)
+                } else {
+                    walk_acceleration
+                };
 
-        state.vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
-            state.effective_velocity.dot(climb_vectors.direction)
-                * climb_vectors
-                    .direction
-                    .dot(ctx.up_direction().adjust_precision())
-        } else {
-            0.0
+            let slipping_boost = 'slipping_boost: {
+                let Some(slipping_vector) = slipping_vector else {
+                    break 'slipping_boost Vector3::ZERO;
+                };
+                let vertical_velocity = if 0.0 <= state.vertical_velocity {
+                    ctx.tracker
+                        .gravity
+                        .dot(ctx.up_direction().adjust_precision())
+                        * ctx.frame_duration
+                } else {
+                    state.vertical_velocity
+                };
+
+                let Ok((slipping_direction, slipping_per_vertical_unit)) =
+                    Direction3d::new_and_length(slipping_vector.f32())
+                else {
+                    break 'slipping_boost Vector3::ZERO;
+                };
+
+                let required_veloicty_in_slipping_direction =
+                    slipping_per_vertical_unit.adjust_precision() * -vertical_velocity;
+                let expected_velocity = velocity_on_plane + walk_acceleration * ctx.frame_duration;
+                let expected_velocity_in_slipping_direction =
+                    expected_velocity.dot(slipping_direction.adjust_precision());
+
+                let diff = required_veloicty_in_slipping_direction
+                    - expected_velocity_in_slipping_direction;
+
+                if diff <= 0.0 {
+                    break 'slipping_boost Vector3::ZERO;
+                }
+
+                slipping_direction.adjust_precision() * diff
+            };
+            TnuaVelChange {
+                acceleration: walk_acceleration,
+                boost: slipping_boost,
+            }
         };
 
         let upward_impulse: TnuaVelChange = 'upward_impulse: {
+            let should_disable_due_to_slipping =
+                slipping_vector.is_some() && state.vertical_velocity <= 0.0;
             for _ in 0..2 {
                 #[allow(clippy::unnecessary_cast)]
                 match &mut state.airborne_timer {
                     None => {
-                        if let Some(sensor_output) = &ctx.proximity_sensor.output {
+                        if let (false, Some(sensor_output)) =
+                            (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
+                        {
                             // not doing the jump calculation here
                             let spring_offset =
                                 self.float_height - sensor_output.proximity.adjust_precision();
@@ -272,7 +348,9 @@ impl TnuaBasis for TnuaBuiltinWalk {
                         }
                     }
                     Some(_) => {
-                        if let Some(sensor_output) = &ctx.proximity_sensor.output {
+                        if let (false, Some(sensor_output)) =
+                            (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
+                        {
                             if sensor_output.proximity.adjust_precision() <= self.float_height {
                                 state.airborne_timer = None;
                                 continue;
@@ -292,6 +370,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
             error!("Tnua could not decide on jump state");
             TnuaVelChange::ZERO
         };
+
         motor.lin = walk_vel_change + TnuaVelChange::boost(impulse_to_offset) + upward_impulse;
         let new_velocity = state.effective_velocity
             + motor.lin.boost

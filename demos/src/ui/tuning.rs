@@ -2,7 +2,7 @@
 use std::ops::RangeInclusive;
 
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash};
-use bevy_tnua::math::Float;
+use bevy_tnua::math::{float_consts, Float};
 use bevy_tnua::prelude::*;
 
 #[cfg(feature = "egui")]
@@ -136,6 +136,11 @@ impl UiTunable for TnuaBuiltinWalk {
             "Turning Angular Velocity",
             &mut self.turning_angvel,
             0.0..=70.0,
+        );
+
+        ui.add(
+            egui::Slider::new(&mut self.max_slope, 0.0..=float_consts::FRAC_PI_2)
+                .text("Max Slope (in radians)"),
         );
     }
 }

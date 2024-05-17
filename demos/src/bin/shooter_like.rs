@@ -201,6 +201,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         speed: 20.0,
         walk: TnuaBuiltinWalk {
             float_height: 2.0,
+            max_slope: float_consts::FRAC_PI_4,
             turning_angvel: Float::INFINITY,
             ..Default::default()
         },
