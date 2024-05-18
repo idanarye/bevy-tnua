@@ -1,12 +1,18 @@
 use std::time::Duration;
 
-use crate::math::{float_consts, AdjustPrecision, Float, Quaternion, Vector3};
+use crate::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::AsF32;
 
 use crate::util::rotation_arc_around_axis;
 use crate::TnuaBasisContext;
 use crate::{TnuaBasis, TnuaVelChange};
+
+// TODO: Once I make a release of the integration layer crate that includes float_consts, import
+// that from there (adding this reexport does not justify a release of that crate...)
+#[cfg(not(feature = "f64"))]
+use std::f32::consts as float_consts;
+#[cfg(feature = "f64")]
+use std::f64::consts as float_consts;
 
 /// The most common [basis](TnuaBasis) - walk around as a floating capsule.
 ///
