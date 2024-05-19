@@ -122,6 +122,8 @@ fn ui_system<C: Component + UiTunable>(
         crate::app_setup_options::AppSetupConfiguration,
     >,
 ) {
+    use std::any::TypeId;
+
     let Ok(mut primary_window) = primary_window_query.get_single_mut() else {
         return;
     };
@@ -189,38 +191,69 @@ fn ui_system<C: Component + UiTunable>(
             command_altering_selectors,
         ) in query.iter_mut()
         {
-            egui::CollapsingHeader::new(name)
-                .default_open(false)
-                .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.vertical(|ui| {
-                            egui::ComboBox::from_label("Toggle Tnua")
-                                .selected_text(format!("{:?}", tnua_toggle.as_ref()))
-                                .show_ui(ui, |ui| {
-                                    for option in [
-                                        TnuaToggle::Disabled,
-                                        TnuaToggle::SenseOnly,
-                                        TnuaToggle::Enabled,
-                                    ] {
-                                        let label = format!("{:?}", option);
-                                        ui.selectable_value(tnua_toggle.as_mut(), option, label);
-                                    }
-                                });
+            let collapse_state = egui::collapsing_header::CollapsingState::load_with_default_open(ui.ctx(), ui.make_persistent_id(("for-character", entity)), false);
 
-                            if let Some(tunable) = tunable.as_mut() {
-                                tunable.tune(ui);
-                            }
+            #[derive(Clone, Copy, PartialEq, Default, Debug)]
+            enum ThingToShow {
+                #[default]
+                Settings,
+                Plots,
+            }
 
-                            if let Some(mut command_altering_selectors) = command_altering_selectors
-                            {
-                                command_altering_selectors.show_ui(ui, &mut commands, entity);
-                            }
-                        });
-                        ui.vertical(|ui| {
-                            plot_source.show(entity, ui);
-                        });
-                    });
-                });
+            let thing_to_show_id = ui.make_persistent_id((TypeId::of::<ThingToShow>(), entity));
+            let is_open = collapse_state.is_open();
+            let mut thing_to_show = ui.memory_mut(|mem| mem.data.get_temp_mut_or_default::<ThingToShow>(thing_to_show_id).clone());
+            let mut set_open = None;
+
+            let mut collapse_state = collapse_state.show_header(ui, |ui| {
+                ui.label(name);
+                for (option, text) in [
+                    (ThingToShow::Settings, "settings"),
+                    (ThingToShow::Plots, "plots"),
+                ] {
+                    let mut selected = is_open && option == thing_to_show;
+                    if ui.toggle_value(&mut selected, text).changed() {
+                        set_open = Some(selected);
+                        if selected {
+                            thing_to_show = option;
+                            ui.memory_mut(|mem| *mem.data.get_temp_mut_or_default::<ThingToShow>(thing_to_show_id) = option);
+                        }
+                    }
+                }
+            });
+            if let Some(set_open) = set_open {
+                collapse_state.set_open(set_open);
+            }
+            collapse_state.body(|ui| {
+                match thing_to_show {
+                    ThingToShow::Settings => {
+                        egui::ComboBox::from_label("Toggle Tnua")
+                            .selected_text(format!("{:?}", tnua_toggle.as_ref()))
+                            .show_ui(ui, |ui| {
+                                for option in [
+                                    TnuaToggle::Disabled,
+                                    TnuaToggle::SenseOnly,
+                                    TnuaToggle::Enabled,
+                                ] {
+                                    let label = format!("{:?}", option);
+                                    ui.selectable_value(tnua_toggle.as_mut(), option, label);
+                                }
+                            });
+
+                        if let Some(tunable) = tunable.as_mut() {
+                            tunable.tune(ui);
+                        }
+
+                        if let Some(mut command_altering_selectors) = command_altering_selectors
+                        {
+                            command_altering_selectors.show_ui(ui, &mut commands, entity);
+                        }
+                    }
+                    ThingToShow::Plots => {
+                        plot_source.show(entity, ui);
+                    }
+                }
+            });
         }
     });
 }
