@@ -19,7 +19,7 @@ pub enum LayerNames {
 }
 
 pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let mut cmd = commands.spawn_empty();
+    let mut cmd = commands.spawn(Name::new("Floor"));
     cmd.insert(SpriteBundle {
         sprite: Sprite {
             custom_size: Some(Vec2::new(128.0, 0.5)),
@@ -36,20 +36,34 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         cmd.insert(xpbd::Collider::halfspace(Vector2::Y));
     }
 
-    for ([width, height], transform) in [
+    for (name, [width, height], transform) in [
         (
+            "Moderate Slope",
             [10.0, 0.1],
             Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
         ),
         (
+            "Steep Slope",
             [10.0, 0.1],
             Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
         ),
-        ([4.0, 2.0], Transform::from_xyz(-4.0, 1.0, 0.0)),
-        ([6.0, 1.0], Transform::from_xyz(-10.0, 4.0, 0.0)),
-        ([6.0, 1.0], Transform::from_xyz(-20.0, 2.6, 0.0)),
+        (
+            "Box to Step on",
+            [4.0, 2.0],
+            Transform::from_xyz(-4.0, 1.0, 0.0),
+        ),
+        (
+            "Floating Box",
+            [6.0, 1.0],
+            Transform::from_xyz(-10.0, 4.0, 0.0),
+        ),
+        (
+            "Box to Crawl Under",
+            [6.0, 1.0],
+            Transform::from_xyz(-20.0, 2.6, 0.0),
+        ),
     ] {
-        let mut cmd = commands.spawn_empty();
+        let mut cmd = commands.spawn(Name::new(name));
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(width, height)),
@@ -72,8 +86,8 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 
     // Fall-through platforms
-    for y in [5.0, 7.5] {
-        let mut cmd = commands.spawn_empty();
+    for (i, y) in [5.0, 7.5].into_iter().enumerate() {
+        let mut cmd = commands.spawn(Name::new(format!("Fall Through #{}", i + 1)));
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(6.0, 0.5)),
@@ -104,6 +118,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 
     commands.spawn((
+        Name::new("Collision Groups"),
         TransformBundle::from_transform(Transform::from_xyz(10.0, 2.0, 0.0)),
         #[cfg(feature = "rapier2d")]
         (
@@ -137,6 +152,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     #[cfg(feature = "rapier2d")]
     {
         commands.spawn((
+            Name::new("Solver Groups"),
             TransformBundle::from_transform(Transform::from_xyz(15.0, 2.0, 0.0)),
             rapier::Collider::ball(1.0),
             SolverGroups {
@@ -160,6 +176,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 
     commands.spawn((
+        Name::new("Sensor"),
         TransformBundle::from_transform(Transform::from_xyz(20.0, 2.0, 0.0)),
         #[cfg(feature = "rapier2d")]
         (rapier::Collider::ball(1.0), rapier::Sensor),
@@ -186,7 +203,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // spawn moving platform
     {
-        let mut cmd = commands.spawn_empty();
+        let mut cmd = commands.spawn(Name::new("Moving Platform"));
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(4.0, 1.0)),

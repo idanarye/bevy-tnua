@@ -19,6 +19,7 @@ use bevy_tnua_xpbd2d::*;
 use bevy_xpbd_2d::{prelude as xpbd, prelude::*, PhysicsSchedule};
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
+use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
 };
@@ -26,8 +27,10 @@ use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd2d")]
 use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
+use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
+use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
 use tnua_demos_crate::MovingPlatformPlugin;
 
 fn main() {
@@ -101,6 +104,11 @@ fn main() {
         }
     }
 
+    #[cfg(feature = "egui")]
+    app.add_systems(
+        Update,
+        character_control_info_dumping_system.in_set(DemoInfoUpdateSystemSet),
+    );
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
         CharacterMotionConfigForPlatformerDemo,
     >::default());
@@ -339,7 +347,10 @@ fn setup_player(mut commands: Commands) {
     // This helper keeps track of air actions like jumps or air dashes.
     cmd.insert(TnuaSimpleAirActionsCounter::default());
 
-    cmd.insert(tnua_demos_crate::ui::TrackedEntity("Player".to_owned()));
     #[cfg(feature = "egui")]
-    cmd.insert(PlotSource::default());
+    cmd.insert((
+        tnua_demos_crate::ui::TrackedEntity("Player".to_owned()),
+        PlotSource::default(),
+        InfoSource::default(),
+    ));
 }

@@ -1,4 +1,5 @@
 pub mod component_alterbation;
+pub mod info;
 #[cfg(feature = "egui")]
 pub mod plotting;
 pub mod tuning;
@@ -23,6 +24,9 @@ use self::plotting::{make_update_plot_data_system, plot_source_rolling_update};
 
 use tuning::UiTunable;
 
+#[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
+pub struct DemoInfoUpdateSystemSet;
+
 pub struct DemoUi<C: Component + UiTunable> {
     _phantom: PhantomData<C>,
 }
@@ -40,9 +44,13 @@ impl<C: Component + UiTunable> Plugin for DemoUi<C> {
         #[cfg(feature = "egui")]
         app.add_plugins(EguiPlugin);
         app.insert_resource(DemoUiPhysicsBackendActive(true));
+        app.configure_sets(
+            Update,
+            DemoInfoUpdateSystemSet.after(bevy_tnua::TnuaUserControlsSystemSet),
+        );
         app.add_systems(Update, apply_selectors);
         #[cfg(feature = "egui")]
-        app.add_systems(Update, ui_system::<C>);
+        app.add_systems(Update, ui_system::<C>.after(DemoInfoUpdateSystemSet));
         #[cfg(feature = "egui")]
         app.add_systems(Update, plot_source_rolling_update);
         #[cfg(feature = "egui")]
@@ -110,7 +118,8 @@ fn ui_system<C: Component + UiTunable>(
     mut query: Query<(
         Entity,
         &TrackedEntity,
-        &plotting::PlotSource,
+        Option<&plotting::PlotSource>,
+        Option<&mut info::InfoSource>,
         &mut TnuaToggle,
         Option<&mut C>,
         Option<&mut CommandAlteringSelectors>,
@@ -186,6 +195,7 @@ fn ui_system<C: Component + UiTunable>(
             entity,
             TrackedEntity(name),
             plot_source,
+            mut info_source,
             mut tnua_toggle,
             mut tunable,
             command_altering_selectors,
@@ -198,6 +208,7 @@ fn ui_system<C: Component + UiTunable>(
                 #[default]
                 Settings,
                 Plots,
+                Info,
             }
 
             let thing_to_show_id = ui.make_persistent_id((TypeId::of::<ThingToShow>(), entity));
@@ -207,23 +218,31 @@ fn ui_system<C: Component + UiTunable>(
 
             let mut collapse_state = collapse_state.show_header(ui, |ui| {
                 ui.label(name);
-                for (option, text) in [
-                    (ThingToShow::Settings, "settings"),
-                    (ThingToShow::Plots, "plots"),
+                for (possible, option, text) in [
+                    (true, ThingToShow::Settings, "settings"),
+                    (plot_source.is_some(), ThingToShow::Plots, "plots"),
+                    (info_source.is_some(), ThingToShow::Info, "info"),
                 ] {
                     let mut selected = is_open && option == thing_to_show;
-                    if ui.toggle_value(&mut selected, text).changed() {
-                        set_open = Some(selected);
-                        if selected {
-                            thing_to_show = option;
-                            ui.memory_mut(|mem| *mem.data.get_temp_mut_or_default::<ThingToShow>(thing_to_show_id) = option);
+                    ui.add_enabled_ui(possible, |ui| {
+                        if ui.toggle_value(&mut selected, text).changed() {
+                            set_open = Some(selected);
+                            if selected {
+                                thing_to_show = option;
+                                ui.memory_mut(|mem| *mem.data.get_temp_mut_or_default::<ThingToShow>(thing_to_show_id) = option);
+                            }
                         }
-                    }
+                    });
                 }
             });
             if let Some(set_open) = set_open {
                 collapse_state.set_open(set_open);
             }
+
+            if let Some(info_source) = info_source.as_mut() {
+                info_source.set_active(collapse_state.is_open() && thing_to_show == ThingToShow::Info);
+            }
+
             collapse_state.body(|ui| {
                 match thing_to_show {
                     ThingToShow::Settings => {
@@ -250,7 +269,18 @@ fn ui_system<C: Component + UiTunable>(
                         }
                     }
                     ThingToShow::Plots => {
-                        plot_source.show(entity, ui);
+                        if let Some(plot_source) = plot_source {
+                            plot_source.show(entity, ui);
+                        } else {
+                            ui.colored_label(egui::Color32::DARK_RED, "No plotting configured for this entity");
+                        }
+                    }
+                    ThingToShow::Info => {
+                        if let Some(info_source) = info_source.as_mut() {
+                            info_source.show(entity, ui);
+                        } else {
+                            ui.colored_label(egui::Color32::DARK_RED, "No info configured for this entity");
+                        }
                     }
                 }
             });
