@@ -9,12 +9,14 @@ exclude = [
 
 [features]
 default = [
-    # Comment this out when Bevy gets upgraded and bevy_egui lags behind
-    "egui",
     "bevy_xpbd_3d?/parry-f32",
     "bevy_xpbd_2d?/parry-f32",
+    # Comment these out when Bevy gets upgraded and a dependency lags behind
+    "egui",
+    "framepace",
 ]
 egui = ["dep:bevy_egui", "dep:egui_plot", "dep:egui_extras"]
+framepace = ["dep:bevy_framepace"]
 rapier = []
 rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
 rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
@@ -62,6 +64,8 @@ bevy-tnua-xpbd3d = { path = "../xpbd3d", default-features = false, optional = tr
 bevy_egui = { version = "0.27", optional = true, default-features = false, features = ["default_fonts", "render"] }
 egui_plot = { version = "0.27", optional = true }
 egui_extras = { version = "0.27", optional = true }
+
+bevy_framepace = { version = "0.16.0", optional = true }
 
 clap = { version = "^4", features = ["derive"] }
 

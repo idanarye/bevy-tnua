@@ -1,4 +1,6 @@
 pub mod component_alterbation;
+#[cfg(feature = "egui")]
+mod framerate;
 pub mod info;
 #[cfg(feature = "egui")]
 pub mod plotting;
@@ -7,7 +9,6 @@ pub mod tuning;
 use std::marker::PhantomData;
 
 #[cfg(feature = "egui")]
-use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy::window::{PresentMode, PrimaryWindow};
@@ -53,8 +54,9 @@ impl<C: Component + UiTunable> Plugin for DemoUi<C> {
         app.add_systems(Update, ui_system::<C>.after(DemoInfoUpdateSystemSet));
         #[cfg(feature = "egui")]
         app.add_systems(Update, plot_source_rolling_update);
+
         #[cfg(feature = "egui")]
-        app.add_plugins(FrameTimeDiagnosticsPlugin);
+        app.add_plugins(framerate::DemoFrameratePlugin);
 
         #[cfg(feature = "egui")]
         {
@@ -126,7 +128,7 @@ fn ui_system<C: Component + UiTunable>(
     )>,
     mut commands: Commands,
     mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
-    diagnostics_store: Res<DiagnosticsStore>,
+    mut framerate: framerate::DemoFramerateParam,
     #[cfg(target_arch = "wasm32")] app_setup_configuration: Res<
         crate::app_setup_options::AppSetupConfiguration,
     >,
@@ -167,19 +169,7 @@ fn ui_system<C: Component + UiTunable>(
                 ui.selectable_value(present_mode, PresentMode::Immediate, "Immediate");
                 ui.selectable_value(present_mode, PresentMode::Mailbox, "Mailbox");
             });
-        for (diagnostic_path, range) in [
-            (FrameTimeDiagnosticsPlugin::FPS, 0.0..120.0),
-            (FrameTimeDiagnosticsPlugin::FRAME_TIME, 0.0..50.0),
-        ] {
-            if let Some(diagnostic) = diagnostics_store.get(&diagnostic_path) {
-                if let Some(value) = diagnostic.smoothed() {
-                    ui.add(
-                        egui::widgets::ProgressBar::new((value as f32 - range.start) / (range.end - range.start))
-                        .text(format!("{}: {:.0}", diagnostic_path, value))
-                    );
-                }
-            }
-        }
+        framerate.show_in_ui(ui);
         egui::CollapsingHeader::new("Controls:")
             .default_open(false)
             .show(ui, |ui| {
