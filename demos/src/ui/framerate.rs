@@ -17,12 +17,7 @@ impl Plugin for DemoFrameratePlugin {
         app.add_plugins(FrameTimeDiagnosticsPlugin);
 
         #[cfg(feature = "framepace")]
-        {
-            app.add_plugins((FramepacePlugin, FramepaceDiagnosticsPlugin));
-            app.insert_resource(FramepaceSettings {
-                limiter: Limiter::Off,
-            });
-        }
+        app.add_plugins((FramepacePlugin, FramepaceDiagnosticsPlugin));
     }
 }
 

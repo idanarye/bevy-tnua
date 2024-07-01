@@ -13,10 +13,9 @@ default = [
     "bevy_xpbd_2d?/parry-f32",
     # Comment these out when Bevy gets upgraded and a dependency lags behind
     "egui",
-    "framepace",
 ]
 egui = ["dep:bevy_egui", "dep:egui_plot", "dep:egui_extras"]
-framepace = ["dep:bevy_framepace"]
+framepace = ["dep:bevy_framepace"] # Not a default feature
 rapier = []
 rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
 rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
