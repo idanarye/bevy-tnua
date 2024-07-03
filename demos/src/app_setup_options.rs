@@ -28,6 +28,7 @@ impl AppSetupConfiguration {
             } else {
                 ScheduleToUse::Update
             },
+            level_to_load: url_params.get("level"),
         }
     }
 
