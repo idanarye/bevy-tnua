@@ -10,6 +10,8 @@ use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
 
 use crate::MovingPlatform;
 
+use super::{LevelObject, PositionPlayer};
+
 #[cfg(feature = "xpbd2d")]
 #[derive(PhysicsLayer)]
 pub enum LayerNames {
@@ -19,7 +21,9 @@ pub enum LayerNames {
 }
 
 pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let mut cmd = commands.spawn(Name::new("Floor"));
+    commands.spawn(PositionPlayer::from(Vec3::new(0.0, 2.0, 0.0)));
+
+    let mut cmd = commands.spawn((LevelObject, Name::new("Floor")));
     cmd.insert(SpriteBundle {
         sprite: Sprite {
             custom_size: Some(Vec2::new(128.0, 0.5)),
@@ -63,7 +67,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             Transform::from_xyz(-20.0, 2.6, 0.0),
         ),
     ] {
-        let mut cmd = commands.spawn(Name::new(name));
+        let mut cmd = commands.spawn((LevelObject, Name::new(name)));
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(width, height)),
@@ -87,7 +91,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // Fall-through platforms
     for (i, y) in [5.0, 7.5].into_iter().enumerate() {
-        let mut cmd = commands.spawn(Name::new(format!("Fall Through #{}", i + 1)));
+        let mut cmd = commands.spawn((LevelObject, Name::new(format!("Fall Through #{}", i + 1))));
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(6.0, 0.5)),
@@ -118,6 +122,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 
     commands.spawn((
+        LevelObject,
         Name::new("Collision Groups"),
         TransformBundle::from_transform(Transform::from_xyz(10.0, 2.0, 0.0)),
         #[cfg(feature = "rapier2d")]
@@ -135,23 +140,27 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
         ),
     ));
-    commands.spawn(Text2dBundle {
-        text: Text::from_section(
-            "collision\ngroups",
-            TextStyle {
-                font: asset_server.load("FiraSans-Bold.ttf"),
-                font_size: 72.0,
-                color: Color::WHITE,
-            },
-        )
-        .with_justify(JustifyText::Center),
-        transform: Transform::from_xyz(10.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-        ..Default::default()
-    });
+    commands.spawn((
+        LevelObject,
+        Text2dBundle {
+            text: Text::from_section(
+                "collision\ngroups",
+                TextStyle {
+                    font: asset_server.load("FiraSans-Bold.ttf"),
+                    font_size: 72.0,
+                    color: Color::WHITE,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(10.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
+            ..Default::default()
+        },
+    ));
 
     #[cfg(feature = "rapier2d")]
     {
         commands.spawn((
+            LevelObject,
             Name::new("Solver Groups"),
             TransformBundle::from_transform(Transform::from_xyz(15.0, 2.0, 0.0)),
             rapier::Collider::ball(1.0),
@@ -160,22 +169,26 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                 filters: Group::GROUP_1,
             },
         ));
-        commands.spawn(Text2dBundle {
-            text: Text::from_section(
-                "solver\ngroups",
-                TextStyle {
-                    font: asset_server.load("FiraSans-Bold.ttf"),
-                    font_size: 72.0,
-                    color: Color::WHITE,
-                },
-            )
-            .with_justify(JustifyText::Center),
-            transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        });
+        commands.spawn((
+            LevelObject,
+            Text2dBundle {
+                text: Text::from_section(
+                    "solver\ngroups",
+                    TextStyle {
+                        font: asset_server.load("FiraSans-Bold.ttf"),
+                        font_size: 72.0,
+                        color: Color::WHITE,
+                    },
+                )
+                .with_justify(JustifyText::Center),
+                transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
+                ..Default::default()
+            },
+        ));
     }
 
     commands.spawn((
+        LevelObject,
         Name::new("Sensor"),
         TransformBundle::from_transform(Transform::from_xyz(20.0, 2.0, 0.0)),
         #[cfg(feature = "rapier2d")]
@@ -187,23 +200,26 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             xpbd::Sensor,
         ),
     ));
-    commands.spawn(Text2dBundle {
-        text: Text::from_section(
-            "sensor",
-            TextStyle {
-                font: asset_server.load("FiraSans-Bold.ttf"),
-                font_size: 72.0,
-                color: Color::WHITE,
-            },
-        )
-        .with_justify(JustifyText::Center),
-        transform: Transform::from_xyz(20.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-        ..Default::default()
-    });
+    commands.spawn((
+        LevelObject,
+        Text2dBundle {
+            text: Text::from_section(
+                "sensor",
+                TextStyle {
+                    font: asset_server.load("FiraSans-Bold.ttf"),
+                    font_size: 72.0,
+                    color: Color::WHITE,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(20.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
+            ..Default::default()
+        },
+    ));
 
     // spawn moving platform
     {
-        let mut cmd = commands.spawn(Name::new("Moving Platform"));
+        let mut cmd = commands.spawn((LevelObject, Name::new("Moving Platform")));
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(4.0, 1.0)),

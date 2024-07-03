@@ -7,6 +7,8 @@ use clap::{Parser, ValueEnum};
 pub struct AppSetupConfiguration {
     #[arg(long = "schedule", default_value = "update")]
     pub schedule_to_use: ScheduleToUse,
+    #[arg(long = "level")]
+    pub level_to_load: Option<String>,
 }
 
 impl AppSetupConfiguration {

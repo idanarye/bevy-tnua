@@ -2,6 +2,7 @@ pub mod component_alterbation;
 #[cfg(feature = "egui")]
 mod framerate;
 pub mod info;
+mod level_selection;
 #[cfg(feature = "egui")]
 pub mod plotting;
 pub mod tuning;
@@ -128,6 +129,7 @@ fn ui_system<C: Component + UiTunable>(
     )>,
     mut commands: Commands,
     mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
+    mut level_selection: level_selection::LevelSelectionParam,
     mut framerate: framerate::DemoFramerateParam,
     #[cfg(target_arch = "wasm32")] app_setup_configuration: Res<
         crate::app_setup_options::AppSetupConfiguration,
@@ -180,6 +182,7 @@ fn ui_system<C: Component + UiTunable>(
                 ui.label("Turn in place with Alt (only in 3D)");
                 ui.label("Dash with Shift (while moving in a direction)");
             });
+        level_selection.show_in_ui(ui);
         ui.checkbox(&mut physics_backend_active.0, "Physics Backend Enabled");
         for (
             entity,

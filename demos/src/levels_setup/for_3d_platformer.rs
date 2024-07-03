@@ -10,6 +10,8 @@ use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
 
 use crate::MovingPlatform;
 
+use super::{LevelObject, PositionPlayer};
+
 #[cfg(feature = "xpbd3d")]
 #[derive(PhysicsLayer)]
 pub enum LayerNames {
@@ -24,7 +26,9 @@ pub fn setup_level(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    let mut cmd = commands.spawn(Name::new("Floor"));
+    commands.spawn(PositionPlayer::from(Vec3::new(0.0, 10.0, 0.0)));
+
+    let mut cmd = commands.spawn((LevelObject, Name::new("Floor")));
     cmd.insert(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(128.0, 128.0)),
         material: materials.add(Color::WHITE),
@@ -66,7 +70,7 @@ pub fn setup_level(
             Transform::from_xyz(0.0, 2.6, -5.0),
         ),
     ] {
-        let mut cmd = commands.spawn(Name::new(name));
+        let mut cmd = commands.spawn((LevelObject, Name::new(name)));
         cmd.insert(PbrBundle {
             mesh: meshes.add(Cuboid::new(width, height, depth)),
             material: obstacles_material.clone(),
@@ -93,7 +97,7 @@ pub fn setup_level(
     // Fall-through platforms
     let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8));
     for (i, y) in [2.0, 4.5].into_iter().enumerate() {
-        let mut cmd = commands.spawn(Name::new(format!("Fall Through #{}", i + 1)));
+        let mut cmd = commands.spawn((LevelObject, Name::new(format!("Fall Through #{}", i + 1))));
         cmd.insert(PbrBundle {
             mesh: meshes.add(Cuboid::new(6.0, 0.5, 2.0)),
             material: fall_through_obstacles_material.clone(),
@@ -121,6 +125,7 @@ pub fn setup_level(
     }
 
     commands.spawn((
+        LevelObject,
         Name::new("Collision Groups"),
         SceneBundle {
             scene: asset_server.load("collision-groups-text.glb#Scene0"),
@@ -145,6 +150,7 @@ pub fn setup_level(
 
     #[cfg(feature = "rapier3d")]
     commands.spawn((
+        LevelObject,
         Name::new("Solver Groups"),
         SceneBundle {
             scene: asset_server.load("solver-groups-text.glb#Scene0"),
@@ -159,6 +165,7 @@ pub fn setup_level(
     ));
 
     commands.spawn((
+        LevelObject,
         Name::new("Sensor"),
         SceneBundle {
             scene: asset_server.load("sensor-text.glb#Scene0"),
@@ -177,7 +184,7 @@ pub fn setup_level(
 
     // spawn moving platform
     {
-        let mut cmd = commands.spawn(Name::new("Moving Platform"));
+        let mut cmd = commands.spawn((LevelObject, Name::new("Moving Platform")));
         cmd.insert(PbrBundle {
             mesh: meshes.add(Cuboid::new(4.0, 1.0, 4.0)),
             material: materials.add(Color::BLUE),
@@ -210,7 +217,7 @@ pub fn setup_level(
 
     // spawn spinning platform
     {
-        let mut cmd = commands.spawn(Name::new("Spinning Platform"));
+        let mut cmd = commands.spawn((LevelObject, Name::new("Spinning Platform")));
 
         cmd.insert(PbrBundle {
             mesh: meshes.add(Cylinder {

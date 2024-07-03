@@ -29,6 +29,8 @@ use tnua_demos_crate::character_control_systems::platformer_control_systems::{
 use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd3d")]
 use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
+use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
+use tnua_demos_crate::levels_setup::IsPlayer;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
@@ -113,10 +115,12 @@ fn main() {
         CharacterMotionConfigForPlatformerDemo,
     >::default());
     app.add_systems(Startup, setup_camera_and_lights);
-    app.add_systems(
-        Startup,
-        tnua_demos_crate::levels_setup::for_3d_platformer::setup_level,
-    );
+    app.add_plugins({
+        LevelSwitchingPlugin::new(app_setup_configuration.level_to_load.as_ref()).with(
+            "Default",
+            tnua_demos_crate::levels_setup::for_3d_platformer::setup_level,
+        )
+    });
     app.add_systems(Startup, setup_player);
     app.add_systems(
         match app_setup_configuration.schedule_to_use {
@@ -157,10 +161,9 @@ fn setup_camera_and_lights(mut commands: Commands) {
 }
 
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let mut cmd = commands.spawn_empty();
+    let mut cmd = commands.spawn(IsPlayer);
     cmd.insert(SceneBundle {
         scene: asset_server.load("player.glb#Scene0"),
-        transform: Transform::from_xyz(0.0, 10.0, 0.0),
         ..Default::default()
     });
     cmd.insert(GltfSceneHandler {

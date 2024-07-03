@@ -26,6 +26,8 @@ use tnua_demos_crate::character_control_systems::platformer_control_systems::{
 use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "xpbd2d")]
 use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
+use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
+use tnua_demos_crate::levels_setup::IsPlayer;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
@@ -113,10 +115,12 @@ fn main() {
         CharacterMotionConfigForPlatformerDemo,
     >::default());
     app.add_systems(Startup, setup_camera_and_lights);
-    app.add_systems(
-        Startup,
-        tnua_demos_crate::levels_setup::for_2d_platformer::setup_level,
-    );
+    app.add_plugins({
+        LevelSwitchingPlugin::new(app_setup_configuration.level_to_load.as_ref()).with(
+            "Default",
+            tnua_demos_crate::levels_setup::for_2d_platformer::setup_level,
+        )
+    });
     app.add_systems(Startup, setup_player);
     app.add_systems(
         match app_setup_configuration.schedule_to_use {
@@ -153,10 +157,8 @@ fn setup_camera_and_lights(mut commands: Commands) {
 }
 
 fn setup_player(mut commands: Commands) {
-    let mut cmd = commands.spawn_empty();
-    cmd.insert(TransformBundle::from_transform(Transform::from_xyz(
-        0.0, 2.0, 0.0,
-    )));
+    let mut cmd = commands.spawn(IsPlayer);
+    cmd.insert(TransformBundle::default());
     cmd.insert(VisibilityBundle::default());
 
     // The character entity must be configured as a dynamic rigid body of the physics backend.
