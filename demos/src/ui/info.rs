@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
+#[cfg(feature = "egui")]
 use bevy_egui::egui;
 
 #[derive(Component, Default)]
@@ -10,7 +11,7 @@ pub struct InfoSource {
 }
 
 pub enum InfoBit {
-    Label(egui::WidgetText),
+    Label(#[cfg(feature = "egui")] egui::WidgetText),
 }
 
 impl InfoSource {
@@ -25,6 +26,7 @@ impl InfoSource {
         }
     }
 
+    #[cfg(feature = "egui")]
     pub(crate) fn show(&mut self, _entity: Entity, ui: &mut egui::Ui) {
         egui_extras::TableBuilder::new(ui)
             .striped(true)
@@ -60,7 +62,12 @@ impl InfoSource {
         }
     }
 
+    #[cfg(feature = "egui")]
     pub fn label(&mut self, key: &str, label: impl Into<egui::WidgetText>) {
         self.set_info_bit(key, InfoBit::Label(label.into()));
+    }
+    #[cfg(not(feature = "egui"))]
+    pub fn label<T>(&mut self, key: &str, _: T) {
+        self.set_info_bit(key, InfoBit::Label());
     }
 }

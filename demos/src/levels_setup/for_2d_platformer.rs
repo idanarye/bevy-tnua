@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
@@ -27,7 +27,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     cmd.insert(SpriteBundle {
         sprite: Sprite {
             custom_size: Some(Vec2::new(128.0, 0.5)),
-            color: Color::GRAY,
+            color: css::GRAY.into(),
             ..Default::default()
         },
         ..Default::default()
@@ -71,7 +71,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(width, height)),
-                color: Color::GRAY,
+                color: css::GRAY.into(),
                 ..Default::default()
             },
             transform,
@@ -95,7 +95,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(6.0, 0.5)),
-                color: Color::PINK,
+                color: css::PINK.into(),
                 ..Default::default()
             },
             transform: Transform::from_xyz(-20.0, y, -1.0),
@@ -148,7 +148,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                 TextStyle {
                     font: asset_server.load("FiraSans-Bold.ttf"),
                     font_size: 72.0,
-                    color: Color::WHITE,
+                    color: css::WHITE.into(),
                 },
             )
             .with_justify(JustifyText::Center),
@@ -177,7 +177,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                     TextStyle {
                         font: asset_server.load("FiraSans-Bold.ttf"),
                         font_size: 72.0,
-                        color: Color::WHITE,
+                        color: css::WHITE.into(),
                     },
                 )
                 .with_justify(JustifyText::Center),
@@ -208,7 +208,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                 TextStyle {
                     font: asset_server.load("FiraSans-Bold.ttf"),
                     font_size: 72.0,
-                    color: Color::WHITE,
+                    color: css::WHITE.into(),
                 },
             )
             .with_justify(JustifyText::Center),
@@ -223,7 +223,7 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         cmd.insert(SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2::new(4.0, 1.0)),
-                color: Color::BLUE,
+                color: css::BLUE.into(),
                 ..Default::default()
             },
             transform: Transform::from_xyz(-4.0, 6.0, 0.0),

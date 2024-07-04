@@ -149,7 +149,7 @@ fn update_proximity_sensors_system(
                 entity: Entity,
                 proximity: Float,
                 intersection_point: Vector3,
-                normal: Direction3d,
+                normal: Dir3,
             }
 
             let owner_entity = if let Some(subservient) = subservient {
@@ -273,7 +273,7 @@ fn update_proximity_sensors_system(
                             entity: shape_hit_data.entity,
                             proximity: shape_hit_data.time_of_impact,
                             intersection_point: shape_hit_data.point1,
-                            normal: Direction3d::new(shape_hit_data.normal1.f32())
+                            normal: Dir3::new(shape_hit_data.normal1.f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },
@@ -291,7 +291,7 @@ fn update_proximity_sensors_system(
                             proximity: ray_hit_data.time_of_impact,
                             intersection_point: cast_origin
                                 + ray_hit_data.time_of_impact * cast_direction.adjust_precision(),
-                            normal: Direction3d::new(ray_hit_data.normal.f32())
+                            normal: Dir3::new(ray_hit_data.normal.f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },

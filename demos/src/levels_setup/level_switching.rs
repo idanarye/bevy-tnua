@@ -60,7 +60,7 @@ impl Plugin for LevelSwitchingPlugin {
             .iter()
             .map(|(name, system_registrar)| SwitchableLevel {
                 name: name.clone(),
-                level: system_registrar(&mut app.world),
+                level: system_registrar(app.world_mut()),
             })
             .collect::<Vec<_>>();
         let level_index = if let Some(default_level) = self.default_level.as_ref() {

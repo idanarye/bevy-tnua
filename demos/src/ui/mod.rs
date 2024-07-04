@@ -9,7 +9,6 @@ pub mod tuning;
 
 use std::marker::PhantomData;
 
-#[cfg(feature = "egui")]
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy::window::{PresentMode, PrimaryWindow};

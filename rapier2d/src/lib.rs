@@ -154,7 +154,7 @@ fn update_proximity_sensors_system(
                 intersection_point: Vec2,
                 // Use 3D and not 2D because converting a direction from 2D to 3D is more painful
                 // than it should be.
-                normal: Direction3d,
+                normal: Dir3,
             }
 
             let owner_entity = if let Some(subservient) = subservient {
@@ -244,7 +244,7 @@ fn update_proximity_sensors_system(
                                 entity,
                                 proximity: hit.time_of_impact + cast_range_skip,
                                 intersection_point: details.witness1,
-                                normal: Direction3d::new(details.normal1.extend(0.0))
+                                normal: Dir3::new(details.normal1.extend(0.0))
                                     .unwrap_or_else(|_| -cast_direction),
                             })
                         })
@@ -261,7 +261,7 @@ fn update_proximity_sensors_system(
                             entity,
                             proximity: hit.time_of_impact + cast_range_skip,
                             intersection_point: hit.point,
-                            normal: Direction3d::new(hit.normal.extend(0.0))
+                            normal: Dir3::new(hit.normal.extend(0.0))
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                 }

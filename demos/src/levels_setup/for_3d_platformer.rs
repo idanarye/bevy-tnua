@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
@@ -31,7 +31,7 @@ pub fn setup_level(
     let mut cmd = commands.spawn((LevelObject, Name::new("Floor")));
     cmd.insert(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(128.0, 128.0)),
-        material: materials.add(Color::WHITE),
+        material: materials.add(Color::from(css::WHITE)),
         ..Default::default()
     });
     #[cfg(feature = "rapier3d")]
@@ -42,7 +42,7 @@ pub fn setup_level(
         cmd.insert(xpbd::Collider::halfspace(Vector3::Y));
     }
 
-    let obstacles_material = materials.add(Color::GRAY);
+    let obstacles_material = materials.add(Color::from(css::GRAY));
     for (name, [width, height, depth], transform) in [
         (
             "Moderate Slope",
@@ -95,7 +95,7 @@ pub fn setup_level(
     }
 
     // Fall-through platforms
-    let fall_through_obstacles_material = materials.add(Color::PINK.with_a(0.8));
+    let fall_through_obstacles_material = materials.add(Color::from(css::PINK).with_alpha(0.8));
     for (i, y) in [2.0, 4.5].into_iter().enumerate() {
         let mut cmd = commands.spawn((LevelObject, Name::new(format!("Fall Through #{}", i + 1))));
         cmd.insert(PbrBundle {
@@ -187,7 +187,7 @@ pub fn setup_level(
         let mut cmd = commands.spawn((LevelObject, Name::new("Moving Platform")));
         cmd.insert(PbrBundle {
             mesh: meshes.add(Cuboid::new(4.0, 1.0, 4.0)),
-            material: materials.add(Color::BLUE),
+            material: materials.add(Color::from(css::BLUE)),
             transform: Transform::from_xyz(-4.0, 6.0, 0.0),
             ..Default::default()
         });
@@ -224,7 +224,7 @@ pub fn setup_level(
                 radius: 3.0,
                 half_height: 0.5,
             }),
-            material: materials.add(Color::BLUE),
+            material: materials.add(Color::from(css::BLUE)),
             transform: Transform::from_xyz(-2.0, 2.0, 10.0),
             ..Default::default()
         });

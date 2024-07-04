@@ -131,7 +131,7 @@ impl SegmentedJumpInitialVelocityCalculator {
 /// Calculate the rotation around `around_axis` required to rotate the character from
 /// `current_forward` to `desired_forward`.
 pub fn rotation_arc_around_axis(
-    around_axis: Direction3d,
+    around_axis: Dir3,
     current_forward: Vector3,
     desired_forward: Vector3,
 ) -> Option<Float> {

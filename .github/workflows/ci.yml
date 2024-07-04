@@ -25,7 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        rust: [1.76.0, nightly]
+        rust: [1.79.0, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -96,7 +96,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.76.0
+          toolchain: 1.79.0
           override: true
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
@@ -148,7 +148,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           target: wasm32-unknown-unknown
-          toolchain: 1.76.0
+          toolchain: 1.79.0
           override: true
       - name: Get package names
         id: get-package-names
@@ -220,9 +220,9 @@ jobs:
           EOF
               done
           }
-          build_for_backend rapier
+          # build_for_backend rapier
           build_for_backend xpbd
-          build_for_backend xpbd 64 --no-default-features --features egui --features f64
+          build_for_backend xpbd 64 --no-default-features --features f64 # --features egui 
           cp -R demos/assets/ target/doc/demos/
       - name: Add read permissions
         run: |-

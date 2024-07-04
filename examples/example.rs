@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 
 use bevy_xpbd_3d::prelude::*;
 
@@ -74,7 +74,7 @@ fn setup_level(
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Cuboid::new(4.0, 1.0, 4.0)),
-            material: materials.add(Color::GRAY),
+            material: materials.add(Color::from(css::GRAY)),
             transform: Transform::from_xyz(-6.0, 2.0, 0.0),
             ..Default::default()
         },
@@ -94,7 +94,7 @@ fn setup_player(
                 radius: 0.5,
                 half_length: 0.5,
             }),
-            material: materials.add(Color::CYAN),
+            material: materials.add(Color::from(css::DARK_CYAN)),
             transform: Transform::from_xyz(0.0, 2.0, 0.0),
             ..Default::default()
         },

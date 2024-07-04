@@ -114,13 +114,15 @@ pub fn animate_platformer_character(
                 // animation (without necessarily replacing it). In this case - control the speed
                 // of the animation based on the speed of the movement.
                 AnimationState::Running(speed) | AnimationState::Crawling(speed) => {
-                    player.set_speed(*speed as f32);
+                    for (_, active_animation) in player.playing_animations_mut() {
+                        active_animation.set_speed(*speed as f32);
+                    }
                 }
                 // Jumping and dashing can be chained, we want to start a new jump/dash animation
                 // when one jump/dash is chained to another.
                 AnimationState::Jumping | AnimationState::Dashing => {
                     if controller.action_flow_status().just_starting().is_some() {
-                        player.seek_to(0.0);
+                        player.seek_all_by(0.0);
                     }
                 }
                 // For other animations we don't have anything special to do - so we just let them
@@ -134,47 +136,44 @@ pub fn animate_platformer_character(
             TnuaAnimatingStateDirective::Alter {
                 old_state: _,
                 state,
-            } => match state {
-                AnimationState::Standing => {
-                    player
-                        .start(handler.animations["Standing"].clone_weak())
-                        .set_speed(1.0)
-                        .repeat();
+            } => {
+                player.stop_all();
+                match state {
+                    AnimationState::Standing => {
+                        player
+                            .start(handler.animations["Standing"])
+                            .set_speed(1.0)
+                            .repeat();
+                    }
+                    AnimationState::Running(speed) => {
+                        player
+                            .start(handler.animations["Running"])
+                            .set_speed(*speed as f32)
+                            .repeat();
+                    }
+                    AnimationState::Jumping => {
+                        player.start(handler.animations["Jumping"]).set_speed(2.0);
+                    }
+                    AnimationState::Falling => {
+                        player.start(handler.animations["Falling"]).set_speed(1.0);
+                    }
+                    AnimationState::Crouching => {
+                        player
+                            .start(handler.animations["Crouching"])
+                            .set_speed(1.0)
+                            .repeat();
+                    }
+                    AnimationState::Crawling(speed) => {
+                        player
+                            .start(handler.animations["Crawling"])
+                            .set_speed(*speed as f32)
+                            .repeat();
+                    }
+                    AnimationState::Dashing => {
+                        player.start(handler.animations["Dashing"]).set_speed(10.0);
+                    }
                 }
-                AnimationState::Running(speed) => {
-                    player
-                        .start(handler.animations["Running"].clone_weak())
-                        .set_speed(*speed as f32)
-                        .repeat();
-                }
-                AnimationState::Jumping => {
-                    player
-                        .start(handler.animations["Jumping"].clone_weak())
-                        .set_speed(2.0);
-                }
-                AnimationState::Falling => {
-                    player
-                        .start(handler.animations["Falling"].clone_weak())
-                        .set_speed(1.0);
-                }
-                AnimationState::Crouching => {
-                    player
-                        .start(handler.animations["Crouching"].clone_weak())
-                        .set_speed(1.0)
-                        .repeat();
-                }
-                AnimationState::Crawling(speed) => {
-                    player
-                        .start(handler.animations["Crawling"].clone_weak())
-                        .set_speed(*speed as f32)
-                        .repeat();
-                }
-                AnimationState::Dashing => {
-                    player
-                        .start(handler.animations["Dashing"].clone_weak())
-                        .set_speed(10.0);
-                }
-            },
+            }
         }
     }
 }

@@ -22,6 +22,7 @@ use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
     animate_platformer_character, AnimationState,
 };
+#[cfg(feature = "egui")]
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
@@ -32,9 +33,11 @@ use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
 use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
 use tnua_demos_crate::levels_setup::IsPlayer;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
+#[cfg(feature = "egui")]
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
+#[cfg(feature = "egui")]
 use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
 use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
 use tnua_demos_crate::MovingPlatformPlugin;

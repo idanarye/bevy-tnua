@@ -143,7 +143,7 @@ impl TnuaAction for TnuaBuiltinDash {
                         let up = up.adjust_precision();
                         let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
                         let rotation_along_up_axis = rotation_arc_around_axis(
-                            Direction3d::Y,
+                            Dir3::Y,
                             current_forward,
                             self.desired_forward,
                         )

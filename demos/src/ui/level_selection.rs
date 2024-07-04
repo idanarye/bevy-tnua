@@ -1,15 +1,19 @@
+#[allow(unused_imports)]
 use bevy::{ecs::system::SystemParam, prelude::*};
+#[cfg(feature = "egui")]
 use bevy_egui::egui;
 
 use crate::levels_setup::level_switching::{SwitchToLevel, SwitchableLevels};
 
 #[derive(SystemParam)]
+#[allow(unused)]
 pub struct LevelSelectionParam<'w> {
     switchable_levels: Option<Res<'w, SwitchableLevels>>,
     writer: Option<ResMut<'w, Events<SwitchToLevel>>>,
 }
 
 impl LevelSelectionParam<'_> {
+    #[cfg(feature = "egui")]
     pub fn show_in_ui(&mut self, ui: &mut egui::Ui) {
         let (Some(switchable_levels), Some(writer)) =
             (self.switchable_levels.as_ref(), self.writer.as_mut())

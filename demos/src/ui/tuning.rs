@@ -2,6 +2,7 @@
 use std::ops::RangeInclusive;
 
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash};
+#[allow(unused_imports)]
 use bevy_tnua::math::{float_consts, Float};
 use bevy_tnua::prelude::*;
 

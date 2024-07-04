@@ -134,7 +134,7 @@ fn update_proximity_sensors_system(
             }
             let cast_origin = transform.transform_point(sensor.cast_origin.f32());
             let cast_direction = sensor.cast_direction;
-            let cast_direction_2d = Direction2d::new(cast_direction.truncate())
+            let cast_direction_2d = Dir2::new(cast_direction.truncate())
                 .expect("cast direction must be on the XY plane");
 
             struct CastResult {
@@ -143,7 +143,7 @@ fn update_proximity_sensors_system(
                 intersection_point: Vector2,
                 // Use 3D and not 2D because converting a direction from 2D to 3D is more painful
                 // than it should be.
-                normal: Direction3d,
+                normal: Dir3,
             }
 
             let owner_entity = if let Some(subservient) = subservient {
@@ -264,7 +264,7 @@ fn update_proximity_sensors_system(
                             entity: shape_hit_data.entity,
                             proximity: shape_hit_data.time_of_impact,
                             intersection_point: shape_hit_data.point1,
-                            normal: Direction3d::new(shape_hit_data.normal1.extend(0.0).f32())
+                            normal: Dir3::new(shape_hit_data.normal1.extend(0.0).f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },
@@ -283,7 +283,7 @@ fn update_proximity_sensors_system(
                             intersection_point: cast_origin.truncate().adjust_precision()
                                 + ray_hit_data.time_of_impact.adjust_precision()
                                     * cast_direction_2d.adjust_precision(),
-                            normal: Direction3d::new(ray_hit_data.normal.extend(0.0).f32())
+                            normal: Dir3::new(ray_hit_data.normal.extend(0.0).f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },
