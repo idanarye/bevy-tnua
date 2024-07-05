@@ -18,9 +18,9 @@ use bevy::prelude::*;
 /// # use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 /// # use bevy_tnua::math::Float;
 /// # #[derive(Resource)]
-/// # struct AnimationClips {
-/// #     standing: Handle<AnimationClip>,
-/// #     running: Handle<AnimationClip>,
+/// # struct AnimationNodes {
+/// #     standing: AnimationNodeIndex,
+/// #     running: AnimationNodeIndex,
 /// # }
 /// enum AnimationState {
 ///     Standing,
@@ -33,7 +33,7 @@ use bevy::prelude::*;
 ///         &TnuaController,
 ///         &mut AnimationPlayer,
 ///     )>,
-///     animation_clips: Res<AnimationClips>,
+///     animation_nodes: Res<AnimationNodes>,
 /// ) {
 ///     for (mut animating_state, controller, mut animation_player) in query.iter_mut() {
 ///         match animating_state.update_by_discriminant({
@@ -50,7 +50,9 @@ use bevy::prelude::*;
 ///         }) {
 ///             TnuaAnimatingStateDirective::Maintain { state } => {
 ///                 if let AnimationState::Running(speed) = state {
-///                     animation_player.set_speed(*speed);
+///                     if let Some(active_animation) = animation_player.animation_mut(animation_nodes.running) {
+///                         active_animation.set_speed(*speed);
+///                     }
 ///                 }
 ///             }
 ///             TnuaAnimatingStateDirective::Alter {
@@ -61,13 +63,13 @@ use bevy::prelude::*;
 ///             } => match state {
 ///                 AnimationState::Standing => {
 ///                     animation_player
-///                         .start(animation_clips.standing.clone_weak())
+///                         .start(animation_nodes.standing)
 ///                         .set_speed(1.0)
 ///                         .repeat();
 ///                 }
 ///                 AnimationState::Running(speed) => {
 ///                     animation_player
-///                         .start(animation_clips.standing.clone_weak())
+///                         .start(animation_nodes.running)
 ///                         .set_speed(*speed)
 ///                         .repeat();
 ///                 }
