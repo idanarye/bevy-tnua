@@ -18,7 +18,7 @@ keywords = ["bevy", "gamedev", "locomotion", "game-controls"]
 [package]
 name = "bevy-tnua"
 description = "A floating character controller for Bevy"
-version = "0.18.0"
+version = "0.19.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
