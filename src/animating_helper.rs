@@ -60,18 +60,21 @@ use bevy::prelude::*;
 ///                 // animations.
 ///                 old_state: _,
 ///                 state,
-///             } => match state {
-///                 AnimationState::Standing => {
-///                     animation_player
-///                         .start(animation_nodes.standing)
-///                         .set_speed(1.0)
-///                         .repeat();
-///                 }
-///                 AnimationState::Running(speed) => {
-///                     animation_player
-///                         .start(animation_nodes.running)
-///                         .set_speed(*speed)
-///                         .repeat();
+///             } => {
+///                 animation_player.stop_all();
+///                 match state {
+///                     AnimationState::Standing => {
+///                         animation_player
+///                             .start(animation_nodes.standing)
+///                             .set_speed(1.0)
+///                             .repeat();
+///                     }
+///                     AnimationState::Running(speed) => {
+///                         animation_player
+///                             .start(animation_nodes.running)
+///                             .set_speed(*speed)
+///                             .repeat();
+///                     }
 ///                 }
 ///             }
 ///         }
