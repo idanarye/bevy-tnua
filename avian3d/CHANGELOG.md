@@ -10,5 +10,7 @@ NOTES:
 * Avian used to be named bevy_xpbd. The old bevy-tnua-xpbd changelog can be seen [here](https://github.com/idanarye/bevy-tnua/blob/3cba881c8825633a8d8bdca1fe30e54500e655b8/xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
+
+## 0.1.0 - 2024-07-06
 ### Added
 - [avian](https://github.com/Jondolf/avian) (formerly bevy_xpbd) support - both 2D and 3D.
