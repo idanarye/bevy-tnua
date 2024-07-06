@@ -1,12 +1,12 @@
 use bevy::{color::palettes::css, prelude::*};
 
+#[cfg(feature = "avian2d")]
+use avian2d::{prelude as avian, prelude::*};
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
 #[allow(unused_imports)]
 use bevy_tnua::math::{AdjustPrecision, Vector2, Vector3};
 use bevy_tnua::TnuaGhostPlatform;
-#[cfg(feature = "avian2d")]
-use avian2d::{prelude as avian, prelude::*};
 
 use crate::MovingPlatform;
 

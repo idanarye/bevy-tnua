@@ -1,3 +1,5 @@
+#[cfg(feature = "avian2d")]
+use avian2d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
 #[cfg(feature = "rapier2d")]
@@ -11,12 +13,10 @@ use bevy_tnua::control_helpers::{
 use bevy_tnua::math::{float_consts, AsF32, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
-#[cfg(feature = "rapier2d")]
-use bevy_tnua_rapier2d::*;
 #[cfg(feature = "avian2d")]
 use bevy_tnua_avian2d::*;
-#[cfg(feature = "avian2d")]
-use avian2d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
+#[cfg(feature = "rapier2d")]
+use bevy_tnua_rapier2d::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
@@ -232,7 +232,9 @@ fn setup_player(mut commands: Commands) {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.49, 0.0)));
                         #[cfg(feature = "avian2d")]
-                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(0.99, 0.0)));
+                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(
+                            0.99, 0.0,
+                        )));
                     }),
                     ("Flat (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
@@ -244,7 +246,9 @@ fn setup_player(mut commands: Commands) {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.51, 0.0)));
                         #[cfg(feature = "avian2d")]
-                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.01, 0.0)));
+                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(
+                            1.01, 0.0,
+                        )));
                     }),
                     ("Ball (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]

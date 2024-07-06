@@ -1,3 +1,5 @@
+#[cfg(feature = "avian3d")]
+use avian3d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
@@ -12,12 +14,10 @@ use bevy_tnua::control_helpers::{
 use bevy_tnua::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
-#[cfg(feature = "rapier3d")]
-use bevy_tnua_rapier3d::*;
 #[cfg(feature = "avian3d")]
 use bevy_tnua_avian3d::*;
-#[cfg(feature = "avian3d")]
-use avian3d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
+#[cfg(feature = "rapier3d")]
+use bevy_tnua_rapier3d::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
