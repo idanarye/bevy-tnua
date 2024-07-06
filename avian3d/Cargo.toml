@@ -1,24 +1,24 @@
 [package]
-name = "bevy-tnua-xpbd3d"
-description = "XPBD 3D integration for bevy-tnua"
-version = "0.5.0"
+name = "bevy-tnua-avian3d"
+description = "Avian 3D integration for bevy-tnua"
+version = "0.1.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
 categories.workspace = true
 keywords.workspace = true
-documentation = "https://docs.rs/bevy-tnua-xpbd3d"
+documentation = "https://docs.rs/bevy-tnua-avian3d"
 readme = "../README.md"
 
 [dependencies]
 bevy = { version = "^0.14", default-features = false }
-bevy_xpbd_3d = {version = "^0.5", default-features = false, features = ["3d", "debug-plugin", "parallel", "async-collider"] }
+avian3d = {version = "^0.1", default-features = false, features = ["3d", "debug-plugin", "parallel"] }
 bevy-tnua-physics-integration-layer = { version = "^0.4", path = "../physics-integration-layer" }
 
 [package.metadata.docs.rs]
 all-features = true
 
 [features]
-default = [  "bevy_xpbd_3d/parry-f32" ]
-f64 = ["bevy_xpbd_3d/parry-f64", "bevy-tnua-physics-integration-layer/f64"]
+default = [  "avian3d/parry-f32" ]
+f64 = ["avian3d/parry-f64", "bevy-tnua-physics-integration-layer/f64"]

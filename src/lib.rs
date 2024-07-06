@@ -4,20 +4,20 @@
 //! constantly touching the ground the character floats above it, which makes many aspects of the
 //! motion control simpler.
 //!
-//! Tnua can use [Rapier](https://rapier.rs/) or [XPBD](https://github.com/Jondolf/bevy_xpbd), and
+//! Tnua can use [Rapier](https://rapier.rs/) or [Avian](https://github.com/Jondolf/avian), and
 //! supports both the 2D and 3D versions of both with integration crates:
 //!
 //! * For Rapier 2D, add the [bevy-tnua-rapier2d](https://crates.io/crates/bevy-tnua-rapier2d) crate.
 //! * For Rapier 3D, add the [bevy-tnua-rapier3d](https://crates.io/crates/bevy-tnua-rapier3d) crate.
-//! * For XPBD 2D, add the [bevy-tnua-xpbd2d](https://crates.io/crates/bevy-tnua-xpbd2d) crate.
-//! * For XPBD 3D, add the [bevy-tnua-xpbd3d](https://crates.io/crates/bevy-tnua-xpbd3d) crate.
+//! * For Avian 2D, add the [bevy-tnua-avian2d](https://crates.io/crates/bevy-tnua-avian2d) crate.
+//! * For Avian 3D, add the [bevy-tnua-avian3d](https://crates.io/crates/bevy-tnua-avian3d) crate.
 //! * Third party integration crates. Such crates should depend on
 //!   [bevy-tnua-physics-integration-layer](https://crates.io/crates/bevy-tnua-physics-integration-layer)
 //!   and not the main bevy-tnua crate.
 //!
 //! Each physics integration crate has basic usage instructions for adding it in its documentation.
 //!
-//! When using a physics backend with double precision (like XPBD with the `f64` flag), the `f64`
+//! When using a physics backend with double precision (like Avian with the `f64` flag), the `f64`
 //! flag should be added to all the Tnua crates. This applies to double precision data that gets
 //! defined by the physics backend - Bevy itself will still use single precision, and this is the
 //! precision the position and rotation will use.
@@ -63,7 +63,7 @@
 //!   that wall.
 //! * Tnua will apply forces to keep the character upright, but it is also possible to lock
 //!   rotation so that there would be no tilting at all. This is done by Tnua itself - it has to be
-//!   done by the physics engine. Both Rapier and XPBD can do it using a component called
+//!   done by the physics engine. Both Rapier and Avian can do it using a component called
 //!   `LockedAxes`. When using it in 3D in combination of rotation controls (such as
 //!   [`TnuaBuiltinWalk::desired_forward`](builtins::TnuaBuiltinWalk::desired_forward)) make sure
 //!   to only lock the X and Z axess, so that Tnua could rotate the character around the Y axis.

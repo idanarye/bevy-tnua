@@ -138,15 +138,15 @@ struct PlayerQueryForPositioning {
     #[cfg(feature = "rapier3d")]
     rapier3d_velocity: Option<&'static mut bevy_rapier3d::prelude::Velocity>,
 
-    #[cfg(feature = "xpbd2d")]
-    xpbd2d_linear_velocity: Option<&'static mut bevy_xpbd_2d::prelude::LinearVelocity>,
-    #[cfg(feature = "xpbd2d")]
-    xpbd2d_angular_velocity: Option<&'static mut bevy_xpbd_2d::prelude::AngularVelocity>,
+    #[cfg(feature = "avian2d")]
+    avian2d_linear_velocity: Option<&'static mut avian2d::prelude::LinearVelocity>,
+    #[cfg(feature = "avian2d")]
+    avian2d_angular_velocity: Option<&'static mut avian2d::prelude::AngularVelocity>,
 
-    #[cfg(feature = "xpbd3d")]
-    xpbd3d_linear_velocity: Option<&'static mut bevy_xpbd_3d::prelude::LinearVelocity>,
-    #[cfg(feature = "xpbd3d")]
-    xpbd3d_angular_velocity: Option<&'static mut bevy_xpbd_3d::prelude::AngularVelocity>,
+    #[cfg(feature = "avian3d")]
+    avian3d_linear_velocity: Option<&'static mut avian3d::prelude::LinearVelocity>,
+    #[cfg(feature = "avian3d")]
+    avian3d_angular_velocity: Option<&'static mut avian3d::prelude::AngularVelocity>,
 }
 
 fn handle_player_positioning(
@@ -173,21 +173,21 @@ fn handle_player_positioning(
             velocity.angvel = Default::default();
         }
 
-        #[cfg(feature = "xpbd2d")]
-        if let Some(velocity) = player.xpbd2d_linear_velocity.as_mut() {
+        #[cfg(feature = "avian2d")]
+        if let Some(velocity) = player.avian2d_linear_velocity.as_mut() {
             velocity.0 = Default::default();
         }
-        #[cfg(feature = "xpbd2d")]
-        if let Some(velocity) = player.xpbd2d_angular_velocity.as_mut() {
+        #[cfg(feature = "avian2d")]
+        if let Some(velocity) = player.avian2d_angular_velocity.as_mut() {
             velocity.0 = Default::default();
         }
 
-        #[cfg(feature = "xpbd3d")]
-        if let Some(velocity) = player.xpbd3d_linear_velocity.as_mut() {
+        #[cfg(feature = "avian3d")]
+        if let Some(velocity) = player.avian3d_linear_velocity.as_mut() {
             velocity.0 = Default::default();
         }
-        #[cfg(feature = "xpbd3d")]
-        if let Some(velocity) = player.xpbd3d_angular_velocity.as_mut() {
+        #[cfg(feature = "avian3d")]
+        if let Some(velocity) = player.avian3d_angular_velocity.as_mut() {
             velocity.0 = Default::default();
         }
     }

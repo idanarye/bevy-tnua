@@ -1,7 +1,7 @@
 //! # Physics Integration Layer for bevy-tnua
 //!
 //! Crates that implement a physics layer integration for Tnua (like bevy-tnua-rapier or
-//! bevy-tnua-xpbd) should depend on this crate and not on the main bevy-tnua crate. This crate
+//! bevy-tnua-avian) should depend on this crate and not on the main bevy-tnua crate. This crate
 //! should update less often - only when there are changes in the integration layer (which is not
 //! supposed to change as much) or when Bevy itself updates.
 //!
@@ -51,7 +51,7 @@
 //! `Update`)
 //!
 //! Note that a physics backend may run its systems under `PostUpdate` instead of `Update` (both
-//! Rapier and XPBD do this by default). In this case, it's still okay for the integration backend
+//! Rapier and Avian do this by default). In this case, it's still okay for the integration backend
 //! to run under `Update`, because they use the same timing.
 //!
 //! If the integration crate needs the character entity to have more components from the physics

@@ -7,7 +7,7 @@ pub mod ui;
 pub mod util;
 pub use moving_platform::{MovingPlatform, MovingPlatformPlugin};
 
-#[cfg(all(feature = "bevy_xpbd_2d/parry-f32", feature = "f64"))]
+#[cfg(all(feature = "avian2d/parry-f32", feature = "f64"))]
 compile_error!(
     "Default Feature (f32) and f64 are mutually exclusive and cannot be enabled together"
 );

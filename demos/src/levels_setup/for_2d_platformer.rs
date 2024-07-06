@@ -5,14 +5,14 @@ use bevy_rapier2d::{prelude as rapier, prelude::*};
 #[allow(unused_imports)]
 use bevy_tnua::math::{AdjustPrecision, Vector2, Vector3};
 use bevy_tnua::TnuaGhostPlatform;
-#[cfg(feature = "xpbd2d")]
-use bevy_xpbd_2d::{prelude as xpbd, prelude::*};
+#[cfg(feature = "avian2d")]
+use avian2d::{prelude as avian, prelude::*};
 
 use crate::MovingPlatform;
 
 use super::{LevelObject, PositionPlayer};
 
-#[cfg(feature = "xpbd2d")]
+#[cfg(feature = "avian2d")]
 #[derive(PhysicsLayer)]
 pub enum LayerNames {
     Player,
@@ -34,10 +34,10 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     #[cfg(feature = "rapier2d")]
     cmd.insert(rapier::Collider::halfspace(Vec2::Y).unwrap());
-    #[cfg(feature = "xpbd2d")]
+    #[cfg(feature = "avian2d")]
     {
-        cmd.insert(xpbd::RigidBody::Static);
-        cmd.insert(xpbd::Collider::halfspace(Vector2::Y));
+        cmd.insert(avian::RigidBody::Static);
+        cmd.insert(avian::Collider::half_space(Vector2::Y));
     }
 
     for (name, [width, height], transform) in [
@@ -79,10 +79,10 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
         #[cfg(feature = "rapier2d")]
         cmd.insert(rapier::Collider::cuboid(0.5 * width, 0.5 * height));
-        #[cfg(feature = "xpbd2d")]
+        #[cfg(feature = "avian2d")]
         {
-            cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::rectangle(
+            cmd.insert(avian::RigidBody::Static);
+            cmd.insert(avian::Collider::rectangle(
                 width.adjust_precision(),
                 height.adjust_precision(),
             ));
@@ -109,10 +109,10 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                 filters: Group::empty(),
             });
         }
-        #[cfg(feature = "xpbd2d")]
+        #[cfg(feature = "avian2d")]
         {
-            cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::rectangle(6.0, 0.5));
+            cmd.insert(avian::RigidBody::Static);
+            cmd.insert(avian::Collider::rectangle(6.0, 0.5));
             cmd.insert(CollisionLayers::new(
                 [LayerNames::FallThrough],
                 [LayerNames::FallThrough],
@@ -133,10 +133,10 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                 filters: Group::GROUP_1,
             },
         ),
-        #[cfg(feature = "xpbd2d")]
+        #[cfg(feature = "avian2d")]
         (
-            xpbd::RigidBody::Static,
-            xpbd::Collider::circle(1.0),
+            avian::RigidBody::Static,
+            avian::Collider::circle(1.0),
             CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
         ),
     ));
@@ -193,11 +193,11 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
         TransformBundle::from_transform(Transform::from_xyz(20.0, 2.0, 0.0)),
         #[cfg(feature = "rapier2d")]
         (rapier::Collider::ball(1.0), rapier::Sensor),
-        #[cfg(feature = "xpbd2d")]
+        #[cfg(feature = "avian2d")]
         (
-            xpbd::RigidBody::Static,
-            xpbd::Collider::circle(1.0),
-            xpbd::Sensor,
+            avian::RigidBody::Static,
+            avian::Collider::circle(1.0),
+            avian::Sensor,
         ),
     ));
     commands.spawn((
@@ -235,10 +235,10 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
             cmd.insert(Velocity::default());
             cmd.insert(rapier::RigidBody::KinematicVelocityBased);
         }
-        #[cfg(feature = "xpbd2d")]
+        #[cfg(feature = "avian2d")]
         {
-            cmd.insert(xpbd::Collider::rectangle(4.0, 1.0));
-            cmd.insert(xpbd::RigidBody::Kinematic);
+            cmd.insert(avian::Collider::rectangle(4.0, 1.0));
+            cmd.insert(avian::RigidBody::Kinematic);
         }
         cmd.insert(MovingPlatform::new(
             4.0,

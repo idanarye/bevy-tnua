@@ -1,11 +1,11 @@
 use bevy::{color::palettes::css, prelude::*};
 
-use bevy_xpbd_3d::prelude::*;
+use avian3d::prelude::*;
 
 use bevy_tnua::prelude::*;
-use bevy_tnua_xpbd3d::*;
+use bevy_tnua_avian3d::*;
 
-#[cfg(all(feature = "bevy_xpbd_2d/parry-f32", feature = "f64"))]
+#[cfg(all(feature = "avian2d/parry-f32", feature = "f64"))]
 compile_error!(
     "Default Feature (f32) and f64 are mutually exclusive and cannot be enabled together"
 );
@@ -18,7 +18,7 @@ fn main() {
             // We need both Tnua's main controller plugin, and the plugin to connect to the physics
             // backend (in this case XBPD-3D)
             TnuaControllerPlugin::default(),
-            TnuaXpbd3dPlugin::default(),
+            TnuaAvian3dPlugin::default(),
         ))
         .add_systems(
             Startup,
@@ -53,7 +53,7 @@ fn setup_camera_and_lights(mut commands: Commands) {
     });
 }
 
-// No Tnua-related setup here - this is just normal Bevy (and XPBD) stuff.
+// No Tnua-related setup here - this is just normal Bevy (and Avian) stuff.
 fn setup_level(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -67,7 +67,7 @@ fn setup_level(
             ..Default::default()
         },
         RigidBody::Static,
-        Collider::halfspace(Vec3::Y),
+        Collider::half_space(Vec3::Y),
     ));
 
     // Spawn a little platform for the player to jump on.
@@ -101,16 +101,16 @@ fn setup_player(
         // The player character needs to be configured as a dynamic rigid body of the physics
         // engine.
         RigidBody::Dynamic,
-        Collider::capsule(1.0, 0.5),
+        Collider::capsule(0.5, 1.0),
         // This bundle holds the main components.
         TnuaControllerBundle::default(),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
-        TnuaXpbd3dSensorShape(Collider::cylinder(0.0, 0.49)),
+        TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
         // Tnua can fix the rotation, but the character will still get rotated before it can do so.
         // By locking the rotation we can prevent this.
         LockedAxes::ROTATION_LOCKED,
     ));
-    // NOTE: if this was Rapier, we'd also need `TnuaRapier3dIOBundle`. XPBD does not need it.
+    // NOTE: if this was Rapier, we'd also need `TnuaRapier3dIOBundle`. Avian does not need it.
 }
 
 fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut TnuaController>) {

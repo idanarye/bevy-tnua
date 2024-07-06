@@ -7,21 +7,22 @@
 
 Tnua ("motion" in Hebrew) is a floating character controller, which means that instead of constantly touching the ground the character floats above it, which makes many aspects of the motion control simpler.
 
-Tnua can use [Rapier](https://rapier.rs/) or [XPBD](https://github.com/Jondolf/bevy_xpbd), and supports both the 2D and 3D versions of both with integration crates:
+Tnua can use [Rapier](https://rapier.rs/) or [Avian](https://github.com/Jondolf/avian) (formerly XPBD), and supports both the 2D and 3D versions of both with integration crates:
 * For Rapier 2D, add the [bevy-tnua-rapier2d](https://crates.io/crates/bevy-tnua-rapier2d) crate.
 * For Rapier 3D, add the [bevy-tnua-rapier3d](https://crates.io/crates/bevy-tnua-rapier3d) crate.
-* For XPBD 2D, add the [bevy-tnua-xpbd2d](https://crates.io/crates/bevy-tnua-xpbd2d) crate.
-* For XPBD 3D, add the [bevy-tnua-xpbd3d](https://crates.io/crates/bevy-tnua-xpbd3d) crate.
+* For Avian 2D, add the [bevy-tnua-avian2d](https://crates.io/crates/bevy-tnua-avian2d) crate.
+* For Avian 3D, add the [bevy-tnua-avian3d](https://crates.io/crates/bevy-tnua-avian3d) crate.
+* XPBD is still supported with [bevy-tnua-xpbd2d](https://crates.io/crates/bevy-tnua-xpbd2d) and [bevy-tnua-xpbd3d](https://crates.io/crates/bevy-tnua-xpbd3d), but users are encouraged to migrate to Avian
 * Third party integration crates. Such crates should depend on [bevy-tnua-physics-integration-layer](https://crates.io/crates/bevy-tnua-physics-integration-layer) and not the main bevy-tnua crate.
 
 Note that:
 
 * **Both** integration crate (`bevy-tnua-<physics-backend>`) and the main `bevy-tnua` crate are required, and that the main plugin from both crates should be added.
-* If you use a physics backend with double precision (like XPBD with the `f64` flag), you need to add the `f64` flag to all the Tnua crates. This applies to double precision data that gets defined by the physics backend - Bevy itself will still use single precision, and this is the precision the position and rotation will use.
+* If you use a physics backend with double precision (like Avian with the `f64` flag), you need to add the `f64` flag to all the Tnua crates. This applies to double precision data that gets defined by the physics backend - Bevy itself will still use single precision, and this is the precision the position and rotation will use.
 
 ## Features
 
-* Supports both 2D and 3D versions of [Rapier](https://rapier.rs/) and [XPBD](https://github.com/Jondolf/bevy_xpbd)
+* Supports both 2D and 3D versions of [Rapier](https://rapier.rs/) and [Avian](https://github.com/Jondolf/avian)
 * Running
 * Jumping
 * Crouching
@@ -40,16 +41,16 @@ Note that:
 
 * 2D Platformer:
   [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-rapier),
-  [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd),
-  [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-xpbd-64)
+  [Avian](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-avian),
+  [Avian (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_2d-avian-64)
 * 3D Platformer:
   [Rapier](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-rapier),
-  [XPBD](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd),
-  [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-xpbd-64)
+  [Avian](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-avian),
+  [Avian (f64 version)](https://idanarye.github.io/bevy-tnua/demos/platformer_3d-avian-64)
 * 3D Shooter:
   [Rapier](https://idanarye.github.io/bevy-tnua/demos/shooter_like-rapier),
-  [XPBD](https://idanarye.github.io/bevy-tnua/demos/shooter_like-xpbd),
-  [XPBD (f64 version)](https://idanarye.github.io/bevy-tnua/demos/shooter_like-xpbd-64)
+  [Avian](https://idanarye.github.io/bevy-tnua/demos/shooter_like-avian),
+  [Avian (f64 version)](https://idanarye.github.io/bevy-tnua/demos/shooter_like-avian-64)
 
 The basis and actions in the demos can be tweaked with a GUI. They are initialized to the `Default::default()` provided in Tnua, with the following exceptions:
 
@@ -66,10 +67,10 @@ The basis and actions in the demos can be tweaked with a GUI. They are initializ
 $ cargo run --bin <demo-name> --features <physics-backend>
 ```
 
-Where `<demo-name>` is the name of the demo and `<physics-backend>` is either `rapier2d`, `rapier3d`, `xpbd2d` or `xpbd3d`. Make sure to match the dimensionality of the backend (2D or 3D) to that of the demo. For example, to run the 3D platformer with XPBD, use this:
+Where `<demo-name>` is the name of the demo and `<physics-backend>` is either `rapier2d`, `rapier3d`, `avian2d` or `avian3d`. Make sure to match the dimensionality of the backend (2D or 3D) to that of the demo. For example, to run the 3D platformer with Avian, use this:
 
 ```sh
-$ cargo run --bin platformer_3d --features xpbd3d
+$ cargo run --bin platformer_3d --features avian3d
 ```
 
 ### Interesting Parts of the Demo Code
@@ -101,7 +102,15 @@ Tnua is broken into different crates that update separately, so this is broken i
 | 0.12 | 0.1                                 | 0.2              | 0.24        |
 | 0.12 | 0.1                                 | 0.1              | 0.23        |
 
+### Avian integration
+
+| bevy | bevy-tnua-physics-integration-layer | bevy-tnua-avian | avian |
+|------|-------------------------------------|-----------------|-------|
+| 0.14 | 0.4                                 | 0.1             | 0.1   |
+
 ### XPBD integration
+
+Will not receive any more updates since the bevy_xpbd project has been rebranded as "Avian".
 
 | bevy | bevy-tnua-physics-integration-layer | bevy-tnua-xpbd | bevy_xpbd |
 |------|-------------------------------------|----------------|-----------|

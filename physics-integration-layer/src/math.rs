@@ -26,7 +26,7 @@ pub type Quaternion = DQuat;
 #[cfg(not(feature = "f64"))]
 pub type Quaternion = Quat;
 
-// Taken from `bevy_xpbd` https://github.com/Jondolf/bevy_xpbd/blob/main/src/math/double.rs#L39
+// Taken from `avian` https://github.com/Jondolf/avian/blob/main/src/math/double.rs#L39
 /// Adjust the precision of the math construct to the precision chosen for compilation.
 pub trait AdjustPrecision {
     /// A math construct type with the desired precision.

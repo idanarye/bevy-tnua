@@ -9,8 +9,8 @@ exclude = [
 
 [features]
 default = [
-    "bevy_xpbd_3d?/parry-f32",
-    "bevy_xpbd_2d?/parry-f32",
+    "avian3d?/parry-f32",
+    "avian2d?/parry-f32",
     # Comment these out when Bevy gets upgraded and a dependency lags behind
     "egui",
 ]
@@ -19,11 +19,16 @@ framepace = ["dep:bevy_framepace"] # Not a default feature
 # rapier = []
 # rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
 # rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
-f64 = ["bevy_xpbd_3d?/parry-f64", "bevy_xpbd_2d?/parry-f64", "bevy-tnua-physics-integration-layer/f64", "bevy-tnua/f64"]
+f64 = [
+    "avian3d?/parry-f64",
+    "avian2d?/parry-f64",
+    "bevy-tnua-physics-integration-layer/f64",
+    "bevy-tnua/f64",
+]
 
-xpbd = []
-xpbd2d = ["xpbd", "dep:bevy_xpbd_2d", "dep:bevy-tnua-xpbd2d"]
-xpbd3d = ["xpbd", "dep:bevy_xpbd_3d", "dep:bevy-tnua-xpbd3d"]
+avian = []
+avian2d = ["avian", "dep:avian2d", "dep:bevy-tnua-avian2d"]
+avian3d = ["avian", "dep:avian3d", "dep:bevy-tnua-avian3d"]
 
 [dependencies]
 bevy = { version = "^0.14", default-features = false, features = [
@@ -54,11 +59,11 @@ bevy-tnua-physics-integration-layer = { path = "../physics-integration-layer" }
 # bevy_rapier3d = { version = "^0.26", features = ["debug-render-3d"], optional = true }
 # bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
-bevy_xpbd_2d = {version = "^0.5", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
-bevy-tnua-xpbd2d = { path = "../xpbd2d", default-features = false, optional = true }
+avian2d = {version = "^0.1", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
+bevy-tnua-avian2d = { path = "../avian2d", default-features = false, optional = true }
 
-bevy_xpbd_3d = {version = "^0.5", default-features = false, features = ["3d","debug-plugin", "parallel", "async-collider"], optional = true }
-bevy-tnua-xpbd3d = { path = "../xpbd3d", default-features = false, optional = true }
+avian3d = {version = "^0.1", default-features = false, features = ["3d","debug-plugin", "parallel"], optional = true }
+bevy-tnua-avian3d = { path = "../avian3d", default-features = false, optional = true }
 
 bevy_egui = { version = "0.28", optional = true, default-features = false, features = ["default_fonts", "render"] }
 egui_plot = { version = "0.28", optional = true }

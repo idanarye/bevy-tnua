@@ -23,20 +23,20 @@ impl Plugin for MovingPlatformPlugin {
                 },
             ),
         );
-        #[cfg(feature = "xpbd2d")]
+        #[cfg(feature = "avian2d")]
         app.add_systems(
             Update,
             MovingPlatform::make_system(
-                |velocity: &mut bevy_xpbd_2d::prelude::LinearVelocity, linvel: Vector3| {
+                |velocity: &mut avian2d::prelude::LinearVelocity, linvel: Vector3| {
                     velocity.0 = linvel.truncate();
                 },
             ),
         );
-        #[cfg(feature = "xpbd3d")]
+        #[cfg(feature = "avian3d")]
         app.add_systems(
             Update,
             MovingPlatform::make_system(
-                |velocity: &mut bevy_xpbd_3d::prelude::LinearVelocity, linvel: Vector3| {
+                |velocity: &mut avian3d::prelude::LinearVelocity, linvel: Vector3| {
                     velocity.0 = linvel;
                 },
             ),

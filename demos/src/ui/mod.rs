@@ -74,20 +74,20 @@ impl<C: Component + UiTunable> Plugin for DemoUi<C> {
                     velocity.linvel
                 }),
             );
-            #[cfg(feature = "xpbd2d")]
+            #[cfg(feature = "avian2d")]
             app.add_systems(
                 Update,
                 make_update_plot_data_system(
-                    |velocity: &bevy_xpbd_2d::components::LinearVelocity| {
+                    |velocity: &avian2d::dynamics::rigid_body::LinearVelocity| {
                         (**velocity).f32().extend(0.0)
                     },
                 ),
             );
-            #[cfg(feature = "xpbd3d")]
+            #[cfg(feature = "avian3d")]
             app.add_systems(
                 Update,
                 make_update_plot_data_system(
-                    |velocity: &bevy_xpbd_3d::components::LinearVelocity| (**velocity).f32(),
+                    |velocity: &avian3d::dynamics::rigid_body::LinearVelocity| (**velocity).f32(),
                 ),
             );
         }
@@ -288,11 +288,11 @@ fn update_physics_active_from_ui(
     #[cfg(feature = "rapier3d")] mut config_rapier3d: Option<
         ResMut<bevy_rapier3d::plugin::RapierConfiguration>,
     >,
-    #[cfg(feature = "xpbd2d")] mut physics_time_xpbd2d: Option<
-        ResMut<Time<bevy_xpbd_2d::plugins::setup::Physics>>,
+    #[cfg(feature = "avian2d")] mut physics_time_avian2d: Option<
+        ResMut<Time<avian2d::schedule::Physics>>,
     >,
-    #[cfg(feature = "xpbd3d")] mut physics_time_xpbd3d: Option<
-        ResMut<Time<bevy_xpbd_3d::plugins::setup::Physics>>,
+    #[cfg(feature = "avian3d")] mut physics_time_avian3d: Option<
+        ResMut<Time<avian3d::schedule::Physics>>,
     >,
 ) {
     #[cfg(feature = "rapier2d")]
@@ -303,18 +303,18 @@ fn update_physics_active_from_ui(
     if let Some(config) = config_rapier3d.as_mut() {
         config.physics_pipeline_active = setting_from_ui.0;
     }
-    #[cfg(feature = "xpbd2d")]
-    if let Some(physics_time) = physics_time_xpbd2d.as_mut() {
-        use bevy_xpbd_2d::plugins::setup::PhysicsTime;
+    #[cfg(feature = "avian2d")]
+    if let Some(physics_time) = physics_time_avian2d.as_mut() {
+        use avian2d::schedule::PhysicsTime;
         if setting_from_ui.0 {
             physics_time.unpause();
         } else {
             physics_time.pause();
         }
     }
-    #[cfg(feature = "xpbd3d")]
-    if let Some(physics_time) = physics_time_xpbd3d.as_mut() {
-        use bevy_xpbd_3d::plugins::setup::PhysicsTime;
+    #[cfg(feature = "avian3d")]
+    if let Some(physics_time) = physics_time_avian3d.as_mut() {
+        use avian3d::schedule::PhysicsTime;
         if setting_from_ui.0 {
             physics_time.unpause();
         } else {

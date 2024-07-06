@@ -13,10 +13,10 @@ use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "rapier2d")]
 use bevy_tnua_rapier2d::*;
-#[cfg(feature = "xpbd2d")]
-use bevy_tnua_xpbd2d::*;
-#[cfg(feature = "xpbd2d")]
-use bevy_xpbd_2d::{prelude as xpbd, prelude::*, PhysicsSchedule};
+#[cfg(feature = "avian2d")]
+use bevy_tnua_avian2d::*;
+#[cfg(feature = "avian2d")]
+use avian2d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
@@ -24,7 +24,7 @@ use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
-#[cfg(feature = "xpbd2d")]
+#[cfg(feature = "avian2d")]
 use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
 use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
 use tnua_demos_crate::levels_setup::IsPlayer;
@@ -58,30 +58,30 @@ fn main() {
                 // bevy-tnua-rapier2d.
                 app.add_plugins(TnuaRapier2dPlugin::new(FixedUpdate));
             }
-            #[cfg(feature = "xpbd")]
+            #[cfg(feature = "avian")]
             ScheduleToUse::PhysicsSchedule => {
-                panic!("Cannot happen - XPBD and Rapier used together");
+                panic!("Cannot happen - Avian and Rapier used together");
             }
         }
     }
-    #[cfg(feature = "xpbd2d")]
+    #[cfg(feature = "avian2d")]
     {
         app.add_plugins(PhysicsDebugPlugin::default());
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => {
                 app.add_plugins(PhysicsPlugins::default());
-                // To use Tnua with bevy_xpbd_2d, you need the `TnuaXpbd2dPlugin` plugin from
-                // bevy-tnua-xpbd2d.
-                app.add_plugins(TnuaXpbd2dPlugin::default());
+                // To use Tnua with avian2d, you need the `TnuaAvian2dPlugin` plugin from
+                // bevy-tnua-avian2d.
+                app.add_plugins(TnuaAvian2dPlugin::default());
             }
             ScheduleToUse::FixedUpdate => {
                 app.add_plugins(PhysicsPlugins::new(FixedUpdate));
-                app.add_plugins(TnuaXpbd2dPlugin::new(FixedUpdate));
+                app.add_plugins(TnuaAvian2dPlugin::new(FixedUpdate));
             }
             ScheduleToUse::PhysicsSchedule => {
                 app.add_plugins(PhysicsPlugins::default());
                 app.insert_resource(Time::new_with(Physics::fixed_hz(144.0)));
-                app.add_plugins(TnuaXpbd2dPlugin::new(PhysicsSchedule));
+                app.add_plugins(TnuaAvian2dPlugin::new(PhysicsSchedule));
             }
         }
     }
@@ -99,7 +99,7 @@ fn main() {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
         }
-        #[cfg(feature = "xpbd")]
+        #[cfg(any(feature = "avian", feature = "avian"))]
         ScheduleToUse::PhysicsSchedule => {
             app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
@@ -126,7 +126,7 @@ fn main() {
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
-            #[cfg(feature = "xpbd")]
+            #[cfg(feature = "avian")]
             ScheduleToUse::PhysicsSchedule => PhysicsSchedule.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
@@ -170,11 +170,11 @@ fn setup_player(mut commands: Commands) {
         // it needs to interact with Rapier.
         cmd.insert(TnuaRapier2dIOBundle::default());
     }
-    #[cfg(feature = "xpbd2d")]
+    #[cfg(feature = "avian2d")]
     {
-        cmd.insert(xpbd::RigidBody::Dynamic);
-        cmd.insert(xpbd::Collider::capsule(1.0, 0.5));
-        // XPBD does not need an "IO" bundle.
+        cmd.insert(avian::RigidBody::Dynamic);
+        cmd.insert(avian::Collider::capsule(0.5, 1.0));
+        // Avian does not need an "IO" bundle.
     }
 
     // This bundle container `TnuaController` - the main interface of Tnua with the user code - as
@@ -225,38 +225,38 @@ fn setup_player(mut commands: Commands) {
                     ("Point", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.remove::<TnuaRapier2dSensorShape>();
-                        #[cfg(feature = "xpbd2d")]
-                        cmd.remove::<TnuaXpbd2dSensorShape>();
+                        #[cfg(feature = "avian2d")]
+                        cmd.remove::<TnuaAvian2dSensorShape>();
                     }),
                     ("Flat (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.49, 0.0)));
-                        #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::rectangle(0.99, 0.0)));
+                        #[cfg(feature = "avian2d")]
+                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(0.99, 0.0)));
                     }),
                     ("Flat (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
-                        #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::rectangle(1.0, 0.0)));
+                        #[cfg(feature = "avian2d")]
+                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.0, 0.0)));
                     }),
                     ("flat (overfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.51, 0.0)));
-                        #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::rectangle(1.01, 0.0)));
+                        #[cfg(feature = "avian2d")]
+                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.01, 0.0)));
                     }),
                     ("Ball (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.49)));
-                        #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::circle(0.49)));
+                        #[cfg(feature = "avian2d")]
+                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::circle(0.49)));
                     }),
                     ("Ball (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.5)));
-                        #[cfg(feature = "xpbd2d")]
-                        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::circle(0.5)));
+                        #[cfg(feature = "avian2d")]
+                        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::circle(0.5)));
                     }),
                 ],
             )
@@ -267,13 +267,13 @@ fn setup_player(mut commands: Commands) {
                 if lock_tilt {
                     #[cfg(feature = "rapier2d")]
                     cmd.insert(rapier::LockedAxes::ROTATION_LOCKED);
-                    #[cfg(feature = "xpbd2d")]
-                    cmd.insert(xpbd::LockedAxes::new().lock_rotation());
+                    #[cfg(feature = "avian2d")]
+                    cmd.insert(avian::LockedAxes::new().lock_rotation());
                 } else {
                     #[cfg(feature = "rapier2d")]
                     cmd.insert(rapier::LockedAxes::empty());
-                    #[cfg(feature = "xpbd2d")]
-                    cmd.insert(xpbd::LockedAxes::new());
+                    #[cfg(feature = "avian2d")]
+                    cmd.insert(avian::LockedAxes::new());
                 }
             })
             .with_checkbox(
@@ -292,7 +292,7 @@ fn setup_player(mut commands: Commands) {
                             filters: Group::ALL,
                         });
                     }
-                    #[cfg(feature = "xpbd2d")]
+                    #[cfg(feature = "avian2d")]
                     {
                         let player_layers: LayerMask = if use_collision_groups {
                             [LayerNames::Player].into()
@@ -332,8 +332,8 @@ fn setup_player(mut commands: Commands) {
         // it'd do a raycast.
         #[cfg(feature = "rapier2d")]
         cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
-        #[cfg(feature = "xpbd2d")]
-        cmd.insert(TnuaXpbd2dSensorShape(xpbd::Collider::rectangle(1.0, 0.0)));
+        #[cfg(feature = "avian2d")]
+        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.0, 0.0)));
     }));
 
     // The ghost sensor is used for detecting ghost platforms - platforms configured in the physics

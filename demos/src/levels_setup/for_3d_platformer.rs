@@ -5,14 +5,14 @@ use bevy_rapier3d::{prelude as rapier, prelude::*};
 #[allow(unused_imports)]
 use bevy_tnua::math::{AdjustPrecision, Vector3};
 use bevy_tnua::TnuaGhostPlatform;
-#[cfg(feature = "xpbd3d")]
-use bevy_xpbd_3d::{prelude as xpbd, prelude::*};
+#[cfg(feature = "avian3d")]
+use avian3d::{prelude as avian, prelude::*};
 
 use crate::MovingPlatform;
 
 use super::{LevelObject, PositionPlayer};
 
-#[cfg(feature = "xpbd3d")]
+#[cfg(feature = "avian3d")]
 #[derive(PhysicsLayer)]
 pub enum LayerNames {
     Player,
@@ -36,10 +36,10 @@ pub fn setup_level(
     });
     #[cfg(feature = "rapier3d")]
     cmd.insert(rapier::Collider::halfspace(Vec3::Y).unwrap());
-    #[cfg(feature = "xpbd3d")]
+    #[cfg(feature = "avian3d")]
     {
-        cmd.insert(xpbd::RigidBody::Static);
-        cmd.insert(xpbd::Collider::halfspace(Vector3::Y));
+        cmd.insert(avian::RigidBody::Static);
+        cmd.insert(avian::Collider::half_space(Vector3::Y));
     }
 
     let obstacles_material = materials.add(Color::from(css::GRAY));
@@ -83,10 +83,10 @@ pub fn setup_level(
             0.5 * height,
             0.5 * depth,
         ));
-        #[cfg(feature = "xpbd3d")]
+        #[cfg(feature = "avian3d")]
         {
-            cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(
+            cmd.insert(avian::RigidBody::Static);
+            cmd.insert(avian::Collider::cuboid(
                 width.adjust_precision(),
                 height.adjust_precision(),
                 depth.adjust_precision(),
@@ -112,10 +112,10 @@ pub fn setup_level(
                 filters: Group::empty(),
             });
         }
-        #[cfg(feature = "xpbd3d")]
+        #[cfg(feature = "avian3d")]
         {
-            cmd.insert(xpbd::RigidBody::Static);
-            cmd.insert(xpbd::Collider::cuboid(6.0, 0.5, 2.0));
+            cmd.insert(avian::RigidBody::Static);
+            cmd.insert(avian::Collider::cuboid(6.0, 0.5, 2.0));
             cmd.insert(CollisionLayers::new(
                 [LayerNames::FallThrough],
                 [LayerNames::FallThrough],
@@ -140,10 +140,10 @@ pub fn setup_level(
                 filters: Group::GROUP_1,
             },
         ),
-        #[cfg(feature = "xpbd3d")]
+        #[cfg(feature = "avian3d")]
         (
-            xpbd::RigidBody::Static,
-            xpbd::Collider::cuboid(4.0, 2.0, 4.0),
+            avian::RigidBody::Static,
+            avian::Collider::cuboid(4.0, 2.0, 4.0),
             CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
         ),
     ));
@@ -174,11 +174,11 @@ pub fn setup_level(
         },
         #[cfg(feature = "rapier3d")]
         (rapier::Collider::cuboid(2.0, 1.0, 2.0), rapier::Sensor),
-        #[cfg(feature = "xpbd3d")]
+        #[cfg(feature = "avian3d")]
         (
-            xpbd::RigidBody::Static,
-            xpbd::Collider::cuboid(4.0, 2.0, 4.0),
-            xpbd::Sensor,
+            avian::RigidBody::Static,
+            avian::Collider::cuboid(4.0, 2.0, 4.0),
+            avian::Sensor,
         ),
     ));
 
@@ -197,10 +197,10 @@ pub fn setup_level(
             cmd.insert(Velocity::default());
             cmd.insert(rapier::RigidBody::KinematicVelocityBased);
         }
-        #[cfg(feature = "xpbd3d")]
+        #[cfg(feature = "avian3d")]
         {
-            cmd.insert(xpbd::Collider::cuboid(4.0, 1.0, 4.0));
-            cmd.insert(xpbd::RigidBody::Kinematic);
+            cmd.insert(avian::Collider::cuboid(4.0, 1.0, 4.0));
+            cmd.insert(avian::RigidBody::Kinematic);
         }
         cmd.insert(MovingPlatform::new(
             4.0,
@@ -234,11 +234,11 @@ pub fn setup_level(
             cmd.insert(Velocity::angular(Vec3::Y));
             cmd.insert(rapier::RigidBody::KinematicVelocityBased);
         }
-        #[cfg(feature = "xpbd3d")]
+        #[cfg(feature = "avian3d")]
         {
-            cmd.insert(xpbd::Collider::cylinder(1.0, 3.0));
+            cmd.insert(avian::Collider::cylinder(3.0, 1.0));
             cmd.insert(AngularVelocity(Vector3::Y));
-            cmd.insert(xpbd::RigidBody::Kinematic);
+            cmd.insert(avian::RigidBody::Kinematic);
         }
     }
 }
