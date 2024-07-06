@@ -18,6 +18,7 @@ bevy-tnua-physics-integration-layer = { version = "^0.4", path = "../physics-int
 
 [package.metadata.docs.rs]
 all-features = true
+features = ["bevy/bevy_asset"]
 
 [features]
 default = [  "avian3d/parry-f32" ]
