@@ -220,7 +220,7 @@ jobs:
           EOF
               done
           }
-          # build_for_backend rapier
+          build_for_backend rapier
           build_for_backend avian
           # build_for_backend avian 64 --no-default-features --features f64 --features egui 
           cp -R demos/assets/ target/doc/demos/
