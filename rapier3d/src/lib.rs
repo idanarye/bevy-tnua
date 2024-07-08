@@ -263,8 +263,7 @@ fn update_proximity_sensors_system(
                             entity,
                             proximity: hit.time_of_impact,
                             intersection_point: hit.point,
-                            normal: Dir3::new(hit.normal)
-                                .unwrap_or_else(|_| -cast_direction),
+                            normal: Dir3::new(hit.normal).unwrap_or_else(|_| -cast_direction),
                         })
                 }
             };
