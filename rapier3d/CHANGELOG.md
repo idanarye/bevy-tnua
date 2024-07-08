@@ -8,6 +8,10 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 
 ## [Unreleased]
 
+## 0.4.0 - 2024-07-08
+### Changed
+- Upgrade to Bevy 0.14 and bevy_rapier 0.27.
+
 ## 0.6.0 - 2024-05-07
 ### Changed
 - Upgrade to bevy_rapier 0.26.
