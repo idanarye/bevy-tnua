@@ -29,6 +29,7 @@ use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     ForwardFromCamera,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
+use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian3d")]
 use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
 use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
@@ -39,7 +40,6 @@ use tnua_demos_crate::ui::info::InfoSource;
 use tnua_demos_crate::ui::plotting::PlotSource;
 use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
 use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
-use tnua_demos_crate::MovingPlatformPlugin;
 
 fn main() {
     let mut app = App::new();
@@ -144,7 +144,7 @@ fn main() {
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
-    app.add_plugins(MovingPlatformPlugin);
+    app.add_plugins(LevelMechanicsPlugin);
     app.run();
 }
 

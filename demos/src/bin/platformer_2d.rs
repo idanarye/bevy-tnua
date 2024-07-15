@@ -24,6 +24,7 @@ use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
+use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian2d")]
 use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
 use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
@@ -33,7 +34,6 @@ use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
 use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
-use tnua_demos_crate::MovingPlatformPlugin;
 
 fn main() {
     let mut app = App::new();
@@ -131,7 +131,7 @@ fn main() {
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
-    app.add_plugins(MovingPlatformPlugin);
+    app.add_plugins(LevelMechanicsPlugin);
     #[cfg(feature = "rapier2d")]
     {
         app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {

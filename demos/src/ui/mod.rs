@@ -205,7 +205,7 @@ fn ui_system<C: Component + UiTunable>(
 
             let thing_to_show_id = ui.make_persistent_id((TypeId::of::<ThingToShow>(), entity));
             let is_open = collapse_state.is_open();
-            let mut thing_to_show = ui.memory_mut(|mem| mem.data.get_temp_mut_or_default::<ThingToShow>(thing_to_show_id).clone());
+            let mut thing_to_show = ui.memory_mut(|mem| *mem.data.get_temp_mut_or_default::<ThingToShow>(thing_to_show_id));
             let mut set_open = None;
 
             let mut collapse_state = collapse_state.show_header(ui, |ui| {

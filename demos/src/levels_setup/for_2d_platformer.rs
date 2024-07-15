@@ -8,7 +8,7 @@ use bevy_rapier2d::{prelude as rapier, prelude::*};
 use bevy_tnua::math::{AdjustPrecision, Vector2, Vector3};
 use bevy_tnua::TnuaGhostPlatform;
 
-use crate::MovingPlatform;
+use crate::level_mechanics::MovingPlatform;
 
 use super::{LevelObject, PositionPlayer};
 
