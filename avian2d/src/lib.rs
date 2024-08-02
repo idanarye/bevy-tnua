@@ -46,7 +46,7 @@ impl Plugin for TnuaAvian2dPlugin {
             self.schedule,
             TnuaSystemSet
                 .before(PhysicsSet::Prepare)
-                .before(PhysicsStepSet::BroadPhase)
+                .before(PhysicsStepSet::First)
                 .run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
         );
         app.add_systems(
