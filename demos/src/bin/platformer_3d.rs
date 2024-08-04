@@ -43,6 +43,8 @@ use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
 use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
 
 fn main() {
+    tnua_demos_crate::verify_physics_backends_features!("rapier3d", "avian3d");
+
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
 

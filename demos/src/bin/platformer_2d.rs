@@ -36,6 +36,8 @@ use tnua_demos_crate::ui::plotting::PlotSource;
 use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
 
 fn main() {
+    tnua_demos_crate::verify_physics_backends_features!("rapier2d", "avian2d");
+
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
 
