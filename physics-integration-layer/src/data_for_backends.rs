@@ -161,6 +161,10 @@ impl TnuaVelChange {
         self.acceleration = self.acceleration.reject_from(axis);
         self.boost = self.boost.reject_from(axis);
     }
+
+    pub fn calc_boost(&self, frame_duration: Float) -> Vector3 {
+        self.acceleration * frame_duration + self.boost
+    }
 }
 
 impl Default for TnuaVelChange {

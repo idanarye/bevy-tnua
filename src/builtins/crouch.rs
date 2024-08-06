@@ -113,47 +113,48 @@ impl TnuaAction for TnuaBuiltinCrouch {
             }
         }
 
-        let spring_force_boost = |spring_offset: Float| -> Float {
-            walk_basis.spring_force_boost(walk_state, &ctx.as_basis_context(), spring_offset)
+        let spring_force = |spring_offset: Float| -> TnuaVelChange {
+            walk_basis.spring_force(walk_state, &ctx.as_basis_context(), spring_offset)
         };
 
-        let impulse_or_spring_force_boost = |spring_offset: Float| -> Float {
-            let spring_force_boost = spring_force_boost(spring_offset);
+        let impulse_or_spring_force = |spring_offset: Float| -> TnuaVelChange {
+            let spring_force = spring_force(spring_offset);
+            let spring_force_boost = spring_force.calc_boost(ctx.frame_duration);
             let impulse_boost = self.impulse_boost(spring_offset);
-            if spring_force_boost.abs() < impulse_boost.abs() {
-                impulse_boost
+            if spring_force_boost.length_squared() < impulse_boost.powi(2) {
+            TnuaVelChange::boost(
+                impulse_boost * ctx.up_direction().adjust_precision()
+            )
             } else {
-                spring_force_boost
+                spring_force
             }
         };
 
-        let mut set_impulse = |impulse: Float| {
+        let mut set_vel_change = |vel_change: TnuaVelChange| {
             motor
                 .lin
                 .cancel_on_axis(ctx.up_direction().adjust_precision());
-            motor.lin += TnuaVelChange::boost(
-                impulse.adjust_precision() * ctx.up_direction().adjust_precision(),
-            );
+            motor.lin += vel_change;
         };
 
         match state {
             TnuaBuiltinCrouchState::Sinking => {
                 if spring_offset_down < -0.01 {
-                    set_impulse(impulse_or_spring_force_boost(spring_offset_down));
+                    set_vel_change(impulse_or_spring_force(spring_offset_down));
                 } else {
                     *state = TnuaBuiltinCrouchState::Maintaining;
-                    set_impulse(spring_force_boost(spring_offset_down));
+                    set_vel_change(spring_force(spring_offset_down));
                 }
                 lifecycle_status.directive_simple()
             }
             TnuaBuiltinCrouchState::Maintaining => {
-                set_impulse(spring_force_boost(spring_offset_down));
+                set_vel_change(spring_force(spring_offset_down));
                 // If it's finished/cancelled, something else should changed its state
                 TnuaActionLifecycleDirective::StillActive
             }
             TnuaBuiltinCrouchState::Rising => {
                 if 0.01 < spring_offset_up {
-                    set_impulse(impulse_or_spring_force_boost(spring_offset_up));
+                    set_vel_change(impulse_or_spring_force(spring_offset_up));
 
                     if matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto) {
                         // Don't finish the rise - just do the other action

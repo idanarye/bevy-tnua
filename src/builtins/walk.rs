@@ -341,10 +341,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                                 self.float_height - sensor_output.proximity.adjust_precision();
                             state.standing_offset =
                                 -spring_offset * ctx.up_direction().adjust_precision();
-                            let boost = self.spring_force_boost(state, &ctx, spring_offset);
-                            break 'upward_impulse TnuaVelChange::boost(
-                                boost * ctx.up_direction().adjust_precision(),
-                            );
+                            break 'upward_impulse self.spring_force(state, &ctx, spring_offset);
                         } else {
                             state.airborne_timer = Some(Timer::from_seconds(
                                 self.coyote_time as f32,
@@ -471,22 +468,18 @@ impl TnuaBasis for TnuaBuiltinWalk {
 }
 
 impl TnuaBuiltinWalk {
-    // TODO: maybe this needs to be an acceleration rather than an
-    // impulse? The problem is the comparison between `spring_impulse`
-    // and `offset_change_impulse`...
-
     /// Calculate the vertical spring force that this basis would need to apply assuming its
     /// vertical distance from the vertical distance it needs to be at equals the `spring_offset`
     /// argument.
     ///
     /// Note: this is exposed so that actions like
     /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) may rely on it.
-    pub fn spring_force_boost(
+    pub fn spring_force(
         &self,
         state: &TnuaBuiltinWalkState,
         ctx: &TnuaBasisContext,
         spring_offset: Float,
-    ) -> Float {
+    ) -> TnuaVelChange {
         let spring_force: Float = spring_offset * self.spring_strengh;
 
         let relative_velocity = state
@@ -494,15 +487,16 @@ impl TnuaBuiltinWalk {
             .dot(ctx.up_direction().adjust_precision())
             - state.vertical_velocity;
 
-        let dampening_force = relative_velocity * self.spring_dampening / ctx.frame_duration;
-        let spring_force = spring_force - dampening_force;
-
         let gravity_compensation = -ctx
             .tracker
-            .gravity
-            .dot(ctx.up_direction().adjust_precision());
+            .gravity;
 
-        ctx.frame_duration * (spring_force + gravity_compensation)
+        let dampening_boost = relative_velocity * self.spring_dampening;
+
+        TnuaVelChange {
+            acceleration: ctx.up_direction() * spring_force + gravity_compensation,
+            boost: ctx.up_direction() * -dampening_boost,
+        }
     }
 }
 
