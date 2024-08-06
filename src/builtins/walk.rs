@@ -487,15 +487,14 @@ impl TnuaBuiltinWalk {
             .dot(ctx.up_direction().adjust_precision())
             - state.vertical_velocity;
 
-        let gravity_compensation = -ctx
-            .tracker
-            .gravity;
+        let gravity_compensation = -ctx.tracker.gravity;
 
         let dampening_boost = relative_velocity * self.spring_dampening;
 
         TnuaVelChange {
-            acceleration: ctx.up_direction() * spring_force + gravity_compensation,
-            boost: ctx.up_direction() * -dampening_boost,
+            acceleration: ctx.up_direction().adjust_precision() * spring_force
+                + gravity_compensation,
+            boost: ctx.up_direction().adjust_precision() * -dampening_boost,
         }
     }
 }

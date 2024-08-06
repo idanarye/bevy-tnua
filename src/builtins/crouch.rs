@@ -122,9 +122,7 @@ impl TnuaAction for TnuaBuiltinCrouch {
             let spring_force_boost = spring_force.calc_boost(ctx.frame_duration);
             let impulse_boost = self.impulse_boost(spring_offset);
             if spring_force_boost.length_squared() < impulse_boost.powi(2) {
-            TnuaVelChange::boost(
-                impulse_boost * ctx.up_direction().adjust_precision()
-            )
+                TnuaVelChange::boost(impulse_boost * ctx.up_direction().adjust_precision())
             } else {
                 spring_force
             }
