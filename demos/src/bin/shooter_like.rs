@@ -130,9 +130,9 @@ fn main() {
     app.add_systems(PostUpdate, {
         let system = apply_camera_controls;
         #[cfg(feature = "rapier")]
-        let system = system.after(PhysicsSet::SyncBackend);
+        let system = system.after(bevy_rapier3d::prelude::PhysicsSet::SyncBackend);
         #[cfg(feature = "avian")]
-        let system = system.after(PhysicsSet::Sync);
+        let system = system.after(avian3d::prelude::PhysicsSet::Sync);
         system.before(bevy::transform::TransformSystem::TransformPropagate)
     });
     app.add_systems(

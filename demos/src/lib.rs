@@ -6,11 +6,6 @@ pub mod levels_setup;
 pub mod ui;
 pub mod util;
 
-#[cfg(all(feature = "avian2d/parry-f32", feature = "f64"))]
-compile_error!(
-    "Default Feature (f32) and f64 are mutually exclusive and cannot be enabled together"
-);
-
 #[macro_export]
 macro_rules! verify_physics_backends_features {
     ( $($backend:literal),* ) => {

@@ -76,10 +76,10 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
     /// time it was called with `just_pressed` being `true`. This means that:
     ///
     /// * To let the player fall through all the platforms by simply holding the button, call this
-    /// with `just_pressed = true` as long as the button is held.
+    ///   with `just_pressed = true` as long as the button is held.
     /// * To let the player fall through one layer of platforms at a time, forcing them to release
-    /// and press again for each layer, pass `just_pressed = true` only when the button really is
-    /// just pressed.
+    ///   and press again for each layer, pass `just_pressed = true` only when the button really is
+    ///   just pressed.
     ///
     /// Returns `true` if actually dropping through a platform, to help determining if the
     /// character should be crouching (since these buttons are usually the same)

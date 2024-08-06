@@ -5,11 +5,6 @@ use avian3d::prelude::*;
 use bevy_tnua::prelude::*;
 use bevy_tnua_avian3d::*;
 
-#[cfg(all(feature = "avian2d/parry-f32", feature = "f64"))]
-compile_error!(
-    "Default Feature (f32) and f64 are mutually exclusive and cannot be enabled together"
-);
-
 fn main() {
     App::new()
         .add_plugins((

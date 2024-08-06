@@ -346,6 +346,7 @@ pub enum TnuaBuiltinJumpState {
         /// The potential energy at the top of the jump, when:
         /// * The potential energy at the bottom of the jump is defined as 0
         /// * The mass is 1
+        ///
         /// Calculating the desired velocity based on energy is easier than using the ballistic
         /// formulas.
         desired_energy: Float,
