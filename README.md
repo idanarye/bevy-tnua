@@ -75,6 +75,8 @@ $ cargo run --bin platformer_3d --features avian3d
 
 ### Interesting Parts of the Demo Code
 
+(**NOTE**: [the examples](examples/) are simpler than the demos, so if there is an example that shows something it'll be easier to read that)
+
 * Check out [the demos' entry points](demos/src/bin/) to see how the plugins and the player character entities are being set.
 * Check out [the character control systems](demos/src/character_control_systems/) to see how to control the character's motion and special movement actions.
 * Check out [the character animating systems](demos/src/character_animating_systems/) to see how to use information from Tnua for character animation.
