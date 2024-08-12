@@ -10,7 +10,10 @@ use bevy_tnua::TnuaGhostPlatform;
 
 use crate::level_mechanics::MovingPlatform;
 
-use super::{LevelObject, PositionPlayer};
+use super::{
+    helper::{LevelSetupHelper2d, LevelSetupHelper2dEntityCommandsExtension},
+    PositionPlayer,
+};
 
 #[cfg(feature = "avian2d")]
 #[derive(PhysicsLayer)]
@@ -20,227 +23,120 @@ pub enum LayerNames {
     PhaseThrough,
 }
 
-pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(PositionPlayer::from(Vec3::new(0.0, 2.0, 0.0)));
+pub fn setup_level(mut helper: LevelSetupHelper2d) {
+    helper.spawn(PositionPlayer::from(Vec3::new(0.0, 2.0, 0.0)));
 
-    let mut cmd = commands.spawn((LevelObject, Name::new("Floor")));
-    cmd.insert(SpriteBundle {
-        sprite: Sprite {
-            custom_size: Some(Vec2::new(128.0, 0.5)),
-            color: css::GRAY.into(),
-            ..Default::default()
-        },
-        ..Default::default()
-    });
-    #[cfg(feature = "rapier2d")]
-    cmd.insert(rapier::Collider::halfspace(Vec2::Y).unwrap());
-    #[cfg(feature = "avian2d")]
-    {
-        cmd.insert(avian::RigidBody::Static);
-        cmd.insert(avian::Collider::half_space(Vector2::Y));
-    }
+    helper.spawn_floor(css::GRAY);
 
-    for (name, [width, height], transform) in [
-        (
-            "Moderate Slope",
-            [10.0, 0.1],
-            Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
-        ),
-        (
-            "Steep Slope",
-            [10.0, 0.1],
-            Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
-        ),
-        (
-            "Box to Step on",
-            [4.0, 2.0],
-            Transform::from_xyz(-4.0, 1.0, 0.0),
-        ),
-        (
-            "Floating Box",
-            [6.0, 1.0],
-            Transform::from_xyz(-10.0, 4.0, 0.0),
-        ),
-        (
-            "Box to Crawl Under",
-            [6.0, 1.0],
-            Transform::from_xyz(-20.0, 2.6, 0.0),
-        ),
-    ] {
-        let mut cmd = commands.spawn((LevelObject, Name::new(name)));
-        cmd.insert(SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(width, height)),
-                color: css::GRAY.into(),
-                ..Default::default()
-            },
-            transform,
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier2d")]
-        cmd.insert(rapier::Collider::cuboid(0.5 * width, 0.5 * height));
-        #[cfg(feature = "avian2d")]
-        {
-            cmd.insert(avian::RigidBody::Static);
-            cmd.insert(avian::Collider::rectangle(
-                width.adjust_precision(),
-                height.adjust_precision(),
-            ));
-        }
-    }
+    helper.spawn_rectangle(
+        "Moderate Slope",
+        css::GRAY,
+        Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
+        Vector2::new(10.0, 0.1),
+    );
+    helper.spawn_rectangle(
+        "Steep Slope",
+        css::GRAY,
+        Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
+        Vector2::new(10.0, 0.1),
+    );
+    helper.spawn_rectangle(
+        "Box to Step on",
+        css::GRAY,
+        Transform::from_xyz(-4.0, 1.0, 0.0),
+        Vector2::new(4.0, 2.0),
+    );
+    helper.spawn_rectangle(
+        "Floating Box",
+        css::GRAY,
+        Transform::from_xyz(-10.0, 4.0, 0.0),
+        Vector2::new(6.0, 1.0),
+    );
+    helper.spawn_rectangle(
+        "Box to Crawl Under",
+        css::GRAY,
+        Transform::from_xyz(-20.0, 2.6, 0.0),
+        Vector2::new(6.0, 1.0),
+    );
 
     // Fall-through platforms
     for (i, y) in [5.0, 7.5].into_iter().enumerate() {
-        let mut cmd = commands.spawn((LevelObject, Name::new(format!("Fall Through #{}", i + 1))));
-        cmd.insert(SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(6.0, 0.5)),
-                color: css::PINK.into(),
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(-20.0, y, -1.0),
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier2d")]
-        {
-            cmd.insert(rapier::Collider::cuboid(3.0, 0.25));
-            cmd.insert(SolverGroups {
-                memberships: Group::empty(),
-                filters: Group::empty(),
-            });
-        }
-        #[cfg(feature = "avian2d")]
-        {
-            cmd.insert(avian::RigidBody::Static);
-            cmd.insert(avian::Collider::rectangle(6.0, 0.5));
-            cmd.insert(CollisionLayers::new(
-                [LayerNames::FallThrough],
-                [LayerNames::FallThrough],
+        helper
+            .spawn_rectangle(
+                format!("Fall Through #{}", i + 1),
+                css::PINK,
+                Transform::from_xyz(-20.0, y, -1.0),
+                Vector2::new(6.0, 0.5),
+            )
+            .insert((
+                #[cfg(feature = "rapier2d")]
+                SolverGroups {
+                    memberships: Group::empty(),
+                    filters: Group::empty(),
+                },
+                #[cfg(feature = "avian2d")]
+                CollisionLayers::new([LayerNames::FallThrough], [LayerNames::FallThrough]),
+                TnuaGhostPlatform,
             ));
-        }
-        cmd.insert(TnuaGhostPlatform);
     }
 
-    commands.spawn((
-        LevelObject,
-        Name::new("Collision Groups"),
-        TransformBundle::from_transform(Transform::from_xyz(10.0, 2.0, 0.0)),
-        #[cfg(feature = "rapier2d")]
-        (
-            rapier::Collider::ball(1.0),
+    helper
+        .spawn_text_circle(
+            "Collision Groups",
+            "collision\ngroups",
+            0.01,
+            Transform::from_xyz(10.0, 2.0, 0.0),
+            1.0,
+        )
+        .insert((
+            #[cfg(feature = "rapier2d")]
             CollisionGroups {
                 memberships: Group::GROUP_1,
                 filters: Group::GROUP_1,
             },
-        ),
-        #[cfg(feature = "avian2d")]
-        (
-            avian::RigidBody::Static,
-            avian::Collider::circle(1.0),
+            #[cfg(feature = "avian2d")]
             CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
-        ),
-    ));
-    commands.spawn((
-        LevelObject,
-        Text2dBundle {
-            text: Text::from_section(
-                "collision\ngroups",
-                TextStyle {
-                    font: asset_server.load("FiraSans-Bold.ttf"),
-                    font_size: 72.0,
-                    color: css::WHITE.into(),
-                },
-            )
-            .with_justify(JustifyText::Center),
-            transform: Transform::from_xyz(10.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        },
-    ));
+        ));
 
     #[cfg(feature = "rapier2d")]
-    {
-        commands.spawn((
-            LevelObject,
-            Name::new("Solver Groups"),
-            TransformBundle::from_transform(Transform::from_xyz(15.0, 2.0, 0.0)),
-            rapier::Collider::ball(1.0),
-            SolverGroups {
-                memberships: Group::GROUP_1,
-                filters: Group::GROUP_1,
-            },
-        ));
-        commands.spawn((
-            LevelObject,
-            Text2dBundle {
-                text: Text::from_section(
-                    "solver\ngroups",
-                    TextStyle {
-                        font: asset_server.load("FiraSans-Bold.ttf"),
-                        font_size: 72.0,
-                        color: css::WHITE.into(),
-                    },
-                )
-                .with_justify(JustifyText::Center),
-                transform: Transform::from_xyz(15.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-                ..Default::default()
-            },
-        ));
-    }
+    helper
+        .spawn_text_circle(
+            "Solver Groups",
+            "solver\ngroups",
+            0.01,
+            Transform::from_xyz(15.0, 2.0, 0.0),
+            1.0,
+        )
+        .insert(SolverGroups {
+            memberships: Group::GROUP_1,
+            filters: Group::GROUP_1,
+        });
 
-    commands.spawn((
-        LevelObject,
-        Name::new("Sensor"),
-        TransformBundle::from_transform(Transform::from_xyz(20.0, 2.0, 0.0)),
-        #[cfg(feature = "rapier2d")]
-        (rapier::Collider::ball(1.0), rapier::Sensor),
-        #[cfg(feature = "avian2d")]
-        (
-            avian::RigidBody::Static,
-            avian::Collider::circle(1.0),
+    helper
+        .spawn_text_circle(
+            "Sensor",
+            "sensor",
+            0.01,
+            Transform::from_xyz(20.0, 2.0, 0.0),
+            1.0,
+        )
+        .insert((
+            #[cfg(feature = "rapier2d")]
+            rapier::Sensor,
+            #[cfg(feature = "avian2d")]
             avian::Sensor,
-        ),
-    ));
-    commands.spawn((
-        LevelObject,
-        Text2dBundle {
-            text: Text::from_section(
-                "sensor",
-                TextStyle {
-                    font: asset_server.load("FiraSans-Bold.ttf"),
-                    font_size: 72.0,
-                    color: css::WHITE.into(),
-                },
-            )
-            .with_justify(JustifyText::Center),
-            transform: Transform::from_xyz(20.0, 2.0, 1.0).with_scale(0.01 * Vec3::ONE),
-            ..Default::default()
-        },
-    ));
+        ));
 
     // spawn moving platform
-    {
-        let mut cmd = commands.spawn((LevelObject, Name::new("Moving Platform")));
-        cmd.insert(SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(4.0, 1.0)),
-                color: css::BLUE.into(),
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(-4.0, 6.0, 0.0),
-            ..Default::default()
-        });
-        #[cfg(feature = "rapier2d")]
-        {
-            cmd.insert(rapier::Collider::cuboid(2.0, 0.5));
-            cmd.insert(Velocity::default());
-            cmd.insert(rapier::RigidBody::KinematicVelocityBased);
-        }
-        #[cfg(feature = "avian2d")]
-        {
-            cmd.insert(avian::Collider::rectangle(4.0, 1.0));
-            cmd.insert(avian::RigidBody::Kinematic);
-        }
-        cmd.insert(MovingPlatform::new(
+    helper
+        .spawn_rectangle(
+            "Moving Platform",
+            css::BLUE,
+            Transform::from_xyz(-4.0, 6.0, 0.0),
+            Vector2::new(4.0, 1.0),
+        )
+        .make_kinematic()
+        .insert(MovingPlatform::new(
             4.0,
             &[
                 Vector3::new(-4.0, 6.0, 0.0),
@@ -249,5 +145,4 @@ pub fn setup_level(mut commands: Commands, asset_server: Res<AssetServer>) {
                 Vector3::new(-4.0, 10.0, 0.0),
             ],
         ));
-    }
 }
