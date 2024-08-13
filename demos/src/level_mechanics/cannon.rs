@@ -1,6 +1,6 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
-use crate::levels_setup::LevelObject;
+use crate::levels_setup::{IsPlayer, LevelObject};
 
 #[derive(Component)]
 pub struct Cannon {
@@ -12,7 +12,7 @@ pub struct CannonPlugin;
 
 impl Plugin for CannonPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, shoot);
+        app.add_systems(Update, (shoot, handle_collision));
     }
 }
 
@@ -27,10 +27,62 @@ fn shoot(
             if let Some(cannon_name) = cannon_name.as_ref() {
                 cmd.insert(Name::new(format!("{cannon_name} projectile")));
             }
+            #[cfg(feature = "rapier3d")]
+            cmd.insert(bevy_rapier3d::geometry::ActiveEvents::COLLISION_EVENTS);
             (cannon.cmd)(&mut cmd);
             cmd.insert(TransformBundle::from_transform(
                 Transform::from_translation(cannon_transform.translation()),
             ));
         }
+    }
+}
+
+#[derive(Component)]
+#[allow(clippy::type_complexity)]
+pub struct CannonBullet {
+    effect: Box<dyn Send + Sync + Fn(&mut EntityCommands)>,
+}
+
+impl CannonBullet {
+    pub fn new_with_effect(effect: impl 'static + Send + Sync + Fn(&mut EntityCommands)) -> Self {
+        Self {
+            effect: Box::new(effect),
+        }
+    }
+}
+
+fn handle_collision(
+    #[cfg(feature = "avian3d")] mut avian_reader: EventReader<avian3d::prelude::CollisionStarted>,
+    #[cfg(feature = "rapier3d")] mut rapier_reader: EventReader<
+        bevy_rapier3d::prelude::CollisionEvent,
+    >,
+    bullets_query: Query<&CannonBullet>,
+    player_query: Query<(), With<IsPlayer>>,
+    mut commands: Commands,
+) {
+    let events = std::iter::empty::<(Entity, Entity)>();
+    #[cfg(feature = "avian3d")]
+    let events = events.chain(avian_reader.read().map(|event| (event.0, event.1)));
+    #[cfg(feature = "rapier3d")]
+    let events = events.chain(rapier_reader.read().filter_map(|event| {
+        use bevy_rapier3d::pipeline::CollisionEvent;
+        if let CollisionEvent::Started(e1, e2, _) = event {
+            Some((*e1, *e2))
+        } else {
+            None
+        }
+    }));
+
+    let events = events.flat_map(|(e1, e2)| [(e1, e2), (e2, e1)]);
+
+    for (bullet_entity, player_entity) in events {
+        let Ok(bullet) = bullets_query.get(bullet_entity) else {
+            continue;
+        };
+        if !player_query.contains(player_entity) {
+            continue;
+        }
+        (bullet.effect)(&mut commands.entity(player_entity));
+        commands.entity(bullet_entity).despawn_recursive();
     }
 }

@@ -179,6 +179,8 @@ pub trait LevelSetupHelper3dEntityCommandsExtension {
     fn make_kinematic(&mut self) -> &mut Self;
     fn make_kinematic_with_linear_velocity(&mut self, velocity: Vector3) -> &mut Self;
     fn make_kinematic_with_angular_velocity(&mut self, angvel: Vector3) -> &mut Self;
+    fn add_ball_collider(&mut self, radius: Float) -> &mut Self;
+    fn make_sensor(&mut self) -> &mut Self;
 }
 
 impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
@@ -221,6 +223,24 @@ impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
                 rapier::Velocity::angular(angvel),
                 rapier::RigidBody::KinematicVelocityBased,
             ),
+        ))
+    }
+
+    fn add_ball_collider(&mut self, #[allow(unused)] radius: Float) -> &mut Self {
+        self.insert((
+            #[cfg(feature = "avian3d")]
+            avian::Collider::sphere(radius),
+            #[cfg(feature = "rapier3d")]
+            rapier::Collider::ball(radius),
+        ))
+    }
+
+    fn make_sensor(&mut self) -> &mut Self {
+        self.insert((
+            #[cfg(feature = "avian3d")]
+            avian::Sensor,
+            #[cfg(feature = "rapier3d")]
+            rapier::Sensor,
         ))
     }
 }

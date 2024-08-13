@@ -6,7 +6,7 @@ use bevy_tnua::math::Vector3;
 //#[cfg(feature = "rapier3d")]
 //use bevy_rapier3d::{prelude as rapier, prelude::*};
 
-use crate::level_mechanics::Cannon;
+use crate::level_mechanics::{Cannon, CannonBullet, TimeToDespawn};
 
 use super::{
     helper::{LevelSetupHelper3d, LevelSetupHelper3dEntityCommandsExtension},
@@ -37,11 +37,17 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
             timer: Timer::from_seconds(1.0, TimerMode::Repeating),
             cmd: Box::new(move |cmd| {
                 cmd.make_kinematic_with_linear_velocity(-20.0 * Vector3::X);
+                cmd.make_sensor();
+                cmd.add_ball_collider(0.2);
                 cmd.insert(PbrBundle {
                     mesh: bullet_mesh.clone(),
                     material: bullet_material.clone(),
                     ..Default::default()
                 });
+                cmd.insert(TimeToDespawn::from_seconds(10.0));
+                cmd.insert(CannonBullet::new_with_effect(|cmd| {
+                    info!("TODO: apply pushback effect to {}", cmd.id());
+                }));
             }),
         });
 }
