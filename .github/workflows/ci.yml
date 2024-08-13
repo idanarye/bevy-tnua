@@ -11,6 +11,9 @@ permissions:
   id-token: write
   checks: write
 
+env:
+  all_physics_backends: rapier2d,rapier3d,avian2d,avian3d
+
 jobs:
   ci:
     name: CI
@@ -46,7 +49,7 @@ jobs:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Test
-        run: cargo test --verbose -- --nocapture
+        run: cargo test --verbose --features ${{ env.all_physics_backends }} -- --nocapture
   fmt:
    name: Rustfmt
    runs-on: ubuntu-latest
@@ -83,11 +86,11 @@ jobs:
         with:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Run clippy --all-targets --
+      - name: Run clippy
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --workspace --all-targets --
+          args: --workspace --all-targets --features ${{ env.all_physics_backends }} --
   docs:
     name: Docs
     runs-on: ubuntu-latest
