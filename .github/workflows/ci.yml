@@ -113,7 +113,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --doc 
+          args: --doc --features ${{ env.all_physics_backends }}
       - name: Get package names
         id: get-package-names
         run: |-
