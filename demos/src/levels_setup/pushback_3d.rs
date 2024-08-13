@@ -6,7 +6,7 @@ use bevy_tnua::math::Vector3;
 //#[cfg(feature = "rapier3d")]
 //use bevy_rapier3d::{prelude as rapier, prelude::*};
 
-use crate::level_mechanics::{Cannon, CannonBullet, TimeToDespawn};
+use crate::level_mechanics::{Cannon, CannonBullet, PushEffect, TimeToDespawn};
 
 use super::{
     helper::{LevelSetupHelper3d, LevelSetupHelper3dEntityCommandsExtension},
@@ -46,7 +46,7 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
                 });
                 cmd.insert(TimeToDespawn::from_seconds(10.0));
                 cmd.insert(CannonBullet::new_with_effect(|cmd| {
-                    info!("TODO: apply pushback effect to {}", cmd.id());
+                    cmd.insert(PushEffect::Impulse(-10.0 * Vector3::X));
                 }));
             }),
         });

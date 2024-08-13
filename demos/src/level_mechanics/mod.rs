@@ -7,6 +7,7 @@ use bevy::prelude::*;
 
 pub use cannon::{Cannon, CannonBullet};
 pub use moving_platform::MovingPlatform;
+pub use push_effect::PushEffect;
 pub use time_to_despawn::TimeToDespawn;
 
 pub struct LevelMechanicsPlugin;
