@@ -106,33 +106,41 @@ pub struct LevelSetupHelper3dWithMaterial<'a, 'w, 's> {
 }
 
 impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
-    pub fn spawn_cuboid(
+    pub fn spawn_mesh_without_physics(
         &mut self,
         name: impl ToString,
         transform: Transform,
-        size: Vector3,
+        mesh: impl Into<Mesh>,
     ) -> EntityCommands {
-        let mesh = self.parent.meshes.add(Cuboid::from_size(size.f32()));
+        let mesh = self.parent.meshes.add(mesh);
         let mut cmd = self.parent.spawn_named(name);
-
         cmd.insert(PbrBundle {
             mesh,
             material: self.material.clone(),
             transform,
             ..Default::default()
         });
+        cmd
+    }
 
-        #[cfg(feature = "rapier3d")]
-        cmd.insert(rapier::Collider::cuboid(
-            0.5 * size.x.f32(),
-            0.5 * size.y.f32(),
-            0.5 * size.z.f32(),
+    pub fn spawn_cuboid(
+        &mut self,
+        name: impl ToString,
+        transform: Transform,
+        size: Vector3,
+    ) -> EntityCommands {
+        let mut cmd =
+            self.spawn_mesh_without_physics(name, transform, Cuboid::from_size(size.f32()));
+
+        cmd.insert((
+            #[cfg(feature = "rapier3d")]
+            rapier::Collider::cuboid(0.5 * size.x.f32(), 0.5 * size.y.f32(), 0.5 * size.z.f32()),
+            #[cfg(feature = "avian3d")]
+            (
+                avian::RigidBody::Static,
+                avian::Collider::cuboid(size.x, size.y, size.z),
+            ),
         ));
-        #[cfg(feature = "avian3d")]
-        {
-            cmd.insert(avian::RigidBody::Static);
-            cmd.insert(avian::Collider::cuboid(size.x, size.y, size.z));
-        }
 
         cmd
     }
@@ -144,26 +152,24 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
         radius: Float,
         half_height: Float,
     ) -> EntityCommands {
-        let mesh = self.parent.meshes.add(Cylinder {
-            radius: radius.f32(),
-            half_height: half_height.f32(),
-        });
-        let mut cmd = self.parent.spawn_named(name);
-
-        cmd.insert(PbrBundle {
-            mesh,
-            material: self.material.clone(),
+        let mut cmd = self.spawn_mesh_without_physics(
+            name,
             transform,
-            ..Default::default()
-        });
+            Cylinder {
+                radius: radius.f32(),
+                half_height: half_height.f32(),
+            },
+        );
 
-        #[cfg(feature = "rapier3d")]
-        cmd.insert(rapier::Collider::cylinder(half_height, radius));
-        #[cfg(feature = "avian3d")]
-        {
-            cmd.insert(avian::RigidBody::Static);
-            cmd.insert(avian::Collider::cylinder(radius, 2.0 * half_height));
-        }
+        cmd.insert((
+            #[cfg(feature = "rapier3d")]
+            rapier::Collider::cylinder(half_height, radius),
+            #[cfg(feature = "avian3d")]
+            (
+                avian::RigidBody::Static,
+                avian::Collider::cylinder(radius, 2.0 * half_height),
+            ),
+        ));
 
         cmd
     }
@@ -171,7 +177,10 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
 
 pub trait LevelSetupHelper3dEntityCommandsExtension {
     fn make_kinematic(&mut self) -> &mut Self;
+    fn make_kinematic_with_linear_velocity(&mut self, velocity: Vector3) -> &mut Self;
     fn make_kinematic_with_angular_velocity(&mut self, angvel: Vector3) -> &mut Self;
+    fn add_ball_collider(&mut self, radius: Float) -> &mut Self;
+    fn make_sensor(&mut self) -> &mut Self;
 }
 
 impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
@@ -182,6 +191,21 @@ impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
             #[cfg(feature = "rapier3d")]
             (
                 rapier::Velocity::default(),
+                rapier::RigidBody::KinematicVelocityBased,
+            ),
+        ))
+    }
+
+    fn make_kinematic_with_linear_velocity(
+        &mut self,
+        #[allow(unused)] velocity: Vector3,
+    ) -> &mut Self {
+        self.insert((
+            #[cfg(feature = "avian3d")]
+            (avian::LinearVelocity(velocity), avian::RigidBody::Kinematic),
+            #[cfg(feature = "rapier3d")]
+            (
+                rapier::Velocity::linear(velocity),
                 rapier::RigidBody::KinematicVelocityBased,
             ),
         ))
@@ -199,6 +223,24 @@ impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
                 rapier::Velocity::angular(angvel),
                 rapier::RigidBody::KinematicVelocityBased,
             ),
+        ))
+    }
+
+    fn add_ball_collider(&mut self, #[allow(unused)] radius: Float) -> &mut Self {
+        self.insert((
+            #[cfg(feature = "avian3d")]
+            avian::Collider::sphere(radius),
+            #[cfg(feature = "rapier3d")]
+            rapier::Collider::ball(radius),
+        ))
+    }
+
+    fn make_sensor(&mut self) -> &mut Self {
+        self.insert((
+            #[cfg(feature = "avian3d")]
+            avian::Sensor,
+            #[cfg(feature = "rapier3d")]
+            rapier::Sensor,
         ))
     }
 }
