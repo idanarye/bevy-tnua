@@ -19,6 +19,8 @@ use bevy_tnua::math::AsF32;
 #[cfg(feature = "egui")]
 use bevy_tnua::TnuaToggle;
 
+use bevy_tnua::modifiers::TnuaPushover;
+
 use self::component_alterbation::CommandAlteringSelectors;
 #[cfg(feature = "egui")]
 use self::plotting::{make_update_plot_data_system, plot_source_rolling_update};
@@ -123,6 +125,7 @@ fn ui_system<C: Component + UiTunable>(
         Option<&plotting::PlotSource>,
         Option<&mut info::InfoSource>,
         &mut TnuaToggle,
+        Option<&mut TnuaPushover>,
         Option<&mut C>,
         Option<&mut CommandAlteringSelectors>,
     )>,
@@ -189,6 +192,7 @@ fn ui_system<C: Component + UiTunable>(
             plot_source,
             mut info_source,
             mut tnua_toggle,
+            mut pushover,
             mut tunable,
             command_altering_selectors,
         ) in query.iter_mut()
@@ -254,6 +258,17 @@ fn ui_system<C: Component + UiTunable>(
                         if let Some(tunable) = tunable.as_mut() {
                             tunable.tune(ui);
                         }
+
+                        tuning::slider_or_remove(
+                            ui,
+                            "Pushover",
+                            &mut pushover,
+                            |pushover| &mut pushover.update_factor,
+                            0.0..=1.0,
+                            &mut commands,
+                            entity,
+                            || TnuaPushover::new(0.5)
+                        );
 
                         if let Some(mut command_altering_selectors) = command_altering_selectors
                         {

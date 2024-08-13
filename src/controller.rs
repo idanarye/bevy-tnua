@@ -9,6 +9,7 @@ use crate::basis_action_traits::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus,
     TnuaBasisContext,
 };
+use crate::modifiers::TnuaPushover;
 use crate::{
     TnuaBasis, TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker,
     TnuaSystemSet, TnuaToggle, TnuaUserControlsSystemSet,
@@ -368,13 +369,16 @@ fn apply_controller_system(
         &mut TnuaProximitySensor,
         &mut TnuaMotor,
         Option<&TnuaToggle>,
+        Option<&mut TnuaPushover>,
     )>,
 ) {
     let frame_duration = time.delta().as_secs_f64() as Float;
     if frame_duration == 0.0 {
         return;
     }
-    for (mut controller, tracker, mut sensor, mut motor, tnua_toggle) in query.iter_mut() {
+    for (mut controller, tracker, mut sensor, mut motor, tnua_toggle, mut pushover) in
+        query.iter_mut()
+    {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
@@ -382,6 +386,20 @@ fn apply_controller_system(
         }
 
         let controller = controller.as_mut();
+
+        if let Some(pushover) = pushover.as_mut() {
+            let perceived_velocity = pushover.perceived_velocity;
+            dbg!(perceived_velocity);
+            // let mut diff = perceived_velocity - tracker.velocity;
+            // diff.y = 0.0;
+            // info!("{}", diff.length_squared());
+            pushover.update(frame_duration, tracker.velocity);
+            // info!("{}", per
+            // info!(
+                // "{:?} -> {:?}",
+                // perceived_velocity, pushover.perceived_velocity
+            // );
+        }
 
         match controller.action_flow_status {
             TnuaActionFlowStatus::NoAction | TnuaActionFlowStatus::ActionOngoing(_) => {}
@@ -607,6 +625,11 @@ fn apply_controller_system(
             if !controller.actions_being_fed.contains_key(contender_name) {
                 controller.contender_action = None;
             }
+        }
+
+        if let Some(pushover) = pushover.as_mut() {
+            pushover
+                .predict(frame_duration * tracker.gravity + motor.lin.calc_boost(frame_duration));
         }
     }
 }

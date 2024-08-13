@@ -1,3 +1,6 @@
+#[allow(unused_imports)]
+use bevy::prelude::*;
+
 #[cfg(feature = "egui")]
 use std::ops::RangeInclusive;
 
@@ -93,6 +96,40 @@ fn slider_or_none(
             ui.add_enabled(
                 false,
                 egui::Slider::new(&mut copied_saved_value, range).text(caption),
+            );
+        }
+    });
+}
+
+#[cfg(feature = "egui")]
+pub fn slider_or_remove<C: Component>(
+    ui: &mut egui::Ui,
+    caption: &str,
+    component: &mut Option<Mut<C>>,
+    extract_value: impl Fn(&mut C) -> &mut Float,
+    range: RangeInclusive<Float>,
+    commands: &mut Commands,
+    entity: Entity,
+    init: impl Fn() -> C,
+) {
+
+    ui.horizontal(|ui| {
+        let mut has_component = component.is_some();
+        let resp = ui.toggle_value(&mut has_component, "\u{d8}");
+        if resp.clicked() {
+            if has_component {
+                commands.entity(entity).insert(init());
+            } else {
+                commands.entity(entity).remove::<C>();
+            }
+        }
+        if let Some(value) = component.as_mut() {
+            ui.add(egui::Slider::new(extract_value(value), range).text(caption));
+        } else {
+            let mut value = 0.5 * (range.start() + range.end());
+            ui.add_enabled(
+                false,
+                egui::Slider::new(&mut value, range).text(caption),
             );
         }
     });
