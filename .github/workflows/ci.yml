@@ -120,6 +120,7 @@ jobs:
           echo "PACKAGE_NAMES=$(
             cargo metadata --no-deps --format-version=1 \
             | jq '.packages[].name' -r \
+            | grep -v tnua-demos-crate \
             | sort -u \
             | xargs -L1 echo --package \
             | paste -sd ' '
@@ -159,6 +160,7 @@ jobs:
           echo "PACKAGE_NAMES=$(
             cargo metadata --no-deps --format-version=1 \
             | jq '.packages[].name | select(. != "tnua-demos-crate")' -r \
+            | grep -v tnua-demos-crate \
             | sort -u \
             | xargs -L1 echo --package \
             | paste -sd ' '
