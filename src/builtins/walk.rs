@@ -159,13 +159,20 @@ impl TnuaBasis for TnuaBuiltinWalk {
             stopwatch.tick(Duration::from_secs_f64(ctx.frame_duration as f64));
         }
 
+        let perceived_velocity = {
+            let diff_on_up_axis = (ctx.tracker.velocity - ctx.perceived_velocity).dot(*ctx.up_direction());
+            ctx.perceived_velocity + diff_on_up_axis * *ctx.up_direction()
+        };
+
+        let effective_true_velocity: Vector3;
         let climb_vectors: Option<ClimbVectors>;
         let considered_in_air: bool;
         let impulse_to_offset: Vector3;
         let slipping_vector: Option<Vector3>;
 
         if let Some(sensor_output) = &ctx.proximity_sensor.output {
-            state.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
+            effective_true_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
+            state.effective_velocity = perceived_velocity - sensor_output.entity_linvel;
             let sideways_unnormalized = sensor_output
                 .normal
                 .cross(*ctx.up_direction())
@@ -227,13 +234,15 @@ impl TnuaBasis for TnuaBuiltinWalk {
                 }
             }
         } else {
-            state.effective_velocity = ctx.tracker.velocity;
+            effective_true_velocity = ctx.tracker.velocity;
+            state.effective_velocity = perceived_velocity;
             climb_vectors = None;
             considered_in_air = true;
             impulse_to_offset = Vector3::ZERO;
             slipping_vector = None;
             state.standing_on = None;
         }
+        let effective_true_velocity = effective_true_velocity + impulse_to_offset;
         state.effective_velocity += impulse_to_offset;
 
         let velocity_on_plane = state
@@ -256,7 +265,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         let max_acceleration = direction_change_factor * relevant_acceleration_limit;
 
         state.vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
-            state.effective_velocity.dot(climb_vectors.direction)
+            effective_true_velocity.dot(climb_vectors.direction)
                 * climb_vectors
                     .direction
                     .dot(ctx.up_direction().adjust_precision())
