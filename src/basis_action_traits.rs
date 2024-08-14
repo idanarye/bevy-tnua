@@ -16,6 +16,16 @@ pub struct TnuaBasisContext<'a> {
 
     /// A sensor that tracks the distance of the character's center from the ground.
     pub proximity_sensor: &'a TnuaProximitySensor,
+
+    /// The basis should use this velocity instead of the one in the `tracker` for things that need
+    /// to be sensitive to external forces ("pushover")
+    ///
+    /// Refer to [`TnuaPushover`](crate::modifiers::TnuaPushover) for more details. When pushover
+    /// is not configured (the entity does not have the `TnuaPushover` component) this will be
+    /// identical to the true velocity (the one in the `tracker`). The basis does not know and
+    /// should not care if pushover is configured or not - it should always assume it is and decide
+    /// which velocity to use (or how to combine them) for each calculation.
+    pub perceived_velocity: Vector3,
 }
 
 impl TnuaBasisContext<'_> {
@@ -207,6 +217,16 @@ pub struct TnuaActionContext<'a> {
 
     /// An accessor to the currently active basis.
     pub basis: &'a dyn DynamicBasis,
+
+    /// The action should use this velocity instead of the one in the `tracker` for things that
+    /// need to be sensitive to external forces ("pushover")
+    ///
+    /// Refer to [`TnuaPushover`](crate::modifiers::TnuaPushover) for more details. When pushover
+    /// is not configured (the entity does not have the `TnuaPushover` component) this will be
+    /// identical to the true velocity (the one in the `tracker`). The action does not know and
+    /// should not care if pushover is configured or not - it should always assume it is and decide
+    /// which velocity to use (or how to combine them) for each calculation.
+    pub perceived_velocity: Vector3,
 }
 
 impl<'a> TnuaActionContext<'a> {
@@ -227,6 +247,7 @@ impl<'a> TnuaActionContext<'a> {
             frame_duration: self.frame_duration,
             tracker: self.tracker,
             proximity_sensor: self.proximity_sensor,
+            perceived_velocity: self.perceived_velocity,
         }
     }
 

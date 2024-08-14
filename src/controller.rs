@@ -387,18 +387,13 @@ fn apply_controller_system(
 
         let controller = controller.as_mut();
 
+        let perceived_velocity;
         if let Some(pushover) = pushover.as_mut() {
-            let perceived_velocity = pushover.perceived_velocity;
-            dbg!(perceived_velocity);
-            // let mut diff = perceived_velocity - tracker.velocity;
-            // diff.y = 0.0;
-            // info!("{}", diff.length_squared());
             pushover.update(frame_duration, tracker.velocity);
-            // info!("{}", per
-            // info!(
-                // "{:?} -> {:?}",
-                // perceived_velocity, pushover.perceived_velocity
-            // );
+            perceived_velocity = pushover.perceived_velocity;
+        } else {
+            // Pushover not configured - perceived velocity is identical to the true velocity
+            perceived_velocity = tracker.velocity;
         }
 
         match controller.action_flow_status {
@@ -422,6 +417,7 @@ fn apply_controller_system(
                     frame_duration,
                     tracker,
                     proximity_sensor: sensor.as_ref(),
+                    perceived_velocity,
                 },
                 motor.as_mut(),
             );
@@ -439,6 +435,7 @@ fn apply_controller_system(
                         tracker,
                         proximity_sensor,
                         basis,
+                        perceived_velocity,
                     },
                     being_fed_for,
                 );
@@ -475,6 +472,7 @@ fn apply_controller_system(
                         tracker,
                         proximity_sensor,
                         basis,
+                        perceived_velocity,
                     },
                     lifecycle_status,
                     motor.as_mut(),
@@ -521,6 +519,7 @@ fn apply_controller_system(
                                     tracker,
                                     proximity_sensor,
                                     basis,
+                                    perceived_velocity,
                                 },
                                 TnuaActionLifecycleStatus::CancelledFrom,
                                 motor.as_mut(),
@@ -587,6 +586,7 @@ fn apply_controller_system(
                         tracker,
                         proximity_sensor,
                         basis,
+                        perceived_velocity,
                     },
                     TnuaActionLifecycleStatus::Initiated,
                     motor.as_mut(),

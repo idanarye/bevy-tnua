@@ -112,7 +112,6 @@ pub fn slider_or_remove<C: Component>(
     entity: Entity,
     init: impl Fn() -> C,
 ) {
-
     ui.horizontal(|ui| {
         let mut has_component = component.is_some();
         let resp = ui.toggle_value(&mut has_component, "\u{d8}");
@@ -127,10 +126,7 @@ pub fn slider_or_remove<C: Component>(
             ui.add(egui::Slider::new(extract_value(value), range).text(caption));
         } else {
             let mut value = 0.5 * (range.start() + range.end());
-            ui.add_enabled(
-                false,
-                egui::Slider::new(&mut value, range).text(caption),
-            );
+            ui.add_enabled(false, egui::Slider::new(&mut value, range).text(caption));
         }
     });
 }

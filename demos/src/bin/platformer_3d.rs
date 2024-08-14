@@ -11,6 +11,7 @@ use bevy_tnua::control_helpers::{
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{float_consts, AsF32, Vector3};
+use bevy_tnua::modifiers::TnuaPushover;
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "avian3d")]
@@ -231,6 +232,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
     cmd.insert(TnuaToggle::default());
+
+    cmd.insert(TnuaPushover::new(0.95));
 
     // This is an helper component for deciding which animation to play. Tnua itself does not
     // actually interact with `TnuaAnimatingState` - it's there so that animating systems could use

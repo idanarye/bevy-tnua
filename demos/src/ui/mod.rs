@@ -264,10 +264,10 @@ fn ui_system<C: Component + UiTunable>(
                             "Pushover",
                             &mut pushover,
                             |pushover| &mut pushover.update_factor,
-                            0.0..=1.0,
+                            0.9..=1.0,
                             &mut commands,
                             entity,
-                            || TnuaPushover::new(0.5)
+                            || TnuaPushover::new(0.95)
                         );
 
                         if let Some(mut command_altering_selectors) = command_altering_selectors

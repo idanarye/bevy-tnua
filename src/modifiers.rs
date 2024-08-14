@@ -21,7 +21,7 @@ impl TnuaPushover {
     }
 
     pub(crate) fn update(&mut self, frame_duration: Float, true_velocity: Vector3) {
-        let factor = self.update_factor.powf(frame_duration);
+        let factor = self.update_factor.powf(1.0 / frame_duration);
         self.perceived_velocity = (1.0 - factor) * self.perceived_velocity + factor * true_velocity;
     }
 }
