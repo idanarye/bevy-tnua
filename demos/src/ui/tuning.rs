@@ -102,6 +102,7 @@ fn slider_or_none(
 }
 
 #[cfg(feature = "egui")]
+#[allow(clippy::too_many_arguments)]
 pub fn slider_or_remove<C: Component>(
     ui: &mut egui::Ui,
     caption: &str,
