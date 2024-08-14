@@ -160,8 +160,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
         }
 
         let perceived_velocity = {
-            let diff_on_up_axis = (ctx.tracker.velocity - ctx.perceived_velocity).dot(*ctx.up_direction());
-            ctx.perceived_velocity + diff_on_up_axis * *ctx.up_direction()
+            let diff_on_up_axis = (ctx.tracker.velocity - ctx.perceived_velocity).dot(ctx.up_direction().adjust_precision());
+            ctx.perceived_velocity + diff_on_up_axis * ctx.up_direction().adjust_precision()
         };
 
         let effective_true_velocity: Vector3;
