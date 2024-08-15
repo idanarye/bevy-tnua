@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use crate::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
+use crate::util::boundary::BoundaryTracker;
 use bevy::prelude::*;
 
 use crate::util::rotation_arc_around_axis;
@@ -96,6 +97,9 @@ pub struct TnuaBuiltinWalk {
     /// Set to 0.0 to completely disable air movement.
     pub air_acceleration: Float,
 
+    pub pushover_threshold: Float,
+    pub pushover_no_push_timeout: Float,
+
     /// The time, in seconds, the character can still jump after losing their footing.
     pub coyote_time: Float,
 
@@ -139,6 +143,8 @@ impl Default for TnuaBuiltinWalk {
             spring_dampening: 1.2,
             acceleration: 60.0,
             air_acceleration: 20.0,
+            pushover_threshold: 1.0,
+            pushover_no_push_timeout: 1.0,
             coyote_time: 0.15,
             free_fall_extra_gravity: 60.0,
             tilt_offset_angvel: 5.0,
@@ -239,6 +245,14 @@ impl TnuaBasis for TnuaBuiltinWalk {
         let velocity_on_plane = state
             .effective_velocity
             .reject_from(ctx.up_direction().adjust_precision());
+
+        state.boundary_tracker.update(
+            velocity_on_plane,
+            (self.pushover_threshold < velocity_on_plane.distance_squared(state.running_velocity))
+                .then_some(state.running_velocity),
+            ctx.frame_duration,
+            self.pushover_no_push_timeout,
+        );
 
         let desired_boost = self.desired_velocity - velocity_on_plane;
 
@@ -520,6 +534,7 @@ pub struct TnuaBuiltinWalkState {
     /// ([`standing_on_entity`](Self::standing_on_entity) returns `Some`) then the
     /// `running_velocity` will be relative to the velocity of that entity.
     pub running_velocity: Vector3,
+    boundary_tracker: BoundaryTracker,
 }
 
 impl TnuaBuiltinWalkState {

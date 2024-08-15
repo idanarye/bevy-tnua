@@ -112,6 +112,17 @@ impl UiTunable for TnuaBuiltinWalk {
             &mut self.air_acceleration,
             0.0..=200.0,
         );
+
+        slider_or_infinity(
+            ui,
+            "Pushover: Threshold",
+            &mut self.pushover_threshold,
+            0.0..=4.0,
+        );
+        ui.add(
+            egui::Slider::new(&mut self.pushover_no_push_timeout, 0.0..=5.0)
+                .text("Pushover: No Push Timeout"),
+        );
         ui.add(egui::Slider::new(&mut self.coyote_time, 0.0..=1.0).text("Coyote Time"));
 
         ui.add(

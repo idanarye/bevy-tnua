@@ -1,3 +1,5 @@
+pub mod boundary;
+
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::{
     AdjustPrecision, Float, Quaternion, Vector2, Vector3,
