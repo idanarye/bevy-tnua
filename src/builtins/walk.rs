@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
-use crate::util::boundary::BoundaryTracker;
+use crate::util::boundary::VelocityBoundaryTracker;
 use bevy::prelude::*;
 
 use crate::util::rotation_arc_around_axis;
@@ -246,7 +246,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
             .effective_velocity
             .reject_from(ctx.up_direction().adjust_precision());
 
-        state.boundary_tracker.update(
+        state.velocity_boundary_tracker.update(
             velocity_on_plane,
             (self.pushover_threshold < velocity_on_plane.distance_squared(state.running_velocity))
                 .then_some(state.running_velocity),
@@ -534,7 +534,7 @@ pub struct TnuaBuiltinWalkState {
     /// ([`standing_on_entity`](Self::standing_on_entity) returns `Some`) then the
     /// `running_velocity` will be relative to the velocity of that entity.
     pub running_velocity: Vector3,
-    boundary_tracker: BoundaryTracker,
+    velocity_boundary_tracker: VelocityBoundaryTracker,
 }
 
 impl TnuaBuiltinWalkState {
