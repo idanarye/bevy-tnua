@@ -98,7 +98,9 @@ pub struct TnuaBuiltinWalk {
     pub air_acceleration: Float,
 
     pub pushover_threshold: Float,
-    pub pushover_no_push_timeout: Float,
+    pub pushover_no_push_timeout: f32,
+    pub pushover_acceleration_limit: Float,
+    pub pushover_air_acceleration_limit: Float,
 
     /// The time, in seconds, the character can still jump after losing their footing.
     pub coyote_time: Float,
@@ -144,7 +146,9 @@ impl Default for TnuaBuiltinWalk {
             acceleration: 60.0,
             air_acceleration: 20.0,
             pushover_threshold: 1.0,
-            pushover_no_push_timeout: 1.0,
+            pushover_no_push_timeout: 0.2,
+            pushover_acceleration_limit: 6.0,
+            pushover_air_acceleration_limit: 2.0,
             coyote_time: 0.15,
             free_fall_extra_gravity: 60.0,
             tilt_offset_angvel: 5.0,
@@ -278,10 +282,32 @@ impl TnuaBasis for TnuaBuiltinWalk {
             0.0
         };
 
+        let limited_boost_component_due_to_boundary =
+            if let Some(velocity_boundary) = state.velocity_boundary_tracker.boundary() {
+                velocity_boundary
+                    .calc_boost_part_on_boundary_axis_after_limit(
+                        velocity_on_plane,
+                        desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration),
+                        ctx.frame_duration
+                            * if considered_in_air {
+                                self.pushover_air_acceleration_limit
+                            } else {
+                                self.pushover_acceleration_limit
+                            },
+                    )
+                    .filter(|limited_component| 0.0 < limited_component.length_squared())
+            } else {
+                None
+            };
         let walk_vel_change = if self.desired_velocity == Vector3::ZERO && slipping_vector.is_none()
         {
             // When stopping, prefer a boost to be able to reach a precise stop (see issue #39)
-            let walk_boost = desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration);
+            let mut walk_boost =
+                desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration);
+            if let Some(limited_component) = limited_boost_component_due_to_boundary {
+                let orig_component = walk_boost.project_onto(limited_component);
+                walk_boost += limited_component - orig_component;
+            }
             let walk_boost = if let Some(climb_vectors) = &climb_vectors {
                 climb_vectors.project(walk_boost)
             } else {
@@ -291,8 +317,13 @@ impl TnuaBasis for TnuaBuiltinWalk {
         } else {
             // When accelerating, prefer an acceleration because the physics backends treat it
             // better (see issue #34)
-            let walk_acceleration =
+            let mut walk_acceleration =
                 (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
+            if let Some(limited_component) = limited_boost_component_due_to_boundary {
+                let limited_component = limited_component / ctx.frame_duration;
+                let orig_component = walk_acceleration.project_onto(limited_component);
+                walk_acceleration += limited_component - orig_component;
+            }
             let walk_acceleration =
                 if let (Some(climb_vectors), None) = (&climb_vectors, slipping_vector) {
                     climb_vectors.project(walk_acceleration)
