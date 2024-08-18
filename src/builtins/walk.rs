@@ -99,6 +99,7 @@ pub struct TnuaBuiltinWalk {
 
     pub pushover_threshold: Float,
     pub pushover_no_push_timeout: f32,
+    pub pushover_barrier_strength_diminishing: Float,
     pub pushover_acceleration_limit: Float,
     pub pushover_air_acceleration_limit: Float,
 
@@ -147,6 +148,7 @@ impl Default for TnuaBuiltinWalk {
             air_acceleration: 20.0,
             pushover_threshold: 1.0,
             pushover_no_push_timeout: 0.2,
+            pushover_barrier_strength_diminishing: 0.2,
             pushover_acceleration_limit: 6.0,
             pushover_air_acceleration_limit: 2.0,
             coyote_time: 0.15,
@@ -294,6 +296,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                             } else {
                                 self.pushover_acceleration_limit
                             },
+                        self.pushover_barrier_strength_diminishing,
                     )
                     .filter(|limited_component| 0.0 < limited_component.length_squared())
             } else {

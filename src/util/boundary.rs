@@ -25,9 +25,11 @@ impl VelocityBoundaryTracker {
             else {
                 break 'create_boundary;
             };
+            let frontier = true_velocity.dot(disruption_direction.adjust_precision());
             self.boundary = Some(VelocityBoundary {
                 base: disruption_from.dot(disruption_direction.adjust_precision()),
-                frontier: true_velocity.dot(disruption_direction.adjust_precision()),
+                original_frontier: frontier,
+                frontier,
                 direction: disruption_direction,
                 no_push_timer: Timer::from_seconds(no_push_timeout, TimerMode::Once),
             });
@@ -57,6 +59,7 @@ impl VelocityBoundaryTracker {
 
 pub struct VelocityBoundary {
     base: Float,
+    original_frontier: Float,
     frontier: Float,
     direction: Dir3,
     no_push_timer: Timer,
@@ -68,6 +71,7 @@ impl VelocityBoundary {
         current_velocity: Vector3,
         regular_boost: Vector3,
         boost_limit_inside_barrier: Float,
+        barrier_strength_diminishing: Float,
     ) -> Option<Vector3> {
         let boost = regular_boost.dot(self.direction.adjust_precision());
         if 0.0 <= boost {
@@ -100,6 +104,15 @@ impl VelocityBoundary {
 
         let total_boost = boost_outside_barrier + boost_inside_barrier;
 
+        let barrier_strength = self.percentage_left().powf(barrier_strength_diminishing);
+        let total_boost = (1.0 - barrier_strength) * boost + barrier_strength * total_boost;
+
         Some(total_boost * self.direction.adjust_precision())
+    }
+
+    fn percentage_left(&self) -> Float {
+        let current_depth = self.frontier - self.base;
+        let original_depth = self.original_frontier - self.base;
+        current_depth / original_depth
     }
 }

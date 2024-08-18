@@ -123,6 +123,14 @@ impl UiTunable for TnuaBuiltinWalk {
             egui::Slider::new(&mut self.pushover_no_push_timeout, 0.0..=2.0)
                 .text("Pushover: No Push Timeout"),
         );
+        ui.add(
+            egui::Slider::new(
+                &mut self.pushover_barrier_strength_diminishing,
+                0.01..=100.0,
+            )
+            .logarithmic(true)
+            .text("Pushover: Barrier Strengh Diminishing"),
+        );
         slider_or_infinity(
             ui,
             "Pushover: Acceleration Limit",
