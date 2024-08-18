@@ -2,9 +2,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: 
-      - main
-      - feature/30/boundary-pushing
+    branches: [main]
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
