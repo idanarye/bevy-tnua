@@ -97,10 +97,45 @@ pub struct TnuaBuiltinWalk {
     /// Set to 0.0 to completely disable air movement.
     pub air_acceleration: Float,
 
+    /// Threshold for external change in velocity to trigger a Pushover.
+    ///
+    /// Set it to infinity to disable the Pushover feature. Never set it to zero, because then
+    /// calculation/rounding artifacts will trigger a Pushover even when the character is not
+    /// subject to any external impulses.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub pushover_threshold: Float,
+
+    /// Timeout (in seconds) for abandoning a Pushover boundary that no longer gets pushed.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub pushover_no_push_timeout: f32,
+
+    /// An exponent for controling the shape of the Pushover barrier diminishing.
+    ///
+    /// For best results, set it to values lareger than 1.0.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub pushover_barrier_strength_diminishing: Float,
+
+    /// Acceleration cap when pushing against the Pushover barrier.
+    ///
+    /// In practice this will be averaged with [`acceleration`](Self::acceleration) (weighted by a
+    /// function of the pushover boundary penetration percentage and
+    /// [`pushover_barrier_strength_diminishing`](Self::pushover_barrier_strength_diminishing)) so
+    /// the actual acceleration limit will higher than that.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub pushover_acceleration_limit: Float,
+
+    /// Acceleration cap when pushing against the Pushover barrier while in the air.
+    ///
+    /// In practice this will be averaged with [`air_acceleration`](Self::air_acceleration)
+    /// (weighted by a function of the pushover boundary penetration percentage and
+    /// [`pushover_barrier_strength_diminishing`](Self::pushover_barrier_strength_diminishing)) so
+    /// the actual acceleration limit will higher than that.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub pushover_air_acceleration_limit: Float,
 
     /// The time, in seconds, the character can still jump after losing their footing.
@@ -254,8 +289,9 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
         state.velocity_boundary_tracker.update(
             velocity_on_plane,
-            (self.pushover_threshold < velocity_on_plane.distance_squared(state.running_velocity))
-                .then_some(state.running_velocity),
+            (self.pushover_threshold.powi(2)
+                < velocity_on_plane.distance_squared(state.running_velocity))
+            .then_some(state.running_velocity),
             ctx.frame_duration,
             self.pushover_no_push_timeout,
         );

@@ -4,6 +4,18 @@ use bevy::prelude::*;
 
 use crate::math::{AdjustPrecision, AsF32, Float, Vector3};
 
+/// Use this to create velocity boundaries for implementing the _Pushover_ feature.
+///
+/// A Pushover happens when the character receives an external impulse or force other than gravity.
+/// The typical acceleration required for tight and responsive control can usually neutralize such
+/// impulses too quickly, ruining the knockback effect the game is trying to achieve.
+///
+/// To work around this, the basis/action can use a `VelocityBoundaryTracker`. It needs to use the
+/// [`update`](Self::update) method to detect these external impulses by comparing the velocity the
+/// basis/action was trying to achieve with the actual velocity of the character. Then it can check
+/// for a velocity [`boundary`](Self::boundary()) and if one exists - use its
+/// [`calc_boost_part_on_boundary_axis_after_limit`](VelocityBoundary::calc_boost_part_on_boundary_axis_after_limit)
+/// method to determine how to limit the character acceleration according to that boundary.
 #[derive(Default)]
 pub struct VelocityBoundaryTracker {
     boundary: Option<VelocityBoundary>,
