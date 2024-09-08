@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{app::RunFixedMainLoop, prelude::*, time::run_fixed_main_schedule};
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts};
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash};
@@ -18,6 +18,7 @@ use super::Dimensionality;
 pub fn apply_platformer_controls(
     #[cfg(feature = "egui")] mut egui_context: EguiContexts,
     keyboard: Res<ButtonInput<KeyCode>>,
+    mut just_pressed: ResMut<JustPressedCache>,
     mut query: Query<(
         &CharacterMotionConfigForPlatformerDemo,
         // This is the main component used for interacting with Tnua. It is used for both issuing
@@ -111,25 +112,13 @@ pub fn apply_platformer_controls(
         let turn_in_place = forward_from_camera.is_none()
             && keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
-        let crouch_pressed: bool;
-        let crouch_just_pressed: bool;
-        match config.dimensionality {
-            Dimensionality::Dim2 => {
-                let crouch_buttons = [
-                    KeyCode::ControlLeft,
-                    KeyCode::ControlRight,
-                    KeyCode::ArrowDown,
-                    KeyCode::KeyS,
-                ];
-                crouch_pressed = keyboard.any_pressed(crouch_buttons);
-                crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
-            }
-            Dimensionality::Dim3 => {
-                let crouch_buttons = [KeyCode::ControlLeft, KeyCode::ControlRight];
-                crouch_pressed = keyboard.any_pressed(crouch_buttons);
-                crouch_just_pressed = keyboard.any_just_pressed(crouch_buttons);
-            }
-        }
+        let crouch_buttons = match config.dimensionality {
+            Dimensionality::Dim2 => CROUCH_BUTTONS_2D.iter().copied(),
+            Dimensionality::Dim3 => CROUCH_BUTTONS_3D.iter().copied(),
+        };
+        let crouch_pressed = keyboard.any_pressed(crouch_buttons);
+        let crouch_just_pressed = just_pressed.crouch;
+        just_pressed.was_read = true;
 
         // This needs to be called once per frame. It lets the air actions counter know about the
         // air status of the character. Specifically:
@@ -457,3 +446,58 @@ impl Default for ForwardFromCamera {
         }
     }
 }
+
+/// Since the fixed timestep schedule does not cache just pressed states that happened
+/// in a frame with no fixed updates, we need to cache them ourselves in order to not miss them.
+/// Note that if you use a smarter input manager like LWIM, this is handled for you.
+/// If the demo is running with a variable timestep, this will just report the current frame's
+/// state as expected.
+pub struct JustPressedCachePlugin;
+
+impl Plugin for JustPressedCachePlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<JustPressedCache>();
+        app.add_systems(
+            RunFixedMainLoop,
+            (
+                collect_just_pressed_cache.before(run_fixed_main_schedule),
+                clear_just_pressed_cache.after(run_fixed_main_schedule),
+            ),
+        );
+    }
+}
+
+fn collect_just_pressed_cache(
+    query: Query<&CharacterMotionConfigForPlatformerDemo>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut just_pressed: ResMut<JustPressedCache>,
+) {
+    for config in &query {
+        let crouch_buttons = match config.dimensionality {
+            Dimensionality::Dim2 => CROUCH_BUTTONS_2D.iter().copied(),
+            Dimensionality::Dim3 => CROUCH_BUTTONS_3D.iter().copied(),
+        };
+        just_pressed.crouch = keyboard.any_just_pressed(crouch_buttons);
+    }
+}
+
+fn clear_just_pressed_cache(mut just_pressed: ResMut<JustPressedCache>) {
+    if just_pressed.was_read {
+        *just_pressed = default()
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct JustPressedCache {
+    crouch: bool,
+    was_read: bool,
+}
+
+const CROUCH_BUTTONS_2D: &[KeyCode] = &[
+    KeyCode::ControlLeft,
+    KeyCode::ControlRight,
+    KeyCode::ArrowDown,
+    KeyCode::KeyS,
+];
+
+const CROUCH_BUTTONS_3D: &[KeyCode] = &[KeyCode::ControlLeft, KeyCode::ControlRight];

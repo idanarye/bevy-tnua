@@ -5,7 +5,11 @@ use clap::{Parser, ValueEnum};
 
 #[derive(Resource, Debug, Parser, Clone)]
 pub struct AppSetupConfiguration {
-    #[arg(long = "schedule", default_value = "update")]
+    #[cfg_attr(feature = "rapier", arg(long = "schedule", default_value = "update"))]
+    #[cfg_attr(
+        feature = "avian",
+        arg(long = "schedule", default_value = "fixed-update")
+    )]
     pub schedule_to_use: ScheduleToUse,
     #[arg(long = "level")]
     pub level_to_load: Option<String>,
@@ -25,8 +29,12 @@ impl AppSetupConfiguration {
         Self {
             schedule_to_use: if let Some(value) = url_params.get("schedule") {
                 ScheduleToUse::from_str(&value, true).unwrap()
-            } else {
+            } else if cfg!(feature = "avian") {
+                ScheduleToUse::FixedUpdate
+            } else if cfg!(feature = "rapier") {
                 ScheduleToUse::Update
+            } else {
+                panic!("No schedule was specified, but also no physics engine is avaible. Therefore, there is no fallback.")
             },
             level_to_load: url_params.get("level"),
         }

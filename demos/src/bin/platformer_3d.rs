@@ -1,5 +1,5 @@
 #[cfg(feature = "avian3d")]
-use avian3d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
+use avian3d::{prelude as avian, prelude::*};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
 #[cfg(feature = "rapier3d")]
@@ -19,9 +19,6 @@ use bevy_tnua_avian3d::*;
 use bevy_tnua_rapier3d::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
-use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
-    animate_platformer_character, AnimationState,
-};
 #[cfg(feature = "egui")]
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
@@ -41,6 +38,12 @@ use tnua_demos_crate::ui::plotting::PlotSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
 use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
+use tnua_demos_crate::{
+    character_animating_systems::platformer_animating_systems::{
+        animate_platformer_character, AnimationState,
+    },
+    character_control_systems::platformer_control_systems::JustPressedCachePlugin,
+};
 
 fn main() {
     tnua_demos_crate::verify_physics_backends_features!("rapier3d", "avian3d");
@@ -77,7 +80,6 @@ fn main() {
             }
             ScheduleToUse::FixedUpdate => {
                 app.add_plugins(PhysicsPlugins::new(FixedUpdate));
-                app.insert_resource(Time::new_with(Physics::fixed_hz(144.0)));
                 app.add_plugins(TnuaAvian3dPlugin::new(FixedUpdate));
             }
         }
@@ -128,7 +130,7 @@ fn main() {
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
-    app.add_plugins(LevelMechanicsPlugin);
+    app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     app.run();
 }
 
@@ -317,9 +319,14 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     #[cfg(feature = "avian3d")]
                     {
                         let player_layers: LayerMask = if use_collision_groups {
-                            [LayerNames::Player].into()
+                            [LayerNames::Player, LayerNames::Default].into()
                         } else {
-                            [LayerNames::Player, LayerNames::PhaseThrough].into()
+                            [
+                                LayerNames::Player,
+                                LayerNames::PhaseThrough,
+                                LayerNames::Default,
+                            ]
+                            .into()
                         };
                         cmd.insert(CollisionLayers::new(player_layers, player_layers));
                     }

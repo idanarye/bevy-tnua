@@ -1,5 +1,5 @@
 #[cfg(feature = "avian3d")]
-use avian3d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
+use avian3d::{prelude as avian, prelude::*};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
@@ -23,12 +23,15 @@ use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
     animate_platformer_character, AnimationState,
 };
-use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
     ForwardFromCamera,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
+use tnua_demos_crate::character_control_systems::{
+    info_dumpeing_systems::character_control_info_dumping_system,
+    platformer_control_systems::JustPressedCachePlugin,
+};
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian3d")]
 use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
@@ -76,7 +79,6 @@ fn main() {
             }
             ScheduleToUse::FixedUpdate => {
                 app.add_plugins(PhysicsPlugins::new(FixedUpdate));
-                app.insert_resource(Time::new_with(Physics::fixed_hz(144.0)));
                 app.add_plugins(TnuaAvian3dPlugin::new(FixedUpdate));
             }
         }
@@ -129,7 +131,7 @@ fn main() {
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
-    app.add_plugins(LevelMechanicsPlugin);
+    app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     app.run();
 }
 
@@ -321,9 +323,14 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     #[cfg(feature = "avian3d")]
                     {
                         let player_layers: LayerMask = if use_collision_groups {
-                            [LayerNames::Player].into()
+                            [LayerNames::Player, LayerNames::Default].into()
                         } else {
-                            [LayerNames::Player, LayerNames::PhaseThrough].into()
+                            [
+                                LayerNames::Player,
+                                LayerNames::PhaseThrough,
+                                LayerNames::Default,
+                            ]
+                            .into()
                         };
                         cmd.insert(CollisionLayers::new(player_layers, player_layers));
                     }
