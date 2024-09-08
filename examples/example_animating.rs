@@ -24,8 +24,8 @@ fn main() {
             (setup_camera_and_lights, setup_level, setup_player),
         )
         .add_systems(
-            PhysicsSchedule,
-            apply_controls.in_set(TnuaUserControlsSystemSet),
+            FixedUpdate,
+            apply_controls,
         )
         .add_systems(
             Update,
