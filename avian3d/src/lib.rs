@@ -27,6 +27,20 @@ use bevy_tnua_physics_integration_layer::TnuaSystemSet;
 /// Add this plugin to use avian3d as a physics backend.
 ///
 /// This plugin should be used in addition to `TnuaControllerPlugin`.
+/// Note that you should make sure both of these plugins use the same schedule.
+/// This should usually be `PhysicsSchedule`, which by default is `FixedUpdate`.
+///
+/// # Example
+///
+/// ```ignore
+/// App::new()
+///     .add_plugins((
+///         DefaultPlugins,
+///         PhysicsPlugins::default(),
+///         TnuaControllerPlugin::new(PhysicsSchedule),
+///         TnuaAvian3dPlugin::new(PhysicsSchedule),
+///     ));
+/// ```
 pub struct TnuaAvian3dPlugin {
     schedule: InternedScheduleLabel,
 }
