@@ -75,21 +75,24 @@ pub struct TnuaAvian3dSensorShape(pub Collider);
 fn update_rigid_body_trackers_system(
     gravity: Res<Gravity>,
     mut query: Query<(
-        &GlobalTransform,
+        &Position,
+        &Rotation,
         &LinearVelocity,
         &AngularVelocity,
         &mut TnuaRigidBodyTracker,
         Option<&TnuaToggle>,
     )>,
 ) {
-    for (transform, linaer_velocity, angular_velocity, mut tracker, tnua_toggle) in query.iter_mut()
+    for (position, rotation, linaer_velocity, angular_velocity, mut tracker, tnua_toggle) in
+        query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
             TnuaToggle::Enabled => {}
         }
-        let (_, rotation, translation) = transform.to_scale_rotation_translation();
+        let translation = position.0;
+        let rotation = rotation.0;
         *tracker = TnuaRigidBodyTracker {
             translation: translation.adjust_precision(),
             rotation: rotation.adjust_precision(),
@@ -106,7 +109,9 @@ fn update_proximity_sensors_system(
     collisions: Res<Collisions>,
     mut query: Query<(
         Entity,
-        &GlobalTransform,
+        &Position,
+        &Rotation,
+        &Collider,
         &mut TnuaProximitySensor,
         Option<&TnuaAvian3dSensorShape>,
         Option<&mut TnuaGhostSensor>,
@@ -115,7 +120,7 @@ fn update_proximity_sensors_system(
     )>,
     collision_layers_entity: Query<&CollisionLayers>,
     other_object_query: Query<(
-        Option<(&GlobalTransform, &LinearVelocity, &AngularVelocity)>,
+        Option<(&Position, &LinearVelocity, &AngularVelocity)>,
         Option<&CollisionLayers>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
@@ -124,7 +129,9 @@ fn update_proximity_sensors_system(
     query.par_iter_mut().for_each(
         |(
             owner_entity,
-            transform,
+            position,
+            rotation,
+            collider,
             mut sensor,
             shape,
             mut ghost_sensor,
@@ -136,6 +143,11 @@ fn update_proximity_sensors_system(
                 TnuaToggle::SenseOnly => {}
                 TnuaToggle::Enabled => {}
             }
+            let transform = Transform {
+                translation: position.0,
+                rotation: rotation.0,
+                scale: collider.scale(),
+            };
 
             // TODO: is there any point in doing these transformations as f64 when that feature
             // flag is active?
@@ -205,14 +217,14 @@ fn update_proximity_sensors_system(
 
                 let entity_linvel;
                 let entity_angvel;
-                if let Some((entity_transform, entity_linear_velocity, entity_angular_velocity)) =
+                if let Some((entity_position, entity_linear_velocity, entity_angular_velocity)) =
                     entity_kinematic_data
                 {
                     entity_angvel = entity_angular_velocity.0.adjust_precision();
                     entity_linvel = entity_linear_velocity.0.adjust_precision()
                         + if 0.0 < entity_angvel.length_squared() {
-                            let relative_point = intersection_point
-                                - entity_transform.translation().adjust_precision();
+                            let relative_point =
+                                intersection_point - entity_position.adjust_precision();
                             // NOTE: no need to project relative_point on the
                             // rotation plane, it will not affect the cross
                             // product.
@@ -254,7 +266,7 @@ fn update_proximity_sensors_system(
 
             let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaAvian3dSensorShape(shape)) = shape {
-                let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
+                let owner_rotation = transform.rotation;
                 let owner_rotation = Quat::from_axis_angle(
                     *cast_direction,
                     owner_rotation.to_scaled_axis().dot(*cast_direction),
