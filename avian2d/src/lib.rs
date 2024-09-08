@@ -96,7 +96,7 @@ fn update_rigid_body_trackers_system(
         }
         *tracker = TnuaRigidBodyTracker {
             translation: position.adjust_precision().extend(0.0),
-            rotation: Quat::from_rotation_z(rotation.as_radians()).adjust_precision(),
+            rotation: Quaternion::from(*rotation).adjust_precision(),
             velocity: linaer_velocity.0.extend(0.0),
             angvel: Vector3::new(0.0, 0.0, angular_velocity.0),
             gravity: gravity.0.extend(0.0),
@@ -145,9 +145,9 @@ fn update_proximity_sensors_system(
                 TnuaToggle::Enabled => {}
             }
             let transform = Transform {
-                translation: position.extend(0.0),
-                rotation: Quat::from_rotation_z(rotation.as_radians()),
-                scale: collider.scale().extend(1.0),
+                translation: position.adjust_precision().extend(0.0),
+                rotation: Quaternion::from(*rotation).adjust_precision(),
+                scale: collider.scale().adjust_precision().extend(1.0),
             };
             let cast_origin = transform.transform_point(sensor.cast_origin.f32());
             let cast_direction = sensor.cast_direction;
