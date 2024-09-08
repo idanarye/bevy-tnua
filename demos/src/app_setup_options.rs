@@ -8,7 +8,7 @@ pub struct AppSetupConfiguration {
     #[cfg_attr(feature = "rapier", arg(long = "schedule", default_value = "update"))]
     #[cfg_attr(
         feature = "avian",
-        arg(long = "schedule", default_value = "fixed-update")
+        arg(long = "schedule", default_value = "physics-schedule")
     )]
     pub schedule_to_use: ScheduleToUse,
     #[arg(long = "level")]
@@ -30,7 +30,7 @@ impl AppSetupConfiguration {
             schedule_to_use: if let Some(value) = url_params.get("schedule") {
                 ScheduleToUse::from_str(&value, true).unwrap()
             } else if cfg!(feature = "avian") {
-                ScheduleToUse::FixedUpdate
+                ScheduleToUse::PhysicsSchedule
             } else if cfg!(feature = "rapier") {
                 ScheduleToUse::Update
             } else {
@@ -67,6 +67,8 @@ impl AppSetupConfiguration {
 pub enum ScheduleToUse {
     Update,
     FixedUpdate,
+    #[cfg(feature = "avian")]
+    PhysicsSchedule,
 }
 
 impl ScheduleToUse {

@@ -61,6 +61,10 @@ fn main() {
                 // bevy-tnua-rapier2d.
                 app.add_plugins(TnuaRapier2dPlugin::new(FixedUpdate));
             }
+            #[cfg(feature = "avian")]
+            ScheduleToUse::PhysicsSchedule => {
+                panic!("Cannot happen - Avian and Rapier used together");
+            }
         }
     }
     #[cfg(feature = "avian2d")]
@@ -77,6 +81,10 @@ fn main() {
                 app.add_plugins(PhysicsPlugins::new(FixedUpdate));
                 app.add_plugins(TnuaAvian2dPlugin::new(FixedUpdate));
             }
+            ScheduleToUse::PhysicsSchedule => {
+                app.add_plugins(PhysicsPlugins::default());
+                app.add_plugins(TnuaAvian2dPlugin::new(PhysicsSchedule));
+            }
         }
     }
 
@@ -92,6 +100,11 @@ fn main() {
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
+        }
+        #[cfg(feature = "avian")]
+        ScheduleToUse::PhysicsSchedule => {
+            app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
+            app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
         }
     }
 
@@ -115,6 +128,11 @@ fn main() {
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
+            #[cfg(feature = "avian")]
+            // `PhysicsSchedule` is `FixedPostUpdate` by default, which allows us
+            // to run user code like the platformer controls in `FixedUpdate`,
+            // which is a bit more idiomatic.
+            ScheduleToUse::PhysicsSchedule => FixedUpdate.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
