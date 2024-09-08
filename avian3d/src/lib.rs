@@ -105,10 +105,8 @@ fn update_rigid_body_trackers_system(
             TnuaToggle::SenseOnly => {}
             TnuaToggle::Enabled => {}
         }
-        let translation = position.0;
-        let rotation = rotation.0;
         *tracker = TnuaRigidBodyTracker {
-            translation: translation.adjust_precision(),
+            translation: position.adjust_precision(),
             rotation: rotation.adjust_precision(),
             velocity: linaer_velocity.0.adjust_precision(),
             angvel: angular_velocity.0.adjust_precision(),

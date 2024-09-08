@@ -63,10 +63,6 @@ fn main() {
                 app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule());
                 app.add_plugins(TnuaRapier3dPlugin::new(FixedUpdate));
             }
-            #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => {
-                panic!("Cannot happen - Avian and Rapier used together");
-            }
         }
     }
     #[cfg(feature = "avian3d")]
@@ -80,12 +76,8 @@ fn main() {
             }
             ScheduleToUse::FixedUpdate => {
                 app.add_plugins(PhysicsPlugins::new(FixedUpdate));
-                app.add_plugins(TnuaAvian3dPlugin::new(FixedUpdate));
-            }
-            ScheduleToUse::PhysicsSchedule => {
-                app.add_plugins(PhysicsPlugins::default());
                 app.insert_resource(Time::new_with(Physics::fixed_hz(144.0)));
-                app.add_plugins(TnuaAvian3dPlugin::new(PhysicsSchedule));
+                app.add_plugins(TnuaAvian3dPlugin::new(FixedUpdate));
             }
         }
     }
@@ -102,11 +94,6 @@ fn main() {
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
-        }
-        #[cfg(feature = "avian")]
-        ScheduleToUse::PhysicsSchedule => {
-            app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
-            app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
         }
     }
 
@@ -131,16 +118,12 @@ fn main() {
         let system = apply_camera_controls;
         #[cfg(feature = "rapier")]
         let system = system.after(bevy_rapier3d::prelude::PhysicsSet::SyncBackend);
-        #[cfg(feature = "avian")]
-        let system = system.after(avian3d::prelude::PhysicsSet::Sync);
         system.before(bevy::transform::TransformSystem::TransformPropagate)
     });
     app.add_systems(
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
-            #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => PhysicsSchedule.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );

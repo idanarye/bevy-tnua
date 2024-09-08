@@ -19,7 +19,10 @@ fn main() {
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(Update, apply_controls.in_set(TnuaUserControlsSystemSet))
+        .add_systems(
+            PhysicsSchedule,
+            apply_controls.in_set(TnuaUserControlsSystemSet),
+        )
         .run();
 }
 
