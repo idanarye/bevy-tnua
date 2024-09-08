@@ -58,7 +58,7 @@ bevy = { version = "^0.14", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-avian3d = { version = "^0.1", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
+avian3d = { version = "^0.1", git = "https://github.com/Jondolf/avian", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
 bevy-tnua-avian3d = { path = "avian3d" }
 
 [package.metadata.docs.rs]

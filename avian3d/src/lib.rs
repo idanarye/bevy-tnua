@@ -278,7 +278,7 @@ fn update_proximity_sensors_system(
                     cast_direction,
                     sensor.cast_range,
                     true,
-                    query_filter,
+                    &query_filter,
                     |shape_hit_data| {
                         apply_cast(CastResult {
                             entity: shape_hit_data.entity,
@@ -295,7 +295,7 @@ fn update_proximity_sensors_system(
                     cast_direction,
                     sensor.cast_range,
                     true,
-                    query_filter,
+                    &query_filter,
                     |ray_hit_data| {
                         apply_cast(CastResult {
                             entity: ray_hit_data.entity,
