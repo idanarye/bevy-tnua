@@ -50,8 +50,7 @@ impl Plugin for TnuaAvian3dPlugin {
         app.configure_sets(
             self.schedule,
             TnuaSystemSet
-                .before(PhysicsSet::Prepare)
-                .before(PhysicsStepSet::First)
+                .in_set(PhysicsStepSet::First)
                 .run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
         );
         app.add_systems(
