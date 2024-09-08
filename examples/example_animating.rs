@@ -23,17 +23,8 @@ fn main() {
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(
-            FixedUpdate,
-            apply_controls,
-        )
-        .add_systems(
-            Update,
-            (
-                prepare_animations,
-                handle_animating,
-            ),
-        )
+        .add_systems(FixedUpdate, apply_controls)
+        .add_systems(Update, (prepare_animations, handle_animating))
         .run();
 }
 
