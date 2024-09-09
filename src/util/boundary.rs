@@ -115,12 +115,12 @@ pub struct VelocityBoundary {
 impl VelocityBoundary {
     /// Calculate how a boost needs to be adjusted according to the boundary.
     ///
-    /// Note that the returned value is the boost limit only on the axis direction. The other axes
-    /// should remain the same (unless the caller has a good reason to modify them). The reason why
-    /// this method doesn't simply return the final boost is that the caller may be using
-    /// [`TnuaVelChange`](crate::TnuaVelChange) which combines acceleration and impulse, and if so
-    /// then it is the caller's responsibility to amend the result of this method to match that
-    /// scheme.
+    /// Note that the returned value is the boost limit only on the axis of the returned direction.
+    /// The other axes should remain the same (unless the caller has a good reason to modify them).
+    /// The reason why this method doesn't simply return the final boost is that the caller may be
+    /// using [`TnuaVelChange`](crate::TnuaVelChange) which combines acceleration and impulse, and
+    /// if so then it is the caller's responsibility to amend the result of this method to match
+    /// that scheme.
     ///
     /// # Arguments:
     ///
@@ -138,7 +138,7 @@ impl VelocityBoundary {
         regular_boost: Vector3,
         boost_limit_inside_barrier: Float,
         barrier_strength_diminishing: Float,
-    ) -> Option<Vector3> {
+    ) -> Option<(Dir3, Float)> {
         let boost = regular_boost.dot(self.direction.adjust_precision());
         if 0.0 <= boost {
             // Not pushing the barrier
@@ -173,7 +173,7 @@ impl VelocityBoundary {
         let barrier_strength = self.percentage_left().powf(barrier_strength_diminishing);
         let total_boost = (1.0 - barrier_strength) * boost + barrier_strength * total_boost;
 
-        Some(total_boost * self.direction.adjust_precision())
+        Some((-self.direction, -total_boost))
     }
 
     fn percentage_left(&self) -> Float {

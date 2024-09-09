@@ -334,7 +334,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                             },
                         self.pushover_barrier_strength_diminishing,
                     )
-                    .filter(|limited_component| 0.0 < limited_component.length_squared())
+                    .filter(|(_, limit)| 0.0 < *limit)
             } else {
                 None
             };
@@ -343,9 +343,11 @@ impl TnuaBasis for TnuaBuiltinWalk {
             // When stopping, prefer a boost to be able to reach a precise stop (see issue #39)
             let mut walk_boost =
                 desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration);
-            if let Some(limited_component) = limited_boost_component_due_to_boundary {
-                let orig_component = walk_boost.project_onto(limited_component);
-                walk_boost += limited_component - orig_component;
+            if let Some((limit_direction, limit)) = limited_boost_component_due_to_boundary {
+                let orig = walk_boost.dot(limit_direction.adjust_precision());
+                if limit < orig {
+                    walk_boost += (limit - orig) * limit_direction.adjust_precision();
+                }
             }
             let walk_boost = if let Some(climb_vectors) = &climb_vectors {
                 climb_vectors.project(walk_boost)
@@ -358,10 +360,10 @@ impl TnuaBasis for TnuaBuiltinWalk {
             // better (see issue #34)
             let mut walk_acceleration =
                 (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
-            if let Some(limited_component) = limited_boost_component_due_to_boundary {
-                let limited_component = limited_component / ctx.frame_duration;
-                let orig_component = walk_acceleration.project_onto(limited_component);
-                walk_acceleration += limited_component - orig_component;
+            if let Some((limit_direction, limit)) = limited_boost_component_due_to_boundary {
+                let limit = limit / ctx.frame_duration;
+                let orig = walk_acceleration.dot(limit_direction.adjust_precision());
+                walk_acceleration += (limit - orig) * limit_direction.adjust_precision();
             }
             let walk_acceleration =
                 if let (Some(climb_vectors), None) = (&climb_vectors, slipping_vector) {
