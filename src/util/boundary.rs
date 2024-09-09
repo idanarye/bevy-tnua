@@ -22,6 +22,34 @@ pub struct VelocityBoundaryTracker {
 }
 
 impl VelocityBoundaryTracker {
+    /// Call this every frame to detect disruptions and track boundary clearing.
+    ///
+    /// Call this every frame to update the velocity boundary. This method will create a velocity
+    /// boundary when there is a "disruption" in the velocity (which indicates an external impulse)
+    /// and also take care of "clearing" the boundary when it gets "pushed" (the character's actual
+    /// velocity goes past the boundary). It also removes the boundary when it does not get pushed
+    /// for too long.
+    ///
+    /// This method does not apply the boundary - it only updates it. To apply the boundary,
+    /// retrieve it with the [`boundary`](Self::boundary) method and use the [`VelocityBoundary`]
+    /// object to alter the acceleration.
+    ///
+    /// # Arguments:
+    ///
+    /// * `true_velocity` - the velocity as reported by the physics backend. This is the data
+    ///   tracked in the [`TnuaRigidBodyTracker`](crate::TnuaRigidBodyTracker), so a typical basis
+    ///   or action will get it from
+    ///   [`TnuaBasisContext::tracker`](crate::TnuaBasisContext::tracker).
+    /// * `disruption_from` - the velocity the entity was _supposed_ to be in, according to the
+    ///   calculations of the basis or the action.
+    ///   It is up to the caller to determine whether or not there was a disruption. If there was
+    ///
+    ///   no disruption, this argument should be `None` (but `update` should still be called!).
+    ///   `VelocityBoundaryTracker` will make no attempt to determine if the difference in velocity
+    ///   really is a disruption.
+    /// * `frame_duration` - the duration of the current frame, in seconds.
+    /// * `no_push_timeout` - a duration in seconds to keep the boundary alive when it is not
+    ///   actively pushed.
     pub fn update(
         &mut self,
         true_velocity: Vector3,
@@ -64,6 +92,9 @@ impl VelocityBoundaryTracker {
         }
     }
 
+    /// Retrieve the current velocity boundary if there is one.
+    ///
+    /// Make sure to call [`update`](Self::update) every frame to keep the bounady up-to-date.
     pub fn boundary(&self) -> Option<&VelocityBoundary> {
         self.boundary.as_ref()
     }
