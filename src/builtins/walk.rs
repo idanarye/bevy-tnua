@@ -111,9 +111,9 @@ pub struct TnuaBuiltinWalk {
     /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub pushover_no_push_timeout: f32,
 
-    /// An exponent for controling the shape of the Pushover barrier diminishing.
+    /// An exponent for controlling the shape of the Pushover barrier diminishing.
     ///
-    /// For best results, set it to values lareger than 1.0.
+    /// For best results, set it to values larger than 1.0.
     ///
     /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub pushover_barrier_strength_diminishing: Float,

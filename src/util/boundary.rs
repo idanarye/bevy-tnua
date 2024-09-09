@@ -100,6 +100,10 @@ impl VelocityBoundaryTracker {
     }
 }
 
+/// An indication that a character was knocked back and "struggles" to get back to its original
+/// velocity.
+///
+/// Typically created in [`VelocityBoundaryTracker`].
 pub struct VelocityBoundary {
     base: Float,
     original_frontier: Float,
@@ -109,6 +113,25 @@ pub struct VelocityBoundary {
 }
 
 impl VelocityBoundary {
+    /// Calculate how a boost needs to be adjusted according to the boundary.
+    ///
+    /// Note that the returned value is the boost limit only on the axis direction. The other axes
+    /// should remain the same (unless the caller has a good reason to modify them). The reason why
+    /// this method doesn't simply return the final boost is that the caller may be using
+    /// [`TnuaVelChange`](crate::TnuaVelChange) which combines acceleration and impulse, and if so
+    /// then it is the caller's responsibility to amend the result of this method to match that
+    /// scheme.
+    ///
+    /// # Arguments:
+    ///
+    /// * `current_velocity` - the velocity of the character **before the boost**.
+    /// * `regular_boost` - the boost that the caller would have applied to the character before
+    ///   taking the boundary into account.
+    /// * `boost_limit_inside_barrier` - the maximum boost allowed inside a fully strength barrier,
+    ///   assuming it goes directly against the direction of the boundary.
+    /// * `barrier_strength_diminishing` - an exponent describing how the boundary strength
+    ///   diminishes when the barrier gets cleared. For best results, set it to values larger than
+    ///   1.0.
     pub fn calc_boost_part_on_boundary_axis_after_limit(
         &self,
         current_velocity: Vector3,
