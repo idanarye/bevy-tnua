@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- Pushover - the ability of characters to get knocked back by external forces.
+  - Controlled by the `pushover_...` settings of `TnuaBuiltinWalk`.
+
 ## 0.19.0 - 2024-07-05
 ### Changed
 - Upgrade to Bevy 0.14.
