@@ -15,6 +15,7 @@ pub enum AnimationState {
     Crouching,
     Crawling(Float),
     Dashing,
+    KnockedBack,
 }
 
 #[allow(clippy::unnecessary_cast)]
@@ -94,7 +95,9 @@ pub fn animate_platformer_character(
                     else {
                         continue;
                     };
-                    if basis_state.standing_on_entity().is_none() {
+                    if let Some(_pushover_direction) = basis_state.pushover() {
+                        AnimationState::KnockedBack
+                    } else if basis_state.standing_on_entity().is_none() {
                         AnimationState::Falling
                     } else {
                         let speed = basis_state.running_velocity.length();
@@ -171,6 +174,11 @@ pub fn animate_platformer_character(
                     }
                     AnimationState::Dashing => {
                         player.start(handler.animations["Dashing"]).set_speed(10.0);
+                    }
+                    AnimationState::KnockedBack => {
+                        player
+                            .start(handler.animations["KnockedBack"])
+                            .set_speed(1.0);
                     }
                 }
             }

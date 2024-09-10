@@ -108,7 +108,7 @@ pub struct VelocityBoundary {
     base: Float,
     original_frontier: Float,
     frontier: Float,
-    direction: Dir3,
+    pub direction: Dir3,
     no_push_timer: Timer,
 }
 

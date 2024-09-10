@@ -614,6 +614,12 @@ impl TnuaBuiltinWalkState {
     pub fn standing_on_entity(&self) -> Option<Entity> {
         Some(self.standing_on.as_ref()?.entity)
     }
+
+    /// If the character is is being knocked back, returns the direction it is being knockback back
+    /// toward.
+    pub fn pushover(&self) -> Option<Dir3> {
+        Some(self.velocity_boundary_tracker.boundary()?.direction)
+    }
 }
 
 struct ClimbVectors {
