@@ -292,7 +292,7 @@ pub fn apply_platformer_controls(
         // configuration - which in this case we copy over from `config.walk` - and controls like
         // `desired_velocity` or `desired_forward` which we compute here based on the current
         // frame's input.
-        let mut basis = TnuaBuiltinWalk {
+        controller.basis(TnuaBuiltinWalk {
             desired_velocity: if turn_in_place {
                 Vector3::ZERO
             } else {
@@ -307,18 +307,7 @@ pub fn apply_platformer_controls(
                 direction.normalize_or_zero()
             },
             ..config.walk.clone()
-        };
-
-        // During knockback, we want the character to face the right way so that the animation
-        // would make sense.
-        if let Some((_, state)) = controller.concrete_basis::<TnuaBuiltinWalk>() {
-            if let Some(pushover_direction) = state.pushover() {
-                basis.desired_forward = *-pushover_direction;
-                basis.turning_angvel = Float::INFINITY;
-            }
-        }
-
-        controller.basis(basis);
+        });
 
         if crouch {
             // Crouching is an action. We either feed it or we don't - other than that there is

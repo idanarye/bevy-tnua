@@ -1,3 +1,4 @@
+use bevy::ecs::query::QueryData;
 use bevy::prelude::*;
 use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState};
 use bevy_tnua::math::Float;
@@ -15,7 +16,54 @@ pub enum AnimationState {
     Crouching,
     Crawling(Float),
     Dashing,
-    KnockedBack,
+    KnockedBack(Dir3),
+}
+
+impl AnimationState {
+    fn force_forward(&self) -> Option<Dir3> {
+        match self {
+            AnimationState::Standing => None,
+            AnimationState::Running(_) => None,
+            AnimationState::Jumping => None,
+            AnimationState::Falling => None,
+            AnimationState::Crouching => None,
+            AnimationState::Crawling(_) => None,
+            AnimationState::Dashing => None,
+            AnimationState::KnockedBack(direction) => Some(-*direction),
+        }
+    }
+}
+
+#[derive(QueryData)]
+#[query_data(mutable)]
+pub struct ForwardForcing {
+    pub transform: &'static mut Transform,
+    #[cfg(feature = "rapier3d")]
+    rapier3d_locked_axes: &'static mut bevy_rapier3d::prelude::LockedAxes,
+    #[cfg(feature = "avian3d")]
+    avian3d_locked_axes: &'static mut avian3d::prelude::LockedAxes,
+}
+
+impl ForwardForcingItem<'_> {
+    fn lock_rotation(&mut self) {
+        #[cfg(feature = "rapier3d")]
+        self.rapier3d_locked_axes
+            .insert(bevy_rapier3d::prelude::LockedAxes::ROTATION_LOCKED_Y);
+        #[cfg(feature = "avian3d")]
+        {
+            *self.avian3d_locked_axes = self.avian3d_locked_axes.lock_rotation_y();
+        }
+    }
+
+    fn unlock_rotation(&mut self) {
+        #[cfg(feature = "rapier3d")]
+        self.rapier3d_locked_axes
+            .remove(bevy_rapier3d::prelude::LockedAxes::ROTATION_LOCKED_Y);
+        #[cfg(feature = "avian3d")]
+        {
+            *self.avian3d_locked_axes = self.avian3d_locked_axes.unlock_rotation_y();
+        }
+    }
 }
 
 #[allow(clippy::unnecessary_cast)]
@@ -32,10 +80,13 @@ pub fn animate_platformer_character(
         // for deciding which animation to play.
         &TnuaController,
         &AnimationsHandler,
+        ForwardForcing,
     )>,
     mut animation_players_query: Query<&mut AnimationPlayer>,
 ) {
-    for (mut animating_state, controller, handler) in animations_handlers_query.iter_mut() {
+    for (mut animating_state, controller, handler, mut forward_forcing) in
+        animations_handlers_query.iter_mut()
+    {
         let Ok(mut player) = animation_players_query.get_mut(handler.player_entity) else {
             continue;
         };
@@ -95,8 +146,8 @@ pub fn animate_platformer_character(
                     else {
                         continue;
                     };
-                    if let Some(_pushover_direction) = basis_state.pushover() {
-                        AnimationState::KnockedBack
+                    if let Some(pushover_direction) = basis_state.pushover() {
+                        AnimationState::KnockedBack(pushover_direction)
                     } else if basis_state.standing_on_entity().is_none() {
                         AnimationState::Falling
                     } else {
@@ -175,13 +226,24 @@ pub fn animate_platformer_character(
                     AnimationState::Dashing => {
                         player.start(handler.animations["Dashing"]).set_speed(10.0);
                     }
-                    AnimationState::KnockedBack => {
+                    AnimationState::KnockedBack(_) => {
                         player
                             .start(handler.animations["KnockedBack"])
                             .set_speed(1.0);
                     }
                 }
             }
+        }
+
+        // The knockback animation needs the character to be in a specific direciton. We want the
+        // character to face that way immediately (a gradual turn would look weird here) and we
+        // also want to lock the rotation so that the physics engine won't be able to slightly
+        // change it between frames (which Tnua will try to do)
+        if let Some(forward) = animating_state.get().and_then(|s| s.force_forward()) {
+            forward_forcing.lock_rotation();
+            forward_forcing.transform.look_to(forward, Dir3::Y);
+        } else {
+            forward_forcing.unlock_rotation();
         }
     }
 }
