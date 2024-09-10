@@ -46,7 +46,7 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
                 });
                 cmd.insert(TimeToDespawn::from_seconds(10.0));
                 cmd.insert(CannonBullet::new_with_effect(|cmd| {
-                    cmd.insert(PushEffect::Impulse(-10.0 * Vector3::X));
+                    cmd.insert(PushEffect::Impulse(-20.0 * Vector3::X));
                 }));
             }),
         });
