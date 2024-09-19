@@ -24,7 +24,7 @@ pub struct LevelSetupHelper2d<'w, 's> {
     asset_server: Res<'w, AssetServer>,
 }
 
-impl<'w, 's> LevelSetupHelper2d<'w, 's> {
+impl LevelSetupHelper2d<'_, '_> {
     pub fn spawn_named(&mut self, name: impl ToString) -> EntityCommands {
         self.commands
             .spawn((LevelObject, Name::new(name.to_string())))
@@ -32,12 +32,9 @@ impl<'w, 's> LevelSetupHelper2d<'w, 's> {
 
     pub fn spawn_floor(&mut self, color: impl Into<Color>) -> EntityCommands {
         let mut cmd = self.spawn_named("Floor");
-        cmd.insert(SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(128.0, 0.5)),
-                color: color.into(),
-                ..Default::default()
-            },
+        cmd.insert(Sprite {
+            custom_size: Some(Vec2::new(128.0, 0.5)),
+            color: color.into(),
             ..Default::default()
         });
 
@@ -61,15 +58,14 @@ impl<'w, 's> LevelSetupHelper2d<'w, 's> {
     ) -> EntityCommands {
         let mut cmd = self.spawn_named(name);
 
-        cmd.insert(SpriteBundle {
-            sprite: Sprite {
+        cmd.insert((
+            Sprite {
                 custom_size: Some(size.f32()),
                 color: color.into(),
                 ..Default::default()
             },
             transform,
-            ..Default::default()
-        });
+        ));
 
         #[cfg(feature = "rapier2d")]
         cmd.insert(rapier::Collider::cuboid(
@@ -97,26 +93,21 @@ impl<'w, 's> LevelSetupHelper2d<'w, 's> {
         let child = self
             .spawn((
                 LevelObject,
-                Text2dBundle {
-                    text: Text::from_section(
-                        text.to_string(),
-                        TextStyle {
-                            font,
-                            font_size: 72.0,
-                            color: css::WHITE.into(),
-                        },
-                    )
-                    .with_justify(JustifyText::Center),
-                    transform: Transform::from_xyz(0.0, 0.0, 1.0)
-                        .with_scale(text_scale.f32() * Vec3::ONE),
-                    ..Default::default()
+                Text::new(text.to_string()),
+                TextLayout::new_with_justify(JustifyText::Center),
+                TextFont {
+                    font,
+                    font_size: 72.0,
+                    ..default()
                 },
+                TextColor(css::WHITE.into()),
+                Transform::from_xyz(0.0, 0.0, 1.0).with_scale(text_scale.f32() * Vec3::ONE),
             ))
             .id();
         let mut cmd = self.spawn_named(name);
         cmd.add_child(child);
         cmd.insert((
-            TransformBundle::from_transform(transform),
+            transform,
             #[cfg(feature = "rapier2d")]
             rapier::Collider::ball(radius),
             #[cfg(feature = "avian2d")]

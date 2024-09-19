@@ -7,8 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d.
 
 ## [Unreleased]
+### Deprecated
+- Deprecate `TnuaRapier3dIOBundle` in favor or bevy required components.
 
-## 0.4.0 - 2024-07-08
+## 0.9.0 - 2024-12-13
+### Changed
+- Use `RapierContextEntityLink` to detect the Rapir context. This means Tnua
+  should now support Rapier's multiple physics worlds feature.
+
+## 0.8.0 - 2024-12-13
+### Changed
+- Upgrade to Bevy 0.15 and bevy_rapier 0.28.
+
+## 0.7.0 - 2024-07-08
 ### Changed
 - Upgrade to Bevy 0.14 and bevy_rapier 0.27.
 

@@ -16,6 +16,7 @@ use bevy::window::{PresentMode, PrimaryWindow};
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 #[allow(unused_imports)]
 use bevy_tnua::math::AsF32;
+use bevy_tnua::math::{float_consts, Float, Vector2, Vector3};
 #[cfg(feature = "egui")]
 use bevy_tnua::TnuaToggle;
 
@@ -40,11 +41,16 @@ impl<C: Component + UiTunable> Default for DemoUi<C> {
     }
 }
 
+const GRAVITY_MAGNITUDE: Float = 9.81;
+
 impl<C: Component + UiTunable> Plugin for DemoUi<C> {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "egui")]
         app.add_plugins(EguiPlugin);
-        app.insert_resource(DemoUiPhysicsBackendActive(true));
+        app.insert_resource(DemoUiPhysicsBackendSettings {
+            active: true,
+            gravity: Vector3::NEG_Y * GRAVITY_MAGNITUDE,
+        });
         app.configure_sets(
             Update,
             DemoInfoUpdateSystemSet.after(bevy_tnua::TnuaUserControlsSystemSet),
@@ -98,7 +104,10 @@ impl<C: Component + UiTunable> Plugin for DemoUi<C> {
 
 // NOTE: The demos are responsible for updating the physics backend
 #[derive(Resource)]
-pub struct DemoUiPhysicsBackendActive(pub bool);
+pub struct DemoUiPhysicsBackendSettings {
+    pub active: bool,
+    pub gravity: Vector3,
+}
 
 #[derive(Component)]
 pub struct TrackedEntity(pub String);
@@ -116,7 +125,7 @@ fn apply_selectors(
 #[allow(clippy::type_complexity)]
 fn ui_system<C: Component + UiTunable>(
     mut egui_context: EguiContexts,
-    mut physics_backend_active: ResMut<DemoUiPhysicsBackendActive>,
+    mut physics_backend_settings: ResMut<DemoUiPhysicsBackendSettings>,
     mut query: Query<(
         Entity,
         &TrackedEntity,
@@ -140,7 +149,7 @@ fn ui_system<C: Component + UiTunable>(
         return;
     };
     let mut egui_window = egui::Window::new("Tnua");
-    if !primary_window.cursor.visible {
+    if !primary_window.cursor_options.visible {
         egui_window = egui::Window::new("Tnua")
             .interactable(false)
             .movable(false)
@@ -182,7 +191,19 @@ fn ui_system<C: Component + UiTunable>(
                 ui.label("Dash with Shift (while moving in a direction)");
             });
         level_selection.show_in_ui(ui);
-        ui.checkbox(&mut physics_backend_active.0, "Physics Backend Enabled");
+        ui.collapsing("Physics Backend", |ui| {
+            ui.checkbox(&mut physics_backend_settings.active, "Physics Enabled");
+            let mut gravity_angle = physics_backend_settings.gravity.truncate().to_angle();
+            ui.horizontal(|ui| {
+                ui.label("Gravity Angle:");
+                if ui.add(egui::Slider::new(&mut gravity_angle, -float_consts::PI..=0.0)).changed() {
+                    physics_backend_settings.gravity = Vector2::from_angle(gravity_angle).extend(0.0) * GRAVITY_MAGNITUDE;
+                }
+                if ui.button("Reset").clicked() {
+                    physics_backend_settings.gravity = Vector3::NEG_Y * GRAVITY_MAGNITUDE;
+                }
+            });
+        });
         for (
             entity,
             TrackedEntity(name),
@@ -281,44 +302,56 @@ fn ui_system<C: Component + UiTunable>(
 }
 
 fn update_physics_active_from_ui(
-    setting_from_ui: Res<DemoUiPhysicsBackendActive>,
+    setting_from_ui: Res<DemoUiPhysicsBackendSettings>,
     #[cfg(feature = "rapier2d")] mut config_rapier2d: Option<
-        ResMut<bevy_rapier2d::plugin::RapierConfiguration>,
+        Single<&mut bevy_rapier2d::plugin::RapierConfiguration>,
     >,
     #[cfg(feature = "rapier3d")] mut config_rapier3d: Option<
-        ResMut<bevy_rapier3d::plugin::RapierConfiguration>,
+        Single<&mut bevy_rapier3d::plugin::RapierConfiguration>,
     >,
     #[cfg(feature = "avian2d")] mut physics_time_avian2d: Option<
         ResMut<Time<avian2d::schedule::Physics>>,
     >,
+    #[cfg(feature = "avian2d")] mut gravity_avian2d: Option<ResMut<avian2d::prelude::Gravity>>,
     #[cfg(feature = "avian3d")] mut physics_time_avian3d: Option<
         ResMut<Time<avian3d::schedule::Physics>>,
     >,
+    #[cfg(feature = "avian3d")] mut gravity_avian3d: Option<ResMut<avian3d::prelude::Gravity>>,
 ) {
     #[cfg(feature = "rapier2d")]
     if let Some(config) = config_rapier2d.as_mut() {
-        config.physics_pipeline_active = setting_from_ui.0;
+        config.physics_pipeline_active = setting_from_ui.active;
+        config.gravity = setting_from_ui.gravity.truncate();
     }
     #[cfg(feature = "rapier3d")]
     if let Some(config) = config_rapier3d.as_mut() {
-        config.physics_pipeline_active = setting_from_ui.0;
+        config.physics_pipeline_active = setting_from_ui.active;
+        config.gravity = setting_from_ui.gravity;
     }
     #[cfg(feature = "avian2d")]
     if let Some(physics_time) = physics_time_avian2d.as_mut() {
         use avian2d::schedule::PhysicsTime;
-        if setting_from_ui.0 {
+        if setting_from_ui.active {
+            physics_time.unpause();
+        } else {
+            physics_time.pause();
+        }
+    }
+    #[cfg(feature = "avian2d")]
+    if let Some(gravity) = gravity_avian2d.as_mut() {
+        gravity.0 = setting_from_ui.gravity.truncate();
+    }
+    #[cfg(feature = "avian3d")]
+    if let Some(physics_time) = physics_time_avian3d.as_mut() {
+        use avian3d::schedule::PhysicsTime;
+        if setting_from_ui.active {
             physics_time.unpause();
         } else {
             physics_time.pause();
         }
     }
     #[cfg(feature = "avian3d")]
-    if let Some(physics_time) = physics_time_avian3d.as_mut() {
-        use avian3d::schedule::PhysicsTime;
-        if setting_from_ui.0 {
-            physics_time.unpause();
-        } else {
-            physics_time.pause();
-        }
+    if let Some(gravity) = gravity_avian3d.as_mut() {
+        gravity.0 = setting_from_ui.gravity;
     }
 }

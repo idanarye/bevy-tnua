@@ -39,14 +39,11 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
                 cmd.make_kinematic_with_linear_velocity(-20.0 * Vector3::X);
                 cmd.make_sensor();
                 cmd.add_ball_collider(0.2);
-                cmd.insert(PbrBundle {
-                    mesh: bullet_mesh.clone(),
-                    material: bullet_material.clone(),
-                    ..Default::default()
-                });
+                cmd.insert(Mesh3d(bullet_mesh.clone()));
+                cmd.insert(MeshMaterial3d(bullet_material.clone()));
                 cmd.insert(TimeToDespawn::from_seconds(10.0));
                 cmd.insert(CannonBullet::new_with_effect(|cmd| {
-                    cmd.insert(PushEffect::Impulse(-10.0 * Vector3::X));
+                    cmd.insert(PushEffect::Impulse(-20.0 * Vector3::X));
                 }));
             }),
         });

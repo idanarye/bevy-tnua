@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+
+## 0.21.0 - 2024-12-13
+### Changed
+- Upgrade to Bevy 0.15.
+
+### Removed
+- `TnuaControllerBundle`. It is no longer needed since `TnuaController` uses
+  Bevy 0.15's required components feature.
+
+## 0.20.0 - 2024-10-12
+### Added
+- A `TnuaBuiltinKnockback` action for applying knockback that will not be
+  nullified even with very high walk acceleration settings (see
+  https://github.com/idanarye/bevy-tnua/issues/30)
+
+### Changed
+- Instead of fixating it to positive Y, Tnua now calculates the up direction to
+  be the reverse of the gravity direction (see see
+  https://github.com/idanarye/bevy-tnua/issues/40)
+- [**BREAKING**] API changes:
+  - (only relevant for custom basis/actions) The `up_direction` of
+    `TnuaBasisContext` and `TnuaActionContext` is now a field instead of a
+    method.
+  - `TnuaController` method for feeding basis and actions no longer return
+    `&mut Self` (this was always redundant, since they get called from queries
+    anyway rather than on freshly created objects, so they don't benefit from a
+    fluent API)
+  - `desired_forward` fields of `TnuaBuiltinWalk` and `TnuaBuiltinDash` were
+    changed from `Vector3` to `Option<Dir3>`.
+  - The `direction` fields of some of `TnuaBuiltinDashState`'s variants were
+    changed from `Vector3` to `Dir3`.
+
 ## 0.19.0 - 2024-07-05
 ### Changed
 - Upgrade to Bevy 0.14.

@@ -9,8 +9,10 @@ exclude = [
 
 [features]
 default = [
-    "avian3d?/parry-f32",
+    "avian2d?/f32",
     "avian2d?/parry-f32",
+    "avian3d?/f32",
+    "avian3d?/parry-f32",
     # Comment these out when Bevy gets upgraded and a dependency lags behind
     "egui",
 ]
@@ -20,8 +22,10 @@ rapier = []
 rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
 rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
 f64 = [
-    "avian3d?/parry-f64",
+    "avian2d?/f64",
     "avian2d?/parry-f64",
+    "avian3d?/f64",
+    "avian3d?/parry-f64",
     "bevy-tnua-physics-integration-layer/f64",
     "bevy-tnua/f64",
 ]
@@ -31,7 +35,7 @@ avian2d = ["avian", "dep:avian2d", "dep:bevy-tnua-avian2d"]
 avian3d = ["avian", "dep:avian3d", "dep:bevy-tnua-avian3d"]
 
 [dependencies]
-bevy = { version = "^0.14", default-features = false, features = [
+bevy = { version = "^0.15", default-features = false, features = [
      "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -44,6 +48,8 @@ bevy = { version = "^0.14", default-features = false, features = [
     "zstd",
     "tonemapping_luts",
     "bevy_text",
+    "bevy_window",
+    "bevy_ui",
     # "png",
     # "hdr",
     # "vorbis",
@@ -53,21 +59,21 @@ bevy = { version = "^0.14", default-features = false, features = [
 bevy-tnua = { path = ".." }
 bevy-tnua-physics-integration-layer = { path = "../physics-integration-layer" }
 
-bevy_rapier2d = { version = "^0.27", features = ["debug-render-2d"], optional = true }
+bevy_rapier2d = { version = "^0.28", features = ["debug-render-2d"], optional = true }
 bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
 
-bevy_rapier3d = { version = "^0.27", features = ["debug-render-3d"], optional = true }
+bevy_rapier3d = { version = "^0.28", features = ["debug-render-3d"], optional = true }
 bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
-avian2d = {version = "^0.1", git = "https://github.com/Jondolf/avian", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
+avian2d = { version = "^0.2", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
 bevy-tnua-avian2d = { path = "../avian2d", default-features = false, optional = true }
 
-avian3d = {version = "^0.1", git = "https://github.com/Jondolf/avian", default-features = false, features = ["3d","debug-plugin", "parallel"], optional = true }
+avian3d = { version = "^0.2", default-features = false, features = ["3d","debug-plugin", "parallel"], optional = true }
 bevy-tnua-avian3d = { path = "../avian3d", default-features = false, optional = true }
 
-bevy_egui = { version = "0.28", optional = true, default-features = false, features = ["default_fonts", "render"] }
-egui_plot = { version = "0.28", optional = true }
-egui_extras = { version = "0.28", optional = true }
+bevy_egui = { version = "0.31", optional = true, default-features = false, features = ["default_fonts", "render"] }
+egui_plot = { version = "0.29", optional = true }
+egui_extras = { version = "0.29", optional = true }
 
 bevy_framepace = { version = "0.17", optional = true }
 

@@ -147,3 +147,12 @@ pub fn rotation_arc_around_axis(
         Quaternion::from_rotation_arc_2d(Vector2::X, desired_forward_in_plane_coords);
     Some(rotation_to_set_forward.xyz().z)
 }
+
+/// Temporary until we get an official release of the physics integration layer crate with
+/// `calc_boost` in it.
+pub(crate) fn calc_boost(
+    vel_change: &bevy_tnua_physics_integration_layer::data_for_backends::TnuaVelChange,
+    frame_duration: Float,
+) -> Vector3 {
+    vel_change.acceleration * frame_duration + vel_change.boost
+}

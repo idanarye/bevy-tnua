@@ -1,18 +1,11 @@
 use std::time::Duration;
 
-use crate::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
+use crate::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy::prelude::*;
 
 use crate::util::rotation_arc_around_axis;
 use crate::TnuaBasisContext;
 use crate::{TnuaBasis, TnuaVelChange};
-
-// TODO: Once I make a release of the integration layer crate that includes float_consts, import
-// that from there (adding this reexport does not justify a release of that crate...)
-#[cfg(not(feature = "f64"))]
-use std::f32::consts as float_consts;
-#[cfg(feature = "f64")]
-use std::f64::consts as float_consts;
 
 /// The most common [basis](TnuaBasis) - walk around as a floating capsule.
 ///
@@ -25,12 +18,12 @@ use std::f64::consts as float_consts;
 ///   bottom of the collider.
 /// * [`desired_velocity`](Self::desired_velocity) - while leaving this as as the default
 ///   `Vector3::ZERO`, doing so would mean that the character will not move.
-/// * [`desired_forward`](Self::desired_forward) - leaving this is the default `Vector3::ZERO` will
-///   mean that Tnua will not attempt to fix the character's rotation along the [up](Self::up)
-///   axis.
+/// * [`desired_forward`](Self::desired_forward) - leaving this is the default `None` will mean
+///   that Tnua will not attempt to fix the character's rotation along the up axis.
 ///
-///   This is fine if rotation along the up axis is locked (Rapier only supports locking cardinal
-///   axes, but [`up`](Self::up) defaults to `Vector3::Y` which fits the bill).
+///   This is fine if rotation along the up axis is locked (Rapier and Avian only support locking
+///   cardinal axes, but the up direction is based on the gravity which means it defaults to the Y
+///   axis so it usually works out).
 ///
 ///   This is also fine for 2D games (or games with 3D graphics and 2D physics) played from side
 ///   view where the physics engine cannot rotate the character along the up axis.
@@ -43,14 +36,14 @@ use std::f64::consts as float_consts;
 pub struct TnuaBuiltinWalk {
     /// The direction (in the world space) and speed to accelerate to.
     ///
-    /// Tnua assumes that this vector is orthogonal to the [`up`](Self::up) vector.
+    /// Tnua assumes that this vector is orthogonal to the up dierction.
     pub desired_velocity: Vector3,
 
     /// If non-zero, Tnua will rotate the character so that its negative Z will face in that
     /// direction.
     ///
-    /// Tnua assumes that this vector is orthogonal to the [`up`](Self::up) vector.
-    pub desired_forward: Vector3,
+    /// Tnua assumes that this vector is orthogonal to the up direction.
+    pub desired_forward: Option<Dir3>,
 
     /// The height at which the character will float above ground at rest.
     ///
@@ -132,7 +125,7 @@ impl Default for TnuaBuiltinWalk {
     fn default() -> Self {
         Self {
             desired_velocity: Vector3::ZERO,
-            desired_forward: Vector3::ZERO,
+            desired_forward: None,
             float_height: 0.0,
             cling_distance: 1.0,
             spring_strengh: 400.0,
@@ -168,7 +161,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
             state.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
             let sideways_unnormalized = sensor_output
                 .normal
-                .cross(*ctx.up_direction())
+                .cross(*ctx.up_direction)
                 .adjust_precision();
             if sideways_unnormalized == Vector3::ZERO {
                 climb_vectors = None;
@@ -185,7 +178,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
             slipping_vector = {
                 let angle_with_floor = sensor_output
                     .normal
-                    .angle_between(*ctx.up_direction())
+                    .angle_between(*ctx.up_direction)
                     .adjust_precision();
                 if angle_with_floor <= self.max_slope {
                     None
@@ -193,7 +186,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     Some(
                         sensor_output
                             .normal
-                            .reject_from(*ctx.up_direction())
+                            .reject_from(*ctx.up_direction)
                             .adjust_precision(),
                     )
                 }
@@ -238,7 +231,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
         let velocity_on_plane = state
             .effective_velocity
-            .reject_from(ctx.up_direction().adjust_precision());
+            .reject_from(ctx.up_direction.adjust_precision());
 
         let desired_boost = self.desired_velocity - velocity_on_plane;
 
@@ -259,7 +252,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
             state.effective_velocity.dot(climb_vectors.direction)
                 * climb_vectors
                     .direction
-                    .dot(ctx.up_direction().adjust_precision())
+                    .dot(ctx.up_direction.adjust_precision())
         } else {
             0.0
         };
@@ -291,9 +284,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     break 'slipping_boost Vector3::ZERO;
                 };
                 let vertical_velocity = if 0.0 <= state.vertical_velocity {
-                    ctx.tracker
-                        .gravity
-                        .dot(ctx.up_direction().adjust_precision())
+                    ctx.tracker.gravity.dot(ctx.up_direction.adjust_precision())
                         * ctx.frame_duration
                 } else {
                     state.vertical_velocity
@@ -340,7 +331,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                             let spring_offset =
                                 self.float_height - sensor_output.proximity.adjust_precision();
                             state.standing_offset =
-                                -spring_offset * ctx.up_direction().adjust_precision();
+                                -spring_offset * ctx.up_direction.adjust_precision();
                             break 'upward_impulse self.spring_force(state, &ctx, spring_offset);
                         } else {
                             state.airborne_timer = Some(Timer::from_seconds(
@@ -361,8 +352,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                         }
                         if state.vertical_velocity <= 0.0 {
                             break 'upward_impulse TnuaVelChange::acceleration(
-                                -self.free_fall_extra_gravity
-                                    * ctx.up_direction().adjust_precision(),
+                                -self.free_fall_extra_gravity * ctx.up_direction.adjust_precision(),
                             );
                         } else {
                             break 'upward_impulse TnuaVelChange::ZERO;
@@ -379,18 +369,15 @@ impl TnuaBasis for TnuaBuiltinWalk {
             + motor.lin.boost
             + ctx.frame_duration * motor.lin.acceleration
             - impulse_to_offset;
-        state.running_velocity = new_velocity.reject_from(ctx.up_direction().adjust_precision());
+        state.running_velocity = new_velocity.reject_from(ctx.up_direction.adjust_precision());
 
         // Tilt
 
         let torque_to_fix_tilt = {
-            let tilted_up = ctx
-                .tracker
-                .rotation
-                .mul_vec3(ctx.up_direction().adjust_precision());
+            let tilted_up = ctx.tracker.rotation.mul_vec3(Vector3::Y);
 
             let rotation_required_to_fix_tilt =
-                Quaternion::from_rotation_arc(tilted_up, ctx.up_direction().adjust_precision());
+                Quaternion::from_rotation_arc(tilted_up, ctx.up_direction.adjust_precision());
 
             let desired_angvel = (rotation_required_to_fix_tilt.xyz() / ctx.frame_duration)
                 .clamp_length_max(self.tilt_offset_angvel);
@@ -400,11 +387,14 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
         // Turning
 
-        let desired_angvel = if 0.0 < self.desired_forward.length_squared() {
+        let desired_angvel = if let Some(desired_forward) = self.desired_forward {
             let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
-            let rotation_along_up_axis =
-                rotation_arc_around_axis(Dir3::Y, current_forward, self.desired_forward)
-                    .unwrap_or(0.0);
+            let rotation_along_up_axis = rotation_arc_around_axis(
+                ctx.up_direction,
+                current_forward,
+                desired_forward.adjust_precision(),
+            )
+            .unwrap_or(0.0);
             (rotation_along_up_axis / ctx.frame_duration)
                 .clamp(-self.turning_angvel, self.turning_angvel)
         } else {
@@ -412,20 +402,17 @@ impl TnuaBasis for TnuaBuiltinWalk {
         };
 
         // NOTE: This is the regular axis system so we used the configured up.
-        let existing_angvel = ctx
-            .tracker
-            .angvel
-            .dot(ctx.up_direction().adjust_precision());
+        let existing_angvel = ctx.tracker.angvel.dot(ctx.up_direction.adjust_precision());
 
         // This is the torque. Should it be clamped by an acceleration? From experimenting with
         // this I think it's meaningless and only causes bugs.
         let torque_to_turn = desired_angvel - existing_angvel;
 
-        let existing_turn_torque = torque_to_fix_tilt.dot(ctx.up_direction().adjust_precision());
+        let existing_turn_torque = torque_to_fix_tilt.dot(ctx.up_direction.adjust_precision());
         let torque_to_turn = torque_to_turn - existing_turn_torque;
 
         motor.ang = TnuaVelChange::boost(
-            torque_to_fix_tilt + torque_to_turn * ctx.up_direction().adjust_precision(),
+            torque_to_fix_tilt + torque_to_turn * ctx.up_direction.adjust_precision(),
         );
     }
 
@@ -450,7 +437,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
     fn neutralize(&mut self) {
         self.desired_velocity = Vector3::ZERO;
-        self.desired_forward = Vector3::ZERO;
+        self.desired_forward = None;
     }
 
     fn is_airborne(&self, state: &Self::State) -> bool {
@@ -484,7 +471,7 @@ impl TnuaBuiltinWalk {
 
         let relative_velocity = state
             .effective_velocity
-            .dot(ctx.up_direction().adjust_precision())
+            .dot(ctx.up_direction.adjust_precision())
             - state.vertical_velocity;
 
         let gravity_compensation = -ctx.tracker.gravity;
@@ -492,9 +479,8 @@ impl TnuaBuiltinWalk {
         let dampening_boost = relative_velocity * self.spring_dampening;
 
         TnuaVelChange {
-            acceleration: ctx.up_direction().adjust_precision() * spring_force
-                + gravity_compensation,
-            boost: ctx.up_direction().adjust_precision() * -dampening_boost,
+            acceleration: ctx.up_direction.adjust_precision() * spring_force + gravity_compensation,
+            boost: ctx.up_direction.adjust_precision() * -dampening_boost,
         }
     }
 }
@@ -513,8 +499,7 @@ pub struct TnuaBuiltinWalkState {
     standing_on: Option<StandingOnState>,
     effective_velocity: Vector3,
     vertical_velocity: Float,
-    /// The velocity, perpendicular to the [up](TnuaBuiltinWalk::up) axis, that the character is
-    /// supposed to move at.
+    /// The velocity, perpendicular to the up direction, that the character is supposed to move at.
     ///
     /// If the character is standing on something else
     /// ([`standing_on_entity`](Self::standing_on_entity) returns `Some`) then the

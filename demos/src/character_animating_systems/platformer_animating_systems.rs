@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState};
+use bevy_tnua::builtins::{
+    TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState, TnuaBuiltinKnockback,
+};
 use bevy_tnua::math::Float;
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
@@ -15,6 +17,7 @@ pub enum AnimationState {
     Crouching,
     Crawling(Float),
     Dashing,
+    KnockedBack,
 }
 
 #[allow(clippy::unnecessary_cast)]
@@ -86,6 +89,7 @@ pub fn animate_platformer_character(
                 // For the dash, we don't need the internal state of the dash action to determine
                 // the action - so there is no need to downcast.
                 Some(TnuaBuiltinDash::NAME) => AnimationState::Dashing,
+                Some(TnuaBuiltinKnockback::NAME) => AnimationState::KnockedBack,
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
                     // If there is no action going on, we'll base the animation on the state of the
@@ -171,6 +175,11 @@ pub fn animate_platformer_character(
                     }
                     AnimationState::Dashing => {
                         player.start(handler.animations["Dashing"]).set_speed(10.0);
+                    }
+                    AnimationState::KnockedBack => {
+                        player
+                            .start(handler.animations["KnockedBack"])
+                            .set_speed(1.0);
                     }
                 }
             }

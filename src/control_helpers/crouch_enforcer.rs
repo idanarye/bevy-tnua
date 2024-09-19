@@ -204,9 +204,7 @@ fn update_crouch_enforcer(
                 subservient_sensor.cast_range = cast_range;
             } else {
                 let mut cmd = commands.spawn((
-                    TransformBundle {
-                        ..Default::default()
-                    },
+                    Transform::default(),
                     TnuaSubservientSensor { owner_entity },
                     TnuaProximitySensor {
                         cast_origin: crouch_enforcer.offset,

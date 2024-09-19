@@ -16,15 +16,21 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             PhysicsPlugins::default(),
-            TnuaControllerPlugin::new(PhysicsSchedule),
-            TnuaAvian3dPlugin::new(PhysicsSchedule),
+            TnuaControllerPlugin::new(FixedUpdate),
+            TnuaAvian3dPlugin::new(FixedUpdate),
         ))
         .add_systems(
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(FixedUpdate, apply_controls)
-        .add_systems(Update, (prepare_animations, handle_animating))
+        .add_systems(
+            FixedUpdate,
+            (
+                apply_controls.in_set(TnuaUserControlsSystemSet),
+                prepare_animations,
+                handle_animating,
+            ),
+        )
         .run();
 }
 
@@ -53,27 +59,22 @@ struct AnimationNodes {
 
 // No Tnua-related setup here - this is just normal Bevy stuff.
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 16.0, 40.0)
-            .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
-        ..Default::default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
+    ));
 
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
-        ..default()
-    });
+    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
 
     // A directly-down light to tell where the player is going to land.
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             illuminance: 4000.0,
             shadows_enabled: true,
             ..Default::default()
         },
-        transform: Transform::default().looking_at(-Vec3::Y, Vec3::Z),
-        ..Default::default()
-    });
+        Transform::default().looking_at(-Vec3::Y, Vec3::Z),
+    ));
 }
 
 // No Tnua-related setup here - this is just normal Bevy (and Avian) stuff.
@@ -84,11 +85,8 @@ fn setup_level(
 ) {
     // Spawn the ground.
     commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Plane3d::default().mesh().size(128.0, 128.0)),
-            material: materials.add(Color::WHITE),
-            ..Default::default()
-        },
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(128.0, 128.0))),
+        MeshMaterial3d(materials.add(Color::WHITE)),
         RigidBody::Static,
         Collider::half_space(Vec3::Y),
     ));
@@ -104,11 +102,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PlayerGltfHandle(asset_server.load("player.glb")));
 
     commands.spawn((
-        SceneBundle {
-            scene: asset_server.load("player.glb#Scene0"),
-            transform: Transform::from_xyz(0.0, 2.0, 0.0),
-            ..Default::default()
-        },
+        SceneRoot(asset_server.load("player.glb#Scene0")),
+        Transform::from_xyz(0.0, 2.0, 0.0),
         // We'll need this in the `handle_animating` system to keep track of the players animating
         // state.
         TnuaAnimatingState::<AnimationState>::default(),
@@ -116,15 +111,14 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         // engine.
         RigidBody::Dynamic,
         Collider::capsule(0.5, 1.0),
-        // This bundle holds the main components.
-        TnuaControllerBundle::default(),
+        // This is Tnua's interface component.
+        TnuaController::default(),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
         TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
         // Tnua can fix the rotation, but the character will still get rotated before it can do so.
         // By locking the rotation we can prevent this.
         LockedAxes::ROTATION_LOCKED.unlock_rotation_y(),
     ));
-    // NOTE: if this was Rapier, we'd also need `TnuaRapier3dIOBundle`. Avian does not need it.
 }
 
 // No Tnua-related setup here - this is just for dealing with Bevy's animation graph.
@@ -155,7 +149,7 @@ fn prepare_animations(
 
     commands
         .entity(animation_player_entity)
-        .insert(animation_graphs_assets.add(graph));
+        .insert(AnimationGraphHandle(animation_graphs_assets.add(graph)));
 
     // So that we won't run this again
     commands.remove_resource::<PlayerGltfHandle>();
@@ -187,7 +181,7 @@ fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Tnu
     controller.basis(TnuaBuiltinWalk {
         // The `desired_velocity` determines how the character will move.
         desired_velocity: direction.normalize_or_zero() * 10.0,
-        desired_forward: direction.normalize_or_zero(),
+        desired_forward: Dir3::new(direction).ok(),
         // The `float_height` must be greater (even if by little) from the distance between the
         // character's center and the lowest point of its collider.
         float_height: 2.0,

@@ -76,17 +76,18 @@ fn main() {
     {
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => {
-                app.add_plugins(PhysicsPlugins::default());
+                app.add_plugins(PhysicsPlugins::new(PostUpdate));
                 // To use Tnua with avian3d, you need the `TnuaAvian3dPlugin` plugin from
                 // bevy-tnua-avian3d.
-                app.add_plugins(TnuaAvian3dPlugin::default());
+                app.add_plugins(TnuaAvian3dPlugin::new(Update));
             }
             ScheduleToUse::FixedUpdate => {
-                app.add_plugins(PhysicsPlugins::new(FixedUpdate));
+                app.add_plugins(PhysicsPlugins::new(FixedPostUpdate));
                 app.add_plugins(TnuaAvian3dPlugin::new(FixedUpdate));
             }
             ScheduleToUse::PhysicsSchedule => {
                 app.add_plugins(PhysicsPlugins::default());
+                app.insert_resource(Time::from_hz(144.0));
                 app.add_plugins(TnuaAvian3dPlugin::new(PhysicsSchedule));
             }
         }
@@ -154,34 +155,26 @@ fn main() {
 }
 
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 16.0, 40.0)
-            .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
-        ..Default::default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
+    ));
 
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
-        ..default()
-    });
+    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
 
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             illuminance: 4000.0,
             shadows_enabled: true,
             ..Default::default()
         },
-        transform: Transform::default().looking_at(-Vec3::Y, Vec3::Z),
-        ..Default::default()
-    });
+        Transform::default().looking_at(-Vec3::Y, Vec3::Z),
+    ));
 }
 
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn(IsPlayer);
-    cmd.insert(SceneBundle {
-        scene: asset_server.load("player.glb#Scene0"),
-        ..Default::default()
-    });
+    cmd.insert(SceneRoot(asset_server.load("player.glb#Scene0")));
     cmd.insert(GltfSceneHandler {
         names_from: asset_server.load("player.glb"),
     });
@@ -191,26 +184,17 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     {
         cmd.insert(rapier::RigidBody::Dynamic);
         cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
-        // For Rapier, an "IO" bundle needs to be added so that Tnua will have all the components
-        // it needs to interact with Rapier.
-        cmd.insert(TnuaRapier3dIOBundle::default());
     }
     #[cfg(feature = "avian3d")]
     {
         cmd.insert(avian::RigidBody::Dynamic);
         cmd.insert(avian::Collider::capsule(0.5, 1.0));
-        // Avian does not need an "IO" bundle.
     }
 
-    // This bundle container `TnuaController` - the main interface of Tnua with the user code - as
-    // well as the main components used as API between the main plugin and the physics backend
-    // integration. These components (and the IO bundle, in case of backends that need one like
-    // Rapier) are the only mandatory Tnua components - but this example will also add some
-    // components used for more advanced features.
-    //
-    // Read examples/src/character_control_systems/platformer_control_systems.rs to see how
+    // `TnuaController` is Tnua's main interface with the user code. Read
+    // examples/src/character_control_systems/platformer_control_systems.rs to see how
     // `TnuaController` is used in this example.
-    cmd.insert(TnuaControllerBundle::default());
+    cmd.insert(TnuaController::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim3,
@@ -234,6 +218,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         dash: Default::default(),
         one_way_platforms_min_proximity: 1.0,
         falling_through: FallingThroughControlScheme::SingleFall,
+        knockback: Default::default(),
     });
 
     cmd.insert(ForwardFromCamera::default());
@@ -341,12 +326,12 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     #[cfg(feature = "avian3d")]
                     {
                         let player_layers: LayerMask = if use_collision_groups {
-                            [LayerNames::Player, LayerNames::Default].into()
+                            [LayerNames::Default, LayerNames::Player].into()
                         } else {
                             [
+                                LayerNames::Default,
                                 LayerNames::Player,
                                 LayerNames::PhaseThrough,
-                                LayerNames::Default,
                             ]
                             .into()
                         };
@@ -415,20 +400,20 @@ fn grab_ungrab_mouse(
     let Ok(mut window) = primary_window_query.get_single_mut() else {
         return;
     };
-    if window.cursor.visible {
+    if window.cursor_options.visible {
         if mouse_buttons.just_pressed(MouseButton::Left) {
             #[cfg(feature = "egui")]
             if egui_context.ctx_mut().is_pointer_over_area() {
                 return;
             }
-            window.cursor.grab_mode = CursorGrabMode::Locked;
-            window.cursor.visible = false;
+            window.cursor_options.grab_mode = CursorGrabMode::Locked;
+            window.cursor_options.visible = false;
         }
     } else if keyboard.just_released(KeyCode::Escape)
         || mouse_buttons.just_pressed(MouseButton::Left)
     {
-        window.cursor.grab_mode = CursorGrabMode::None;
-        window.cursor.visible = true;
+        window.cursor_options.grab_mode = CursorGrabMode::None;
+        window.cursor_options.visible = true;
     }
 }
 
@@ -440,7 +425,7 @@ fn apply_camera_controls(
 ) {
     let mouse_controls_camera = primary_window_query
         .get_single()
-        .map_or(false, |w| !w.cursor.visible);
+        .map_or(false, |w| !w.cursor_options.visible);
     let total_delta = if mouse_controls_camera {
         mouse_motion.read().map(|event| event.delta).sum()
     } else {

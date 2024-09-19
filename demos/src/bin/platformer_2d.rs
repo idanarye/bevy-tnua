@@ -72,17 +72,18 @@ fn main() {
         app.add_plugins(PhysicsDebugPlugin::default());
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => {
-                app.add_plugins(PhysicsPlugins::new(Update));
+                app.add_plugins(PhysicsPlugins::new(PostUpdate));
                 // To use Tnua with avian2d, you need the `TnuaAvian2dPlugin` plugin from
                 // bevy-tnua-avian2d.
                 app.add_plugins(TnuaAvian2dPlugin::new(Update));
             }
             ScheduleToUse::FixedUpdate => {
-                app.add_plugins(PhysicsPlugins::new(FixedUpdate));
+                app.add_plugins(PhysicsPlugins::new(FixedPostUpdate));
                 app.add_plugins(TnuaAvian2dPlugin::new(FixedUpdate));
             }
             ScheduleToUse::PhysicsSchedule => {
                 app.add_plugins(PhysicsPlugins::default());
+                app.insert_resource(Time::from_hz(144.0));
                 app.add_plugins(TnuaAvian2dPlugin::new(PhysicsSchedule));
             }
         }
@@ -139,7 +140,7 @@ fn main() {
     app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     #[cfg(feature = "rapier2d")]
     {
-        app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
+        app.add_systems(Startup, |mut cfg: Single<&mut RapierConfiguration>| {
             // For some odd reason, Rapier 2D defaults to a gravity of 98.1
             cfg.gravity = Vec2::Y * -9.81;
         });
@@ -148,49 +149,37 @@ fn main() {
 }
 
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(0.0, 14.0, 30.0)
+    commands.spawn((
+        Camera2d,
+        Transform::from_xyz(0.0, 14.0, 30.0)
             .with_scale((0.05 * Vec2::ONE).extend(1.0))
             .looking_at(Vec3::new(0.0, 14.0, 0.0), Vec3::Y),
-        ..Default::default()
-    });
+    ));
 
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
-        ..default()
-    });
+    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
 }
 
 fn setup_player(mut commands: Commands) {
     let mut cmd = commands.spawn(IsPlayer);
-    cmd.insert(TransformBundle::default());
-    cmd.insert(VisibilityBundle::default());
+    cmd.insert(Transform::default());
+    cmd.insert(Visibility::default());
 
     // The character entity must be configured as a dynamic rigid body of the physics backend.
     #[cfg(feature = "rapier2d")]
     {
         cmd.insert(rapier::RigidBody::Dynamic);
         cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
-        // For Rapier, an "IO" bundle needs to be added so that Tnua will have all the components
-        // it needs to interact with Rapier.
-        cmd.insert(TnuaRapier2dIOBundle::default());
     }
     #[cfg(feature = "avian2d")]
     {
         cmd.insert(avian::RigidBody::Dynamic);
         cmd.insert(avian::Collider::capsule(0.5, 1.0));
-        // Avian does not need an "IO" bundle.
     }
 
-    // This bundle container `TnuaController` - the main interface of Tnua with the user code - as
-    // well as the main components used as API between the main plugin and the physics backend
-    // integration. These components (and the IO bundle, in case of backends that need one like
-    // Rapier) are the only mandatory Tnua components - but this example will also add some
-    // components used for more advanced features.
-    //
-    // Read examples/src/character_control_systems/platformer_control_systems.rs to see how
+    // `TnuaController` is Tnua's main interface with the user code. Read
+    // examples/src/character_control_systems/platformer_control_systems.rs to see how
     // `TnuaController` is used in this example.
-    cmd.insert(TnuaControllerBundle::default());
+    cmd.insert(TnuaController::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim2,
@@ -213,6 +202,7 @@ fn setup_player(mut commands: Commands) {
         dash: Default::default(),
         one_way_platforms_min_proximity: 1.0,
         falling_through: FallingThroughControlScheme::SingleFall,
+        knockback: Default::default(),
     });
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
@@ -304,12 +294,12 @@ fn setup_player(mut commands: Commands) {
                     #[cfg(feature = "avian2d")]
                     {
                         let player_layers: LayerMask = if use_collision_groups {
-                            [LayerNames::Player, LayerNames::Default].into()
+                            [LayerNames::Default, LayerNames::Player].into()
                         } else {
                             [
+                                LayerNames::Default,
                                 LayerNames::Player,
                                 LayerNames::PhaseThrough,
-                                LayerNames::Default,
                             ]
                             .into()
                         };

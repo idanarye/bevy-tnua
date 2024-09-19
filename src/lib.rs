@@ -34,8 +34,8 @@
 //! where it should usually be registered)
 //!
 //! A Tnua controlled character must have a dynamic rigid body, everything from
-//! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle1), and
-//! everything from [`TnuaControllerBundle`](prelude::TnuaControllerBundle):
+//! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle`), and a
+//! [`TnuaController`](prelude::TnuaController) (and its automatically added required component):
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # // Not importing from Rapier because there are two versions and the default features does not
@@ -48,7 +48,7 @@
 //! # let mut cmd = commands.spawn_empty();
 //! cmd.insert(RigidBody::Dynamic);
 //! cmd.insert(TnuaRapier3dIOBundle::default()); // this one depends on the physics backend
-//! cmd.insert(TnuaControllerBundle::default());
+//! cmd.insert(TnuaController::default());
 //! ```
 //! Typically though it'd also include a `Collider`.
 //!
@@ -70,10 +70,10 @@
 //!
 //! ## Controlling the Character
 //!
-//! To control the character, update the [`TnuaController`](prelude::TnuaController) (added via tha
-//! [`TnuaControllerBundle`](prelude::TnuaControllerBundle)) by feeding it a [basis](TnuaBasis) and
-//! zero or more [actions](TnuaAction). For some of the advanced features to work, the system that
-//! does this needs to be placed inside the [`TnuaUserControlsSystemSet`] system set.
+//! To control the character, update the [`TnuaController`](prelude::TnuaController) by feeding it
+//! a [basis](TnuaBasis) and zero or more [actions](TnuaAction). For some of the advanced features
+//! to work, the system that does this needs to be placed inside the [`TnuaUserControlsSystemSet`]
+//! system set.
 //!
 //! ```no_run
 //! # use bevy::prelude::*;
@@ -95,7 +95,7 @@
 //!             desired_velocity: player_input.direction_vector() * 10.0,
 //!
 //!             // Turn the character in the movement direction:
-//!             desired_forward: player_input.direction_vector(),
+//!             desired_forward: Dir3::new(player_input.direction_vector()).ok(),
 //!             
 //!             // Must be larger than the height of the entity's center from the bottom of its
 //!             // collider, or else the character will not float and Tnua will not work properly:
@@ -140,7 +140,7 @@ pub use basis_action_traits::{
 
 pub mod prelude {
     pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
-    pub use crate::controller::{TnuaController, TnuaControllerBundle, TnuaControllerPlugin};
+    pub use crate::controller::{TnuaController, TnuaControllerPlugin};
     pub use crate::{TnuaAction, TnuaPipelineStages, TnuaUserControlsSystemSet};
 }
 
