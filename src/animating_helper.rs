@@ -154,4 +154,11 @@ impl<State> TnuaAnimatingState<State> {
     ) -> TnuaAnimatingStateDirective<State> {
         self.update_by(new_state, |a, b| discriminant(a) == discriminant(b))
     }
+
+    /// Get the current state.
+    ///
+    /// Can provide no information about the previous state.
+    pub fn get(&self) -> Option<&State> {
+        self.state.as_ref()
+    }
 }

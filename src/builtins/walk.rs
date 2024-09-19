@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use crate::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
+use crate::util::boundary::VelocityBoundaryTracker;
 use bevy::prelude::*;
 
 use crate::util::rotation_arc_around_axis;
@@ -96,6 +97,47 @@ pub struct TnuaBuiltinWalk {
     /// Set to 0.0 to completely disable air movement.
     pub air_acceleration: Float,
 
+    /// Threshold for external change in velocity to trigger a Pushover.
+    ///
+    /// Set it to infinity to disable the Pushover feature. Never set it to zero, because then
+    /// calculation/rounding artifacts will trigger a Pushover even when the character is not
+    /// subject to any external impulses.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
+    pub pushover_threshold: Float,
+
+    /// Timeout (in seconds) for abandoning a Pushover boundary that no longer gets pushed.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
+    pub pushover_no_push_timeout: f32,
+
+    /// An exponent for controlling the shape of the Pushover barrier diminishing.
+    ///
+    /// For best results, set it to values larger than 1.0.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
+    pub pushover_barrier_strength_diminishing: Float,
+
+    /// Acceleration cap when pushing against the Pushover barrier.
+    ///
+    /// In practice this will be averaged with [`acceleration`](Self::acceleration) (weighted by a
+    /// function of the pushover boundary penetration percentage and
+    /// [`pushover_barrier_strength_diminishing`](Self::pushover_barrier_strength_diminishing)) so
+    /// the actual acceleration limit will higher than that.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
+    pub pushover_acceleration_limit: Float,
+
+    /// Acceleration cap when pushing against the Pushover barrier while in the air.
+    ///
+    /// In practice this will be averaged with [`air_acceleration`](Self::air_acceleration)
+    /// (weighted by a function of the pushover boundary penetration percentage and
+    /// [`pushover_barrier_strength_diminishing`](Self::pushover_barrier_strength_diminishing)) so
+    /// the actual acceleration limit will higher than that.
+    ///
+    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
+    pub pushover_air_acceleration_limit: Float,
+
     /// The time, in seconds, the character can still jump after losing their footing.
     pub coyote_time: Float,
 
@@ -139,6 +181,11 @@ impl Default for TnuaBuiltinWalk {
             spring_dampening: 1.2,
             acceleration: 60.0,
             air_acceleration: 20.0,
+            pushover_threshold: 1.0,
+            pushover_no_push_timeout: 0.2,
+            pushover_barrier_strength_diminishing: 2.0,
+            pushover_acceleration_limit: 3.0,
+            pushover_air_acceleration_limit: 1.0,
             coyote_time: 0.15,
             free_fall_extra_gravity: 60.0,
             tilt_offset_angvel: 5.0,
@@ -240,6 +287,15 @@ impl TnuaBasis for TnuaBuiltinWalk {
             .effective_velocity
             .reject_from(ctx.up_direction().adjust_precision());
 
+        state.velocity_boundary_tracker.update(
+            velocity_on_plane,
+            (self.pushover_threshold.powi(2)
+                < velocity_on_plane.distance_squared(state.running_velocity))
+            .then_some(state.running_velocity),
+            ctx.frame_duration,
+            self.pushover_no_push_timeout,
+        );
+
         let desired_boost = self.desired_velocity - velocity_on_plane;
 
         let safe_direction_coefficient = self
@@ -264,10 +320,35 @@ impl TnuaBasis for TnuaBuiltinWalk {
             0.0
         };
 
+        let limited_boost_component_due_to_boundary =
+            if let Some(velocity_boundary) = state.velocity_boundary_tracker.boundary() {
+                velocity_boundary
+                    .calc_boost_part_on_boundary_axis_after_limit(
+                        velocity_on_plane,
+                        desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration),
+                        ctx.frame_duration
+                            * if considered_in_air {
+                                self.pushover_air_acceleration_limit
+                            } else {
+                                self.pushover_acceleration_limit
+                            },
+                        self.pushover_barrier_strength_diminishing,
+                    )
+                    .filter(|(_, limit)| 0.0 < *limit)
+            } else {
+                None
+            };
         let walk_vel_change = if self.desired_velocity == Vector3::ZERO && slipping_vector.is_none()
         {
             // When stopping, prefer a boost to be able to reach a precise stop (see issue #39)
-            let walk_boost = desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration);
+            let mut walk_boost =
+                desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration);
+            if let Some((limit_direction, limit)) = limited_boost_component_due_to_boundary {
+                let orig = walk_boost.dot(limit_direction.adjust_precision());
+                if limit < orig {
+                    walk_boost += (limit - orig) * limit_direction.adjust_precision();
+                }
+            }
             let walk_boost = if let Some(climb_vectors) = &climb_vectors {
                 climb_vectors.project(walk_boost)
             } else {
@@ -277,8 +358,13 @@ impl TnuaBasis for TnuaBuiltinWalk {
         } else {
             // When accelerating, prefer an acceleration because the physics backends treat it
             // better (see issue #34)
-            let walk_acceleration =
+            let mut walk_acceleration =
                 (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
+            if let Some((limit_direction, limit)) = limited_boost_component_due_to_boundary {
+                let limit = limit / ctx.frame_duration;
+                let orig = walk_acceleration.dot(limit_direction.adjust_precision());
+                walk_acceleration += (limit - orig) * limit_direction.adjust_precision();
+            }
             let walk_acceleration =
                 if let (Some(climb_vectors), None) = (&climb_vectors, slipping_vector) {
                     climb_vectors.project(walk_acceleration)
@@ -520,12 +606,19 @@ pub struct TnuaBuiltinWalkState {
     /// ([`standing_on_entity`](Self::standing_on_entity) returns `Some`) then the
     /// `running_velocity` will be relative to the velocity of that entity.
     pub running_velocity: Vector3,
+    velocity_boundary_tracker: VelocityBoundaryTracker,
 }
 
 impl TnuaBuiltinWalkState {
     /// Returns the entity that the character currently stands on.
     pub fn standing_on_entity(&self) -> Option<Entity> {
         Some(self.standing_on.as_ref()?.entity)
+    }
+
+    /// If the character is is being knocked back, returns the direction it is being knockback back
+    /// toward.
+    pub fn pushover(&self) -> Option<Dir3> {
+        Some(self.velocity_boundary_tracker.boundary()?.direction)
     }
 }
 
