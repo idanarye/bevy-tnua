@@ -138,6 +138,7 @@ pub fn animate_platformer_character(
                 // For the dash, we don't need the internal state of the dash action to determine
                 // the action - so there is no need to downcast.
                 Some(TnuaBuiltinDash::NAME) => AnimationState::Dashing,
+                Some("TODO") => AnimationState::KnockedBack(Dir3::Y), // use fake dir for now
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
                     // If there is no action going on, we'll base the animation on the state of the
@@ -146,9 +147,7 @@ pub fn animate_platformer_character(
                     else {
                         continue;
                     };
-                    if let Some(pushover_direction) = basis_state.pushover() {
-                        AnimationState::KnockedBack(pushover_direction)
-                    } else if basis_state.standing_on_entity().is_none() {
+                    if basis_state.standing_on_entity().is_none() {
                         AnimationState::Falling
                     } else {
                         let speed = basis_state.running_velocity.length();
