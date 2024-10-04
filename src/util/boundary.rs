@@ -113,6 +113,38 @@ pub struct VelocityBoundary {
 }
 
 impl VelocityBoundary {
+    pub fn new(
+        disruption_from: Vector3,
+        disruption_to: Vector3,
+        no_push_timeout: f32,
+    ) -> Option<Self> {
+        let Ok(disruption_direction) = Dir3::new((disruption_to - disruption_from).f32()) else {
+            return None;
+        };
+        let frontier = disruption_to.dot(disruption_direction.adjust_precision());
+        Some(Self {
+            base: disruption_from.dot(disruption_direction.adjust_precision()),
+            original_frontier: frontier,
+            frontier,
+            direction: disruption_direction,
+            no_push_timer: Timer::from_seconds(no_push_timeout, TimerMode::Once),
+        })
+    }
+
+    pub fn update(&mut self, velocity: Vector3, frame_duration: Duration) {
+        let new_frontier = velocity.dot(self.direction.adjust_precision());
+        if new_frontier < self.frontier {
+            self.frontier = new_frontier;
+            self.no_push_timer.reset();
+        } else {
+            self.no_push_timer.tick(frame_duration);
+        }
+    }
+
+    pub fn is_cleared(&self) -> bool {
+        self.no_push_timer.finished() || self.frontier <= self.base
+    }
+
     /// Calculate how a boost needs to be adjusted according to the boundary.
     ///
     /// Note that the returned value is the boost limit only on the axis of the returned direction.

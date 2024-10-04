@@ -1,9 +1,17 @@
 #![allow(unused_imports)]
-use crate::math::{AdjustPrecision, Float, Vector3};
+use crate::{
+    math::{AdjustPrecision, Float, Vector3},
+    prelude::*,
+    util::boundary::{VelocityBoundary, VelocityBoundaryTracker},
+    TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
+    TnuaActionLifecycleStatus, TnuaMotor, TnuaVelChange,
+};
 use bevy::prelude::*;
 
 #[derive(Clone)]
 pub struct TnuaBuiltinKnockback {
+    pub shove: Vector3,
+
     /// Timeout (in seconds) for abandoning a Pushover boundary that no longer gets pushed.
     ///
     /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
@@ -35,6 +43,102 @@ pub struct TnuaBuiltinKnockback {
     ///
     /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub air_acceleration_limit: Float,
+
+    pub force_forward: Option<Dir3>,
 }
 
-pub struct TnuaBuiltinKnockbackState {}
+impl Default for TnuaBuiltinKnockback {
+    fn default() -> Self {
+        Self {
+            shove: Vector3::ZERO,
+            no_push_timeout: 0.2,
+            barrier_strength_diminishing: 2.0,
+            acceleration_limit: 3.0,
+            air_acceleration_limit: 1.0,
+            force_forward: None,
+        }
+    }
+}
+
+impl TnuaAction for TnuaBuiltinKnockback {
+    const NAME: &'static str = "TnuaBuiltinKnockback";
+    type State = TnuaBuiltinKnockbackState;
+    const VIOLATES_COYOTE_TIME: bool = true;
+
+    fn apply(
+        &self,
+        state: &mut Self::State,
+        ctx: TnuaActionContext,
+        _lifecycle_status: TnuaActionLifecycleStatus,
+        motor: &mut TnuaMotor,
+    ) -> TnuaActionLifecycleDirective {
+        match state {
+            TnuaBuiltinKnockbackState::Boost => {
+                let Some(boundary) = VelocityBoundary::new(
+                    ctx.tracker.velocity,
+                    ctx.tracker.velocity + self.shove,
+                    self.no_push_timeout,
+                ) else {
+                    return TnuaActionLifecycleDirective::Finished;
+                };
+                motor.lin += TnuaVelChange::boost(self.shove);
+                *state = TnuaBuiltinKnockbackState::Pushback { boundary };
+                TnuaActionLifecycleDirective::StillActive
+            }
+            TnuaBuiltinKnockbackState::Pushback { boundary } => {
+                boundary.update(ctx.tracker.velocity, ctx.frame_duration_as_duration());
+                if boundary.is_cleared() {
+                    TnuaActionLifecycleDirective::Finished
+                } else {
+                    let regular_boost = motor.lin.calc_boost(ctx.frame_duration);
+                    if let Some((component_direction, component_limit)) = boundary
+                        .calc_boost_part_on_boundary_axis_after_limit(
+                            ctx.tracker.velocity,
+                            regular_boost,
+                            ctx.frame_duration * self.acceleration_limit,
+                            self.barrier_strength_diminishing,
+                        )
+                    {
+                        'limit_vel_change: {
+                            let regular = regular_boost.dot(*component_direction);
+                            let to_cut = regular - component_limit;
+                            if to_cut <= 0.0 {
+                                break 'limit_vel_change;
+                            }
+                            let boost_part = motor.lin.boost.dot(*component_direction);
+                            if to_cut <= boost_part {
+                                // Can do the entire cut by just reducing the boost
+                                motor.lin.boost -= to_cut * component_direction;
+                                break 'limit_vel_change;
+                            }
+                            // Even nullifying the boost is not enough, and we don't want to
+                            // reverse it, so we're going to cut the acceleration as well.
+                            motor.lin.boost = motor.lin.boost.reject_from(*component_direction);
+                            let to_cut_from_acceleration = to_cut - boost_part;
+                            let acceleration_to_cut = to_cut_from_acceleration / ctx.frame_duration;
+                            motor.lin.acceleration -= acceleration_to_cut * component_direction;
+                        }
+                    }
+                    TnuaActionLifecycleDirective::StillActive
+                }
+            }
+        }
+    }
+
+    fn initiation_decision(
+        &self,
+        _ctx: crate::TnuaActionContext,
+        _being_fed_for: &bevy::time::Stopwatch,
+    ) -> TnuaActionInitiationDirective {
+        TnuaActionInitiationDirective::Allow
+    }
+}
+
+#[derive(Default)]
+pub enum TnuaBuiltinKnockbackState {
+    #[default]
+    Boost,
+    Pushback {
+        boundary: VelocityBoundary,
+    },
+}

@@ -1,5 +1,7 @@
-use bevy::{ecs::query::QueryData, prelude::*};
-use bevy_tnua::math::Vector3;
+use bevy::prelude::*;
+use bevy_tnua::{builtins::TnuaBuiltinKnockback, math::Vector3, prelude::TnuaController};
+
+use crate::character_control_systems::platformer_control_systems::CharacterMotionConfigForPlatformerDemo;
 
 pub struct PushEffectPlugin;
 
@@ -14,54 +16,23 @@ pub enum PushEffect {
     Impulse(Vector3),
 }
 
-#[derive(QueryData)]
-#[query_data(mutable)]
-struct VelocityQuery {
-    #[cfg(feature = "rapier2d")]
-    rapier2d_velocity: Option<&'static mut bevy_rapier2d::prelude::Velocity>,
-
-    #[cfg(feature = "rapier3d")]
-    rapier3d_velocity: Option<&'static mut bevy_rapier3d::prelude::Velocity>,
-
-    #[cfg(feature = "avian2d")]
-    avian2d_linear_velocity: Option<&'static mut avian2d::prelude::LinearVelocity>,
-
-    #[cfg(feature = "avian3d")]
-    avian3d_linear_velocity: Option<&'static mut avian3d::prelude::LinearVelocity>,
-}
-
-impl VelocityQueryItem<'_> {
-    fn apply_impulse(&mut self, impulse: Vector3) {
-        #[cfg(feature = "rapier2d")]
-        if let Some(velocity) = self.rapier2d_velocity.as_mut() {
-            velocity.linvel += impulse.truncate();
-        }
-
-        #[cfg(feature = "rapier3d")]
-        if let Some(velocity) = self.rapier3d_velocity.as_mut() {
-            velocity.linvel += impulse;
-        }
-
-        #[cfg(feature = "avian2d")]
-        if let Some(velocity) = self.avian2d_linear_velocity.as_mut() {
-            velocity.0 += impulse.truncate();
-        }
-
-        #[cfg(feature = "avian3d")]
-        if let Some(velocity) = self.avian3d_linear_velocity.as_mut() {
-            velocity.0 += impulse;
-        }
-    }
-}
-
 fn apply_push_effect(
-    mut query: Query<(Entity, &PushEffect, VelocityQuery)>,
+    mut query: Query<(
+        Entity,
+        &PushEffect,
+        &mut TnuaController,
+        &CharacterMotionConfigForPlatformerDemo,
+    )>,
     mut commands: Commands,
 ) {
-    for (entity, push_effect, mut velocity) in query.iter_mut() {
+    for (entity, push_effect, mut controller, config) in query.iter_mut() {
         match push_effect {
             PushEffect::Impulse(impulse) => {
-                velocity.apply_impulse(*impulse);
+                controller.action(TnuaBuiltinKnockback {
+                    shove: *impulse,
+                    force_forward: None,
+                    ..config.knockback
+                });
                 commands.entity(entity).remove::<PushEffect>();
             }
         }

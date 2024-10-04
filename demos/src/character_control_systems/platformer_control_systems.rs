@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts};
-use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash};
+use bevy_tnua::builtins::{
+    TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash, TnuaBuiltinKnockback,
+};
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
@@ -381,6 +383,7 @@ pub struct CharacterMotionConfigForPlatformerDemo {
     pub dash: TnuaBuiltinDash,
     pub one_way_platforms_min_proximity: Float,
     pub falling_through: FallingThroughControlScheme,
+    pub knockback: TnuaBuiltinKnockback,
 }
 
 impl UiTunable for CharacterMotionConfigForPlatformerDemo {
@@ -407,6 +410,9 @@ impl UiTunable for CharacterMotionConfigForPlatformerDemo {
                     .text("Min Proximity"),
             );
             self.falling_through.tune(ui);
+        });
+        ui.collapsing("Knockback:", |ui| {
+            self.knockback.tune(ui);
         });
     }
 }

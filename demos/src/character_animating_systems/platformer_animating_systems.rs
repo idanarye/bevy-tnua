@@ -1,6 +1,8 @@
 use bevy::ecs::query::QueryData;
 use bevy::prelude::*;
-use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState};
+use bevy_tnua::builtins::{
+    TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState, TnuaBuiltinKnockback,
+};
 use bevy_tnua::math::Float;
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
@@ -16,7 +18,7 @@ pub enum AnimationState {
     Crouching,
     Crawling(Float),
     Dashing,
-    KnockedBack(Dir3),
+    KnockedBack(Option<Dir3>),
 }
 
 impl AnimationState {
@@ -29,7 +31,7 @@ impl AnimationState {
             AnimationState::Crouching => None,
             AnimationState::Crawling(_) => None,
             AnimationState::Dashing => None,
-            AnimationState::KnockedBack(direction) => Some(-*direction),
+            AnimationState::KnockedBack(direction) => Some(-*direction.as_ref()?),
         }
     }
 }
@@ -138,7 +140,14 @@ pub fn animate_platformer_character(
                 // For the dash, we don't need the internal state of the dash action to determine
                 // the action - so there is no need to downcast.
                 Some(TnuaBuiltinDash::NAME) => AnimationState::Dashing,
-                Some("TODO") => AnimationState::KnockedBack(Dir3::Y), // use fake dir for now
+                Some(TnuaBuiltinKnockback::NAME) => {
+                    let Some((action, _state)) =
+                        controller.concrete_action::<TnuaBuiltinKnockback>()
+                    else {
+                        continue;
+                    };
+                    AnimationState::KnockedBack(action.force_forward)
+                }
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
                     // If there is no action going on, we'll base the animation on the state of the

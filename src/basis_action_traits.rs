@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_tnua_physics_integration_layer::math::{Float, Vector3};
 
-use std::any::Any;
+use std::{any::Any, time::Duration};
 
 use crate::{TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker};
 
@@ -228,6 +228,10 @@ impl<'a> TnuaActionContext<'a> {
             tracker: self.tracker,
             proximity_sensor: self.proximity_sensor,
         }
+    }
+
+    pub fn frame_duration_as_duration(&self) -> Duration {
+        Duration::from_secs_f64(self.frame_duration.into())
     }
 
     /// The direction considered as "up".
