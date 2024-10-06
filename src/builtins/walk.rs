@@ -403,7 +403,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         let desired_angvel = if 0.0 < self.desired_forward.length_squared() {
             let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
             let rotation_along_up_axis =
-                rotation_arc_around_axis(Dir3::Y, current_forward, self.desired_forward)
+                rotation_arc_around_axis(ctx.up_direction(), current_forward, self.desired_forward)
                     .unwrap_or(0.0);
             (rotation_along_up_axis / ctx.frame_duration)
                 .clamp(-self.turning_angvel, self.turning_angvel)

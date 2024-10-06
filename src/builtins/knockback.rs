@@ -2,7 +2,10 @@
 use crate::{
     math::{AdjustPrecision, Float, Vector3},
     prelude::*,
-    util::boundary::{VelocityBoundary, VelocityBoundaryTracker},
+    util::{
+        boundary::{VelocityBoundary, VelocityBoundaryTracker},
+        rotation_arc_around_axis,
+    },
     TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor, TnuaVelChange,
 };
@@ -83,12 +86,11 @@ impl TnuaAction for TnuaBuiltinKnockback {
                 };
                 motor.lin += TnuaVelChange::boost(self.shove);
                 *state = TnuaBuiltinKnockbackState::Pushback { boundary };
-                TnuaActionLifecycleDirective::StillActive
             }
             TnuaBuiltinKnockbackState::Pushback { boundary } => {
                 boundary.update(ctx.tracker.velocity, ctx.frame_duration_as_duration());
                 if boundary.is_cleared() {
-                    TnuaActionLifecycleDirective::Finished
+                    return TnuaActionLifecycleDirective::Finished;
                 } else {
                     let regular_boost = motor.lin.calc_boost(ctx.frame_duration);
                     if let Some((component_direction, component_limit)) = boundary
@@ -100,29 +102,59 @@ impl TnuaAction for TnuaBuiltinKnockback {
                         )
                     {
                         'limit_vel_change: {
-                            let regular = regular_boost.dot(*component_direction);
+                            let regular = regular_boost.dot(component_direction.adjust_precision());
                             let to_cut = regular - component_limit;
                             if to_cut <= 0.0 {
                                 break 'limit_vel_change;
                             }
-                            let boost_part = motor.lin.boost.dot(*component_direction);
+                            let boost_part =
+                                motor.lin.boost.dot(component_direction.adjust_precision());
                             if to_cut <= boost_part {
                                 // Can do the entire cut by just reducing the boost
-                                motor.lin.boost -= to_cut * component_direction;
+                                motor.lin.boost -= to_cut * component_direction.adjust_precision();
                                 break 'limit_vel_change;
                             }
                             // Even nullifying the boost is not enough, and we don't want to
                             // reverse it, so we're going to cut the acceleration as well.
-                            motor.lin.boost = motor.lin.boost.reject_from(*component_direction);
+                            motor.lin.boost = motor
+                                .lin
+                                .boost
+                                .reject_from(component_direction.adjust_precision());
                             let to_cut_from_acceleration = to_cut - boost_part;
                             let acceleration_to_cut = to_cut_from_acceleration / ctx.frame_duration;
-                            motor.lin.acceleration -= acceleration_to_cut * component_direction;
+                            motor.lin.acceleration -=
+                                acceleration_to_cut * component_direction.adjust_precision();
                         }
                     }
-                    TnuaActionLifecycleDirective::StillActive
                 }
             }
         }
+
+        if let Some(force_forward) = self.force_forward {
+            let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
+            let rotation_along_up_axis = rotation_arc_around_axis(
+                ctx.up_direction(),
+                current_forward,
+                force_forward.adjust_precision(),
+            )
+            .unwrap_or(0.0);
+            let desired_angvel = rotation_along_up_axis / ctx.frame_duration;
+
+            let existing_angvel = ctx
+                .tracker
+                .angvel
+                .dot(ctx.up_direction().adjust_precision());
+
+            let torque_to_turn = desired_angvel - existing_angvel;
+
+            motor
+                .ang
+                .cancel_on_axis(ctx.up_direction().adjust_precision());
+            motor.ang +=
+                TnuaVelChange::boost(torque_to_turn * ctx.up_direction().adjust_precision());
+        }
+
+        TnuaActionLifecycleDirective::StillActive
     }
 
     fn initiation_decision(

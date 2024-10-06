@@ -1,5 +1,9 @@
 use bevy::prelude::*;
-use bevy_tnua::{builtins::TnuaBuiltinKnockback, math::Vector3, prelude::TnuaController};
+use bevy_tnua::{
+    builtins::TnuaBuiltinKnockback,
+    math::{AsF32, Vector3},
+    prelude::TnuaController,
+};
 
 use crate::character_control_systems::platformer_control_systems::CharacterMotionConfigForPlatformerDemo;
 
@@ -30,7 +34,7 @@ fn apply_push_effect(
             PushEffect::Impulse(impulse) => {
                 controller.action(TnuaBuiltinKnockback {
                     shove: *impulse,
-                    force_forward: None,
+                    force_forward: Dir3::new(-impulse.reject_from(Vector3::Y).f32()).ok(),
                     ..config.knockback
                 });
                 commands.entity(entity).remove::<PushEffect>();
