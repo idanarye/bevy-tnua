@@ -1,50 +1,40 @@
-#![allow(unused_imports)]
 use crate::{
     math::{AdjustPrecision, Float, Vector3},
     prelude::*,
-    util::{
-        boundary::{VelocityBoundary, VelocityBoundaryTracker},
-        rotation_arc_around_axis,
-    },
+    util::{boundary::VelocityBoundary, rotation_arc_around_axis},
     TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor, TnuaVelChange,
 };
 use bevy::prelude::*;
 
+/// Apply this [action](TnuaAction) to shove the character in a way the [basis](crate::TnuaBasis)
+/// cannot easily nullify.
 #[derive(Clone)]
 pub struct TnuaBuiltinKnockback {
     pub shove: Vector3,
 
-    /// Timeout (in seconds) for abandoning a Pushover boundary that no longer gets pushed.
-    ///
-    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
+    /// Timeout (in seconds) for abandoning a knockback boundary that no longer gets pushed.
     pub no_push_timeout: f32,
 
     /// An exponent for controlling the shape of the Pushover barrier diminishing.
     ///
     /// For best results, set it to values larger than 1.0.
-    ///
-    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
     pub barrier_strength_diminishing: Float,
 
     /// Acceleration cap when pushing against the Pushover barrier.
     ///
-    /// In practice this will be averaged with [`acceleration`](Self::acceleration) (weighted by a
-    /// function of the pushover boundary penetration percentage and
-    /// [`barrier_strength_diminishing`](Self::barrier_strength_diminishing)) so
-    /// the actual acceleration limit will higher than that.
-    ///
-    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
+    /// In practice this will be averaged with the acceleration the basis tries to apply (weighted
+    /// by a function of the knockback boundary penetration percentage and
+    /// [`barrier_strength_diminishing`](Self::barrier_strength_diminishing)) so the actual
+    /// acceleration limit will higher than that.
     pub acceleration_limit: Float,
 
     /// Acceleration cap when pushing against the Pushover barrier while in the air.
     ///
-    /// In practice this will be averaged with [`air_acceleration`](Self::air_acceleration)
-    /// (weighted by a function of the pushover boundary penetration percentage and
-    /// [`barrier_strength_diminishing`](Self::barrier_strength_diminishing)) so
-    /// the actual acceleration limit will higher than that.
-    ///
-    /// Refer to [`VelocityBoundaryTracker`] for more information about the Pushover feature.
+    /// In practice this will be averaged with the acceleration the basis tries to apply (weighted
+    /// by a function of the knockback boundary penetration percentage and
+    /// [`barrier_strength_diminishing`](Self::barrier_strength_diminishing)) so the actual
+    /// acceleration limit will higher than that.
     pub air_acceleration_limit: Float,
 
     pub force_forward: Option<Dir3>,
