@@ -11,11 +11,29 @@ use bevy::prelude::*;
 
 /// Apply this [action](TnuaAction) to shove the character in a way the [basis](crate::TnuaBasis)
 /// cannot easily nullify.
+///
+/// Note that this action cannot be cancelled or stopped. Once it starts, it'll resume until the
+/// Pushover boundary is cleared (which means the character overcame the knockback). Unless the
+/// parameters are seriously skewed. The main parameters that can mess it up and unreasonably
+/// prolong the knockback duration are:
+/// * [`no_push_timer`](Self::no_push_timeout). Setting it too high will allow the character to
+///   "move along" with the shove, prolonging the knockback action because the boundary does not
+///   get cleared. The action will not affect the velocity during that time, but it can still
+///   prolong the animation, apply [`force_forward`](Self::force_forward), and prevent other
+///   actions from happening.
+/// * [`barrier_strength_diminishing`](Self::barrier_strength_diminishing). Setting it too low
+///   makes it very hard for the character to push through the boundary. It starts getting slightly
+///   weird below 1.0, and really weird below 0.5. Better keep it at above - 1.0 levels.
 #[derive(Clone)]
 pub struct TnuaBuiltinKnockback {
+    /// Initial impulse to apply to the character before the Pushover stage starts.
+    ///
+    /// It is important that the impulse will be applied using the action (by setting this field)
+    /// and not directly via the physics backend so that Tnua can properly calculate the Pushover
+    /// boundary based on it.
     pub shove: Vector3,
 
-    /// Timeout (in seconds) for abandoning a knockback boundary that no longer gets pushed.
+    /// Timeout (in seconds) for abandoning a Pushover boundary that no longer gets pushed.
     pub no_push_timeout: f32,
 
     /// An exponent for controlling the shape of the Pushover barrier diminishing.
@@ -26,7 +44,7 @@ pub struct TnuaBuiltinKnockback {
     /// Acceleration cap when pushing against the Pushover barrier.
     ///
     /// In practice this will be averaged with the acceleration the basis tries to apply (weighted
-    /// by a function of the knockback boundary penetration percentage and
+    /// by a function of the Pushover boundary penetration percentage and
     /// [`barrier_strength_diminishing`](Self::barrier_strength_diminishing)) so the actual
     /// acceleration limit will higher than that.
     pub acceleration_limit: Float,
@@ -34,11 +52,17 @@ pub struct TnuaBuiltinKnockback {
     /// Acceleration cap when pushing against the Pushover barrier while in the air.
     ///
     /// In practice this will be averaged with the acceleration the basis tries to apply (weighted
-    /// by a function of the knockback boundary penetration percentage and
+    /// by a function of the Pushover boundary penetration percentage and
     /// [`barrier_strength_diminishing`](Self::barrier_strength_diminishing)) so the actual
     /// acceleration limit will higher than that.
     pub air_acceleration_limit: Float,
 
+    /// Force the character to face in a particular direction.
+    ///
+    /// Note that there are no acceleration limits because unlike
+    /// [TnuaBuiltinWalk::desired_forward] this field will attempt to force the direction during a
+    /// single frame. It is useful for when the knockback animation needs to be aligned with the
+    /// knockback direction.
     pub force_forward: Option<Dir3>,
 }
 
@@ -178,11 +202,7 @@ pub struct VelocityBoundary {
 }
 
 impl VelocityBoundary {
-    pub fn new(
-        disruption_from: Vector3,
-        disruption_to: Vector3,
-        no_push_timeout: f32,
-    ) -> Option<Self> {
+    fn new(disruption_from: Vector3, disruption_to: Vector3, no_push_timeout: f32) -> Option<Self> {
         let Ok(disruption_direction) = Dir3::new((disruption_to - disruption_from).f32()) else {
             return None;
         };
@@ -214,7 +234,7 @@ impl VelocityBoundary {
     ///   the [`TnuaRigidBodyTracker`](crate::TnuaRigidBodyTracker), so a typical basis or action
     ///   will get it from [`TnuaBasisContext::tracker`](crate::TnuaBasisContext::tracker).
     /// * `frame_duration` - the duration of the current frame, in seconds.
-    pub fn update(&mut self, velocity: Vector3, frame_duration: Duration) {
+    fn update(&mut self, velocity: Vector3, frame_duration: Duration) {
         let new_frontier = velocity.dot(self.direction.adjust_precision());
         if new_frontier < self.frontier {
             self.frontier = new_frontier;
@@ -224,7 +244,7 @@ impl VelocityBoundary {
         }
     }
 
-    pub fn is_cleared(&self) -> bool {
+    fn is_cleared(&self) -> bool {
         self.no_push_timer.finished() || self.frontier <= self.base
     }
 
@@ -247,7 +267,7 @@ impl VelocityBoundary {
     /// * `barrier_strength_diminishing` - an exponent describing how the boundary strength
     ///   diminishes when the barrier gets cleared. For best results, set it to values larger than
     ///   1.0.
-    pub fn calc_boost_part_on_boundary_axis_after_limit(
+    fn calc_boost_part_on_boundary_axis_after_limit(
         &self,
         current_velocity: Vector3,
         regular_boost: Vector3,
