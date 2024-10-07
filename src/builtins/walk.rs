@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3, float_consts};
+use crate::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy::prelude::*;
 
 use crate::util::rotation_arc_around_axis;
