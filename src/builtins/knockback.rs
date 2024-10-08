@@ -92,7 +92,7 @@ impl TnuaAction for TnuaBuiltinKnockback {
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
         match state {
-            TnuaBuiltinKnockbackState::Boost => {
+            TnuaBuiltinKnockbackState::Shove => {
                 let Some(boundary) = VelocityBoundary::new(
                     ctx.tracker.velocity,
                     ctx.tracker.velocity + self.shove,
@@ -184,11 +184,13 @@ impl TnuaAction for TnuaBuiltinKnockback {
 
 #[derive(Default)]
 pub enum TnuaBuiltinKnockbackState {
+    /// Applying the [`shove`](TnuaBuiltinKnockback::shove) impulse to the character.
     #[default]
-    Boost,
-    Pushback {
-        boundary: VelocityBoundary,
-    },
+    Shove,
+    /// Hindering the character's ability to overcome the
+    /// [`Shove`](TnuaBuiltinKnockbackState::Shove) while waiting for it to overcome it despite the
+    /// hindrance.
+    Pushback { boundary: VelocityBoundary },
 }
 
 /// An indication that a character was knocked back and "struggles" to get back to its original
