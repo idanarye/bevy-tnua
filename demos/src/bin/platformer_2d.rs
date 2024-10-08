@@ -1,5 +1,5 @@
 #[cfg(feature = "avian2d")]
-use avian2d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
+use avian2d::{prelude as avian, prelude::*};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
 #[cfg(feature = "rapier2d")]
@@ -22,6 +22,7 @@ use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
+    JustPressedCachePlugin,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
@@ -71,10 +72,10 @@ fn main() {
         app.add_plugins(PhysicsDebugPlugin::default());
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => {
-                app.add_plugins(PhysicsPlugins::default());
+                app.add_plugins(PhysicsPlugins::new(Update));
                 // To use Tnua with avian2d, you need the `TnuaAvian2dPlugin` plugin from
                 // bevy-tnua-avian2d.
-                app.add_plugins(TnuaAvian2dPlugin::default());
+                app.add_plugins(TnuaAvian2dPlugin::new(Update));
             }
             ScheduleToUse::FixedUpdate => {
                 app.add_plugins(PhysicsPlugins::new(FixedUpdate));
@@ -82,7 +83,6 @@ fn main() {
             }
             ScheduleToUse::PhysicsSchedule => {
                 app.add_plugins(PhysicsPlugins::default());
-                app.insert_resource(Time::new_with(Physics::fixed_hz(144.0)));
                 app.add_plugins(TnuaAvian2dPlugin::new(PhysicsSchedule));
             }
         }
@@ -101,7 +101,7 @@ fn main() {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
         }
-        #[cfg(any(feature = "avian", feature = "avian"))]
+        #[cfg(feature = "avian")]
         ScheduleToUse::PhysicsSchedule => {
             app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
@@ -129,11 +129,14 @@ fn main() {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
             #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => PhysicsSchedule.intern(),
+            // `PhysicsSchedule` is `FixedPostUpdate` by default, which allows us
+            // to run user code like the platformer controls in `FixedUpdate`,
+            // which is a bit more idiomatic.
+            ScheduleToUse::PhysicsSchedule => FixedUpdate.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
-    app.add_plugins(LevelMechanicsPlugin);
+    app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     #[cfg(feature = "rapier2d")]
     {
         app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
@@ -302,9 +305,14 @@ fn setup_player(mut commands: Commands) {
                     #[cfg(feature = "avian2d")]
                     {
                         let player_layers: LayerMask = if use_collision_groups {
-                            [LayerNames::Player].into()
+                            [LayerNames::Player, LayerNames::Default].into()
                         } else {
-                            [LayerNames::Player, LayerNames::PhaseThrough].into()
+                            [
+                                LayerNames::Player,
+                                LayerNames::PhaseThrough,
+                                LayerNames::Default,
+                            ]
+                            .into()
                         };
                         cmd.insert(CollisionLayers::new(player_layers, player_layers));
                     }
