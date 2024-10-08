@@ -1,7 +1,7 @@
 #[cfg(feature = "egui")]
 use std::ops::RangeInclusive;
 
-use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash};
+use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinKnockback};
 #[allow(unused_imports)]
 use bevy_tnua::math::{float_consts, Float};
 use bevy_tnua::prelude::*;
@@ -111,37 +111,6 @@ impl UiTunable for TnuaBuiltinWalk {
             "Air Acceleration",
             &mut self.air_acceleration,
             0.0..=200.0,
-        );
-
-        slider_or_infinity(
-            ui,
-            "Pushover: Threshold",
-            &mut self.pushover_threshold,
-            0.0..=4.0,
-        );
-        ui.add(
-            egui::Slider::new(&mut self.pushover_no_push_timeout, 0.0..=2.0)
-                .text("Pushover: No Push Timeout"),
-        );
-        ui.add(
-            egui::Slider::new(
-                &mut self.pushover_barrier_strength_diminishing,
-                0.01..=100.0,
-            )
-            .logarithmic(true)
-            .text("Pushover: Barrier Strengh Diminishing"),
-        );
-        slider_or_infinity(
-            ui,
-            "Pushover: Acceleration Limit",
-            &mut self.pushover_acceleration_limit,
-            0.0..=20.0,
-        );
-        slider_or_infinity(
-            ui,
-            "Pushover: Air Acceleration Limit",
-            &mut self.pushover_air_acceleration_limit,
-            0.0..=20.0,
         );
 
         ui.add(egui::Slider::new(&mut self.coyote_time, 0.0..=1.0).text("Coyote Time"));
@@ -263,6 +232,30 @@ impl UiTunable for TnuaBuiltinDash {
         ui.add(
             egui::Slider::new(&mut self.input_buffer_time, 0.0..=1.0)
                 .text("Dash Input Buffer Time"),
+        );
+    }
+}
+
+impl UiTunable for TnuaBuiltinKnockback {
+    #[cfg(feature = "egui")]
+    fn tune(&mut self, ui: &mut egui::Ui) {
+        ui.add(egui::Slider::new(&mut self.no_push_timeout, 0.0..=2.0).text("No Push Timeout"));
+        ui.add(
+            egui::Slider::new(&mut self.barrier_strength_diminishing, 0.01..=100.0)
+                .logarithmic(true)
+                .text("Barrier Strengh Diminishing"),
+        );
+        slider_or_infinity(
+            ui,
+            "Acceleration Limit",
+            &mut self.acceleration_limit,
+            0.0..=20.0,
+        );
+        slider_or_infinity(
+            ui,
+            "Air Acceleration Limit",
+            &mut self.air_acceleration_limit,
+            0.0..=20.0,
         );
     }
 }

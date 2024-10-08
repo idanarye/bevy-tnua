@@ -8,8 +8,9 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 ### Added
-- Pushover - the ability of characters to get knocked back by external forces.
-  - Controlled by the `pushover_...` settings of `TnuaBuiltinWalk`.
+- A `TnuaBuiltinKnockback` action for applying knockback that will not be
+  nullified even with very high walk acceleration settings (see
+  https://github.com/idanarye/bevy-tnua/issues/30)
 
 ## 0.19.0 - 2024-07-05
 ### Changed
