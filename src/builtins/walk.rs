@@ -19,10 +19,11 @@ use crate::{TnuaBasis, TnuaVelChange};
 /// * [`desired_velocity`](Self::desired_velocity) - while leaving this as as the default
 ///   `Vector3::ZERO`, doing so would mean that the character will not move.
 /// * [`desired_forward`](Self::desired_forward) - leaving this is the default `None` will mean
-///   that Tnua will not attempt to fix the character's rotation along the [up](Self::up) axis.
+///   that Tnua will not attempt to fix the character's rotation along the up axis.
 ///
-///   This is fine if rotation along the up axis is locked (Rapier only supports locking cardinal
-///   axes, but [`up`](Self::up) defaults to `Vector3::Y` which fits the bill).
+///   This is fine if rotation along the up axis is locked (Rapier and Avian only support locking
+///   cardinal axes, but the up direction is based on the gravity which means it defaults to the Y
+///   axis so it usually works out).
 ///
 ///   This is also fine for 2D games (or games with 3D graphics and 2D physics) played from side
 ///   view where the physics engine cannot rotate the character along the up axis.
@@ -35,13 +36,13 @@ use crate::{TnuaBasis, TnuaVelChange};
 pub struct TnuaBuiltinWalk {
     /// The direction (in the world space) and speed to accelerate to.
     ///
-    /// Tnua assumes that this vector is orthogonal to the [`up`](Self::up) vector.
+    /// Tnua assumes that this vector is orthogonal to the up dierction.
     pub desired_velocity: Vector3,
 
     /// If non-zero, Tnua will rotate the character so that its negative Z will face in that
     /// direction.
     ///
-    /// Tnua assumes that this vector is orthogonal to the [`up`](Self::up) vector.
+    /// Tnua assumes that this vector is orthogonal to the up direction.
     pub desired_forward: Option<Dir3>,
 
     /// The height at which the character will float above ground at rest.
@@ -498,8 +499,7 @@ pub struct TnuaBuiltinWalkState {
     standing_on: Option<StandingOnState>,
     effective_velocity: Vector3,
     vertical_velocity: Float,
-    /// The velocity, perpendicular to the [up](TnuaBuiltinWalk::up) axis, that the character is
-    /// supposed to move at.
+    /// The velocity, perpendicular to the up direction, that the character is supposed to move at.
     ///
     /// If the character is standing on something else
     /// ([`standing_on_entity`](Self::standing_on_entity) returns `Some`) then the
