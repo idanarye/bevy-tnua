@@ -18,9 +18,8 @@ use crate::{TnuaBasis, TnuaVelChange};
 ///   bottom of the collider.
 /// * [`desired_velocity`](Self::desired_velocity) - while leaving this as as the default
 ///   `Vector3::ZERO`, doing so would mean that the character will not move.
-/// * [`desired_forward`](Self::desired_forward) - leaving this is the default `Vector3::ZERO` will
-///   mean that Tnua will not attempt to fix the character's rotation along the [up](Self::up)
-///   axis.
+/// * [`desired_forward`](Self::desired_forward) - leaving this is the default `None` will mean
+///   that Tnua will not attempt to fix the character's rotation along the [up](Self::up) axis.
 ///
 ///   This is fine if rotation along the up axis is locked (Rapier only supports locking cardinal
 ///   axes, but [`up`](Self::up) defaults to `Vector3::Y` which fits the bill).
@@ -43,7 +42,7 @@ pub struct TnuaBuiltinWalk {
     /// direction.
     ///
     /// Tnua assumes that this vector is orthogonal to the [`up`](Self::up) vector.
-    pub desired_forward: Vector3,
+    pub desired_forward: Option<Dir3>,
 
     /// The height at which the character will float above ground at rest.
     ///
@@ -125,7 +124,7 @@ impl Default for TnuaBuiltinWalk {
     fn default() -> Self {
         Self {
             desired_velocity: Vector3::ZERO,
-            desired_forward: Vector3::ZERO,
+            desired_forward: None,
             float_height: 0.0,
             cling_distance: 1.0,
             spring_strengh: 400.0,
@@ -387,11 +386,14 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
         // Turning
 
-        let desired_angvel = if 0.0 < self.desired_forward.length_squared() {
+        let desired_angvel = if let Some(desired_forward) = self.desired_forward {
             let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
-            let rotation_along_up_axis =
-                rotation_arc_around_axis(ctx.up_direction, current_forward, self.desired_forward)
-                    .unwrap_or(0.0);
+            let rotation_along_up_axis = rotation_arc_around_axis(
+                ctx.up_direction,
+                current_forward,
+                desired_forward.adjust_precision(),
+            )
+            .unwrap_or(0.0);
             (rotation_along_up_axis / ctx.frame_duration)
                 .clamp(-self.turning_angvel, self.turning_angvel)
         } else {
@@ -434,7 +436,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
     fn neutralize(&mut self) {
         self.desired_velocity = Vector3::ZERO;
-        self.desired_forward = Vector3::ZERO;
+        self.desired_forward = None;
     }
 
     fn is_airborne(&self, state: &Self::State) -> bool {

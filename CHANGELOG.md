@@ -24,6 +24,8 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
     `&mut Self` (this was always redundant, since they get called from queries
     anyway rather than on freshly created objects, so they don't benefit from a
     fluent API)
+  - `desired_forward` fields of `TnuaBuiltinWalk` and `TnuaBuiltinDash` was
+    changed from `Vector3` to `Option<Dir3>`.
 
 ## 0.19.0 - 2024-07-05
 ### Changed

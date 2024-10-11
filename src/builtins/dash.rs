@@ -22,7 +22,7 @@ pub struct TnuaBuiltinDash {
     /// This input parameter is cached when the action starts. This means that the control system
     /// does not have to make sure the direction reamins the same even if the player changes it
     /// mid-dash.
-    pub desired_forward: Vector3,
+    pub desired_forward: Option<Dir3>,
 
     /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
@@ -51,7 +51,7 @@ impl Default for TnuaBuiltinDash {
     fn default() -> Self {
         Self {
             displacement: Vector3::ZERO,
-            desired_forward: Vector3::ZERO,
+            desired_forward: None,
             allow_in_air: false,
             speed: 80.0,
             brake_to_speed: 20.0,
@@ -138,14 +138,14 @@ impl TnuaAction for TnuaBuiltinDash {
                         0.5 * current_speed
                     };
 
-                    if 0.0 < desired_forward.length_squared() {
+                    if let Some(desired_forward) = desired_forward {
                         let up = ctx.up_direction;
                         let up = up.adjust_precision();
                         let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
                         let rotation_along_up_axis = rotation_arc_around_axis(
                             Dir3::Y,
                             current_forward,
-                            self.desired_forward,
+                            desired_forward.adjust_precision(),
                         )
                         .unwrap_or(0.0);
                         let desired_angvel = rotation_along_up_axis / ctx.frame_duration;
@@ -181,7 +181,7 @@ pub enum TnuaBuiltinDashState {
     During {
         direction: Vector3,
         destination: Vector3,
-        desired_forward: Vector3,
+        desired_forward: Option<Dir3>,
         consider_blocked_if_speed_is_less_than: Float,
     },
     Braking {

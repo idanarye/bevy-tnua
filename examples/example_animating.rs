@@ -193,7 +193,7 @@ fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Tnu
     controller.basis(TnuaBuiltinWalk {
         // The `desired_velocity` determines how the character will move.
         desired_velocity: direction.normalize_or_zero() * 10.0,
-        desired_forward: direction.normalize_or_zero(),
+        desired_forward: Dir3::new(direction).ok(),
         // The `float_height` must be greater (even if by little) from the distance between the
         // character's center and the lowest point of its collider.
         float_height: 2.0,

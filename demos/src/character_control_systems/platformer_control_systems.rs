@@ -302,11 +302,11 @@ pub fn apply_platformer_controls(
             },
             desired_forward: if let Some(forward_from_camera) = forward_from_camera {
                 // With shooters, we want the character model to follow the camera.
-                forward_from_camera.forward
+                Dir3::new(forward_from_camera.forward.f32()).ok()
             } else {
                 // For platformers, we only want ot change direction when the character tries to
                 // moves (or when the player explicitly wants to set the direction)
-                direction.normalize_or_zero()
+                Dir3::new(direction.f32()).ok()
             },
             ..config.walk.clone()
         });
@@ -357,11 +357,11 @@ pub fn apply_platformer_controls(
                 // `desired_forward` of the walk basis. Like the displacement, it gets "frozen" -
                 // allowing to easily maintain a forward direction during the dash.
                 desired_forward: if forward_from_camera.is_none() {
-                    direction.normalize()
+                    Dir3::new(direction.f32()).ok()
                 } else {
                     // For shooters, we want to allow rotating mid-dash if the player moves the
                     // mouse.
-                    Vector3::ZERO
+                    None
                 },
                 allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
                     <= config.actions_in_air,
