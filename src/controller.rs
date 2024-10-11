@@ -594,6 +594,7 @@ fn apply_controller_system(
                 };
 
             sensor.cast_range = sensor_cast_range_for_basis.max(sensor_case_range_for_action);
+            sensor.cast_direction = -up_direction;
         }
 
         // Cycle actions_being_fed
