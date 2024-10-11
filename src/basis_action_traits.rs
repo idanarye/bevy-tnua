@@ -16,13 +16,9 @@ pub struct TnuaBasisContext<'a> {
 
     /// A sensor that tracks the distance of the character's center from the ground.
     pub proximity_sensor: &'a TnuaProximitySensor,
-}
 
-impl TnuaBasisContext<'_> {
     /// The direction considered as "up".
-    pub fn up_direction(&self) -> Dir3 {
-        Dir3::Y
-    }
+    pub up_direction: Dir3,
 }
 
 /// The main movement command of a character.
@@ -205,6 +201,9 @@ pub struct TnuaActionContext<'a> {
     /// A sensor that tracks the distance of the character's center from the ground.
     pub proximity_sensor: &'a TnuaProximitySensor,
 
+    /// The direction considered as "up".
+    pub up_direction: Dir3,
+
     /// An accessor to the currently active basis.
     pub basis: &'a dyn DynamicBasis,
 }
@@ -227,16 +226,12 @@ impl<'a> TnuaActionContext<'a> {
             frame_duration: self.frame_duration,
             tracker: self.tracker,
             proximity_sensor: self.proximity_sensor,
+            up_direction: self.up_direction,
         }
     }
 
     pub fn frame_duration_as_duration(&self) -> Duration {
         Duration::from_secs_f64(self.frame_duration.into())
-    }
-
-    /// The direction considered as "up".
-    pub fn up_direction(&self) -> Dir3 {
-        Dir3::Y
     }
 }
 
