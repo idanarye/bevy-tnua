@@ -20,6 +20,10 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   - (only relevant for custom basis/actions) The `up_direction` of
     `TnuaBasisContext` and `TnuaActionContext` is now a field instead of a
     method.
+  - `TnuaController` method for feeding basis and actions no longer return
+    `&mut Self` (this was always redundant, since they get called from queries
+    anyway rather than on freshly created objects, so they don't benefit from a
+    fluent API)
 
 ## 0.19.0 - 2024-07-05
 ### Changed

@@ -107,8 +107,8 @@ pub struct TnuaController {
 
 impl TnuaController {
     /// Feed a basis - the main movement command - with [its default name](TnuaBasis::NAME).
-    pub fn basis<B: TnuaBasis>(&mut self, basis: B) -> &mut Self {
-        self.named_basis(B::NAME, basis)
+    pub fn basis<B: TnuaBasis>(&mut self, basis: B) {
+        self.named_basis(B::NAME, basis);
     }
 
     /// Feed a basis - the main movement command - with a custom name.
@@ -116,7 +116,7 @@ impl TnuaController {
     /// This should only be used if the same basis type needs to be used with different names to
     /// allow, for example, different animations. Otherwise prefer to use the default name with
     /// [`basis`](Self::basis).
-    pub fn named_basis<B: TnuaBasis>(&mut self, name: &'static str, basis: B) -> &mut Self {
+    pub fn named_basis<B: TnuaBasis>(&mut self, name: &'static str, basis: B) {
         if let Some((existing_name, existing_basis)) =
             self.current_basis.as_mut().and_then(|(n, b)| {
                 let b = b.as_mut_any().downcast_mut::<BoxableBasis<B>>()?;
@@ -128,7 +128,6 @@ impl TnuaController {
         } else {
             self.current_basis = Some((name, Box::new(BoxableBasis::new(basis))));
         }
-        self
     }
 
     /// Instruct the basis to pretend the user provided no input this frame.
@@ -136,11 +135,10 @@ impl TnuaController {
     /// The exact meaning is defined in the basis' [`neutralize`](TnuaBasis::neutralize) method,
     /// but generally it means that fields that typically come from a configuration will not be
     /// touched, and only fields that are typically set by user input get nullified.
-    pub fn neutralize_basis(&mut self) -> &mut Self {
+    pub fn neutralize_basis(&mut self) {
         if let Some((_, basis)) = self.current_basis.as_mut() {
             basis.neutralize();
         }
-        self
     }
 
     /// The name of the currently running basis.
@@ -170,8 +168,8 @@ impl TnuaController {
     }
 
     /// Feed an action with [its default name](TnuaBasis::NAME).
-    pub fn action<A: TnuaAction>(&mut self, action: A) -> &mut Self {
-        self.named_action(A::NAME, action)
+    pub fn action<A: TnuaAction>(&mut self, action: A) {
+        self.named_action(A::NAME, action);
     }
 
     /// Feed an action with a custom name.
@@ -179,7 +177,7 @@ impl TnuaController {
     /// This should only be used if the same action type needs to be used with different names to
     /// allow, for example, different animations. Otherwise prefer to use the default name with
     /// [`action`](Self::action).
-    pub fn named_action<A: TnuaAction>(&mut self, name: &'static str, action: A) -> &mut Self {
+    pub fn named_action<A: TnuaAction>(&mut self, name: &'static str, action: A) {
         match self.actions_being_fed.entry(name) {
             Entry::Occupied(mut entry) => {
                 entry.get_mut().fed_this_frame = true;
@@ -238,7 +236,6 @@ impl TnuaController {
                 }
             }
         }
-        self
     }
 
     /// The name of the currently running action.
