@@ -374,10 +374,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         // Tilt
 
         let torque_to_fix_tilt = {
-            let tilted_up = ctx
-                .tracker
-                .rotation
-                .mul_vec3(Vector3::Y);
+            let tilted_up = ctx.tracker.rotation.mul_vec3(Vector3::Y);
 
             let rotation_required_to_fix_tilt =
                 Quaternion::from_rotation_arc(tilted_up, ctx.up_direction.adjust_precision());

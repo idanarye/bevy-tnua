@@ -398,7 +398,7 @@ fn apply_controller_system(
         }
 
         if let Some((_, basis)) = controller.current_basis.as_mut() {
-            let up_direction = Dir3::new(-tracker.gravity).unwrap_or(Dir3::Y);
+            let up_direction = Dir3::new(-tracker.gravity.f32()).unwrap_or(Dir3::Y);
             let basis = basis.as_mut();
             basis.apply(
                 TnuaBasisContext {
