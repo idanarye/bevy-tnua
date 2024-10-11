@@ -12,6 +12,15 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   nullified even with very high walk acceleration settings (see
   https://github.com/idanarye/bevy-tnua/issues/30)
 
+### Changed
+- Instead of fixating it to positive Y, Tnua now calculates the up direction to
+  be the reverse of the gravity direction (see see
+  https://github.com/idanarye/bevy-tnua/issues/40)
+- [**BREAKING**] API changes:
+  - (only relevant for custom basis/actions) The `up_direction` of
+    `TnuaBasisContext` and `TnuaActionContext` is now a field instead of a
+    method.
+
 ## 0.19.0 - 2024-07-05
 ### Changed
 - Upgrade to Bevy 0.14.
