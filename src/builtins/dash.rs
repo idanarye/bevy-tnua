@@ -1,4 +1,4 @@
-use crate::math::{AdjustPrecision, Float, Vector3};
+use crate::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy::prelude::*;
 
 use crate::util::rotation_arc_around_axis;
@@ -95,12 +95,12 @@ impl TnuaAction for TnuaBuiltinDash {
         for _ in 0..3 {
             return match state {
                 TnuaBuiltinDashState::PreDash => {
-                    // Probably unneeded because of the `initiation_decision`, but still
-                    if !self.displacement.is_finite() || self.displacement == Vector3::ZERO {
+                    let Ok(direction) = Dir3::new(self.displacement.f32()) else {
+                        // Probably unneeded because of the `initiation_decision`, but still
                         return TnuaActionLifecycleDirective::Finished;
-                    }
+                    };
                     *state = TnuaBuiltinDashState::During {
-                        direction: self.displacement.normalize(),
+                        direction,
                         destination: ctx.tracker.translation + self.displacement,
                         desired_forward: self.desired_forward,
                         consider_blocked_if_speed_is_less_than: Float::NEG_INFINITY,
@@ -113,8 +113,9 @@ impl TnuaAction for TnuaBuiltinDash {
                     desired_forward,
                     consider_blocked_if_speed_is_less_than,
                 } => {
-                    let distance_to_destination =
-                        direction.dot(*destination - ctx.tracker.translation);
+                    let distance_to_destination = direction
+                        .adjust_precision()
+                        .dot(*destination - ctx.tracker.translation);
                     if distance_to_destination < 0.0 {
                         *state = TnuaBuiltinDashState::Braking {
                             direction: *direction,
@@ -122,16 +123,19 @@ impl TnuaAction for TnuaBuiltinDash {
                         continue;
                     }
 
-                    let current_speed = direction.dot(ctx.tracker.velocity);
+                    let current_speed = direction.adjust_precision().dot(ctx.tracker.velocity);
                     if current_speed < *consider_blocked_if_speed_is_less_than {
                         return TnuaActionLifecycleDirective::Finished;
                     }
 
                     motor.lin = Default::default();
                     motor.lin.acceleration = -ctx.tracker.gravity;
-                    motor.lin.boost = (*direction * self.speed - ctx.tracker.velocity)
+                    motor.lin.boost = (direction.adjust_precision() * self.speed
+                        - ctx.tracker.velocity)
                         .clamp_length_max(ctx.frame_duration * self.acceleration);
-                    let expected_speed = direction.dot(ctx.tracker.velocity + motor.lin.boost);
+                    let expected_speed = direction
+                        .adjust_precision()
+                        .dot(ctx.tracker.velocity + motor.lin.boost);
                     *consider_blocked_if_speed_is_less_than = if current_speed < expected_speed {
                         0.5 * (current_speed + expected_speed)
                     } else {
@@ -158,11 +162,11 @@ impl TnuaAction for TnuaBuiltinDash {
                     TnuaActionLifecycleDirective::StillActive
                 }
                 TnuaBuiltinDashState::Braking { direction } => {
-                    let remaining_speed = direction.dot(ctx.tracker.velocity);
+                    let remaining_speed = direction.adjust_precision().dot(ctx.tracker.velocity);
                     if remaining_speed <= self.brake_to_speed {
                         TnuaActionLifecycleDirective::Finished
                     } else {
-                        motor.lin.boost = -*direction
+                        motor.lin.boost = -direction.adjust_precision()
                             * (remaining_speed - self.brake_to_speed).min(self.brake_acceleration);
                         TnuaActionLifecycleDirective::StillActive
                     }
@@ -179,12 +183,12 @@ pub enum TnuaBuiltinDashState {
     #[default]
     PreDash,
     During {
-        direction: Vector3,
+        direction: Dir3,
         destination: Vector3,
         desired_forward: Option<Dir3>,
         consider_blocked_if_speed_is_less_than: Float,
     },
     Braking {
-        direction: Vector3,
+        direction: Dir3,
     },
 }
