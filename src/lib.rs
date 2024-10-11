@@ -95,7 +95,7 @@
 //!             desired_velocity: player_input.direction_vector() * 10.0,
 //!
 //!             // Turn the character in the movement direction:
-//!             desired_forward: player_input.direction_vector(),
+//!             desired_forward: Dir3::new(player_input.direction_vector()).ok(),
 //!             
 //!             // Must be larger than the height of the entity's center from the bottom of its
 //!             // collider, or else the character will not float and Tnua will not work properly:
