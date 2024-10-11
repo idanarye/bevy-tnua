@@ -398,12 +398,14 @@ fn apply_controller_system(
         }
 
         if let Some((_, basis)) = controller.current_basis.as_mut() {
+            let up_direction = Dir3::new(-tracker.gravity.f32()).unwrap_or(Dir3::Y);
             let basis = basis.as_mut();
             basis.apply(
                 TnuaBasisContext {
                     frame_duration,
                     tracker,
                     proximity_sensor: sensor.as_ref(),
+                    up_direction,
                 },
                 motor.as_mut(),
             );
@@ -421,6 +423,7 @@ fn apply_controller_system(
                         tracker,
                         proximity_sensor,
                         basis,
+                        up_direction,
                     },
                     being_fed_for,
                 );
@@ -457,6 +460,7 @@ fn apply_controller_system(
                         tracker,
                         proximity_sensor,
                         basis,
+                        up_direction,
                     },
                     lifecycle_status,
                     motor.as_mut(),
@@ -503,6 +507,7 @@ fn apply_controller_system(
                                     tracker,
                                     proximity_sensor,
                                     basis,
+                                    up_direction,
                                 },
                                 TnuaActionLifecycleStatus::CancelledFrom,
                                 motor.as_mut(),
@@ -569,6 +574,7 @@ fn apply_controller_system(
                         tracker,
                         proximity_sensor,
                         basis,
+                        up_direction,
                     },
                     TnuaActionLifecycleStatus::Initiated,
                     motor.as_mut(),
@@ -588,6 +594,7 @@ fn apply_controller_system(
                 };
 
             sensor.cast_range = sensor_cast_range_for_basis.max(sensor_case_range_for_action);
+            sensor.cast_direction = -up_direction;
         }
 
         // Cycle actions_being_fed

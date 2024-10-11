@@ -146,7 +146,7 @@ impl TnuaAction for TnuaBuiltinJump {
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut crate::TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
-        let up = ctx.up_direction().adjust_precision();
+        let up = ctx.up_direction.adjust_precision();
 
         if lifecycle_status.just_started() {
             let mut calculator = SegmentedJumpInitialVelocityCalculator::new(self.height);
