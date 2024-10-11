@@ -108,7 +108,7 @@ impl TnuaAction for TnuaBuiltinKnockback {
                 if boundary.is_cleared() {
                     return TnuaActionLifecycleDirective::Finished;
                 } else {
-                    let regular_boost = motor.lin.calc_boost(ctx.frame_duration);
+                    let regular_boost = crate::util::calc_boost(&motor.lin, ctx.frame_duration);
                     if let Some((component_direction, component_limit)) = boundary
                         .calc_boost_part_on_boundary_axis_after_limit(
                             ctx.tracker.velocity,
