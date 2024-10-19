@@ -11,7 +11,7 @@ use bevy_tnua::control_helpers::{
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{float_consts, AsF32, Vector3};
-use bevy_tnua::prelude::*;
+use bevy_tnua::{prelude::*, TnuaObstacleRadar};
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "avian3d")]
 use bevy_tnua_avian3d::*;
@@ -72,6 +72,7 @@ fn main() {
     }
     #[cfg(feature = "avian3d")]
     {
+        app.add_plugins(PhysicsDebugPlugin::default());
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => {
                 app.add_plugins(PhysicsPlugins::default());
@@ -205,6 +206,14 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Read examples/src/character_control_systems/platformer_control_systems.rs to see how
     // `TnuaController` is used in this example.
     cmd.insert(TnuaControllerBundle::default());
+
+    // The obstacle radar is used to detect obstacles around the player that the player can use
+    // for environment actions (e.g. climbing). The physics backend integration plugin is
+    // responsible for generating the collider in a child object. The collider is a cylinder around
+    // the player character (it needs to be a little bigger than the character's collider),
+    // configured so that it'll generate collision data without generating forces for the actual
+    // physics simulation.
+    cmd.insert(TnuaObstacleRadar::new(1.0, 3.0));
 
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim3,

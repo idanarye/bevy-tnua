@@ -20,6 +20,9 @@ use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
 };
+use bevy_tnua_physics_integration_layer::obstacle_radar::{
+    TnuaObstacleRadar, TnuaObstacleRadarBlip,
+};
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
 use bevy_tnua_physics_integration_layer::TnuaPipelineStages;
 use bevy_tnua_physics_integration_layer::TnuaSystemSet;
@@ -59,6 +62,7 @@ impl Plugin for TnuaAvian3dPlugin {
             (
                 update_rigid_body_trackers_system,
                 update_proximity_sensors_system,
+                update_obstacle_radars_system,
             )
                 .in_set(TnuaPipelineStages::Sensors),
         );
@@ -300,6 +304,69 @@ fn update_proximity_sensors_system(
             sensor.output = final_sensor_output;
         },
     );
+}
+
+fn update_obstacle_radars_system(
+    spatial_query: SpatialQuery,
+    mut radars_query: Query<(Entity, &mut TnuaObstacleRadar, &Position)>,
+    colliders_query: Query<(&Collider, &Position, &Rotation)>,
+) {
+    if radars_query.is_empty() {
+        return;
+    }
+    let radar_up = Vector3::Y; // TODO: make this depend on gravity
+    for (radar_owner_entity, mut radar, radar_position) in radars_query.iter_mut() {
+        radar.mark_unseen();
+        let radar_center_to_top = radar_up * (0.5 * radar.height);
+        spatial_query.shape_intersections_callback(
+            &Collider::cylinder(radar.radius, radar.height),
+            radar_position.0,
+            Default::default(),
+            Default::default(),
+            |obstacle_entity| {
+                if radar_owner_entity == obstacle_entity {
+                    return true;
+                }
+                let Ok((collider, collider_position, collider_rotation)) =
+                    colliders_query.get(obstacle_entity)
+                else {
+                    return true;
+                };
+                let (main_contact_point, _) = collider.project_point(
+                    *collider_position,
+                    *collider_rotation,
+                    radar_position.0,
+                    false,
+                );
+                let vec_to_midslice =
+                    (radar_position.0 - main_contact_point).project_onto(radar_up);
+                let projection_on_midslice = main_contact_point + vec_to_midslice;
+                let [top_point, bottom_point] =
+                    [radar_center_to_top, -radar_center_to_top].map(|offset| {
+                        let projection_on_cap = projection_on_midslice + offset;
+                        let (position_from_cap, _) = collider.project_point(
+                            *collider_position,
+                            *collider_rotation,
+                            projection_on_cap,
+                            true,
+                        );
+                        position_from_cap
+                    });
+                radar.blips.insert(
+                    obstacle_entity,
+                    TnuaObstacleRadarBlip {
+                        radar_position: radar_position.0,
+                        position: main_contact_point,
+                        to_top: (top_point - main_contact_point).dot(radar_up),
+                        to_bottom: (main_contact_point - bottom_point).dot(radar_up),
+                        seen: true,
+                    },
+                );
+                true
+            },
+        );
+        radar.delete_unseen();
+    }
 }
 
 #[allow(clippy::type_complexity)]

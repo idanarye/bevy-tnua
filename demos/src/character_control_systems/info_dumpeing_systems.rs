@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
+use bevy_tnua::{TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor};
 
 use crate::ui::info::InfoSource;
 
@@ -8,10 +8,11 @@ pub fn character_control_info_dumping_system(
         &mut InfoSource,
         &TnuaProximitySensor,
         Option<&TnuaGhostSensor>,
+        Option<&TnuaObstacleRadar>,
     )>,
     names_query: Query<&Name>,
 ) {
-    for (mut info_source, sensor, ghost_sensor) in query.iter_mut() {
+    for (mut info_source, sensor, ghost_sensor, obstacle_radar) in query.iter_mut() {
         if !info_source.is_active() {
             continue;
         }
@@ -37,6 +38,25 @@ pub fn character_control_info_dumping_system(
                 }
             }
             info_source.label("Ghost sensor", text);
+        }
+        if let Some(obstacle_radar) = obstacle_radar.as_ref() {
+            let mut obstacles = obstacle_radar
+                .blips
+                .iter()
+                .map(|(entity, blip)| {
+                    let name = names_query
+                        .get(*entity)
+                        .ok()
+                        .map(|name| name.to_string())
+                        .unwrap_or_else(|| format!("{entity}"));
+                    format!(
+                        "{}\n\t{}\n\t{} to top\n\t{} to bottom",
+                        name, blip.position, blip.to_top, blip.to_bottom
+                    )
+                })
+                .collect::<Vec<_>>();
+            obstacles.sort();
+            info_source.label("Obstacle radar", obstacles.join("\n"));
         }
     }
 }

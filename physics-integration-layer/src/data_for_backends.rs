@@ -239,3 +239,5 @@ impl TnuaGhostSensor {
 /// See `TnuaSimpleFallThroughPlatformsHelper`.
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostPlatform;
+
+pub use crate::obstacle_radar::TnuaObstacleRadar;
