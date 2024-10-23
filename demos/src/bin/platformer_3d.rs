@@ -131,6 +131,10 @@ fn main() {
                 "Pushback",
                 tnua_demos_crate::levels_setup::pushback_3d::setup_level,
             )
+            .with(
+                "JungleGym",
+                tnua_demos_crate::levels_setup::jungle_gym::setup_level,
+            )
     });
     app.add_systems(Startup, setup_player);
     app.add_systems(
