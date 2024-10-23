@@ -11,15 +11,15 @@ fn main() {
             DefaultPlugins,
             PhysicsPlugins::default(),
             // We need both Tnua's main controller plugin, and the plugin to connect to the physics
-            // backend (in this case XBPD-3D)
-            TnuaControllerPlugin::default(),
-            TnuaAvian3dPlugin::default(),
+            // backend (in this case Avian 3D)
+            TnuaControllerPlugin::new(PhysicsSchedule),
+            TnuaAvian3dPlugin::new(PhysicsSchedule),
         ))
         .add_systems(
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(Update, apply_controls.in_set(TnuaUserControlsSystemSet))
+        .add_systems(FixedUpdate, apply_controls)
         .run();
 }
 
