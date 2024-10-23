@@ -34,7 +34,7 @@
 //! where it should usually be registered)
 //!
 //! A Tnua controlled character must have a dynamic rigid body, everything from
-//! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle1), and
+//! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle1`), and
 //! everything from [`TnuaControllerBundle`](prelude::TnuaControllerBundle):
 //! ```no_run
 //! # use bevy::prelude::*;
