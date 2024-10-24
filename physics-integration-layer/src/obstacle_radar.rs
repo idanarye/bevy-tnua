@@ -6,7 +6,8 @@ use crate::math::{Float, Vector3};
 pub struct TnuaObstacleRadar {
     pub radius: Float,
     pub height: Float,
-    pub blips: HashMap<Entity, TnuaObstacleRadarBlip>,
+    tracked_position: Vector3,
+    blips: HashMap<Entity, BlipStatus>,
 }
 
 impl TnuaObstacleRadar {
@@ -14,25 +15,40 @@ impl TnuaObstacleRadar {
         Self {
             radius,
             height,
+            tracked_position: Vector3::NAN,
             blips: Default::default(),
         }
     }
 
-    pub fn mark_unseen(&mut self) {
-        for blip in self.blips.values_mut() {
-            blip.seen = false;
-        }
+    pub fn pre_marking_update(&mut self, tracked_position: Vector3) {
+        self.tracked_position = tracked_position;
+        self.blips.retain(|_, blip_status| match blip_status {
+            BlipStatus::Unseen => false,
+            BlipStatus::Seen => {
+                *blip_status = BlipStatus::Unseen;
+                true
+            }
+        });
     }
 
-    pub fn delete_unseen(&mut self) {
-        self.blips.retain(|_, blip| blip.seen);
+    pub fn mark_seen(&mut self, entity: Entity) {
+        self.blips.insert(entity, BlipStatus::Seen);
+    }
+
+    pub fn tracked_position(&self) -> Vector3 {
+        self.tracked_position
+    }
+
+    pub fn iter_blips(&self) -> impl '_ + Iterator<Item = Entity> {
+        self.blips.keys().copied()
+    }
+
+    pub fn has_blip(&self, entity: Entity) -> bool {
+        self.blips.contains_key(&entity)
     }
 }
 
-pub struct TnuaObstacleRadarBlip {
-    pub radar_position: Vector3,
-    pub position: Vector3,
-    pub to_top: Float,
-    pub to_bottom: Float,
-    pub seen: bool,
+pub enum BlipStatus {
+    Unseen,
+    Seen,
 }

@@ -41,18 +41,13 @@ pub fn character_control_info_dumping_system(
         }
         if let Some(obstacle_radar) = obstacle_radar.as_ref() {
             let mut obstacles = obstacle_radar
-                .blips
-                .iter()
-                .map(|(entity, blip)| {
-                    let name = names_query
-                        .get(*entity)
+                .iter_blips()
+                .map(|entity| {
+                    names_query
+                        .get(entity)
                         .ok()
                         .map(|name| name.to_string())
-                        .unwrap_or_else(|| format!("{entity}"));
-                    format!(
-                        "{}\n\t{}\n\t{} to top\n\t{} to bottom",
-                        name, blip.position, blip.to_top, blip.to_bottom
-                    )
+                        .unwrap_or_else(|| format!("{entity}"))
                 })
                 .collect::<Vec<_>>();
             obstacles.sort();
