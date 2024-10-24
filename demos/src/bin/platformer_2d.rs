@@ -11,7 +11,7 @@ use bevy_tnua::control_helpers::{
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{float_consts, AsF32, Vector3};
-use bevy_tnua::prelude::*;
+use bevy_tnua::{prelude::*, TnuaObstacleRadar};
 use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "avian2d")]
 use bevy_tnua_avian2d::*;
@@ -19,7 +19,9 @@ use bevy_tnua_avian2d::*;
 use bevy_tnua_rapier2d::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
-use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
+use tnua_demos_crate::character_control_systems::info_dumpeing_systems::{
+    character_control_info_dumping_system, character_control_radar_visualization_system,
+};
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
 };
@@ -113,6 +115,7 @@ fn main() {
         Update,
         character_control_info_dumping_system.in_set(DemoInfoUpdateSystemSet),
     );
+    app.add_systems(Update, character_control_radar_visualization_system);
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
         CharacterMotionConfigForPlatformerDemo,
     >::default());
@@ -188,6 +191,14 @@ fn setup_player(mut commands: Commands) {
     // Read examples/src/character_control_systems/platformer_control_systems.rs to see how
     // `TnuaController` is used in this example.
     cmd.insert(TnuaControllerBundle::default());
+
+    // The obstacle radar is used to detect obstacles around the player that the player can use
+    // for environment actions (e.g. climbing). The physics backend integration plugin is
+    // responsible for generating the collider in a child object. The collider is a cylinder around
+    // the player character (it needs to be a little bigger than the character's collider),
+    // configured so that it'll generate collision data without generating forces for the actual
+    // physics simulation.
+    cmd.insert(TnuaObstacleRadar::new(1.0, 3.0));
 
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim2,

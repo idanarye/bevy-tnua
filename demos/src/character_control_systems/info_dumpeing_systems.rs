@@ -1,6 +1,6 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_tnua::{
-    radar_lens::TnuaRadarLens, TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor,
+    math::AsF32, radar_lens::TnuaRadarLens, TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor,
 };
 
 use crate::ui::info::InfoSource;
@@ -70,8 +70,8 @@ pub fn character_control_radar_visualization_system(
         for blip in radar_lens.iter_blips() {
             let closest_point = blip.closest_point();
             gizmos.arrow(
-                obstacle_radar.tracked_position(),
-                closest_point,
+                obstacle_radar.tracked_position().f32(),
+                closest_point.f32(),
                 css::PALE_VIOLETRED,
             );
         }
