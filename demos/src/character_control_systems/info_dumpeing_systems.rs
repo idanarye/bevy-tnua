@@ -1,7 +1,11 @@
-use bevy::prelude::*;
-use bevy_tnua::{TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor};
+use bevy::{color::palettes::css, prelude::*};
+use bevy_tnua::{
+    radar_lens::TnuaRadarLens, TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor,
+};
 
 use crate::ui::info::InfoSource;
+
+use super::spatial_ext_facade::SpatialExtFacade;
 
 pub fn character_control_info_dumping_system(
     mut query: Query<(
@@ -52,6 +56,24 @@ pub fn character_control_info_dumping_system(
                 .collect::<Vec<_>>();
             obstacles.sort();
             info_source.label("Obstacle radar", obstacles.join("\n"));
+        }
+    }
+}
+
+pub fn character_control_radar_visualization_system(
+    query: Query<&TnuaObstacleRadar>,
+    spatial_ext: SpatialExtFacade,
+    mut gizmos: Gizmos,
+) {
+    for obstacle_radar in query.iter() {
+        let radar_lens = TnuaRadarLens::new(obstacle_radar, &spatial_ext);
+        for blip in radar_lens.iter_blips() {
+            let closest_point = blip.closest_point();
+            gizmos.arrow(
+                obstacle_radar.tracked_position(),
+                closest_point,
+                css::PALE_VIOLETRED,
+            );
         }
     }
 }

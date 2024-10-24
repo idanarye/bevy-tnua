@@ -65,6 +65,7 @@ use bevy::prelude::*;
 pub mod data_for_backends;
 pub mod math;
 pub mod obstacle_radar;
+pub mod spatial_ext;
 pub mod subservient_sensors;
 
 /// Umbrella system set for [`TnuaPipelineStages`].
