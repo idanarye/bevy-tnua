@@ -39,6 +39,10 @@ impl TnuaObstacleRadar {
         self.tracked_position
     }
 
+    pub fn up_direction(&self) -> Dir3 {
+        Dir3::Y
+    }
+
     pub fn iter_blips(&self) -> impl '_ + Iterator<Item = Entity> {
         self.blips.keys().copied()
     }

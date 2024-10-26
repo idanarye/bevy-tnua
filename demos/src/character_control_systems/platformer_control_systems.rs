@@ -3,16 +3,19 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use bevy_tnua::builtins::{
     TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash, TnuaBuiltinKnockback,
+    TnuaBuiltinWallSlide,
 };
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Vector3};
-use bevy_tnua::prelude::*;
+use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
+use bevy_tnua::{prelude::*, TnuaObstacleRadar};
 use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 
 use crate::ui::tuning::UiTunable;
 
+use super::spatial_ext_facade::SpatialExtFacade;
 use super::Dimensionality;
 
 #[allow(clippy::type_complexity)]
@@ -50,7 +53,14 @@ pub fn apply_platformer_controls(
         // This is used in the shooter-like demo to control the forward direction of the
         // character.
         Option<&ForwardFromCamera>,
+        // This is used to detect all the colliders in a small area around the character.
+        &TnuaObstacleRadar,
     )>,
+    // This is used to run spatial queries on the physics backend. Note that `SpatialExtFacade` is
+    // defined in the demos crates, and actual games that use Tnua should instead use the
+    // appropriate type from the physics backend integration crate they use - e.g.
+    // `TnuaSpatialExtAvian2d` or `TnuaSpatialExtRapier3d`.
+    spatial_ext: SpatialExtFacade,
 ) {
     #[cfg(feature = "egui")]
     if egui_context.ctx_mut().wants_keyboard_input() {
@@ -72,6 +82,7 @@ pub fn apply_platformer_controls(
         mut fall_through_helper,
         mut air_actions_counter,
         forward_from_camera,
+        obstacle_radar,
     ) in query.iter_mut()
     {
         // This part is just keyboard input processing. In a real game this would probably be done
@@ -310,6 +321,28 @@ pub fn apply_platformer_controls(
             },
             ..config.walk.clone()
         });
+
+        let radar_lens = TnuaRadarLens::new(obstacle_radar, &spatial_ext);
+        for blip in radar_lens.iter_blips() {
+            match blip.spatial_relation(0.5) {
+                TnuaBlipSpatialRelation::Clipping => {}
+                TnuaBlipSpatialRelation::Above => {}
+                TnuaBlipSpatialRelation::Below => {}
+                TnuaBlipSpatialRelation::Aeside(blip_direction) => {
+                    if controller.is_airborne().unwrap()
+                        && 0.5 < direction.dot(blip_direction.adjust_precision())
+                    {
+                        controller.action(TnuaBuiltinWallSlide {
+                            wall_entity: Some(blip.entity()),
+                            contact_point_with_wall: blip.closest_point(),
+                            force_forward: Some(blip_direction),
+                            max_fall_speed: 2.0,
+                            maintain_distance: Some(0.7),
+                        });
+                    }
+                }
+            }
+        }
 
         if crouch {
             // Crouching is an action. We either feed it or we don't - other than that there is
