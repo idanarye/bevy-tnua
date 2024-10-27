@@ -3,7 +3,7 @@ use std::time::Duration;
 use crate::{
     math::{AdjustPrecision, AsF32, Float, Vector3},
     prelude::*,
-    util::rotation_arc_around_axis,
+    util::calc_angular_velchange_to_force_forward,
     TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor, TnuaVelChange,
 };
@@ -147,23 +147,16 @@ impl TnuaAction for TnuaBuiltinKnockback {
         }
 
         if let Some(force_forward) = self.force_forward {
-            let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
-            let rotation_along_up_axis = rotation_arc_around_axis(
-                ctx.up_direction,
-                current_forward,
-                force_forward.adjust_precision(),
-            )
-            .unwrap_or(0.0);
-            let desired_angvel = rotation_along_up_axis / ctx.frame_duration;
-
-            let existing_angvel = ctx.tracker.angvel.dot(ctx.up_direction.adjust_precision());
-
-            let torque_to_turn = desired_angvel - existing_angvel;
-
             motor
                 .ang
                 .cancel_on_axis(ctx.up_direction.adjust_precision());
-            motor.ang += TnuaVelChange::boost(torque_to_turn * ctx.up_direction.adjust_precision());
+            motor.ang += calc_angular_velchange_to_force_forward(
+                force_forward,
+                ctx.tracker.rotation,
+                ctx.tracker.angvel,
+                ctx.up_direction,
+                ctx.frame_duration,
+            );
         }
 
         TnuaActionLifecycleDirective::StillActive

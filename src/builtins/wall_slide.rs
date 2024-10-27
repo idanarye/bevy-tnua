@@ -1,5 +1,6 @@
 use crate::{
     math::{AdjustPrecision, AsF32, Float, Vector3},
+    util::calc_angular_velchange_to_force_forward,
     TnuaAction, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor, TnuaVelChange,
 };
@@ -63,7 +64,18 @@ impl TnuaAction for TnuaBuiltinWallSlide {
             }
         }
 
-        // TODO: Force fowrard
+        if let Some(force_forward) = self.force_forward {
+            motor
+                .ang
+                .cancel_on_axis(ctx.up_direction.adjust_precision());
+            motor.ang += calc_angular_velchange_to_force_forward(
+                force_forward,
+                ctx.tracker.rotation,
+                ctx.tracker.angvel,
+                ctx.up_direction,
+                ctx.frame_duration,
+            );
+        }
 
         TnuaActionLifecycleDirective::StillActive
     }
