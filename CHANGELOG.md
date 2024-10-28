@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- `TnuaRadarLens` - a wrapper around `TnuaObstacleRadar` and `TnuaSpatialExt`
+  that helps user systems to figure out what the detected obstacles are and how
+  the character can use them for movement actions.
+- `TnuaBuiltinWallSlide` action for sliding down walls.
+- `calc_angular_velchange_to_force_forward` utility function.
 
 ## 0.20.0 - 2024-10-12
 ### Added

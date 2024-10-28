@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `TnuaObstacleRadar` component for detecting nearby colliders.
+- `TnuaSpatialExt` trait for allowing physics backend integration crates to
+  offer spatial queries in user systems. This is mostly so that the main
+  crate can offer helpers (like `TnuaRadarLens`) that do more complex things
+  with these queries.
+- The `TnuaVelChange::calc_boost` helper method.
 
 ## 0.4.0 - 2024-07-05
 ### Changed

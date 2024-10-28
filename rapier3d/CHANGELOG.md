@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d.
 
 ## [Unreleased]
+### Added
+- Support for `TnuaObstacleRadar`.
+- `TnuaSpatialExtRapier2d`/`TnuaSpatialExtRapier3d` - implementation for the
+  `TnuaSpatialExt` trait.
 
 ## 0.4.0 - 2024-07-08
 ### Changed
