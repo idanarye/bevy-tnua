@@ -9,9 +9,12 @@ use bevy::prelude::*;
 pub struct TnuaBuiltinWallSlide {
     pub wall_entity: Option<Entity>,
     pub contact_point_with_wall: Vector3,
+    pub normal: Dir3,
     pub force_forward: Option<Dir3>,
     pub max_fall_speed: Float,
     pub maintain_distance: Option<Float>,
+    pub max_sideways_speed: Float,
+    pub max_sideways_acceleration: Float,
 }
 
 impl TnuaAction for TnuaBuiltinWallSlide {
@@ -64,6 +67,28 @@ impl TnuaAction for TnuaBuiltinWallSlide {
             }
         }
 
+        let sideways_direction = self.normal.cross(*ctx.up_direction).adjust_precision();
+        let projected_sideways_velocity =
+            sideways_direction.dot(ctx.tracker.velocity + motor.lin.calc_boost(ctx.frame_duration));
+        if self.max_sideways_speed < projected_sideways_velocity.abs() {
+            let desired_sideways_velocity =
+                self.max_sideways_speed * projected_sideways_velocity.signum();
+            let desired_sideways_boost = desired_sideways_velocity - projected_sideways_velocity;
+            let desired_sideways_acceleration = desired_sideways_boost / ctx.frame_duration;
+            motor.lin +=
+                TnuaVelChange::acceleration(sideways_direction * desired_sideways_acceleration);
+        }
+
+        let sideways_acceleration =
+            sideways_direction.dot(motor.lin.calc_acceleration(ctx.frame_duration));
+        if self.max_sideways_acceleration < sideways_acceleration.abs() {
+            let desired_sideways_acceleration =
+                self.max_sideways_acceleration * sideways_acceleration.signum();
+            motor.lin += TnuaVelChange::acceleration(
+                sideways_direction * (desired_sideways_acceleration - sideways_acceleration),
+            );
+        }
+
         if let Some(force_forward) = self.force_forward {
             motor
                 .ang
@@ -90,4 +115,4 @@ impl TnuaAction for TnuaBuiltinWallSlide {
 }
 
 #[derive(Default, Debug)]
-pub struct TnuaBuiltinWallSlideState;
+pub struct TnuaBuiltinWallSlideState {}

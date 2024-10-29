@@ -23,6 +23,7 @@ impl<'a, X: TnuaSpatialExt> TnuaRadarLens<'a, X> {
                 entity,
                 collider_data: self.ext.fetch_collider_data(entity)?,
                 closest_point_cache: OnceCell::new(),
+                closest_point_normal_cache: OnceCell::new(),
             })
         })
     }
@@ -33,6 +34,7 @@ pub struct TnuaRadarBlipLens<'a, X: TnuaSpatialExt> {
     entity: Entity,
     collider_data: X::ColliderData<'a>,
     closest_point_cache: OnceCell<Vector3>,
+    closest_point_normal_cache: OnceCell<Vector3>,
 }
 
 impl<'a, X: TnuaSpatialExt> TnuaRadarBlipLens<'a, X> {
@@ -58,6 +60,26 @@ impl<'a, X: TnuaSpatialExt> TnuaRadarBlipLens<'a, X> {
 
     pub fn direction_to_closest_point(&self) -> Result<Dir3, InvalidDirectionError> {
         Dir3::new(self.vector_to_closest_point().f32())
+    }
+
+    pub fn normal_from_closest_point(&self) -> Vector3 {
+        *self.closest_point_normal_cache.get_or_init(|| {
+            let closest_point = self.closest_point();
+            let origin = self.radar().tracked_position();
+            let Some(direction) = (closest_point - origin).try_normalize() else {
+                return Vector3::ZERO;
+            };
+            let Some((_, normal)) = self.radar_lens.ext.cast_ray(
+                origin,
+                direction,
+                Float::INFINITY,
+                &self.collider_data,
+            ) else {
+                warn!("Unable to query normal to already-found closest point");
+                return Vector3::ZERO;
+            };
+            normal
+        })
     }
 
     pub fn spatial_relation(&self, threshold: Float) -> TnuaBlipSpatialRelation {

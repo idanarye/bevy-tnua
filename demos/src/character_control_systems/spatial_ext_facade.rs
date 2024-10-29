@@ -66,6 +66,45 @@ impl<'w, 's> TnuaSpatialExt for SpatialExtFacade<'w, 's> {
 
         panic!("Running without any physics backend configured");
     }
+
+    fn cast_ray(
+        &'_ self,
+        origin: Vector3,
+        direction: Vector3,
+        max_time_of_impact: bevy_tnua::math::Float,
+        collider_data: &Self::ColliderData<'_>,
+    ) -> Option<(bevy_tnua::math::Float, Vector3)> {
+        #[cfg(feature = "avian2d")]
+        return self.for_avian2d.cast_ray(
+            origin,
+            direction,
+            max_time_of_impact,
+            &collider_data.for_avian2d,
+        );
+        #[cfg(feature = "avian3d")]
+        return self.for_avian3d.cast_ray(
+            origin,
+            direction,
+            max_time_of_impact,
+            &collider_data.for_avian3d,
+        );
+        #[cfg(feature = "rapier2d")]
+        return self.for_rapier2d.cast_ray(
+            origin,
+            direction,
+            max_time_of_impact,
+            &collider_data.for_rapier2d,
+        );
+        #[cfg(feature = "rapier3d")]
+        return self.for_rapier3d.cast_ray(
+            origin,
+            direction,
+            max_time_of_impact,
+            &collider_data.for_rapier3d,
+        );
+
+        panic!("Running without any physics backend configured");
+    }
 }
 
 pub struct ColliderDataFacade<'a, 'w, 's>

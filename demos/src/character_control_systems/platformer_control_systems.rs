@@ -332,12 +332,18 @@ pub fn apply_platformer_controls(
                     if controller.is_airborne().unwrap()
                         && 0.5 < direction.dot(blip_direction.adjust_precision())
                     {
+                        let Ok(normal) = Dir3::new(blip.normal_from_closest_point().f32()) else {
+                            continue;
+                        };
                         controller.action(TnuaBuiltinWallSlide {
                             wall_entity: Some(blip.entity()),
                             contact_point_with_wall: blip.closest_point(),
+                            normal,
                             force_forward: Some(blip_direction),
                             max_fall_speed: 2.0,
                             maintain_distance: Some(0.7),
+                            max_sideways_speed: 1.0,
+                            max_sideways_acceleration: 60.0,
                         });
                     }
                 }
