@@ -323,14 +323,28 @@ pub fn apply_platformer_controls(
         });
 
         let radar_lens = TnuaRadarLens::new(obstacle_radar, &spatial_ext);
+
+        let already_sliding_on = controller
+            .concrete_action::<TnuaBuiltinWallSlide>()
+            .and_then(|(action, _)| {
+                action
+                    .wall_entity
+                    .filter(|wall_entity| obstacle_radar.has_blip(*wall_entity))
+            });
+
         for blip in radar_lens.iter_blips() {
             match blip.spatial_relation(0.5) {
                 TnuaBlipSpatialRelation::Clipping => {}
                 TnuaBlipSpatialRelation::Above => {}
                 TnuaBlipSpatialRelation::Below => {}
                 TnuaBlipSpatialRelation::Aeside(blip_direction) => {
+                    let dot_threshold = if already_sliding_on == Some(blip.entity()) {
+                        -0.1
+                    } else {
+                        0.0
+                    };
                     if controller.is_airborne().unwrap()
-                        && 0.5 < direction.dot(blip_direction.adjust_precision())
+                        && dot_threshold < direction.dot(blip_direction.adjust_precision())
                     {
                         let Ok(normal) = Dir3::new(blip.normal_from_closest_point().f32()) else {
                             continue;
