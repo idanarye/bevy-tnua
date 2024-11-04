@@ -252,7 +252,7 @@ fn handle_animating(
                 TnuaBuiltinJumpState::NoJump => return,
                 TnuaBuiltinJumpState::StartingJump { .. } => AnimationState::Jumping,
                 TnuaBuiltinJumpState::SlowDownTooFastSlopeJump { .. } => AnimationState::Jumping,
-                TnuaBuiltinJumpState::MaintainingJump => AnimationState::Jumping,
+                TnuaBuiltinJumpState::MaintainingJump { .. } => AnimationState::Jumping,
                 TnuaBuiltinJumpState::StoppedMaintainingJump => AnimationState::Jumping,
                 TnuaBuiltinJumpState::FallSection => AnimationState::Falling,
             }

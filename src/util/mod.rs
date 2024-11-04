@@ -1,8 +1,11 @@
+mod velocity_boundary;
+
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::{
     data_for_backends::TnuaVelChange,
     math::{AdjustPrecision, Float, Quaternion, Vector2, Vector3},
 };
+pub use velocity_boundary::VelocityBoundary;
 
 /// Calculate the kinetic energy required to jump to a certain height when different gravity is
 /// applied in different segments of the jump.
@@ -126,6 +129,33 @@ impl SegmentedJumpInitialVelocityCalculator {
     /// [`LeftoverHeight`] error.
     pub fn required_initial_velocity(&self) -> Result<Float, LeftoverHeight> {
         Ok(Self::kinetic_energy_to_velocity(self.kinetic_energy()?))
+    }
+}
+
+pub struct SegmentedJumpDurationCalculator {
+    velocity: Float,
+    duration: Float,
+}
+
+impl SegmentedJumpDurationCalculator {
+    pub fn new(initial_velocity: Float) -> Self {
+        Self {
+            velocity: initial_velocity,
+            duration: 0.0,
+        }
+    }
+
+    pub fn add_segment(&mut self, gravity: Float, velocity_threshold: Float) -> &mut Self {
+        if velocity_threshold < self.velocity {
+            let lost_velocity = self.velocity - velocity_threshold;
+            self.velocity = velocity_threshold;
+            self.duration += lost_velocity / gravity;
+        }
+        self
+    }
+
+    pub fn duration(&self) -> Float {
+        self.duration
     }
 }
 

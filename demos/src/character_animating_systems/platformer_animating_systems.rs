@@ -66,7 +66,7 @@ pub fn animate_platformer_character(
                         TnuaBuiltinJumpState::SlowDownTooFastSlopeJump { .. } => {
                             AnimationState::Jumping
                         }
-                        TnuaBuiltinJumpState::MaintainingJump => AnimationState::Jumping,
+                        TnuaBuiltinJumpState::MaintainingJump { .. } => AnimationState::Jumping,
                         TnuaBuiltinJumpState::StoppedMaintainingJump => AnimationState::Jumping,
                         TnuaBuiltinJumpState::FallSection => AnimationState::Falling,
                     }

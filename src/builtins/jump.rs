@@ -1,7 +1,10 @@
 use crate::math::{AdjustPrecision, Float, Vector3};
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 
-use crate::util::SegmentedJumpInitialVelocityCalculator;
+use crate::util::{
+    SegmentedJumpDurationCalculator, SegmentedJumpInitialVelocityCalculator, VelocityBoundary,
+};
 use crate::{
     TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus,
@@ -30,6 +33,8 @@ pub struct TnuaBuiltinJump {
     /// ground. The float height is calculated by the inspecting the character's current position
     /// and the basis' [`displacement`](crate::TnuaBasis::displacement).
     pub height: Float,
+
+    pub vertical_displacement: Option<Vector3>,
 
     /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
@@ -105,6 +110,7 @@ impl Default for TnuaBuiltinJump {
     fn default() -> Self {
         Self {
             height: 0.0,
+            vertical_displacement: None,
             allow_in_air: false,
             upslope_extra_gravity: 30.0,
             takeoff_extra_gravity: 30.0,
@@ -127,7 +133,7 @@ impl TnuaAction for TnuaBuiltinJump {
     fn initiation_decision(
         &self,
         ctx: TnuaActionContext,
-        being_fed_for: &bevy::time::Stopwatch,
+        being_fed_for: &Stopwatch,
     ) -> crate::basis_action_traits::TnuaActionInitiationDirective {
         if self.allow_in_air || !ctx.basis.is_airborne() {
             // Either not airborne, or air jumps are allowed
@@ -161,6 +167,7 @@ impl TnuaAction for TnuaBuiltinJump {
                 .kinetic_energy()
                 .expect("`add_final_segment` should have covered remaining height");
             *state = TnuaBuiltinJumpState::StartingJump {
+                origin: ctx.tracker.translation,
                 desired_energy: kinetic_energy,
             };
         }
@@ -172,7 +179,10 @@ impl TnuaAction for TnuaBuiltinJump {
         for _ in 0..7 {
             return match state {
                 TnuaBuiltinJumpState::NoJump => panic!(),
-                TnuaBuiltinJumpState::StartingJump { desired_energy } => {
+                TnuaBuiltinJumpState::StartingJump {
+                    origin,
+                    desired_energy,
+                } => {
                     let extra_height = if let Some(displacement) = ctx.basis.displacement() {
                         displacement.dot(up)
                     } else if !self.allow_in_air && ctx.basis.is_airborne() {
@@ -196,6 +206,7 @@ impl TnuaAction for TnuaBuiltinJump {
                     motor.lin.boost += (desired_upward_velocity - relative_velocity) * up;
                     if 0.0 <= extra_height {
                         *state = TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
+                            origin: *origin,
                             desired_energy: *desired_energy,
                             zero_potential_energy_at: ctx.tracker.translation - extra_height * up,
                         };
@@ -203,6 +214,7 @@ impl TnuaAction for TnuaBuiltinJump {
                     self.directive_simple_or_reschedule(lifecycle_status)
                 }
                 TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
+                    origin,
                     desired_energy,
                     zero_potential_energy_at,
                 } => {
@@ -225,7 +237,36 @@ impl TnuaAction for TnuaBuiltinJump {
                             desired_kinetic_energy,
                         );
                     if relative_velocity <= desired_upward_velocity {
-                        *state = TnuaBuiltinJumpState::MaintainingJump;
+                        let mut velocity_boundary = None;
+                        if let Some(vertical_displacement) = self.vertical_displacement {
+                            let vertical_displacement = vertical_displacement
+                                .reject_from(ctx.up_direction.adjust_precision());
+                            let already_moved = (ctx.tracker.translation - *origin)
+                                .project_onto(vertical_displacement.normalize_or_zero());
+                            let duration_to_top =
+                                SegmentedJumpDurationCalculator::new(relative_velocity)
+                                    .add_segment(
+                                        gravity + self.takeoff_extra_gravity,
+                                        self.takeoff_above_velocity,
+                                    )
+                                    .add_segment(gravity, self.peak_prevention_at_upward_velocity)
+                                    .add_segment(gravity + self.peak_prevention_extra_gravity, 0.0)
+                                    .duration();
+                            let desired_vertical_velocity =
+                                (vertical_displacement - already_moved) / duration_to_top;
+                            let desired_boost = (desired_vertical_velocity - effective_velocity)
+                                .reject_from(ctx.up_direction.adjust_precision());
+                            motor.lin.boost += desired_boost;
+                            velocity_boundary = VelocityBoundary::new(
+                                effective_velocity.reject_from(ctx.up_direction.adjust_precision()),
+                                desired_vertical_velocity,
+                                0.0,
+                            );
+                        }
+                        *state = TnuaBuiltinJumpState::MaintainingJump {
+                            wait_one_frame_before_updating_velocity_boundary: true,
+                            velocity_boundary,
+                        };
                         continue;
                     } else {
                         let mut extra_gravity = self.upslope_extra_gravity;
@@ -237,7 +278,36 @@ impl TnuaAction for TnuaBuiltinJump {
                         self.directive_simple_or_reschedule(lifecycle_status)
                     }
                 }
-                TnuaBuiltinJumpState::MaintainingJump => {
+                TnuaBuiltinJumpState::MaintainingJump {
+                    wait_one_frame_before_updating_velocity_boundary,
+                    velocity_boundary,
+                } => {
+                    if let Some(velocity_boundary) = velocity_boundary {
+                        if *wait_one_frame_before_updating_velocity_boundary {
+                            *wait_one_frame_before_updating_velocity_boundary = false;
+                        } else {
+                            velocity_boundary.update(
+                                ctx.basis.effective_velocity(),
+                                ctx.frame_duration_as_duration(),
+                            );
+                        }
+                        if let Some((component_direction, component_limit)) = velocity_boundary
+                            .calc_boost_part_on_boundary_axis_after_limit(
+                                ctx.basis.effective_velocity(),
+                                motor.lin.calc_boost(ctx.frame_duration),
+                                // TODO: make these parameters?
+                                0.0,
+                                1.0,
+                            )
+                        {
+                            motor.lin.apply_boost_limit(
+                                ctx.frame_duration,
+                                component_direction,
+                                component_limit,
+                            );
+                        }
+                    }
+
                     let relevant_upward_velocity = effective_velocity.dot(up);
                     if relevant_upward_velocity <= 0.0 {
                         *state = TnuaBuiltinJumpState::FallSection;
@@ -343,6 +413,7 @@ pub enum TnuaBuiltinJumpState {
     NoJump,
     // FreeFall,
     StartingJump {
+        origin: Vector3,
         /// The potential energy at the top of the jump, when:
         /// * The potential energy at the bottom of the jump is defined as 0
         /// * The mass is 1
@@ -352,10 +423,14 @@ pub enum TnuaBuiltinJumpState {
         desired_energy: Float,
     },
     SlowDownTooFastSlopeJump {
+        origin: Vector3,
         desired_energy: Float,
         zero_potential_energy_at: Vector3,
     },
-    MaintainingJump,
+    MaintainingJump {
+        wait_one_frame_before_updating_velocity_boundary: bool,
+        velocity_boundary: Option<VelocityBoundary>,
+    },
     StoppedMaintainingJump,
     FallSection,
 }

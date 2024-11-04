@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign};
 
-use crate::math::{Float, Quaternion, Vector3};
+use crate::math::{AdjustPrecision, Float, Quaternion, Vector3};
 use bevy::prelude::*;
 
 /// Allows disabling Tnua for a specific entity.
@@ -168,6 +168,34 @@ impl TnuaVelChange {
 
     pub fn calc_acceleration(&self, frame_duration: Float) -> Vector3 {
         self.acceleration + self.boost / frame_duration
+    }
+
+    pub fn apply_boost_limit(
+        &mut self,
+        frame_duration: Float,
+        component_direction: Dir3,
+        component_limit: Float,
+    ) {
+        let regular_boost = self.calc_boost(frame_duration);
+        let regular = regular_boost.dot(component_direction.adjust_precision());
+        let to_cut = regular - component_limit;
+        if to_cut <= 0.0 {
+            return;
+        }
+        let boost_part = self.boost.dot(component_direction.adjust_precision());
+        if to_cut <= boost_part {
+            // Can do the entire cut by just reducing the boost
+            self.boost -= to_cut * component_direction.adjust_precision();
+            return;
+        }
+        // Even nullifying the boost is not enough, and we don't want to
+        // reverse it, so we're going to cut the acceleration as well.
+        self.boost = self
+            .boost
+            .reject_from(component_direction.adjust_precision());
+        let to_cut_from_acceleration = to_cut - boost_part;
+        let acceleration_to_cut = to_cut_from_acceleration / frame_duration;
+        self.acceleration -= acceleration_to_cut * component_direction.adjust_precision();
     }
 }
 
