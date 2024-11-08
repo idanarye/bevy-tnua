@@ -20,6 +20,7 @@ pub enum AnimationState {
     Dashing,
     KnockedBack,
     WallSliding,
+    WallJumping,
 }
 
 #[allow(clippy::unnecessary_cast)]
@@ -93,6 +94,7 @@ pub fn animate_platformer_character(
                 Some(TnuaBuiltinDash::NAME) => AnimationState::Dashing,
                 Some(TnuaBuiltinKnockback::NAME) => AnimationState::KnockedBack,
                 Some(TnuaBuiltinWallSlide::NAME) => AnimationState::WallSliding,
+                Some("walljump") => AnimationState::WallJumping,
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
                     // If there is no action going on, we'll base the animation on the state of the
@@ -189,6 +191,11 @@ pub fn animate_platformer_character(
                             .start(handler.animations["WallSliding"])
                             .set_speed(1.0)
                             .repeat();
+                    }
+                    AnimationState::WallJumping => {
+                        player
+                            .start(handler.animations["WallJumping"])
+                            .set_speed(2.0);
                     }
                 }
             }

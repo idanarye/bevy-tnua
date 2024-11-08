@@ -14,8 +14,8 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 - `TnuaBuiltinWallSlide` action for sliding down walls.
 - `calc_angular_velchange_to_force_forward` utility function.
 - `TnuaController::prolong_action`.
-- `vertical_displacement` field for `TnuaBuiltinJump`. This is useful for wall
-  jumps.
+- `vertical_displacement` and `force_forward` fields for `TnuaBuiltinJump`.
+  This is useful for wall jumps.
 
 ## 0.20.0 - 2024-10-12
 ### Added

@@ -332,6 +332,8 @@ pub fn apply_platformer_controls(
                     .filter(|wall_entity| obstacle_radar.has_blip(*wall_entity))
             });
 
+        let mut walljump_candidate = None;
+
         for blip in radar_lens.iter_blips() {
             match blip.spatial_relation(0.5) {
                 TnuaBlipSpatialRelation::Clipping => {}
@@ -343,26 +345,44 @@ pub fn apply_platformer_controls(
                     } else {
                         0.0
                     };
-                    if controller.is_airborne().unwrap()
-                        && dot_threshold < direction.dot(blip_direction.adjust_precision())
-                    {
-                        let Ok(normal) = Dir3::new(blip.normal_from_closest_point().f32()) else {
-                            continue;
-                        };
-                        controller.action(TnuaBuiltinWallSlide {
-                            wall_entity: Some(blip.entity()),
-                            contact_point_with_wall: blip.closest_point(),
-                            normal,
-                            force_forward: Some(blip_direction),
-                            max_fall_speed: 2.0,
-                            maintain_distance: Some(0.7),
-                            max_sideways_speed: 1.0,
-                            max_sideways_acceleration: 60.0,
-                        });
+                    if controller.is_airborne().unwrap() {
+                        let dot_direction = direction.dot(blip_direction.adjust_precision());
+                        if dot_direction <= -0.7 {
+                            if let Some((best_entity, best_dot, best_direction)) =
+                                walljump_candidate.as_mut()
+                            {
+                                if *best_dot < dot_direction {
+                                    *best_entity = blip.entity();
+                                    *best_dot = dot_direction;
+                                    *best_direction = blip_direction;
+                                }
+                            } else {
+                                walljump_candidate =
+                                    Some((blip.entity(), dot_direction, blip_direction));
+                            }
+                        }
+                        if dot_threshold < dot_direction {
+                            let Ok(normal) = Dir3::new(blip.normal_from_closest_point().f32())
+                            else {
+                                continue;
+                            };
+                            controller.action(TnuaBuiltinWallSlide {
+                                wall_entity: Some(blip.entity()),
+                                contact_point_with_wall: blip.closest_point(),
+                                normal,
+                                force_forward: Some(blip_direction),
+                                max_fall_speed: 2.0,
+                                maintain_distance: Some(0.7),
+                                max_sideways_speed: 1.0,
+                                max_sideways_acceleration: 60.0,
+                            });
+                        }
                     }
                 }
             }
         }
+        let walljump_candidate =
+            walljump_candidate.map(|(entity, _, blip_direction)| (entity, -blip_direction));
 
         if crouch {
             // Crouching is an action. We either feed it or we don't - other than that there is
@@ -373,27 +393,46 @@ pub fn apply_platformer_controls(
         }
 
         if jump {
-            controller.action(TnuaBuiltinJump {
-                // Jumping, like crouching, is an action that we either feed or don't. However,
-                // because it can be used in midair, we want to set its `allow_in_air`. The air
-                // counter helps us with that.
-                //
-                // The air actions counter is used to decide if the action is allowed midair by
-                // determining how many actions were performed since the last time the character
-                // was considered "grounded" - including the first jump (if it was done from the
-                // ground) or the initiation of a free fall.
-                //
-                // `air_count_for` needs the name of the action to be performed (in this case
-                // `TnuaBuiltinJump::NAME`) because if the player is still holding the jump button,
-                // we want it to be considered as the same air action number. So, if the player
-                // performs an air jump, before the air jump `air_count_for` will return 1 for any
-                // action, but after it it'll return 1 only for `TnuaBuiltinJump::NAME`
-                // (maintaining the jump) and 2 for any other action. Of course, if the player
-                // releases the button and presses it again it'll return 2.
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME)
-                    <= config.actions_in_air,
-                ..config.jump.clone()
-            });
+            if matches!(
+                controller.action_flow_status().ongoing(),
+                Some(TnuaBuiltinJump::NAME | "walljump")
+            ) {
+                controller.prolong_action();
+            } else if let Some((_, walljump_direction)) = walljump_candidate {
+                controller.named_action(
+                    "walljump",
+                    TnuaBuiltinJump {
+                        vertical_displacement: Some(2.0 * walljump_direction.adjust_precision()),
+                        allow_in_air: true,
+                        takeoff_extra_gravity: 3.0 * config.jump.takeoff_extra_gravity,
+                        takeoff_above_velocity: 0.0,
+                        force_forward: Some(-walljump_direction),
+                        ..config.jump.clone()
+                    },
+                );
+            } else {
+                controller.action(TnuaBuiltinJump {
+                    // Jumping, like crouching, is an action that we either feed or don't. However,
+                    // because it can be used in midair, we want to set its `allow_in_air`. The air
+                    // counter helps us with that.
+                    //
+                    // The air actions counter is used to decide if the action is allowed midair by
+                    // determining how many actions were performed since the last time the character
+                    // was considered "grounded" - including the first jump (if it was done from the
+                    // ground) or the initiation of a free fall.
+                    //
+                    // `air_count_for` needs the name of the action to be performed (in this case
+                    // `TnuaBuiltinJump::NAME`) because if the player is still holding the jump button,
+                    // we want it to be considered as the same air action number. So, if the player
+                    // performs an air jump, before the air jump `air_count_for` will return 1 for any
+                    // action, but after it it'll return 1 only for `TnuaBuiltinJump::NAME`
+                    // (maintaining the jump) and 2 for any other action. Of course, if the player
+                    // releases the button and presses it again it'll return 2.
+                    allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME)
+                        <= config.actions_in_air,
+                    ..config.jump.clone()
+                });
+            }
         }
 
         if dash {

@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use crate::util::{
-    SegmentedJumpDurationCalculator, SegmentedJumpInitialVelocityCalculator, VelocityBoundary,
+    calc_angular_velchange_to_force_forward, SegmentedJumpDurationCalculator,
+    SegmentedJumpInitialVelocityCalculator, VelocityBoundary,
 };
 use crate::{
     TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
@@ -104,6 +105,16 @@ pub struct TnuaBuiltinJump {
     /// possible (typically when a character is still in the air and about the land) and the jump
     /// action would still get registered and be executed once the jump is possible.
     pub input_buffer_time: Float,
+
+    /// Force the character to face in a particular direction.
+    ///
+    /// Note that there are no acceleration limits because unlike
+    /// [crate::prelude::TnuaBuiltinWalk::desired_forward] this field will attempt to force the
+    /// direction during a single frame. It is useful for when the jump animation needs to be
+    /// aligned with the [`vertical_displacement`](Self::vertical_displacement).
+    pub force_forward: Option<Dir3>,
+
+    pub disable_force_forward_after_peak: bool,
 }
 
 impl Default for TnuaBuiltinJump {
@@ -121,6 +132,8 @@ impl Default for TnuaBuiltinJump {
             peak_prevention_extra_gravity: 20.0,
             reschedule_cooldown: None,
             input_buffer_time: 0.2,
+            force_forward: None,
+            disable_force_forward_after_peak: true,
         }
     }
 }
@@ -173,6 +186,30 @@ impl TnuaAction for TnuaBuiltinJump {
         }
 
         let effective_velocity = ctx.basis.effective_velocity();
+
+        if let Some(force_forward) = self.force_forward {
+            let disable_force_forward = self.disable_force_forward_after_peak
+                && match state {
+                    TnuaBuiltinJumpState::NoJump => true,
+                    TnuaBuiltinJumpState::StartingJump { .. } => false,
+                    TnuaBuiltinJumpState::SlowDownTooFastSlopeJump { .. } => false,
+                    TnuaBuiltinJumpState::MaintainingJump { .. } => false,
+                    TnuaBuiltinJumpState::StoppedMaintainingJump => true,
+                    TnuaBuiltinJumpState::FallSection => true,
+                };
+            if !disable_force_forward {
+                motor
+                    .ang
+                    .cancel_on_axis(ctx.up_direction.adjust_precision());
+                motor.ang += calc_angular_velchange_to_force_forward(
+                    force_forward,
+                    ctx.tracker.rotation,
+                    ctx.tracker.angvel,
+                    ctx.up_direction,
+                    ctx.frame_duration,
+                );
+            }
+        }
 
         // TODO: Once `std::mem::variant_count` gets stabilized, use that instead. The idea is to
         // allow jumping through multiple states but failing if we get into loop.
