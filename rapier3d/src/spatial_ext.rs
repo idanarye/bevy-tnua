@@ -5,8 +5,11 @@ use bevy_tnua_physics_integration_layer::{
     spatial_ext::TnuaSpatialExt,
 };
 
+use crate::get_collider;
+
 #[derive(SystemParam)]
 pub struct TnuaSpatialExtRapier3d<'w, 's> {
+    rapier_context: Res<'w, RapierContext>,
     colliders_query: Query<'w, 's, (&'static Collider, &'static GlobalTransform)>,
 }
 
@@ -48,5 +51,18 @@ impl TnuaSpatialExt for TnuaSpatialExtRapier3d<'_, '_> {
                 true,
             )
             .map(|res| (res.time_of_impact, res.normal))
+    }
+
+    fn can_interact(&self, entity1: Entity, entity2: Entity) -> bool {
+        let Some(collider1) = get_collider(&self.rapier_context, entity1) else {
+            return true;
+        };
+        let Some(collider2) = get_collider(&self.rapier_context, entity2) else {
+            return true;
+        };
+        collider1
+            .collision_groups()
+            .test(collider2.collision_groups())
+            && collider1.solver_groups().test(collider2.solver_groups())
     }
 }

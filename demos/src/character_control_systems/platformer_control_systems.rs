@@ -335,6 +335,9 @@ pub fn apply_platformer_controls(
         let mut walljump_candidate = None;
 
         for blip in radar_lens.iter_blips() {
+            if !blip.is_interactable() {
+                continue;
+            }
             match blip.spatial_relation(0.5) {
                 TnuaBlipSpatialRelation::Clipping => {}
                 TnuaBlipSpatialRelation::Above => {}

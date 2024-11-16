@@ -119,7 +119,7 @@ fn update_proximity_sensors_system(
         Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
-    collision_layers_entity: Query<&CollisionLayers>,
+    collision_layers_query: Query<&CollisionLayers>,
     other_object_query: Query<(
         Option<(&GlobalTransform, &LinearVelocity, &AngularVelocity)>,
         Option<&CollisionLayers>,
@@ -163,7 +163,7 @@ fn update_proximity_sensors_system(
                 owner_entity
             };
 
-            let collision_layers = collision_layers_entity.get(owner_entity).ok();
+            let collision_layers = collision_layers_query.get(owner_entity).ok();
 
             let mut final_sensor_output = None;
             if let Some(ghost_sensor) = ghost_sensor.as_mut() {
@@ -315,7 +315,7 @@ fn update_obstacle_radars_system(
         return;
     }
     for (radar_owner_entity, mut radar, radar_position) in radars_query.iter_mut() {
-        radar.pre_marking_update(radar_position.0);
+        radar.pre_marking_update(radar_owner_entity, radar_position.0);
         spatial_query.shape_intersections_callback(
             &Collider::cylinder(radar.radius, radar.height),
             radar_position.0,

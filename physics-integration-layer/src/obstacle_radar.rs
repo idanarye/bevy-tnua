@@ -6,6 +6,7 @@ use crate::math::{Float, Vector3};
 pub struct TnuaObstacleRadar {
     pub radius: Float,
     pub height: Float,
+    tracked_entity: Entity,
     tracked_position: Vector3,
     blips: HashMap<Entity, BlipStatus>,
 }
@@ -15,12 +16,14 @@ impl TnuaObstacleRadar {
         Self {
             radius,
             height,
+            tracked_entity: Entity::PLACEHOLDER,
             tracked_position: Vector3::NAN,
             blips: Default::default(),
         }
     }
 
-    pub fn pre_marking_update(&mut self, tracked_position: Vector3) {
+    pub fn pre_marking_update(&mut self, tracked_entity: Entity, tracked_position: Vector3) {
+        self.tracked_entity = tracked_entity;
         self.tracked_position = tracked_position;
         self.blips.retain(|_, blip_status| match blip_status {
             BlipStatus::Unseen => false,
@@ -33,6 +36,10 @@ impl TnuaObstacleRadar {
 
     pub fn mark_seen(&mut self, entity: Entity) {
         self.blips.insert(entity, BlipStatus::Seen);
+    }
+
+    pub fn tracked_entity(&self) -> Entity {
+        self.tracked_entity
     }
 
     pub fn tracked_position(&self) -> Vector3 {

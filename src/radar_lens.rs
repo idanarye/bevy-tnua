@@ -46,6 +46,12 @@ impl<'a, X: TnuaSpatialExt> TnuaRadarBlipLens<'a, X> {
         self.entity
     }
 
+    pub fn is_interactable(&self) -> bool {
+        self.radar_lens
+            .ext
+            .can_interact(self.radar().tracked_entity(), self.entity)
+    }
+
     pub fn closest_point(&self) -> Vector3 {
         *self.closest_point_cache.get_or_init(|| {
             self.radar_lens

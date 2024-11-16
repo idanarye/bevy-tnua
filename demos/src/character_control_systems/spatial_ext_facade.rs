@@ -105,6 +105,19 @@ impl<'w, 's> TnuaSpatialExt for SpatialExtFacade<'w, 's> {
 
         panic!("Running without any physics backend configured");
     }
+
+    fn can_interact(&self, entity1: Entity, entity2: Entity) -> bool {
+        #[cfg(feature = "avian2d")]
+        return self.for_avian2d.can_interact(entity1, entity2);
+        #[cfg(feature = "avian3d")]
+        return self.for_avian3d.can_interact(entity1, entity2);
+        #[cfg(feature = "rapier2d")]
+        return self.for_rapier2d.can_interact(entity1, entity2);
+        #[cfg(feature = "rapier3d")]
+        return self.for_rapier3d.can_interact(entity1, entity2);
+
+        panic!("Running without any physics backend configured");
+    }
 }
 
 pub struct ColliderDataFacade<'a, 'w, 's>

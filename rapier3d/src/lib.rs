@@ -111,7 +111,7 @@ fn update_rigid_body_trackers_system(
     }
 }
 
-fn get_collider(
+pub(crate) fn get_collider(
     rapier_context: &RapierContext,
     entity: Entity,
 ) -> Option<&rapier::geometry::Collider> {
@@ -338,7 +338,7 @@ fn update_obstacle_radars_system(
     for (radar_owner_entity, mut radar, radar_transform) in radars_query.iter_mut() {
         let (_radar_scale, radar_rotation, radar_translation) =
             radar_transform.to_scale_rotation_translation();
-        radar.pre_marking_update(radar_translation);
+        radar.pre_marking_update(radar_owner_entity, radar_translation);
         rapier_context.intersections_with_shape(
             radar_translation,
             radar_rotation,

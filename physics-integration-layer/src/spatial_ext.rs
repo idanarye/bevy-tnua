@@ -17,4 +17,6 @@ pub trait TnuaSpatialExt {
         max_time_of_impact: Float,
         collider_data: &Self::ColliderData<'_>,
     ) -> Option<(Float, Vector3)>;
+
+    fn can_interact(&self, entity1: Entity, entity2: Entity) -> bool;
 }
