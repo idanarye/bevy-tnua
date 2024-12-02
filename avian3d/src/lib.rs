@@ -308,7 +308,7 @@ fn update_proximity_sensors_system(
 }
 
 fn update_obstacle_radars_system(
-    spatial_query: SpatialQuery,
+    spatial_query_pipeline: Res<SpatialQueryPipeline>,
     mut radars_query: Query<(Entity, &mut TnuaObstacleRadar, &Position)>,
 ) {
     if radars_query.is_empty() {
@@ -316,7 +316,7 @@ fn update_obstacle_radars_system(
     }
     for (radar_owner_entity, mut radar, radar_position) in radars_query.iter_mut() {
         radar.pre_marking_update(radar_owner_entity, radar_position.0);
-        spatial_query.shape_intersections_callback(
+        spatial_query_pipeline.shape_intersections_callback(
             &Collider::cylinder(radar.radius, radar.height),
             radar_position.0,
             Default::default(),
