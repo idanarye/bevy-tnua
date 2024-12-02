@@ -37,7 +37,7 @@ pub struct TnuaRadarBlipLens<'a, X: TnuaSpatialExt> {
     closest_point_normal_cache: OnceCell<Vector3>,
 }
 
-impl<'a, X: TnuaSpatialExt> TnuaRadarBlipLens<'a, X> {
+impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
     fn radar(&self) -> &TnuaObstacleRadar {
         self.radar_lens.radar
     }

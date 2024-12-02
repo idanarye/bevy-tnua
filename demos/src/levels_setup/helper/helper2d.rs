@@ -24,7 +24,7 @@ pub struct LevelSetupHelper2d<'w, 's> {
     asset_server: Res<'w, AssetServer>,
 }
 
-impl<'w, 's> LevelSetupHelper2d<'w, 's> {
+impl LevelSetupHelper2d<'_, '_> {
     pub fn spawn_named(&mut self, name: impl ToString) -> EntityCommands {
         self.commands
             .spawn((LevelObject, Name::new(name.to_string())))
