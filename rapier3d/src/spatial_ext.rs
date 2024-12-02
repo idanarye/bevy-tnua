@@ -60,9 +60,15 @@ impl TnuaSpatialExt for TnuaSpatialExtRapier3d<'_, '_> {
         let Some(collider1) = get_collider(&self.rapier_context, entity1) else {
             return true;
         };
+        if collider1.is_sensor() {
+            return false;
+        }
         let Some(collider2) = get_collider(&self.rapier_context, entity2) else {
             return true;
         };
+        if collider2.is_sensor() {
+            return false;
+        }
         collider1
             .collision_groups()
             .test(collider2.collision_groups())

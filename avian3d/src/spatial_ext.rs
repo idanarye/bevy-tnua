@@ -8,7 +8,7 @@ use bevy_tnua_physics_integration_layer::{
 #[derive(SystemParam)]
 pub struct TnuaSpatialExtAvian3d<'w, 's> {
     colliders_query: Query<'w, 's, (&'static Collider, &'static Position, &'static Rotation)>,
-    collision_layers_query: Query<'w, 's, &'static CollisionLayers>,
+    collision_configuration_query: Query<'w, 's, (Option<&'static CollisionLayers>, Has<Sensor>)>,
 }
 
 impl TnuaSpatialExt for TnuaSpatialExtAvian3d<'_, '_> {
@@ -51,10 +51,18 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian3d<'_, '_> {
     }
 
     fn can_interact(&self, entity1: Entity, entity2: Entity) -> bool {
-        let Ok([layers1, layers2]) = self.collision_layers_query.get_many([entity1, entity2])
+        let Ok([(layers1, is_1_sensor), (layers2, is_2_sensor)]) = self
+            .collision_configuration_query
+            .get_many([entity1, entity2])
         else {
-            return true;
+            return false;
         };
-        layers1.interacts_with(*layers2)
+        if is_1_sensor || is_2_sensor {
+            return false;
+        }
+        layers1
+            .copied()
+            .unwrap_or_default()
+            .interacts_with(layers2.copied().unwrap_or_default())
     }
 }

@@ -1,6 +1,7 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_tnua::math::Vector3;
 
+use super::helper::LevelSetupHelper3dEntityCommandsExtension;
 use super::{helper::LevelSetupHelper3d, PositionPlayer};
 
 pub fn setup_level(mut helper: LevelSetupHelper3d) {
@@ -26,4 +27,9 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
         Transform::from_xyz(10.0, 9.0, 0.0),
         Vector3::new(4.0, 0.5, 4.0),
     );
+
+    helper
+        .with_color(css::PALE_GREEN)
+        .spawn_cylinder("Vine", Transform::from_xyz(5.0, 1.0, 5.0), 0.1, 10.0)
+        .make_sensor();
 }
