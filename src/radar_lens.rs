@@ -60,6 +60,34 @@ impl<'a, X: TnuaSpatialExt> TnuaRadarBlipLens<'a, X> {
         })
     }
 
+    pub fn closest_point_from(&self, point: Vector3) -> Vector3 {
+        self.radar_lens
+            .ext
+            .project_point(point, &self.collider_data)
+    }
+
+    pub fn closest_point_from_offset(&self, offset: Vector3) -> Vector3 {
+        self.closest_point_from(self.radar().tracked_position() + offset)
+    }
+
+    pub fn flat_wall_score(&self, up: Dir3, offsets: &[Float]) -> Float {
+        let closest_point = self.closest_point();
+        1.0 - offsets
+            .iter()
+            .map(|offset| {
+                if *offset == 0.0 {
+                    return 0.0;
+                }
+                let offset_vec = *offset * up.adjust_precision();
+                let expected = closest_point + offset_vec;
+                let actual = self.closest_point_from_offset(offset_vec);
+                let dist = expected.distance_squared(actual);
+                dist / offset.powi(2)
+            })
+            .sum::<Float>()
+            / offsets.len() as Float
+    }
+
     pub fn vector_to_closest_point(&self) -> Vector3 {
         self.closest_point() - self.radar().tracked_position()
     }

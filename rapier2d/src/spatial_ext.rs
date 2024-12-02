@@ -14,7 +14,10 @@ pub struct TnuaSpatialExtRapier2d<'w, 's> {
 }
 
 impl TnuaSpatialExt for TnuaSpatialExtRapier2d<'_, '_> {
-    type ColliderData<'a> = (&'a Collider, Vec2, f32) where Self: 'a;
+    type ColliderData<'a>
+        = (&'a Collider, Vec2, f32)
+    where
+        Self: 'a;
 
     fn fetch_collider_data(&self, entity: Entity) -> Option<Self::ColliderData<'_>> {
         let (collider, transform) = self.colliders_query.get(entity).ok()?;

@@ -12,7 +12,10 @@ pub struct TnuaSpatialExtAvian3d<'w, 's> {
 }
 
 impl TnuaSpatialExt for TnuaSpatialExtAvian3d<'_, '_> {
-    type ColliderData<'a> = (&'a Collider, &'a Position, &'a Rotation) where Self: 'a;
+    type ColliderData<'a>
+        = (&'a Collider, &'a Position, &'a Rotation)
+    where
+        Self: 'a;
 
     fn fetch_collider_data(&self, entity: Entity) -> Option<Self::ColliderData<'_>> {
         self.colliders_query.get(entity).ok()

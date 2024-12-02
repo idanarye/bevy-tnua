@@ -28,7 +28,8 @@ pub struct SpatialExtFacade<'w, 's> {
 
 #[allow(unreachable_code)]
 impl<'w, 's> TnuaSpatialExt for SpatialExtFacade<'w, 's> {
-    type ColliderData<'a> = ColliderDataFacade<'a, 'w, 's>
+    type ColliderData<'a>
+        = ColliderDataFacade<'a, 'w, 's>
     where
         Self: 'a;
 

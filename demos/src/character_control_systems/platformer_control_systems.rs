@@ -364,7 +364,9 @@ pub fn apply_platformer_controls(
                                     Some((blip.entity(), dot_direction, blip_direction));
                             }
                         }
-                        if dot_threshold < dot_direction {
+                        if dot_threshold < dot_direction
+                            && 0.8 < blip.flat_wall_score(Dir3::Y, &[-1.0, 1.0])
+                        {
                             let Ok(normal) = Dir3::new(blip.normal_from_closest_point().f32())
                             else {
                                 continue;
