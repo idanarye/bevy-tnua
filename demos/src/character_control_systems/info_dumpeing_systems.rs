@@ -65,6 +65,10 @@ pub fn character_control_radar_visualization_system(
     spatial_ext: SpatialExtFacade,
     mut gizmos: Gizmos,
 ) {
+    if true {
+        // Don't show the gizmos
+        return;
+    }
     for obstacle_radar in query.iter() {
         let radar_lens = TnuaRadarLens::new(obstacle_radar, &spatial_ext);
         for blip in radar_lens.iter_blips() {

@@ -73,7 +73,6 @@ fn main() {
     }
     #[cfg(feature = "avian3d")]
     {
-        app.add_plugins(PhysicsDebugPlugin::default());
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => {
                 app.add_plugins(PhysicsPlugins::default());
