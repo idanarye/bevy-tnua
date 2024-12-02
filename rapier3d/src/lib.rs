@@ -330,6 +330,7 @@ fn update_proximity_sensors_system(
 
 fn update_obstacle_radars_system(
     rapier_context: Res<RapierContext>,
+    rapier_config: Res<RapierConfiguration>,
     mut radars_query: Query<(Entity, &mut TnuaObstacleRadar, &GlobalTransform)>,
 ) {
     if radars_query.is_empty() {
@@ -338,7 +339,11 @@ fn update_obstacle_radars_system(
     for (radar_owner_entity, mut radar, radar_transform) in radars_query.iter_mut() {
         let (_radar_scale, radar_rotation, radar_translation) =
             radar_transform.to_scale_rotation_translation();
-        radar.pre_marking_update(radar_owner_entity, radar_translation);
+        radar.pre_marking_update(
+            radar_owner_entity,
+            radar_translation,
+            Dir3::new(rapier_config.gravity).unwrap_or(Dir3::Y),
+        );
         rapier_context.intersections_with_shape(
             radar_translation,
             radar_rotation,

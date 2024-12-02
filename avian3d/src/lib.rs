@@ -309,13 +309,18 @@ fn update_proximity_sensors_system(
 
 fn update_obstacle_radars_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
+    gravity: Res<Gravity>,
     mut radars_query: Query<(Entity, &mut TnuaObstacleRadar, &Position)>,
 ) {
     if radars_query.is_empty() {
         return;
     }
     for (radar_owner_entity, mut radar, radar_position) in radars_query.iter_mut() {
-        radar.pre_marking_update(radar_owner_entity, radar_position.0);
+        radar.pre_marking_update(
+            radar_owner_entity,
+            radar_position.0,
+            Dir3::new(gravity.0.f32()).unwrap_or(Dir3::Y),
+        );
         spatial_query_pipeline.shape_intersections_callback(
             &Collider::cylinder(radar.radius, radar.height),
             radar_position.0,
