@@ -20,3 +20,6 @@ impl Plugin for LevelMechanicsPlugin {
         app.add_plugins(time_to_despawn::TimeToDespawnPlugin);
     }
 }
+
+#[derive(Component)]
+pub struct Climbable;

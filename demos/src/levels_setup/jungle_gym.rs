@@ -1,6 +1,8 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_tnua::math::Vector3;
 
+use crate::level_mechanics::Climbable;
+
 use super::helper::LevelSetupHelper3dEntityCommandsExtension;
 use super::{helper::LevelSetupHelper3d, PositionPlayer};
 
@@ -31,5 +33,6 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
     helper
         .with_color(css::PALE_GREEN)
         .spawn_cylinder("Vine", Transform::from_xyz(5.0, 1.0, 5.0), 0.1, 10.0)
-        .make_sensor();
+        .make_sensor()
+        .insert(Climbable);
 }

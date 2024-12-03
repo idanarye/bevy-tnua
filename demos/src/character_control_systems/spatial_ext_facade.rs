@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use bevy::{ecs::system::SystemParam, prelude::*};
 
 use bevy_tnua::math::Vector3;
-use bevy_tnua::spatial_ext::TnuaSpatialExt;
+use bevy_tnua::spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt};
 #[cfg(feature = "avian2d")]
 use bevy_tnua_avian2d::TnuaSpatialExtAvian2d;
 #[cfg(feature = "avian3d")]
@@ -47,23 +47,28 @@ impl<'w, 's> TnuaSpatialExt for SpatialExtFacade<'w, 's> {
         })
     }
 
-    fn project_point(&'_ self, point: Vector3, collider_data: &Self::ColliderData<'_>) -> Vector3 {
+    fn project_point(
+        &'_ self,
+        point: Vector3,
+        solid: bool,
+        collider_data: &Self::ColliderData<'_>,
+    ) -> TnuaPointProjectionResult {
         #[cfg(feature = "avian2d")]
         return self
             .for_avian2d
-            .project_point(point, &collider_data.for_avian2d);
+            .project_point(point, solid, &collider_data.for_avian2d);
         #[cfg(feature = "avian3d")]
         return self
             .for_avian3d
-            .project_point(point, &collider_data.for_avian3d);
+            .project_point(point, solid, &collider_data.for_avian3d);
         #[cfg(feature = "rapier2d")]
         return self
             .for_rapier2d
-            .project_point(point, &collider_data.for_rapier2d);
+            .project_point(point, solid, &collider_data.for_rapier2d);
         #[cfg(feature = "rapier3d")]
         return self
             .for_rapier3d
-            .project_point(point, &collider_data.for_rapier3d);
+            .project_point(point, solid, &collider_data.for_rapier3d);
 
         panic!("Running without any physics backend configured");
     }

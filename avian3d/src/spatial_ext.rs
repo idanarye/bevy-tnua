@@ -2,7 +2,7 @@ use avian3d::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_tnua_physics_integration_layer::{
     math::{Float, Vector3},
-    spatial_ext::TnuaSpatialExt,
+    spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
 };
 
 #[derive(SystemParam)]
@@ -24,12 +24,17 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian3d<'_, '_> {
     fn project_point<'a>(
         &'a self,
         point: Vector3,
+        solid: bool,
         collider_data: &Self::ColliderData<'a>,
-    ) -> Vector3 {
+    ) -> TnuaPointProjectionResult {
         let (collider, position, rotation) = collider_data;
-        let (projected_point, _is_inside) =
-            collider.project_point(**position, **rotation, point, true);
-        projected_point
+        let (projected_point, is_inside) =
+            collider.project_point(**position, **rotation, point, solid);
+        if is_inside {
+            TnuaPointProjectionResult::Inside(projected_point)
+        } else {
+            TnuaPointProjectionResult::Outside(projected_point)
+        }
     }
 
     fn cast_ray<'a>(

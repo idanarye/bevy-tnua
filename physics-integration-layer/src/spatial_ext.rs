@@ -20,7 +20,12 @@ pub trait TnuaSpatialExt {
     fn fetch_collider_data(&self, entity: Entity) -> Option<Self::ColliderData<'_>>;
 
     /// Return the point on the collider that's closest to some external point.
-    fn project_point(&self, point: Vector3, collider_data: &Self::ColliderData<'_>) -> Vector3;
+    fn project_point(
+        &self,
+        point: Vector3,
+        solid: bool,
+        collider_data: &Self::ColliderData<'_>,
+    ) -> TnuaPointProjectionResult;
 
     /// Cast a ray on the collider, returning the time-of-impact and the normal.
     fn cast_ray(
@@ -36,4 +41,35 @@ pub trait TnuaSpatialExt {
     /// If the physics engine is detecting the collision but does not apply forces according to it,
     /// this method should return `false`.
     fn can_interact(&self, entity1: Entity, entity2: Entity) -> bool;
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum TnuaPointProjectionResult {
+    Outside(Vector3),
+    Inside(Vector3),
+}
+
+impl TnuaPointProjectionResult {
+    pub fn get(&self) -> Vector3 {
+        match self {
+            TnuaPointProjectionResult::Outside(point) => *point,
+            TnuaPointProjectionResult::Inside(point) => *point,
+        }
+    }
+
+    pub fn outside(&self) -> Option<Vector3> {
+        if let Self::Outside(point) = self {
+            Some(*point)
+        } else {
+            None
+        }
+    }
+
+    pub fn inside(&self) -> Option<Vector3> {
+        if let Self::Inside(point) = self {
+            Some(*point)
+        } else {
+            None
+        }
+    }
 }

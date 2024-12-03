@@ -2,7 +2,7 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_rapier2d::prelude::*;
 use bevy_tnua_physics_integration_layer::{
     math::{Float, Vector3},
-    spatial_ext::TnuaSpatialExt,
+    spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
 };
 
 use crate::get_collider;
@@ -32,13 +32,17 @@ impl TnuaSpatialExt for TnuaSpatialExtRapier2d<'_, '_> {
     fn project_point<'a>(
         &'a self,
         point: Vector3,
+        solid: bool,
         collider_data: &Self::ColliderData<'a>,
-    ) -> Vector3 {
+    ) -> TnuaPointProjectionResult {
         let (collider, position, rotation) = collider_data;
-        collider
-            .project_point(*position, *rotation, point.truncate(), true)
-            .point
-            .extend(point.z)
+        let result = collider.project_point(*position, *rotation, point.truncate(), solid);
+        let projected_point = result.point.extend(point.z);
+        if result.is_inside {
+            TnuaPointProjectionResult::Inside(projected_point)
+        } else {
+            TnuaPointProjectionResult::Outside(projected_point)
+        }
     }
 
     fn cast_ray<'a>(

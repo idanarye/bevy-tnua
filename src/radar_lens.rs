@@ -3,7 +3,8 @@ use std::cell::OnceCell;
 use crate::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy::{math::InvalidDirectionError, prelude::*};
 use bevy_tnua_physics_integration_layer::{
-    obstacle_radar::TnuaObstacleRadar, spatial_ext::TnuaSpatialExt,
+    obstacle_radar::TnuaObstacleRadar,
+    spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
 };
 
 pub struct TnuaRadarLens<'a, X: TnuaSpatialExt> {
@@ -32,8 +33,8 @@ impl<'a, X: TnuaSpatialExt> TnuaRadarLens<'a, X> {
 pub struct TnuaRadarBlipLens<'a, X: TnuaSpatialExt> {
     radar_lens: &'a TnuaRadarLens<'a, X>,
     entity: Entity,
-    collider_data: X::ColliderData<'a>,
-    closest_point_cache: OnceCell<Vector3>,
+    pub collider_data: X::ColliderData<'a>,
+    closest_point_cache: OnceCell<TnuaPointProjectionResult>,
     closest_point_normal_cache: OnceCell<Vector3>,
 }
 
@@ -52,26 +53,34 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
             .can_interact(self.radar().tracked_entity(), self.entity)
     }
 
-    pub fn closest_point(&self) -> Vector3 {
+    pub fn closest_point(&self) -> TnuaPointProjectionResult {
         *self.closest_point_cache.get_or_init(|| {
-            self.radar_lens
-                .ext
-                .project_point(self.radar().tracked_position(), &self.collider_data)
+            self.radar_lens.ext.project_point(
+                self.radar().tracked_position(),
+                false,
+                &self.collider_data,
+            )
         })
     }
 
-    pub fn closest_point_from(&self, point: Vector3) -> Vector3 {
+    pub fn closest_point_from(&self, point: Vector3, solid: bool) -> TnuaPointProjectionResult {
         self.radar_lens
             .ext
-            .project_point(point, &self.collider_data)
+            .project_point(point, solid, &self.collider_data)
     }
 
-    pub fn closest_point_from_offset(&self, offset: Vector3) -> Vector3 {
-        self.closest_point_from(self.radar().tracked_position() + offset)
+    pub fn closest_point_from_offset(
+        &self,
+        offset: Vector3,
+        solid: bool,
+    ) -> TnuaPointProjectionResult {
+        self.closest_point_from(self.radar().tracked_position() + offset, solid)
     }
 
     pub fn flat_wall_score(&self, up: Dir3, offsets: &[Float]) -> Float {
-        let closest_point = self.closest_point();
+        let Some(closest_point) = self.closest_point().outside() else {
+            return 0.0;
+        };
         1.0 - offsets
             .iter()
             .map(|offset| {
@@ -80,7 +89,7 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
                 }
                 let offset_vec = *offset * up.adjust_precision();
                 let expected = closest_point + offset_vec;
-                let actual = self.closest_point_from_offset(offset_vec);
+                let actual = self.closest_point_from_offset(offset_vec, false).get();
                 let dist = expected.distance_squared(actual);
                 dist / offset.powi(2)
             })
@@ -88,37 +97,47 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
             / offsets.len() as Float
     }
 
-    pub fn vector_to_closest_point(&self) -> Vector3 {
-        self.closest_point() - self.radar().tracked_position()
-    }
-
     pub fn direction_to_closest_point(&self) -> Result<Dir3, InvalidDirectionError> {
-        Dir3::new(self.vector_to_closest_point().f32())
+        match self.closest_point() {
+            TnuaPointProjectionResult::Outside(closest_point) => {
+                Dir3::new((closest_point - self.radar().tracked_position()).f32())
+            }
+            TnuaPointProjectionResult::Inside(closest_point) => {
+                Dir3::new((self.radar().tracked_position() - closest_point).f32())
+            }
+        }
     }
 
     pub fn normal_from_closest_point(&self) -> Vector3 {
         *self.closest_point_normal_cache.get_or_init(|| {
-            let closest_point = self.closest_point();
             let origin = self.radar().tracked_position();
-            let Some(direction) = (closest_point - origin).try_normalize() else {
-                return Vector3::ZERO;
+
+            let get_normal = |closest_point: Vector3| -> Vector3 {
+                let Some(direction) = (closest_point - origin).try_normalize() else {
+                    return Vector3::ZERO;
+                };
+                let Some((_, normal)) = self.radar_lens.ext.cast_ray(
+                    origin,
+                    direction,
+                    Float::INFINITY,
+                    &self.collider_data,
+                ) else {
+                    warn!("Unable to query normal to already-found closest point");
+                    return Vector3::ZERO;
+                };
+                normal
             };
-            let Some((_, normal)) = self.radar_lens.ext.cast_ray(
-                origin,
-                direction,
-                Float::INFINITY,
-                &self.collider_data,
-            ) else {
-                warn!("Unable to query normal to already-found closest point");
-                return Vector3::ZERO;
-            };
-            normal
+
+            match self.closest_point() {
+                TnuaPointProjectionResult::Outside(closest_point) => get_normal(closest_point),
+                TnuaPointProjectionResult::Inside(closest_point) => -get_normal(closest_point),
+            }
         })
     }
 
     pub fn spatial_relation(&self, threshold: Float) -> TnuaBlipSpatialRelation {
         let Ok(direction) = self.direction_to_closest_point() else {
-            return TnuaBlipSpatialRelation::Clipping;
+            return TnuaBlipSpatialRelation::Invalid;
         };
         let dot_up = self
             .radar()
@@ -140,7 +159,7 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
 
 #[derive(Debug)]
 pub enum TnuaBlipSpatialRelation {
-    Clipping,
+    Invalid,
     Above,
     Below,
     Aeside(Dir3),

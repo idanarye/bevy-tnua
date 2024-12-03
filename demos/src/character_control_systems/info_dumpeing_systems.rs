@@ -72,7 +72,7 @@ pub fn character_control_radar_visualization_system(
     for obstacle_radar in query.iter() {
         let radar_lens = TnuaRadarLens::new(obstacle_radar, &spatial_ext);
         for blip in radar_lens.iter_blips() {
-            let closest_point = blip.closest_point();
+            let closest_point = blip.closest_point().get();
             gizmos.arrow(
                 obstacle_radar.tracked_position().f32(),
                 closest_point.f32(),

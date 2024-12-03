@@ -15,6 +15,7 @@ use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 
 use crate::ui::tuning::UiTunable;
 
+use super::querying_helpers::ObstacleQueryHelper;
 use super::spatial_ext_facade::SpatialExtFacade;
 use super::Dimensionality;
 
@@ -61,6 +62,9 @@ pub fn apply_platformer_controls(
     // appropriate type from the physics backend integration crate they use - e.g.
     // `TnuaSpatialExtAvian2d` or `TnuaSpatialExtRapier3d`.
     spatial_ext: SpatialExtFacade,
+    // This is used to determine the qualities of the obstacles (e.g. whether or not they are
+    // climbable)
+    obstacle_query: Query<ObstacleQueryHelper>,
 ) {
     #[cfg(feature = "egui")]
     if egui_context.ctx_mut().wants_keyboard_input() {
@@ -335,11 +339,23 @@ pub fn apply_platformer_controls(
         let mut walljump_candidate = None;
 
         for blip in radar_lens.iter_blips() {
+            let obstacle_properties = obstacle_query
+                .get(blip.entity())
+                .expect("ObstacleQueryHelper has nothing that could fail when missing");
+            if obstacle_properties.climbable {
+                if let TnuaBlipSpatialRelation::Aeside(blip_direction) = blip.spatial_relation(0.5)
+                {
+                    let dot_direction = direction.dot(blip_direction.adjust_precision());
+                    if 0.5 < dot_direction {
+                        info!("Initiate climb on {}", blip.entity());
+                    }
+                }
+            }
             if !blip.is_interactable() {
                 continue;
             }
             match blip.spatial_relation(0.5) {
-                TnuaBlipSpatialRelation::Clipping => {}
+                TnuaBlipSpatialRelation::Invalid => {}
                 TnuaBlipSpatialRelation::Above => {}
                 TnuaBlipSpatialRelation::Below => {}
                 TnuaBlipSpatialRelation::Aeside(blip_direction) => {
@@ -373,7 +389,7 @@ pub fn apply_platformer_controls(
                             };
                             controller.action(TnuaBuiltinWallSlide {
                                 wall_entity: Some(blip.entity()),
-                                contact_point_with_wall: blip.closest_point(),
+                                contact_point_with_wall: blip.closest_point().get(),
                                 normal,
                                 force_forward: Some(blip_direction),
                                 max_fall_speed: 2.0,
