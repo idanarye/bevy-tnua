@@ -255,14 +255,17 @@ fn update_proximity_sensors_system(
                     cast_origin.truncate().adjust_precision(),
                     0.0,
                     cast_direction_2d,
-                    sensor.cast_range,
-                    true,
-                    query_filter,
+                    &ShapeCastConfig {
+                        max_distance: sensor.cast_range,
+                        ignore_origin_penetration: true,
+                        ..default()
+                    },
+                    &query_filter,
                     #[allow(clippy::useless_conversion)]
                     |shape_hit_data| {
                         apply_cast(CastResult {
                             entity: shape_hit_data.entity,
-                            proximity: shape_hit_data.time_of_impact,
+                            proximity: shape_hit_data.distance,
                             intersection_point: shape_hit_data.point1,
                             normal: Dir3::new(shape_hit_data.normal1.extend(0.0).f32())
                                 .unwrap_or_else(|_| -cast_direction),
@@ -275,13 +278,13 @@ fn update_proximity_sensors_system(
                     cast_direction_2d,
                     sensor.cast_range,
                     true,
-                    query_filter,
+                    &query_filter,
                     |ray_hit_data| {
                         apply_cast(CastResult {
                             entity: ray_hit_data.entity,
-                            proximity: ray_hit_data.time_of_impact,
+                            proximity: ray_hit_data.distance,
                             intersection_point: cast_origin.truncate().adjust_precision()
-                                + ray_hit_data.time_of_impact.adjust_precision()
+                                + ray_hit_data.distance.adjust_precision()
                                     * cast_direction_2d.adjust_precision(),
                             normal: Dir3::new(ray_hit_data.normal.extend(0.0).f32())
                                 .unwrap_or_else(|_| -cast_direction),
@@ -301,7 +304,7 @@ fn apply_motors_system(
         &mut LinearVelocity,
         &mut AngularVelocity,
         &Mass,
-        &Inertia,
+        &AngularInertia,
         &mut ExternalForce,
         &mut ExternalTorque,
         Option<&TnuaToggle>,

@@ -43,7 +43,7 @@ pub fn animation_patcher_system(
                 });
                 commands
                     .entity(player_entity)
-                    .insert(animation_graphs_assets.add(graph));
+                    .insert(AnimationGraphHandle(animation_graphs_assets.add(graph)));
                 break;
             }
             entity = if let Ok(parent) = parents_query.get(entity) {

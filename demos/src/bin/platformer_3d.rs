@@ -85,7 +85,7 @@ fn main() {
             }
             ScheduleToUse::PhysicsSchedule => {
                 app.add_plugins(PhysicsPlugins::default());
-                app.insert_resource(Time::new_with(Physics::fixed_hz(144.0)));
+                app.insert_resource(Time::from_hz(144.0));
                 app.add_plugins(TnuaAvian3dPlugin::new(PhysicsSchedule));
             }
         }
@@ -148,34 +148,26 @@ fn main() {
 }
 
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 16.0, 40.0)
-            .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
-        ..Default::default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
+    ));
 
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
-        ..default()
-    });
+    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
 
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             illuminance: 4000.0,
             shadows_enabled: true,
             ..Default::default()
         },
-        transform: Transform::default().looking_at(-Vec3::Y, Vec3::Z),
-        ..Default::default()
-    });
+        Transform::default().looking_at(-Vec3::Y, Vec3::Z),
+    ));
 }
 
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn(IsPlayer);
-    cmd.insert(SceneBundle {
-        scene: asset_server.load("player.glb#Scene0"),
-        ..Default::default()
-    });
+    cmd.insert(SceneRoot(asset_server.load("player.glb#Scene0")));
     cmd.insert(GltfSceneHandler {
         names_from: asset_server.load("player.glb"),
     });

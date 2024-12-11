@@ -73,9 +73,7 @@ impl MovingPlatform {
                     velocity.as_mut(),
                     vec_to.normalize_or_zero() * moving_platform.speed,
                 );
-                if vec_to.length()
-                    <= time.delta_seconds().adjust_precision() * moving_platform.speed
-                {
+                if vec_to.length() <= time.delta_secs().adjust_precision() * moving_platform.speed {
                     moving_platform.current_leg =
                         (moving_platform.current_leg + 1) % moving_platform.locations.len();
                 }

@@ -149,7 +149,7 @@ fn ui_system<C: Component + UiTunable>(
         return;
     };
     let mut egui_window = egui::Window::new("Tnua");
-    if !primary_window.cursor.visible {
+    if !primary_window.cursor_options.visible {
         egui_window = egui::Window::new("Tnua")
             .interactable(false)
             .movable(false)
@@ -304,10 +304,10 @@ fn ui_system<C: Component + UiTunable>(
 fn update_physics_active_from_ui(
     setting_from_ui: Res<DemoUiPhysicsBackendSettings>,
     #[cfg(feature = "rapier2d")] mut config_rapier2d: Option<
-        ResMut<bevy_rapier2d::plugin::RapierConfiguration>,
+        Single<&mut bevy_rapier2d::plugin::RapierConfiguration>,
     >,
     #[cfg(feature = "rapier3d")] mut config_rapier3d: Option<
-        ResMut<bevy_rapier3d::plugin::RapierConfiguration>,
+        Single<&mut bevy_rapier3d::plugin::RapierConfiguration>,
     >,
     #[cfg(feature = "avian2d")] mut physics_time_avian2d: Option<
         ResMut<Time<avian2d::schedule::Physics>>,
