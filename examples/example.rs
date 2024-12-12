@@ -25,27 +25,22 @@ fn main() {
 
 // No Tnua-related setup here - this is just normal Bevy stuff.
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 16.0, 40.0)
-            .looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
-        ..Default::default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
+    ));
 
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
-        ..default()
-    });
+    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
 
     // A directly-down light to tell where the player is going to land.
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             illuminance: 4000.0,
             shadows_enabled: true,
             ..Default::default()
         },
-        transform: Transform::default().looking_at(-Vec3::Y, Vec3::Z),
-        ..Default::default()
-    });
+        Transform::default().looking_at(-Vec3::Y, Vec3::Z),
+    ));
 }
 
 // No Tnua-related setup here - this is just normal Bevy (and Avian) stuff.
@@ -56,23 +51,17 @@ fn setup_level(
 ) {
     // Spawn the ground.
     commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Plane3d::default().mesh().size(128.0, 128.0)),
-            material: materials.add(Color::WHITE),
-            ..Default::default()
-        },
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(128.0, 128.0))),
+        MeshMaterial3d(materials.add(Color::WHITE)),
         RigidBody::Static,
         Collider::half_space(Vec3::Y),
     ));
 
     // Spawn a little platform for the player to jump on.
     commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Cuboid::new(4.0, 1.0, 4.0)),
-            material: materials.add(Color::from(css::GRAY)),
-            transform: Transform::from_xyz(-6.0, 2.0, 0.0),
-            ..Default::default()
-        },
+        Mesh3d(meshes.add(Cuboid::new(4.0, 1.0, 4.0))),
+        MeshMaterial3d(materials.add(Color::from(css::GRAY))),
+        Transform::from_xyz(-6.0, 2.0, 0.0),
         RigidBody::Static,
         Collider::cuboid(4.0, 1.0, 4.0),
     ));
@@ -84,15 +73,12 @@ fn setup_player(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Capsule3d {
-                radius: 0.5,
-                half_length: 0.5,
-            }),
-            material: materials.add(Color::from(css::DARK_CYAN)),
-            transform: Transform::from_xyz(0.0, 2.0, 0.0),
-            ..Default::default()
-        },
+        Mesh3d(meshes.add(Capsule3d {
+            radius: 0.5,
+            half_length: 0.5,
+        })),
+        MeshMaterial3d(materials.add(Color::from(css::DARK_CYAN))),
+        Transform::from_xyz(0.0, 2.0, 0.0),
         // The player character needs to be configured as a dynamic rigid body of the physics
         // engine.
         RigidBody::Dynamic,

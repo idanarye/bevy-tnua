@@ -12,8 +12,8 @@ documentation = "https://docs.rs/bevy-tnua-avian2d"
 readme = "../README.md"
 
 [dependencies]
-bevy = { version = "^0.14", default-features = false }
-avian2d = {version = "^0.1", default-features = false, features = ["2d", "debug-plugin", "parallel"]}
+bevy = { version = "^0.15", default-features = false }
+avian2d = { git = "https://github.com/Jondolf/avian", default-features = false, features = ["2d", "debug-plugin", "parallel"]}
 bevy-tnua-physics-integration-layer = { version = "^0.4", path = "../physics-integration-layer" }
 
 [package.metadata.docs.rs]

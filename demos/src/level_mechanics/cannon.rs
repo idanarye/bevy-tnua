@@ -30,9 +30,7 @@ fn shoot(
             #[cfg(feature = "rapier3d")]
             cmd.insert(bevy_rapier3d::geometry::ActiveEvents::COLLISION_EVENTS);
             (cannon.cmd)(&mut cmd);
-            cmd.insert(TransformBundle::from_transform(
-                Transform::from_translation(cannon_transform.translation()),
-            ));
+            cmd.insert(Transform::from_translation(cannon_transform.translation()));
         }
     }
 }

@@ -50,7 +50,7 @@ impl Plugin for TnuaRapier3dPlugin {
         app.configure_sets(
             self.schedule,
             TnuaSystemSet.before(PhysicsSet::SyncBackend).run_if(
-                |rapier_config: Res<RapierConfiguration>| rapier_config.physics_pipeline_active,
+                |rapier_config: Single<&RapierConfiguration>| rapier_config.physics_pipeline_active,
             ),
         );
         app.add_systems(
@@ -81,7 +81,7 @@ pub struct TnuaRapier3dIOBundle {
 pub struct TnuaRapier3dSensorShape(pub Collider);
 
 fn update_rigid_body_trackers_system(
-    rapier_config: Res<RapierConfiguration>,
+    rapier_config: Single<&RapierConfiguration>,
     mut query: Query<(
         &GlobalTransform,
         &Velocity,
@@ -117,7 +117,7 @@ fn get_collider(
 
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
-    rapier_context: Res<RapierContext>,
+    rapier_context: ReadDefaultRapierContext,
     mut query: Query<(
         Entity,
         &GlobalTransform,
