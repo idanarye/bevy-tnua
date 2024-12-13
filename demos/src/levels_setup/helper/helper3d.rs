@@ -33,11 +33,7 @@ impl<'w, 's> LevelSetupHelper3d<'w, 's> {
             .add(Plane3d::default().mesh().size(128.0, 128.0));
         let material = self.materials.add(color.into());
         let mut cmd = self.spawn_named("Floor");
-        cmd.insert(PbrBundle {
-            mesh,
-            material,
-            ..Default::default()
-        });
+        cmd.insert((Mesh3d(mesh), MeshMaterial3d(material)));
 
         #[cfg(feature = "rapier3d")]
         cmd.insert(rapier::Collider::halfspace(Vec3::Y).unwrap());
@@ -78,11 +74,7 @@ impl<'w, 's> LevelSetupHelper3d<'w, 's> {
         let scene = self.asset_server.load(path.to_string());
         let mut cmd = self.spawn_named(name);
 
-        cmd.insert(SceneBundle {
-            scene,
-            transform,
-            ..Default::default()
-        });
+        cmd.insert((SceneRoot(scene), transform));
 
         #[cfg(feature = "rapier3d")]
         cmd.insert(rapier::Collider::cuboid(
@@ -114,12 +106,11 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
     ) -> EntityCommands {
         let mesh = self.parent.meshes.add(mesh);
         let mut cmd = self.parent.spawn_named(name);
-        cmd.insert(PbrBundle {
-            mesh,
-            material: self.material.clone(),
+        cmd.insert((
+            Mesh3d(mesh),
+            MeshMaterial3d(self.material.clone()),
             transform,
-            ..Default::default()
-        });
+        ));
         cmd
     }
 

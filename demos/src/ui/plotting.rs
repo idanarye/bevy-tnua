@@ -76,7 +76,7 @@ impl PlotSource {
 }
 
 pub fn plot_source_rolling_update(time: Res<Time>, mut query: Query<&mut PlotSource>) {
-    let time = time.elapsed_seconds();
+    let time = time.elapsed_secs();
     for mut plot_source in query.iter_mut() {
         if plot_source.input.is_empty() {
             continue;

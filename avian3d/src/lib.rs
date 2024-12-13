@@ -8,7 +8,10 @@
 //!   `TnuaCrouchEnforcer`, that can be affected with a closure.
 mod spatial_ext;
 
-use avian3d::{prelude::*, schedule::PhysicsStepSet};
+use avian3d::{
+    dynamics::rigid_body::mass_properties::components::GlobalAngularInertia, prelude::*,
+    schedule::PhysicsStepSet,
+};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::AdjustPrecision;
@@ -270,13 +273,16 @@ fn update_proximity_sensors_system(
                     cast_origin,
                     owner_rotation.adjust_precision(),
                     cast_direction,
-                    sensor.cast_range,
-                    true,
-                    query_filter,
+                    &ShapeCastConfig {
+                        max_distance: sensor.cast_range,
+                        ignore_origin_penetration: true,
+                        ..default()
+                    },
+                    &query_filter,
                     |shape_hit_data| {
                         apply_cast(CastResult {
                             entity: shape_hit_data.entity,
-                            proximity: shape_hit_data.time_of_impact,
+                            proximity: shape_hit_data.distance,
                             intersection_point: shape_hit_data.point1,
                             normal: Dir3::new(shape_hit_data.normal1.f32())
                                 .unwrap_or_else(|_| -cast_direction),
@@ -289,13 +295,13 @@ fn update_proximity_sensors_system(
                     cast_direction,
                     sensor.cast_range,
                     true,
-                    query_filter,
+                    &query_filter,
                     |ray_hit_data| {
                         apply_cast(CastResult {
                             entity: ray_hit_data.entity,
-                            proximity: ray_hit_data.time_of_impact,
+                            proximity: ray_hit_data.distance,
                             intersection_point: cast_origin
-                                + ray_hit_data.time_of_impact * cast_direction.adjust_precision(),
+                                + ray_hit_data.distance * cast_direction.adjust_precision(),
                             normal: Dir3::new(ray_hit_data.normal.f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
@@ -325,7 +331,7 @@ fn update_obstacle_radars_system(
             &Collider::cylinder(radar.radius, radar.height),
             radar_position.0,
             Default::default(),
-            Default::default(),
+            &SpatialQueryFilter::DEFAULT,
             |obstacle_entity| {
                 if radar_owner_entity == obstacle_entity {
                     return true;
@@ -343,8 +349,8 @@ fn apply_motors_system(
         &TnuaMotor,
         &mut LinearVelocity,
         &mut AngularVelocity,
-        &Mass,
-        &Inertia,
+        &ComputedMass,
+        &GlobalAngularInertia,
         &mut ExternalForce,
         &mut ExternalTorque,
         Option<&TnuaToggle>,
@@ -372,7 +378,7 @@ fn apply_motors_system(
             linare_velocity.0 += motor.lin.boost;
         }
         if motor.lin.acceleration.is_finite() {
-            external_force.set_force(motor.lin.acceleration * mass.0);
+            external_force.set_force(motor.lin.acceleration * mass.value());
         }
         if motor.ang.boost.is_finite() {
             angular_velocity.0 += motor.ang.boost;
@@ -381,7 +387,7 @@ fn apply_motors_system(
             external_torque.set_torque(
                 // NOTE: I did not actually verify that this is the correct formula. Nothing uses
                 // angular acceleration yet - only angular impulses.
-                inertia.0 * motor.ang.acceleration,
+                inertia.value() * motor.ang.acceleration,
             );
         }
     }

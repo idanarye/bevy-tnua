@@ -54,7 +54,7 @@ impl Plugin for TnuaRapier2dPlugin {
         app.configure_sets(
             self.schedule,
             TnuaSystemSet.before(PhysicsSet::SyncBackend).run_if(
-                |rapier_config: Res<RapierConfiguration>| rapier_config.physics_pipeline_active,
+                |rapier_config: Single<&RapierConfiguration>| rapier_config.physics_pipeline_active,
             ),
         );
         app.add_systems(
@@ -86,7 +86,7 @@ pub struct TnuaRapier2dIOBundle {
 pub struct TnuaRapier2dSensorShape(pub Collider);
 
 fn update_rigid_body_trackers_system(
-    rapier_config: Res<RapierConfiguration>,
+    rapier_config: Single<&RapierConfiguration>,
     mut query: Query<(
         &GlobalTransform,
         &Velocity,
@@ -122,9 +122,10 @@ pub(crate) fn get_collider(
 
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
-    rapier_context: Res<RapierContext>,
+    rapier_context_query: RapierContextAccess,
     mut query: Query<(
         Entity,
+        &RapierContextEntityLink,
         &GlobalTransform,
         &mut TnuaProximitySensor,
         Option<&TnuaRapier2dSensorShape>,
@@ -138,6 +139,7 @@ fn update_proximity_sensors_system(
     query.par_iter_mut().for_each(
         |(
             owner_entity,
+            rapier_context_entity_link,
             transform,
             mut sensor,
             shape,
@@ -150,6 +152,12 @@ fn update_proximity_sensors_system(
                 TnuaToggle::SenseOnly => {}
                 TnuaToggle::Enabled => {}
             }
+
+            let Some(rapier_context) = rapier_context_query.try_context(rapier_context_entity_link)
+            else {
+                return;
+            };
+
             let cast_origin = transform.transform_point(sensor.cast_origin);
             let cast_direction = sensor.cast_direction;
 
@@ -171,7 +179,7 @@ fn update_proximity_sensors_system(
             let mut query_filter = QueryFilter::new().exclude_rigid_body(owner_entity);
             let owner_solver_groups: InteractionGroups;
 
-            if let Some(owner_collider) = get_collider(&rapier_context, owner_entity) {
+            if let Some(owner_collider) = get_collider(rapier_context, owner_entity) {
                 let collision_groups = owner_collider.collision_groups();
                 query_filter.groups = Some(CollisionGroups {
                     memberships: Group::from_bits_truncate(collision_groups.memberships.bits()),
@@ -190,7 +198,7 @@ fn update_proximity_sensors_system(
                            already_visited_ghost_entities: &HashSet<Entity>|
              -> Option<CastResult> {
                 let predicate = |other_entity: Entity| {
-                    if let Some(other_collider) = get_collider(&rapier_context, other_entity) {
+                    if let Some(other_collider) = get_collider(rapier_context, other_entity) {
                         if !other_collider.solver_groups().test(owner_solver_groups) {
                             if has_ghost_sensor && ghost_platforms_query.contains(other_entity) {
                                 if already_visited_ghost_entities.contains(&other_entity) {

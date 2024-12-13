@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   with these queries.
 - The `TnuaVelChange::calc_boost` helper method.
 
+## 0.5.0 - 2024-12-13
+### Changed
+- Upgrade to Bevy 0.15.
+
 ## 0.4.0 - 2024-07-05
 ### Changed
 - Upgrade to Bevy 0.14.

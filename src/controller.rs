@@ -57,18 +57,6 @@ impl Plugin for TnuaControllerPlugin {
     }
 }
 
-/// All the Tnua components needed to run a floating character controller.
-///
-/// Note that this bundle only contains components defined by Tnua. The components of the physics
-/// backend that turn the entity into a dynamic rigid body must be added separately.
-#[derive(Default, Bundle)]
-pub struct TnuaControllerBundle {
-    pub controller: TnuaController,
-    pub motor: TnuaMotor,
-    pub rigid_body_tracker: TnuaRigidBodyTracker,
-    pub proximity_sensor: TnuaProximitySensor,
-}
-
 struct FedEntry {
     fed_this_frame: bool,
     rescheduled_in: Option<Timer>,
@@ -97,6 +85,7 @@ struct FedEntry {
 ///
 /// Without [`TnuaControllerPlugin`] this component will not do anything.
 #[derive(Component, Default)]
+#[require(TnuaMotor, TnuaRigidBodyTracker, TnuaProximitySensor)]
 pub struct TnuaController {
     current_basis: Option<(&'static str, Box<dyn DynamicBasis>)>,
     actions_being_fed: HashMap<&'static str, FedEntry>,

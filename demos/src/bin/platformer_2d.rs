@@ -84,7 +84,7 @@ fn main() {
             }
             ScheduleToUse::PhysicsSchedule => {
                 app.add_plugins(PhysicsPlugins::default());
-                app.insert_resource(Time::new_with(Physics::fixed_hz(144.0)));
+                app.insert_resource(Time::from_hz(144.0));
                 app.add_plugins(TnuaAvian2dPlugin::new(PhysicsSchedule));
             }
         }
@@ -139,7 +139,7 @@ fn main() {
     app.add_plugins(LevelMechanicsPlugin);
     #[cfg(feature = "rapier2d")]
     {
-        app.add_systems(Startup, |mut cfg: ResMut<RapierConfiguration>| {
+        app.add_systems(Startup, |mut cfg: Single<&mut RapierConfiguration>| {
             // For some odd reason, Rapier 2D defaults to a gravity of 98.1
             cfg.gravity = Vec2::Y * -9.81;
         });
@@ -148,23 +148,20 @@ fn main() {
 }
 
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(0.0, 14.0, 30.0)
+    commands.spawn((
+        Camera2d,
+        Transform::from_xyz(0.0, 14.0, 30.0)
             .with_scale((0.05 * Vec2::ONE).extend(1.0))
             .looking_at(Vec3::new(0.0, 14.0, 0.0), Vec3::Y),
-        ..Default::default()
-    });
+    ));
 
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
-        ..default()
-    });
+    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
 }
 
 fn setup_player(mut commands: Commands) {
     let mut cmd = commands.spawn(IsPlayer);
-    cmd.insert(TransformBundle::default());
-    cmd.insert(VisibilityBundle::default());
+    cmd.insert(Transform::default());
+    cmd.insert(Visibility::default());
 
     // The character entity must be configured as a dynamic rigid body of the physics backend.
     #[cfg(feature = "rapier2d")]
@@ -182,15 +179,10 @@ fn setup_player(mut commands: Commands) {
         // Avian does not need an "IO" bundle.
     }
 
-    // This bundle container `TnuaController` - the main interface of Tnua with the user code - as
-    // well as the main components used as API between the main plugin and the physics backend
-    // integration. These components (and the IO bundle, in case of backends that need one like
-    // Rapier) are the only mandatory Tnua components - but this example will also add some
-    // components used for more advanced features.
-    //
-    // Read examples/src/character_control_systems/platformer_control_systems.rs to see how
+    // `TnuaController` is Tnua's main interface with the user code. Read
+    // examples/src/character_control_systems/platformer_control_systems.rs to see how
     // `TnuaController` is used in this example.
-    cmd.insert(TnuaControllerBundle::default());
+    cmd.insert(TnuaController::default());
 
     // The obstacle radar is used to detect obstacles around the player that the player can use
     // for environment actions (e.g. climbing). The physics backend integration plugin is
@@ -313,9 +305,14 @@ fn setup_player(mut commands: Commands) {
                     #[cfg(feature = "avian2d")]
                     {
                         let player_layers: LayerMask = if use_collision_groups {
-                            [LayerNames::Player].into()
+                            [LayerNames::Default, LayerNames::Player].into()
                         } else {
-                            [LayerNames::Player, LayerNames::PhaseThrough].into()
+                            [
+                                LayerNames::Default,
+                                LayerNames::Player,
+                                LayerNames::PhaseThrough,
+                            ]
+                            .into()
                         };
                         cmd.insert(CollisionLayers::new(player_layers, player_layers));
                     }

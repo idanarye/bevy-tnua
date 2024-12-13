@@ -16,8 +16,10 @@ use super::{
 };
 
 #[cfg(feature = "avian2d")]
-#[derive(PhysicsLayer)]
+#[derive(PhysicsLayer, Default)]
 pub enum LayerNames {
+    #[default]
+    Default,
     Player,
     FallThrough,
     PhaseThrough,
