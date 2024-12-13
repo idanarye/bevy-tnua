@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d.
 
 ## [Unreleased]
+### Changed
+- Upgrade to Bevy 0.15 and bevy_rapier 0.28.
 
 ## 0.4.0 - 2024-07-08
 ### Changed
