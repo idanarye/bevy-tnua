@@ -117,9 +117,10 @@ fn get_collider(
 
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
-    rapier_context: ReadDefaultRapierContext,
+    rapier_context_query: RapierContextAccess,
     mut query: Query<(
         Entity,
+        &RapierContextEntityLink,
         &GlobalTransform,
         &mut TnuaProximitySensor,
         Option<&TnuaRapier2dSensorShape>,
@@ -133,6 +134,7 @@ fn update_proximity_sensors_system(
     query.par_iter_mut().for_each(
         |(
             owner_entity,
+            rapier_context_entity_link,
             transform,
             mut sensor,
             shape,
@@ -145,6 +147,11 @@ fn update_proximity_sensors_system(
                 TnuaToggle::SenseOnly => {}
                 TnuaToggle::Enabled => {}
             }
+
+            let Some(rapier_context) = rapier_context_query.try_context(rapier_context_entity_link) else {
+                return;
+            };
+
             let cast_origin = transform.transform_point(sensor.cast_origin);
             let cast_direction = sensor.cast_direction;
 
