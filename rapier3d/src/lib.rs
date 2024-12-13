@@ -337,14 +337,25 @@ fn update_proximity_sensors_system(
 }
 
 fn update_obstacle_radars_system(
-    rapier_context: Res<RapierContext>,
-    rapier_config: Res<RapierConfiguration>,
-    mut radars_query: Query<(Entity, &mut TnuaObstacleRadar, &GlobalTransform)>,
+    rapier_world_query: Query<(&RapierContext, &RapierConfiguration)>,
+    mut radars_query: Query<(
+        Entity,
+        &RapierContextEntityLink,
+        &mut TnuaObstacleRadar,
+        &GlobalTransform,
+    )>,
 ) {
     if radars_query.is_empty() {
         return;
     }
-    for (radar_owner_entity, mut radar, radar_transform) in radars_query.iter_mut() {
+    for (radar_owner_entity, rapier_context_entity_link, mut radar, radar_transform) in
+        radars_query.iter_mut()
+    {
+        let Ok((rapier_context, rapier_config)) =
+            rapier_world_query.get(rapier_context_entity_link.0)
+        else {
+            continue;
+        };
         let (_radar_scale, radar_rotation, radar_translation) =
             radar_transform.to_scale_rotation_translation();
         radar.pre_marking_update(
