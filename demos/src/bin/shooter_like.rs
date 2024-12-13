@@ -331,9 +331,14 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     #[cfg(feature = "avian3d")]
                     {
                         let player_layers: LayerMask = if use_collision_groups {
-                            [LayerNames::Player].into()
+                            [LayerNames::Default, LayerNames::Player].into()
                         } else {
-                            [LayerNames::Player, LayerNames::PhaseThrough].into()
+                            [
+                                LayerNames::Default,
+                                LayerNames::Player,
+                                LayerNames::PhaseThrough,
+                            ]
+                            .into()
                         };
                         cmd.insert(CollisionLayers::new(player_layers, player_layers));
                     }

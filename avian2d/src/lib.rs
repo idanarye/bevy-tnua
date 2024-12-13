@@ -303,8 +303,8 @@ fn apply_motors_system(
         &TnuaMotor,
         &mut LinearVelocity,
         &mut AngularVelocity,
-        &Mass,
-        &AngularInertia,
+        &ComputedMass,
+        &ComputedAngularInertia,
         &mut ExternalForce,
         &mut ExternalTorque,
         Option<&TnuaToggle>,
@@ -332,7 +332,7 @@ fn apply_motors_system(
             linare_velocity.0 += motor.lin.boost.truncate();
         }
         if motor.lin.acceleration.is_finite() {
-            external_force.set_force(motor.lin.acceleration.truncate() * mass.0);
+            external_force.set_force(motor.lin.acceleration.truncate() * mass.value());
         }
         if motor.ang.boost.is_finite() {
             angular_velocity.0 += motor.ang.boost.z;
@@ -341,7 +341,7 @@ fn apply_motors_system(
             external_torque.set_torque(
                 // NOTE: I did not actually verify that this is the correct formula. Nothing uses
                 // angular acceleration yet - only angular impulses.
-                inertia.0 * motor.ang.acceleration.z,
+                inertia.value() * motor.ang.acceleration.z,
             );
         }
     }
