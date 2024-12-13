@@ -191,15 +191,10 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         // Avian does not need an "IO" bundle.
     }
 
-    // This bundle container `TnuaController` - the main interface of Tnua with the user code - as
-    // well as the main components used as API between the main plugin and the physics backend
-    // integration. These components (and the IO bundle, in case of backends that need one like
-    // Rapier) are the only mandatory Tnua components - but this example will also add some
-    // components used for more advanced features.
-    //
-    // Read examples/src/character_control_systems/platformer_control_systems.rs to see how
+    // `TnuaController` is Tnua's main interface with the user code. Read
+    // examples/src/character_control_systems/platformer_control_systems.rs to see how
     // `TnuaController` is used in this example.
-    cmd.insert(TnuaControllerBundle::default());
+    cmd.insert(TnuaController::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim3,

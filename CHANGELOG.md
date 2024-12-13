@@ -10,6 +10,10 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 ### Changed
 - Upgrade to Bevy 0.15.
 
+### Removed
+- `TnuaControllerBundle`. It is no longer needed since `TnuaController` uses
+  Bevy 0.15's required components feature.
+
 ## 0.20.0 - 2024-10-12
 ### Added
 - A `TnuaBuiltinKnockback` action for applying knockback that will not be

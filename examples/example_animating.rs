@@ -111,8 +111,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         // engine.
         RigidBody::Dynamic,
         Collider::capsule(0.5, 1.0),
-        // This bundle holds the main components.
-        TnuaControllerBundle::default(),
+        // This is Tnua's interface component.
+        TnuaController::default(),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
         TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
         // Tnua can fix the rotation, but the character will still get rotated before it can do so.
