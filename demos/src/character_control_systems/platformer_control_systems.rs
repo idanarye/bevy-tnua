@@ -2,8 +2,8 @@ use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts};
 use bevy_tnua::builtins::{
-    TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash, TnuaBuiltinKnockback,
-    TnuaBuiltinWallSlide,
+    TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash,
+    TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
 };
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
@@ -108,14 +108,16 @@ pub fn apply_platformer_controls(
             direction += Vector3::X;
         }
 
-        direction = direction.clamp_length_max(1.0);
+        let screen_space_direction = direction.clamp_length_max(1.0);
 
-        if let Some(forward_from_camera) = forward_from_camera {
-            direction = Transform::default()
+        let direction = if let Some(forward_from_camera) = forward_from_camera {
+            Transform::default()
                 .looking_to(forward_from_camera.forward.f32(), Vec3::Y)
-                .transform_point(direction.f32())
-                .adjust_precision();
-        }
+                .transform_point(screen_space_direction.f32())
+                .adjust_precision()
+        } else {
+            screen_space_direction
+        };
 
         let jump = match config.dimensionality {
             Dimensionality::Dim2 => {
@@ -333,21 +335,59 @@ pub fn apply_platformer_controls(
             .and_then(|(action, _)| {
                 action
                     .wall_entity
-                    .filter(|wall_entity| obstacle_radar.has_blip(*wall_entity))
+                    .filter(|entity| obstacle_radar.has_blip(*entity))
             });
+
+        let already_climbing_on =
+            controller
+                .concrete_action::<TnuaBuiltinClimb>()
+                .and_then(|(action, _)| {
+                    let entity = action
+                        .climbable_entity
+                        .filter(|entity| obstacle_radar.has_blip(*entity))?;
+                    Some((entity, action.initiation_direction))
+                });
 
         let mut walljump_candidate = None;
 
-        for blip in radar_lens.iter_blips() {
+        'blips_loop: for blip in radar_lens.iter_blips() {
             let obstacle_properties = obstacle_query
                 .get(blip.entity())
                 .expect("ObstacleQueryHelper has nothing that could fail when missing");
             if obstacle_properties.climbable {
                 if let TnuaBlipSpatialRelation::Aeside(blip_direction) = blip.spatial_relation(0.5)
                 {
+                    'maintain_climb: {
+                        if let Some((climbable_entity, initiation_direction)) = already_climbing_on
+                        {
+                            if climbable_entity != blip.entity() {
+                                break 'maintain_climb;
+                            }
+                            let dot_initiation = direction.dot(initiation_direction);
+                            let initiation_direction = if 0.5 < dot_initiation {
+                                initiation_direction
+                            } else {
+                                Vector3::ZERO
+                            };
+                            if initiation_direction == Vector3::ZERO {
+                                // let up_down = screen_space_direction.dot(Vector3::NEG_Z);
+                                let right_left = screen_space_direction.dot(Vector3::X);
+                                if 0.5 <= right_left.abs() {
+                                    continue 'blips_loop;
+                                }
+                            }
+                            controller.action(TnuaBuiltinClimb {
+                                climbable_entity: Some(climbable_entity),
+                                initiation_direction,
+                            });
+                        }
+                    }
                     let dot_direction = direction.dot(blip_direction.adjust_precision());
                     if 0.5 < dot_direction {
-                        info!("Initiate climb on {}", blip.entity());
+                        controller.action(TnuaBuiltinClimb {
+                            climbable_entity: Some(blip.entity()),
+                            initiation_direction: direction,
+                        });
                     }
                 }
             }

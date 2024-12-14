@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_tnua::builtins::{
-    TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState, TnuaBuiltinKnockback,
-    TnuaBuiltinWallSlide,
+    TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState,
+    TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
 };
 use bevy_tnua::math::Float;
 use bevy_tnua::prelude::*;
@@ -21,6 +21,7 @@ pub enum AnimationState {
     KnockedBack,
     WallSliding,
     WallJumping,
+    Climbing,
 }
 
 #[allow(clippy::unnecessary_cast)]
@@ -95,6 +96,7 @@ pub fn animate_platformer_character(
                 Some(TnuaBuiltinKnockback::NAME) => AnimationState::KnockedBack,
                 Some(TnuaBuiltinWallSlide::NAME) => AnimationState::WallSliding,
                 Some("walljump") => AnimationState::WallJumping,
+                Some(TnuaBuiltinClimb::NAME) => AnimationState::Climbing,
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
                     // If there is no action going on, we'll base the animation on the state of the
@@ -196,6 +198,12 @@ pub fn animate_platformer_character(
                         player
                             .start(handler.animations["WallJumping"])
                             .set_speed(2.0);
+                    }
+                    AnimationState::Climbing => {
+                        player
+                            .start(handler.animations["VineClimbing"])
+                            .repeat()
+                            .set_speed(1.0);
                     }
                 }
             }
