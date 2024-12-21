@@ -13,7 +13,7 @@ readme = "../README.md"
 
 [dependencies]
 bevy = { version = "^0.15", default-features = false }
-avian2d = { git = "https://github.com/Jondolf/avian", default-features = false, features = ["2d", "debug-plugin", "parallel"]}
+avian2d = { version = "^0.2", default-features = false, features = ["2d", "debug-plugin", "parallel"]}
 bevy-tnua-physics-integration-layer = { version = "^0.5", path = "../physics-integration-layer" }
 
 [package.metadata.docs.rs]
@@ -21,5 +21,9 @@ all-features = true
 features = ["bevy/bevy_asset"]
 
 [features]
-default = [  "avian2d/parry-f32" ]
-f64 = ["avian2d/parry-f64",  "bevy-tnua-physics-integration-layer/f64" ]
+default = [  "avian2d/f32", "avian2d/parry-f32" ]
+f64 = [
+    "avian2d/f64",
+    "avian2d/parry-f64",
+    "bevy-tnua-physics-integration-layer/f64",
+]

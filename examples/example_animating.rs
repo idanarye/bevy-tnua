@@ -16,15 +16,15 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             PhysicsPlugins::default(),
-            TnuaControllerPlugin::default(),
-            TnuaAvian3dPlugin::default(),
+            TnuaControllerPlugin::new(FixedUpdate),
+            TnuaAvian3dPlugin::new(FixedUpdate),
         ))
         .add_systems(
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
         .add_systems(
-            Update,
+            FixedUpdate,
             (
                 apply_controls.in_set(TnuaUserControlsSystemSet),
                 prepare_animations,

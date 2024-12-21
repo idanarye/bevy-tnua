@@ -71,13 +71,13 @@ fn main() {
         app.add_plugins(PhysicsDebugPlugin::default());
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => {
-                app.add_plugins(PhysicsPlugins::default());
+                app.add_plugins(PhysicsPlugins::new(PostUpdate));
                 // To use Tnua with avian2d, you need the `TnuaAvian2dPlugin` plugin from
                 // bevy-tnua-avian2d.
-                app.add_plugins(TnuaAvian2dPlugin::default());
+                app.add_plugins(TnuaAvian2dPlugin::new(Update));
             }
             ScheduleToUse::FixedUpdate => {
-                app.add_plugins(PhysicsPlugins::new(FixedUpdate));
+                app.add_plugins(PhysicsPlugins::new(FixedPostUpdate));
                 app.add_plugins(TnuaAvian2dPlugin::new(FixedUpdate));
             }
             ScheduleToUse::PhysicsSchedule => {
