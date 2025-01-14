@@ -180,15 +180,11 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     {
         cmd.insert(rapier::RigidBody::Dynamic);
         cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
-        // For Rapier, an "IO" bundle needs to be added so that Tnua will have all the components
-        // it needs to interact with Rapier.
-        cmd.insert(TnuaRapier3dIOBundle::default());
     }
     #[cfg(feature = "avian3d")]
     {
         cmd.insert(avian::RigidBody::Dynamic);
         cmd.insert(avian::Collider::capsule(0.5, 1.0));
-        // Avian does not need an "IO" bundle.
     }
 
     // `TnuaController` is Tnua's main interface with the user code. Read
