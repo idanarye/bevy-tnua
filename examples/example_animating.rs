@@ -119,7 +119,6 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         // By locking the rotation we can prevent this.
         LockedAxes::ROTATION_LOCKED.unlock_rotation_y(),
     ));
-    // NOTE: if this was Rapier, we'd also need `TnuaRapier3dIOBundle`. Avian does not need it.
 }
 
 // No Tnua-related setup here - this is just for dealing with Bevy's animation graph.

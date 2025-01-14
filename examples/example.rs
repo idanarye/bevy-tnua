@@ -94,7 +94,6 @@ fn setup_player(
         // By locking the rotation we can prevent this.
         LockedAxes::ROTATION_LOCKED,
     ));
-    // NOTE: if this was Rapier, we'd also need `TnuaRapier3dIOBundle`. Avian does not need it.
 }
 
 fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut TnuaController>) {
