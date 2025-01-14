@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d.
 
 ## [Unreleased]
+### Deprecated
+- Deprecate `TnuaRapier3dIOBundle` in favor or bevy required components.
 
 ## 0.9.0 - 2024-12-13
 ### Changed
