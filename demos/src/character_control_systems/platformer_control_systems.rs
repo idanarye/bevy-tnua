@@ -1,4 +1,7 @@
-use bevy::{app::RunFixedMainLoop, prelude::*, time::run_fixed_main_schedule};
+use bevy::{
+    app::{FixedMain, RunFixedMainLoop},
+    prelude::*,
+};
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts};
 use bevy_tnua::builtins::{
@@ -466,8 +469,8 @@ impl Plugin for JustPressedCachePlugin {
         app.add_systems(
             RunFixedMainLoop,
             (
-                collect_just_pressed_cache.before(run_fixed_main_schedule),
-                clear_just_pressed_cache.after(run_fixed_main_schedule),
+                collect_just_pressed_cache.before(FixedMain::run_fixed_main),
+                clear_just_pressed_cache.after(FixedMain::run_fixed_main),
             ),
         );
     }

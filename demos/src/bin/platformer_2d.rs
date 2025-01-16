@@ -104,8 +104,8 @@ fn main() {
         }
         #[cfg(feature = "avian")]
         ScheduleToUse::PhysicsSchedule => {
-            app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
-            app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
+            app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
+            app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
         }
     }
 
