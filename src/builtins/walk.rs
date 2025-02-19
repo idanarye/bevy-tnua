@@ -66,7 +66,7 @@ pub struct TnuaBuiltinWalk {
     ///
     /// The actual force applied is in direct linear relationship to the displacement from the
     /// `float_height`.
-    pub spring_strengh: Float,
+    pub spring_strength: Float,
 
     /// A force that slows down the characters vertical spring motion.
     ///
@@ -128,7 +128,7 @@ impl Default for TnuaBuiltinWalk {
             desired_forward: None,
             float_height: 0.0,
             cling_distance: 1.0,
-            spring_strengh: 400.0,
+            spring_strength: 400.0,
             spring_dampening: 1.2,
             acceleration: 60.0,
             air_acceleration: 20.0,
@@ -467,7 +467,7 @@ impl TnuaBuiltinWalk {
         ctx: &TnuaBasisContext,
         spring_offset: Float,
     ) -> TnuaVelChange {
-        let spring_force: Float = spring_offset * self.spring_strengh;
+        let spring_force: Float = spring_offset * self.spring_strength;
 
         let relative_velocity = state
             .effective_velocity
