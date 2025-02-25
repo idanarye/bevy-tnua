@@ -1,5 +1,5 @@
 #[cfg(feature = "avian3d")]
-use avian3d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
+use avian3d::{prelude as avian, prelude::*};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
@@ -23,12 +23,15 @@ use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
     animate_platformer_character, AnimationState,
 };
-use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
     ForwardFromCamera,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
+use tnua_demos_crate::character_control_systems::{
+    info_dumpeing_systems::character_control_info_dumping_system,
+    platformer_control_systems::JustPressedCachePlugin,
+};
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian3d")]
 use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
@@ -131,8 +134,6 @@ fn main() {
         let system = apply_camera_controls;
         #[cfg(feature = "rapier")]
         let system = system.after(bevy_rapier3d::prelude::PhysicsSet::SyncBackend);
-        #[cfg(feature = "avian")]
-        let system = system.after(avian3d::prelude::PhysicsSet::Sync);
         system.before(bevy::transform::TransformSystem::TransformPropagate)
     });
     app.add_systems(
@@ -140,13 +141,16 @@ fn main() {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
             #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => PhysicsSchedule.intern(),
+            // `PhysicsSchedule` is `FixedPostUpdate` by default, which allows us
+            // to run user code like the platformer controls in `FixedUpdate`,
+            // which is a bit more idiomatic.
+            ScheduleToUse::PhysicsSchedule => FixedUpdate.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
-    app.add_plugins(LevelMechanicsPlugin);
+    app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     app.run();
 }
 
