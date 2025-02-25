@@ -51,6 +51,9 @@ impl Default for TnuaRapier2dPlugin {
 
 impl Plugin for TnuaRapier2dPlugin {
     fn build(&self, app: &mut App) {
+        app.register_required_components::<TnuaProximitySensor, Velocity>()
+            .register_required_components::<TnuaProximitySensor, ExternalForce>()
+            .register_required_components::<TnuaProximitySensor, ReadMassProperties>();
         app.configure_sets(
             self.schedule,
             TnuaSystemSet.before(PhysicsSet::SyncBackend).run_if(
@@ -75,6 +78,9 @@ impl Plugin for TnuaRapier2dPlugin {
 
 /// `bevy_rapier2d`-specific components required for Tnua to work.
 #[derive(Bundle, Default)]
+#[deprecated(
+    note = "All uses can be safely removed, components are added via bevy's required components"
+)]
 pub struct TnuaRapier2dIOBundle {
     pub velocity: Velocity,
     pub external_force: ExternalForce,

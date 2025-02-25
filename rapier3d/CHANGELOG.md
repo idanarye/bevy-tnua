@@ -12,6 +12,9 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 - `TnuaSpatialExtRapier2d`/`TnuaSpatialExtRapier3d` - implementation for the
   `TnuaSpatialExt` trait.
 
+### Deprecated
+- Deprecate `TnuaRapier3dIOBundle` in favor or bevy required components.
+
 ## 0.9.0 - 2024-12-13
 ### Changed
 - Use `RapierContextEntityLink` to detect the Rapir context. This means Tnua

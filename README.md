@@ -111,7 +111,7 @@ Tnua is broken into different crates that update separately, so this is broken i
 
 | bevy | bevy-tnua-physics-integration-layer | bevy-tnua-avian | avian |
 |------|-------------------------------------|-----------------|-------|
-| 0.15 | 0.5                                 | N/A             | N/A   |
+| 0.15 | 0.5                                 | 0.2             | 0.2   |
 | 0.14 | 0.4                                 | 0.1             | 0.1   |
 
 ### XPBD integration

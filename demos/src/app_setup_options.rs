@@ -5,7 +5,12 @@ use clap::{Parser, ValueEnum};
 
 #[derive(Resource, Debug, Parser, Clone)]
 pub struct AppSetupConfiguration {
-    #[arg(long = "schedule", default_value = "update")]
+    //#[arg(long = "schedule", default_value = "update")]
+    #[arg(long = "schedule", default_value_t = if cfg!(feature = "avian") {
+        ScheduleToUse::FixedUpdate
+    } else {
+        ScheduleToUse::Update
+    })]
     pub schedule_to_use: ScheduleToUse,
     #[arg(long = "level")]
     pub level_to_load: Option<String>,
@@ -25,6 +30,8 @@ impl AppSetupConfiguration {
         Self {
             schedule_to_use: if let Some(value) = url_params.get("schedule") {
                 ScheduleToUse::from_str(&value, true).unwrap()
+            } else if cfg!(feature = "avian") {
+                ScheduleToUse::FixedUpdate
             } else {
                 ScheduleToUse::Update
             },
@@ -61,6 +68,17 @@ pub enum ScheduleToUse {
     FixedUpdate,
     #[cfg(feature = "avian")]
     PhysicsSchedule,
+}
+
+impl std::fmt::Display for ScheduleToUse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Update => "update",
+            Self::FixedUpdate => "fixed-update",
+            #[cfg(feature = "avian")]
+            Self::PhysicsSchedule => "physics-schedule",
+        })
+    }
 }
 
 impl ScheduleToUse {

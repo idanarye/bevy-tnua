@@ -12,14 +12,17 @@ fn main() {
             PhysicsPlugins::default(),
             // We need both Tnua's main controller plugin, and the plugin to connect to the physics
             // backend (in this case XBPD-3D)
-            TnuaControllerPlugin::default(),
-            TnuaAvian3dPlugin::default(),
+            TnuaControllerPlugin::new(FixedUpdate),
+            TnuaAvian3dPlugin::new(FixedUpdate),
         ))
         .add_systems(
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(Update, apply_controls.in_set(TnuaUserControlsSystemSet))
+        .add_systems(
+            FixedUpdate,
+            apply_controls.in_set(TnuaUserControlsSystemSet),
+        )
         .run();
 }
 
@@ -91,7 +94,6 @@ fn setup_player(
         // By locking the rotation we can prevent this.
         LockedAxes::ROTATION_LOCKED,
     ));
-    // NOTE: if this was Rapier, we'd also need `TnuaRapier3dIOBundle`. Avian does not need it.
 }
 
 fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut TnuaController>) {

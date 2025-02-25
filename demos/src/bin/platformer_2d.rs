@@ -73,13 +73,13 @@ fn main() {
         app.add_plugins(PhysicsDebugPlugin::default());
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => {
-                app.add_plugins(PhysicsPlugins::default());
+                app.add_plugins(PhysicsPlugins::new(PostUpdate));
                 // To use Tnua with avian2d, you need the `TnuaAvian2dPlugin` plugin from
                 // bevy-tnua-avian2d.
-                app.add_plugins(TnuaAvian2dPlugin::default());
+                app.add_plugins(TnuaAvian2dPlugin::new(Update));
             }
             ScheduleToUse::FixedUpdate => {
-                app.add_plugins(PhysicsPlugins::new(FixedUpdate));
+                app.add_plugins(PhysicsPlugins::new(FixedPostUpdate));
                 app.add_plugins(TnuaAvian2dPlugin::new(FixedUpdate));
             }
             ScheduleToUse::PhysicsSchedule => {
@@ -168,15 +168,11 @@ fn setup_player(mut commands: Commands) {
     {
         cmd.insert(rapier::RigidBody::Dynamic);
         cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
-        // For Rapier, an "IO" bundle needs to be added so that Tnua will have all the components
-        // it needs to interact with Rapier.
-        cmd.insert(TnuaRapier2dIOBundle::default());
     }
     #[cfg(feature = "avian2d")]
     {
         cmd.insert(avian::RigidBody::Dynamic);
         cmd.insert(avian::Collider::capsule(0.5, 1.0));
-        // Avian does not need an "IO" bundle.
     }
 
     // `TnuaController` is Tnua's main interface with the user code. Read

@@ -46,12 +46,6 @@ impl TnuaAvian3dPlugin {
     }
 }
 
-impl Default for TnuaAvian3dPlugin {
-    fn default() -> Self {
-        Self::new(Update)
-    }
-}
-
 impl Plugin for TnuaAvian3dPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(
