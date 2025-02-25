@@ -16,6 +16,8 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 - `TnuaController::prolong_action`.
 - `vertical_displacement` and `force_forward` fields for `TnuaBuiltinJump`.
   This is useful for wall jumps.
+- `MotionHelper` for helping implementing motion commands. Users will probably
+  only need this if the implement custom basis and actions.
 
 ## 0.21.0 - 2024-12-13
 ### Changed

@@ -1,3 +1,4 @@
+mod command_impl_helpers;
 mod velocity_boundary;
 
 use bevy::prelude::*;
@@ -5,6 +6,7 @@ use bevy_tnua_physics_integration_layer::{
     data_for_backends::TnuaVelChange,
     math::{AdjustPrecision, Float, Quaternion, Vector2, Vector3},
 };
+pub use command_impl_helpers::MotionHelper;
 pub use velocity_boundary::VelocityBoundary;
 
 /// Calculate the kinetic energy required to jump to a certain height when different gravity is

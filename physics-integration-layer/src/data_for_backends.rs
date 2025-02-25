@@ -157,6 +157,29 @@ impl TnuaVelChange {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.acceleration = Vector3::ZERO;
+        self.boost = Vector3::ZERO;
+    }
+
+    pub fn project_onto(&self, rhs: Vector3) -> Self {
+        Self {
+            acceleration: self.acceleration.project_onto(rhs),
+            boost: self.boost.project_onto(rhs),
+        }
+    }
+
+    pub fn project_onto_normalized(&self, rhs: Vector3) -> Self {
+        Self {
+            acceleration: self.acceleration.project_onto_normalized(rhs),
+            boost: self.boost.project_onto_normalized(rhs),
+        }
+    }
+
+    pub fn project_onto_dir(&self, rhs: Dir3) -> Self {
+        self.project_onto_normalized(rhs.adjust_precision())
+    }
+
     pub fn cancel_on_axis(&mut self, axis: Vector3) {
         self.acceleration = self.acceleration.reject_from(axis);
         self.boost = self.boost.reject_from(axis);

@@ -1,5 +1,8 @@
 use bevy::prelude::*;
+use bevy_tnua_physics_integration_layer::math::AdjustPrecision;
 
+use crate::util::MotionHelper;
+use crate::TnuaActionContext;
 use crate::{
     math::Vector3, TnuaAction, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor,
@@ -25,16 +28,23 @@ impl TnuaAction for TnuaBuiltinClimb {
     fn apply(
         &self,
         _state: &mut Self::State,
-        _ctx: crate::TnuaActionContext,
+        ctx: TnuaActionContext,
         lifecycle_status: TnuaActionLifecycleStatus,
-        _motor: &mut TnuaMotor,
+        motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
+        // motor.lin.clear();
+        motor
+            .lin
+            .cancel_on_axis(ctx.up_direction.adjust_precision());
+        motor.lin += ctx.negate_gravity();
+        motor.lin += ctx.adjust_vertical_velocity(0.0, 30.0);
+
         lifecycle_status.directive_simple()
     }
 
     fn initiation_decision(
         &self,
-        _ctx: crate::TnuaActionContext,
+        _ctx: TnuaActionContext,
         _being_fed_for: &bevy::time::Stopwatch,
     ) -> TnuaActionInitiationDirective {
         TnuaActionInitiationDirective::Allow
