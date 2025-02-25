@@ -103,7 +103,7 @@ impl UiTunable for TnuaBuiltinWalk {
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.float_height, 0.0..=10.0).text("Float At"));
         ui.add(egui::Slider::new(&mut self.cling_distance, 0.0..=10.0).text("Cling Distance"));
-        ui.add(egui::Slider::new(&mut self.spring_strengh, 0.0..=4000.0).text("Spring Strengh"));
+        ui.add(egui::Slider::new(&mut self.spring_strength, 0.0..=4000.0).text("Spring Strength"));
         ui.add(egui::Slider::new(&mut self.spring_dampening, 0.0..=1.9).text("Spring Dampening"));
         slider_or_infinity(ui, "Acceleration", &mut self.acceleration, 0.0..=200.0);
         slider_or_infinity(
