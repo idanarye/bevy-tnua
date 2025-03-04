@@ -8,7 +8,7 @@ use avian3d::prelude as avian;
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::prelude as rapier;
 
-use bevy_tnua::math::{AsF32, Float, Vector3};
+use bevy_tnua::math::{AsF32, Float, Quaternion, Vector3};
 
 use crate::levels_setup::LevelObject;
 
@@ -130,6 +130,70 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
             (
                 avian::RigidBody::Static,
                 avian::Collider::cuboid(size.x, size.y, size.z),
+            ),
+        ));
+
+        cmd
+    }
+
+    pub fn spawn_compound_cuboids(
+        &mut self,
+        name: impl ToString,
+        transform: Transform,
+        parts: &[(Vector3, Quaternion, Vector3)],
+    ) -> EntityCommands {
+        let child_entity_ids = parts
+            .iter()
+            .map(|&(pos, rot, size)| {
+                self.parent
+                    .commands
+                    .spawn((
+                        Transform {
+                            translation: pos,
+                            rotation: rot,
+                            scale: Vec3::ONE,
+                        },
+                        Mesh3d(self.parent.meshes.add(Cuboid::from_size(size.f32()))),
+                        MeshMaterial3d(self.material.clone()),
+                    ))
+                    .id()
+            })
+            .collect::<Vec<_>>();
+
+        let mut cmd = self.parent.spawn_named(name);
+        cmd.insert(transform);
+        cmd.add_children(&child_entity_ids);
+        // self.spawn_mesh_without_physics(name, transform, Cuboid::from_size(size.f32()));
+
+        cmd.insert((
+            #[cfg(feature = "rapier3d")]
+            rapier::Collider::compound(
+                parts
+                    .iter()
+                    .map(|&(pos, rot, size)| {
+                        (
+                            pos,
+                            rot,
+                            rapier::Collider::cuboid(
+                                0.5 * size.x.f32(),
+                                0.5 * size.y.f32(),
+                                0.5 * size.z.f32(),
+                            ),
+                        )
+                    })
+                    .collect(),
+            ),
+            #[cfg(feature = "avian3d")]
+            (
+                avian::RigidBody::Static,
+                avian::Collider::compound(
+                    parts
+                        .iter()
+                        .map(|&(pos, rot, size)| {
+                            (pos, rot, avian::Collider::cuboid(size.x, size.y, size.z))
+                        })
+                        .collect(),
+                ),
             ),
         ));
 

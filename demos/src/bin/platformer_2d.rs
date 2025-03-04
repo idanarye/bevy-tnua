@@ -118,10 +118,15 @@ fn main() {
     >::default());
     app.add_systems(Startup, setup_camera_and_lights);
     app.add_plugins({
-        LevelSwitchingPlugin::new(app_setup_configuration.level_to_load.as_ref()).with(
-            "Default",
-            tnua_demos_crate::levels_setup::for_2d_platformer::setup_level,
-        )
+        LevelSwitchingPlugin::new(app_setup_configuration.level_to_load.as_ref())
+            .with(
+                "Default",
+                tnua_demos_crate::levels_setup::for_2d_platformer::setup_level,
+            )
+            .with(
+                "CompoundColliders",
+                tnua_demos_crate::levels_setup::compound_colliders_2d::setup_level,
+            )
     });
     app.add_systems(Startup, setup_player);
     app.add_systems(
