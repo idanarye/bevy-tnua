@@ -118,7 +118,6 @@ fn get_collider(
 ) -> Option<&rapier::geometry::Collider> {
     let collider_handle = rapier_context.entity2collider().get(&entity)?;
     rapier_context.colliders.get(*collider_handle)
-    //if let Some(owner_collider) = rapier_context.entity2collider().get(&owner_entity).and_then(|handle| rapier_context.colliders.get(*handle)) {
 }
 
 #[allow(clippy::type_complexity)]
@@ -180,7 +179,8 @@ fn update_proximity_sensors_system(
             let mut query_filter = QueryFilter::new().exclude_rigid_body(owner_entity);
             let owner_solver_groups: InteractionGroups;
 
-            if let Some(owner_collider) = get_collider(rapier_context, owner_entity) {
+            let owner_collider = get_collider(rapier_context, owner_entity);
+            if let Some(owner_collider) = owner_collider {
                 let collision_groups = owner_collider.collision_groups();
                 query_filter.groups = Some(CollisionGroups {
                     memberships: Group::from_bits_truncate(collision_groups.memberships.bits()),
@@ -211,25 +211,6 @@ fn update_proximity_sensors_system(
                         }
                         if other_collider.is_sensor() {
                             return false;
-                        }
-                    }
-
-                    // This fixes https://github.com/idanarye/bevy-tnua/issues/14
-                    if let Some(contact) = rapier_context.contact_pair(owner_entity, other_entity) {
-                        let same_order = owner_entity == contact.collider1();
-                        for manifold in contact.manifolds() {
-                            if 0 < manifold.num_points() {
-                                let manifold_normal = if same_order {
-                                    manifold.local_n2()
-                                } else {
-                                    manifold.local_n1()
-                                };
-                                if sensor.intersection_match_prevention_cutoff
-                                    < manifold_normal.dot(cast_direction.truncate())
-                                {
-                                    return false;
-                                }
-                            }
                         }
                     }
                     true
@@ -285,6 +266,10 @@ fn update_proximity_sensors_system(
             if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                 ghost_sensor.0.clear();
             }
+            let isometry: rapier::na::Isometry2<f32> = {
+                let (_, rotation, translation) = transform.to_scale_rotation_translation();
+                (translation.truncate(), rotation.z).into()
+            };
             sensor.output = 'sensor_output: loop {
                 if let Some(CastResult {
                     entity,
@@ -293,6 +278,20 @@ fn update_proximity_sensors_system(
                     normal,
                 }) = do_cast(cast_range_skip, &already_visited_ghost_entities)
                 {
+                    // Alternative fix for https://github.com/idanarye/bevy-tnua/issues/14 - one
+                    // that does not cause https://github.com/idanarye/bevy-tnua/issues/85
+                    if let Some(owner_collider) = owner_collider {
+                        if owner_collider
+                            .shape()
+                            .contains_point(&isometry, &intersection_point.into())
+                        {
+                            // I hate having to add the `* 1.1` so much, but without
+                            // it it sometimes enters an infinte loop...
+                            cast_range_skip = proximity * 1.1;
+                            continue;
+                        };
+                    }
+
                     let entity_linvel;
                     let entity_angvel;
                     if let Ok((entity_transform, entity_velocity)) =
