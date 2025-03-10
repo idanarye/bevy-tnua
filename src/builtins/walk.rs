@@ -32,7 +32,7 @@ use crate::{TnuaBasis, TnuaVelChange};
 ///   leaving `desired_forward` as the default `Vector3::ZERO` may cause the character to spin
 ///   uncontrollably when it contacts other colliders. Unless, of course, some other mechanism
 ///   prevents that.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TnuaBuiltinWalk {
     /// The direction (in the world space) and speed to accelerate to.
     ///
@@ -485,13 +485,13 @@ impl TnuaBuiltinWalk {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct StandingOnState {
     entity: Entity,
     entity_linvel: Vector3,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Debug)]
 pub struct TnuaBuiltinWalkState {
     airborne_timer: Option<Timer>,
     /// The current distance of the character from the distance its supposed to float at.
@@ -514,6 +514,7 @@ impl TnuaBuiltinWalkState {
     }
 }
 
+#[derive(Debug, Clone)]
 struct ClimbVectors {
     direction: Vector3,
     sideways: Vector3,

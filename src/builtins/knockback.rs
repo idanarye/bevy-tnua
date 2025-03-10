@@ -24,7 +24,7 @@ use bevy::prelude::*;
 /// * [`barrier_strength_diminishing`](Self::barrier_strength_diminishing). Setting it too low
 ///   makes it very hard for the character to push through the boundary. It starts getting slightly
 ///   weird below 1.0, and really weird below 0.5. Better keep it at above - 1.0 levels.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TnuaBuiltinKnockback {
     /// Initial impulse to apply to the character before the Pushover stage starts.
     ///
@@ -178,7 +178,7 @@ impl TnuaAction for TnuaBuiltinKnockback {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Debug)]
 pub enum TnuaBuiltinKnockbackState {
     /// Applying the [`shove`](TnuaBuiltinKnockback::shove) impulse to the character.
     #[default]
@@ -191,6 +191,7 @@ pub enum TnuaBuiltinKnockbackState {
 
 /// An indication that a character was knocked back and "struggles" to get back to its original
 /// velocity.
+#[derive(Clone, Debug)]
 pub struct VelocityBoundary {
     base: Float,
     original_frontier: Float,

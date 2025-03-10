@@ -191,6 +191,7 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
 }
 
 /// Various data passed to [`TnuaAction::apply`].
+#[derive(Clone)]
 pub struct TnuaActionContext<'a> {
     /// The duration of the current frame.
     pub frame_duration: Float,

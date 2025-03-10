@@ -17,7 +17,7 @@ use crate::{
 /// being fed, it'll apply extra gravity to shorten the jump. If the game desires fixed height
 /// jumps instead (where the player cannot make lower jumps by tapping the jump button)
 /// [`shorten_extra_gravity`](Self::shorten_extra_gravity) should be set to `0.0`.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TnuaBuiltinJump {
     /// The height the character will jump to.
     ///
@@ -337,7 +337,7 @@ impl TnuaBuiltinJump {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub enum TnuaBuiltinJumpState {
     #[default]
     NoJump,
