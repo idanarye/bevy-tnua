@@ -512,6 +512,10 @@ impl TnuaBuiltinWalkState {
     pub fn standing_on_entity(&self) -> Option<Entity> {
         Some(self.standing_on.as_ref()?.entity)
     }
+
+    pub fn reset_airborne_timer(&mut self) {
+        self.airborne_timer = None;
+    }
 }
 
 #[derive(Debug, Clone)]
