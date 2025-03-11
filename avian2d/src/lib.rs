@@ -145,9 +145,9 @@ fn update_proximity_sensors_system(
                 TnuaToggle::Enabled => {}
             }
             let transform = Transform {
-                translation: position.adjust_precision().extend(0.0),
-                rotation: Quaternion::from(*rotation).adjust_precision(),
-                scale: collider.scale().adjust_precision().extend(1.0),
+                translation: position.f32().extend(0.0),
+                rotation: Quaternion::from(*rotation).f32(),
+                scale: collider.scale().f32().extend(1.0),
             };
             let cast_origin = transform.transform_point(sensor.cast_origin.f32());
             let cast_direction = sensor.cast_direction;

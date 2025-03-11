@@ -12,10 +12,10 @@ use avian3d::{
 };
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::AdjustPrecision;
 use bevy_tnua_physics_integration_layer::math::AsF32;
 use bevy_tnua_physics_integration_layer::math::Float;
 use bevy_tnua_physics_integration_layer::math::Vector3;
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
 
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
@@ -153,9 +153,9 @@ fn update_proximity_sensors_system(
                 TnuaToggle::Enabled => {}
             }
             let transform = Transform {
-                translation: position.0,
-                rotation: rotation.0,
-                scale: collider.scale(),
+                translation: position.0.f32(),
+                rotation: rotation.0.f32(),
+                scale: collider.scale().f32(),
             };
 
             // TODO: is there any point in doing these transformations as f64 when that feature
@@ -275,14 +275,16 @@ fn update_proximity_sensors_system(
 
             let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaAvian3dSensorShape(shape)) = shape {
-                let owner_rotation = Quat::from_axis_angle(
-                    *cast_direction,
-                    rotation.to_scaled_axis().dot(*cast_direction),
+                let owner_rotation = Quaternion::from_axis_angle(
+                    cast_direction.adjust_precision(),
+                    rotation
+                        .to_scaled_axis()
+                        .dot(cast_direction.adjust_precision()),
                 );
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
                     cast_origin,
-                    owner_rotation.adjust_precision(),
+                    owner_rotation,
                     cast_direction,
                     &ShapeCastConfig {
                         max_distance: sensor.cast_range,

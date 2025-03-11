@@ -175,3 +175,10 @@ impl AsF32 for DQuat {
         self.as_quat()
     }
 }
+
+impl AsF32 for Quat {
+    type F32 = Quat;
+    fn f32(&self) -> Self::F32 {
+        *self
+    }
+}
