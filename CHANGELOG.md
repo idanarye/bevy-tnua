@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- `concrete_basis_mut` and `concrete_action_mut` methods to `TnuaController`.
+- `reset_airborne_timer` method to `TnuaBuiltinWalkState`.
 
 ## 0.21.0 - 2024-12-13
 ### Changed
