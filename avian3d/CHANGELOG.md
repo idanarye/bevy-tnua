@@ -10,6 +10,10 @@ NOTES:
 * Avian used to be named bevy_xpbd. The old bevy-tnua-xpbd changelog can be seen [here](https://github.com/idanarye/bevy-tnua/blob/3cba881c8825633a8d8bdca1fe30e54500e655b8/xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- Change the recommended schedule in the documentation.
+- Sensors and trackers use Avina's `Position` and `Rotation` instead of Bevy's
+  `GlobalTransform`.
 
 ## 0.2.0 - 2024-12-21
 ### Changed
