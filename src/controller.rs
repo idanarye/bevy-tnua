@@ -263,6 +263,9 @@ impl TnuaController {
 
     /// The currently running action, together with its state, as mutable.
     /// Useful if you need to touch the state of a running action to respond to game events.
+    ///
+    /// If the action is replaced, the state will be lost. If you need to keep the state, you should
+    /// store it separately.
     pub fn concrete_action_mut<A: TnuaAction>(&mut self) -> Option<(&A, &mut A::State)> {
         let (_, action) = self.current_action.as_mut()?;
         let boxable_action: &mut BoxableAction<A> = action.as_mut_any().downcast_mut()?;
