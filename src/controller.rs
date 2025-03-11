@@ -156,6 +156,14 @@ impl TnuaController {
         Some((&boxable_basis.input, &boxable_basis.state))
     }
 
+    /// The currently running basis, together with its state, as mutable.
+    /// Useful if you need to touch the state of a running action to respond to game events.
+    pub fn concrete_basis_mut<B: TnuaBasis>(&mut self) -> Option<(&B, &mut B::State)> {
+        let (_, basis) = self.current_basis.as_mut()?;
+        let boxable_basis: &mut BoxableBasis<B> = basis.as_mut_any().downcast_mut()?;
+        Some((&boxable_basis.input, &mut boxable_basis.state))
+    }
+
     /// Feed an action with [its default name](TnuaBasis::NAME).
     pub fn action<A: TnuaAction>(&mut self, action: A) {
         self.named_action(A::NAME, action);
@@ -251,6 +259,17 @@ impl TnuaController {
         let (_, action) = self.current_action.as_ref()?;
         let boxable_action: &BoxableAction<A> = action.as_any().downcast_ref()?;
         Some((&boxable_action.input, &boxable_action.state))
+    }
+
+    /// The currently running action, together with its state, as mutable.
+    /// Useful if you need to touch the state of a running action to respond to game events.
+    ///
+    /// If the action is replaced, the state will be lost. If you need to keep the state, you should
+    /// store it separately.
+    pub fn concrete_action_mut<A: TnuaAction>(&mut self) -> Option<(&A, &mut A::State)> {
+        let (_, action) = self.current_action.as_mut()?;
+        let boxable_action: &mut BoxableAction<A> = action.as_mut_any().downcast_mut()?;
+        Some((&boxable_action.input, &mut boxable_action.state))
     }
 
     /// Indicator for the state and flow of movement actions.
