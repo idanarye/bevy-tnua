@@ -77,8 +77,6 @@ impl AppSetupConfiguration {
 pub enum ScheduleToUse {
     Update,
     FixedUpdate,
-    #[cfg(feature = "avian")]
-    PhysicsSchedule,
 }
 
 impl std::fmt::Display for ScheduleToUse {
@@ -86,8 +84,6 @@ impl std::fmt::Display for ScheduleToUse {
         f.write_str(match self {
             Self::Update => "update",
             Self::FixedUpdate => "fixed-update",
-            #[cfg(feature = "avian")]
-            Self::PhysicsSchedule => "physics-schedule",
         })
     }
 }

@@ -86,11 +86,6 @@ fn main() {
                 app.add_plugins(PhysicsPlugins::new(FixedPostUpdate));
                 app.add_plugins(TnuaAvian3dPlugin::new(FixedUpdate));
             }
-            ScheduleToUse::PhysicsSchedule => {
-                app.add_plugins(PhysicsPlugins::default());
-                app.insert_resource(Time::from_hz(144.0));
-                app.add_plugins(TnuaAvian3dPlugin::new(PhysicsSchedule));
-            }
         }
     }
 
@@ -106,11 +101,6 @@ fn main() {
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
-        }
-        #[cfg(feature = "avian")]
-        ScheduleToUse::PhysicsSchedule => {
-            app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
-            app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
         }
     }
 
@@ -139,11 +129,6 @@ fn main() {
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
-            #[cfg(feature = "avian")]
-            // `PhysicsSchedule` is `FixedPostUpdate` by default, which allows us
-            // to run user code like the platformer controls in `FixedUpdate`,
-            // which is a bit more idiomatic.
-            ScheduleToUse::PhysicsSchedule => FixedUpdate.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
