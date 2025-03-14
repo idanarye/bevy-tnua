@@ -35,7 +35,7 @@ impl AppSetupConfiguration {
             } else {
                 #[cfg(feature = "avian")]
                 {
-                    ScheduleToUse::PhysicsSchedule
+                    ScheduleToUse::FixedUpdate
                 }
                 #[cfg(feature = "rapier")]
                 {
