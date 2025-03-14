@@ -281,6 +281,7 @@ fn update_proximity_sensors_system(
                 {
                     // Alternative fix for https://github.com/idanarye/bevy-tnua/issues/14 - one
                     // that does not cause https://github.com/idanarye/bevy-tnua/issues/85
+                    // Note that this does not solve https://github.com/idanarye/bevy-tnua/issues/87
                     if let Some(owner_collider) = owner_collider {
                         if owner_collider
                             .shape()
