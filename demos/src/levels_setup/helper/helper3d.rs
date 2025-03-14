@@ -149,8 +149,8 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
                     .commands
                     .spawn((
                         Transform {
-                            translation: pos,
-                            rotation: rot,
+                            translation: pos.f32(),
+                            rotation: rot.f32(),
                             scale: Vec3::ONE,
                         },
                         Mesh3d(self.parent.meshes.add(Cuboid::from_size(size.f32()))),

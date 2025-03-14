@@ -1,5 +1,5 @@
 #[cfg(feature = "avian3d")]
-use avian3d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
+use avian3d::{prelude as avian, prelude::*};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
@@ -23,12 +23,15 @@ use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
     animate_platformer_character, AnimationState,
 };
-use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
     ForwardFromCamera,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
+use tnua_demos_crate::character_control_systems::{
+    info_dumpeing_systems::character_control_info_dumping_system,
+    platformer_control_systems::JustPressedCachePlugin,
+};
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian3d")]
 use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
@@ -63,10 +66,6 @@ fn main() {
                 app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule());
                 app.add_plugins(TnuaRapier3dPlugin::new(FixedUpdate));
             }
-            #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => {
-                panic!("Cannot happen - Avian and Rapier used together");
-            }
         }
     }
     #[cfg(feature = "avian3d")]
@@ -81,11 +80,6 @@ fn main() {
             ScheduleToUse::FixedUpdate => {
                 app.add_plugins(PhysicsPlugins::new(FixedPostUpdate));
                 app.add_plugins(TnuaAvian3dPlugin::new(FixedUpdate));
-            }
-            ScheduleToUse::PhysicsSchedule => {
-                app.add_plugins(PhysicsPlugins::default());
-                app.insert_resource(Time::from_hz(144.0));
-                app.add_plugins(TnuaAvian3dPlugin::new(PhysicsSchedule));
             }
         }
     }
@@ -102,11 +96,6 @@ fn main() {
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
-        }
-        #[cfg(feature = "avian")]
-        ScheduleToUse::PhysicsSchedule => {
-            app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
-            app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
         }
     }
 
@@ -131,22 +120,18 @@ fn main() {
         let system = apply_camera_controls;
         #[cfg(feature = "rapier")]
         let system = system.after(bevy_rapier3d::prelude::PhysicsSet::SyncBackend);
-        #[cfg(feature = "avian")]
-        let system = system.after(avian3d::prelude::PhysicsSet::Sync);
         system.before(bevy::transform::TransformSystem::TransformPropagate)
     });
     app.add_systems(
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
-            #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => PhysicsSchedule.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
-    app.add_plugins(LevelMechanicsPlugin);
+    app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     app.run();
 }
 
@@ -421,7 +406,7 @@ fn apply_camera_controls(
 ) {
     let mouse_controls_camera = primary_window_query
         .get_single()
-        .map_or(false, |w| !w.cursor_options.visible);
+        .is_ok_and(|w| !w.cursor_options.visible);
     let total_delta = if mouse_controls_camera {
         mouse_motion.read().map(|event| event.delta).sum()
     } else {

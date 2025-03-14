@@ -1,5 +1,5 @@
 #[cfg(feature = "avian2d")]
-use avian2d::{prelude as avian, prelude::*, schedule::PhysicsSchedule};
+use avian2d::{prelude as avian, prelude::*};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
 #[cfg(feature = "rapier2d")]
@@ -22,6 +22,7 @@ use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
+    JustPressedCachePlugin,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
@@ -60,10 +61,6 @@ fn main() {
                 // bevy-tnua-rapier2d.
                 app.add_plugins(TnuaRapier2dPlugin::new(FixedUpdate));
             }
-            #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => {
-                panic!("Cannot happen - Avian and Rapier used together");
-            }
         }
     }
     #[cfg(feature = "avian2d")]
@@ -80,11 +77,6 @@ fn main() {
                 app.add_plugins(PhysicsPlugins::new(FixedPostUpdate));
                 app.add_plugins(TnuaAvian2dPlugin::new(FixedUpdate));
             }
-            ScheduleToUse::PhysicsSchedule => {
-                app.add_plugins(PhysicsPlugins::default());
-                app.insert_resource(Time::from_hz(144.0));
-                app.add_plugins(TnuaAvian2dPlugin::new(PhysicsSchedule));
-            }
         }
     }
 
@@ -100,11 +92,6 @@ fn main() {
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
             app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
-        }
-        #[cfg(any(feature = "avian", feature = "avian"))]
-        ScheduleToUse::PhysicsSchedule => {
-            app.add_plugins(TnuaControllerPlugin::new(PhysicsSchedule));
-            app.add_plugins(TnuaCrouchEnforcerPlugin::new(PhysicsSchedule));
         }
     }
 
@@ -133,12 +120,10 @@ fn main() {
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
-            #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => PhysicsSchedule.intern(),
         },
         apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
     );
-    app.add_plugins(LevelMechanicsPlugin);
+    app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     #[cfg(feature = "rapier2d")]
     {
         app.add_systems(Startup, |mut cfg: Single<&mut RapierConfiguration>| {

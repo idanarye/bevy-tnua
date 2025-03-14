@@ -33,7 +33,18 @@ impl AppSetupConfiguration {
             } else if cfg!(feature = "avian") {
                 ScheduleToUse::FixedUpdate
             } else {
-                ScheduleToUse::Update
+                #[cfg(feature = "avian")]
+                {
+                    ScheduleToUse::FixedUpdate
+                }
+                #[cfg(feature = "rapier")]
+                {
+                    ScheduleToUse::Update
+                }
+                #[cfg(all(not(feature = "avian"), not(feature = "rapier")))]
+                {
+                    panic!("No schedule was specified, but also no physics engine is avaible. Therefore, there is no fallback.")
+                }
             },
             level_to_load: url_params.get("level"),
         }
@@ -66,8 +77,6 @@ impl AppSetupConfiguration {
 pub enum ScheduleToUse {
     Update,
     FixedUpdate,
-    #[cfg(feature = "avian")]
-    PhysicsSchedule,
 }
 
 impl std::fmt::Display for ScheduleToUse {
@@ -75,8 +84,6 @@ impl std::fmt::Display for ScheduleToUse {
         f.write_str(match self {
             Self::Update => "update",
             Self::FixedUpdate => "fixed-update",
-            #[cfg(feature = "avian")]
-            Self::PhysicsSchedule => "physics-schedule",
         })
     }
 }
