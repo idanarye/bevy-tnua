@@ -61,10 +61,6 @@ fn main() {
                 // bevy-tnua-rapier2d.
                 app.add_plugins(TnuaRapier2dPlugin::new(FixedUpdate));
             }
-            #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => {
-                panic!("Cannot happen - Avian and Rapier used together");
-            }
         }
     }
     #[cfg(feature = "avian2d")]

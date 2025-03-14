@@ -21,7 +21,7 @@ impl TnuaAirActionsTracker {
             TnuaActionFlowStatus::ActionOngoing(action_name) => {
                 if controller
                     .dynamic_action()
-                    .map_or(false, |action| action.violates_coyote_time())
+                    .is_some_and(|action| action.violates_coyote_time())
                 {
                     if self.considered_in_air {
                         TnuaAirActionsUpdate::NoChange
@@ -40,7 +40,7 @@ impl TnuaAirActionsTracker {
             } => {
                 if controller
                     .dynamic_action()
-                    .map_or(false, |action| action.violates_coyote_time())
+                    .is_some_and(|action| action.violates_coyote_time())
                 {
                     self.considered_in_air = true;
                     TnuaAirActionsUpdate::AirActionStarted(action_name)

@@ -75,6 +75,7 @@ impl Plugin for TnuaAvian2dPlugin {
 #[derive(Component)]
 pub struct TnuaAvian2dSensorShape(pub Collider);
 
+#[allow(clippy::type_complexity)]
 fn update_rigid_body_trackers_system(
     gravity: Res<Gravity>,
     mut query: Query<(

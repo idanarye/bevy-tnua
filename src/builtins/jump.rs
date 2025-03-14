@@ -270,7 +270,7 @@ impl TnuaAction for TnuaBuiltinJump {
                         let landed = ctx
                             .basis
                             .displacement()
-                            .map_or(false, |displacement| displacement.dot(up) <= 0.0);
+                            .is_some_and(|displacement| displacement.dot(up) <= 0.0);
                         if landed {
                             self.finish_or_reschedule()
                         } else {
@@ -296,7 +296,7 @@ impl TnuaAction for TnuaBuiltinJump {
                     let landed = ctx
                         .basis
                         .displacement()
-                        .map_or(false, |displacement| displacement.dot(up) <= 0.0);
+                        .is_some_and(|displacement| displacement.dot(up) <= 0.0);
                     if landed
                         || matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto)
                     {

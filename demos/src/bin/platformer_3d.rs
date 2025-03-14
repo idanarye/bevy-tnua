@@ -67,10 +67,6 @@ fn main() {
                 app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule());
                 app.add_plugins(TnuaRapier3dPlugin::new(FixedUpdate));
             }
-            #[cfg(feature = "avian")]
-            ScheduleToUse::PhysicsSchedule => {
-                panic!("Cannot happen - Avian and Rapier used together");
-            }
         }
     }
     #[cfg(feature = "avian3d")]

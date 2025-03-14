@@ -196,7 +196,7 @@ impl TnuaController {
                         .get()
                         .rescheduled_in
                         .as_ref()
-                        .map_or(false, |timer| timer.finished())
+                        .is_some_and(|timer| timer.finished())
                 {
                     // no action is running - but this action is rescheduled and there is no
                     // already-existing contender that would have taken priority
