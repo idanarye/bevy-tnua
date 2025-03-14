@@ -81,6 +81,69 @@ impl LevelSetupHelper2d<'_, '_> {
         cmd
     }
 
+    pub fn spawn_compound_rectangles(
+        &mut self,
+        name: impl ToString,
+        color: impl Into<Color>,
+        transform: Transform,
+        parts: &[(Vector2, Float, Vector2)],
+    ) -> EntityCommands {
+        let mut cmd = self.spawn_named(name);
+
+        cmd.insert((
+            //Sprite {
+            //custom_size: Some(size.f32()),
+            //color: color.into(),
+            //..Default::default()
+            //},
+            transform,
+        ));
+        let color = color.into();
+
+        cmd.with_children(|commands| {
+            for (pos, rot, size) in parts.iter().copied() {
+                commands.spawn((
+                    Sprite {
+                        custom_size: Some(size.f32()),
+                        color,
+                        ..Default::default()
+                    },
+                    Transform {
+                        translation: pos.extend(0.0).f32(),
+                        rotation: Quat::from_rotation_z(rot.f32()),
+                        scale: Vec3::ONE,
+                    },
+                ));
+            }
+        });
+
+        #[cfg(feature = "rapier2d")]
+        cmd.insert(rapier::Collider::compound(
+            parts
+                .iter()
+                .map(|&(pos, rot, size)| {
+                    (
+                        pos,
+                        rot,
+                        rapier::Collider::cuboid(0.5 * size.x, 0.5 * size.y),
+                    )
+                })
+                .collect(),
+        ));
+        #[cfg(feature = "avian2d")]
+        {
+            cmd.insert(avian::RigidBody::Static);
+            cmd.insert(avian::Collider::compound(
+                parts
+                    .iter()
+                    .map(|&(pos, rot, size)| (pos, rot, avian::Collider::rectangle(size.x, size.y)))
+                    .collect(),
+            ));
+        }
+
+        cmd
+    }
+
     pub fn spawn_text_circle(
         &mut self,
         name: impl ToString,

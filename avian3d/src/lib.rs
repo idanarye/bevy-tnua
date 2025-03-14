@@ -193,28 +193,6 @@ fn update_proximity_sensors_system(
                     normal,
                 } = cast_result;
 
-                // This fixes https://github.com/idanarye/bevy-tnua/issues/14
-                if let Some(contacts) = collisions.get(owner_entity, entity) {
-                    let same_order = owner_entity == contacts.entity1;
-                    for manifold in contacts.manifolds.iter() {
-                        if !manifold.contacts.is_empty() {
-                            let manifold_normal = if same_order {
-                                manifold.normal2.adjust_precision()
-                            } else {
-                                manifold.normal1.adjust_precision()
-                            };
-                            if sensor.intersection_match_prevention_cutoff
-                                < manifold_normal.dot(cast_direction.adjust_precision())
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                // TODO: see if https://github.com/idanarye/bevy-tnua/issues/14 replicates in Avian,
-                // and if figure out how to port its fix to Avian.
-
                 let Ok((
                     entity_kinematic_data,
                     entity_collision_layers,

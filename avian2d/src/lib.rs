@@ -108,7 +108,6 @@ fn update_rigid_body_trackers_system(
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
-    collisions: Res<Collisions>,
     mut query: Query<(
         Entity,
         &Position,
@@ -183,29 +182,6 @@ fn update_proximity_sensors_system(
                     intersection_point,
                     normal,
                 } = cast_result;
-
-                // This fixes https://github.com/idanarye/bevy-tnua/issues/14
-                if let Some(contacts) = collisions.get(owner_entity, entity) {
-                    let same_order = owner_entity == contacts.entity1;
-                    for manifold in contacts.manifolds.iter() {
-                        if !manifold.contacts.is_empty() {
-                            let manifold_normal = if same_order {
-                                manifold.normal2
-                            } else {
-                                manifold.normal1
-                            };
-                            #[allow(clippy::useless_conversion)]
-                            if sensor.intersection_match_prevention_cutoff
-                                < manifold_normal.dot(cast_direction.truncate().into())
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                // TODO: see if https://github.com/idanarye/bevy-tnua/issues/14 replicates in Avian,
-                // and if figure out how to port its fix to Avian.
 
                 let Ok((
                     entity_kinematic_data,

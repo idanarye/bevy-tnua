@@ -119,6 +119,10 @@ fn main() {
                 "Pushback",
                 tnua_demos_crate::levels_setup::pushback_3d::setup_level,
             )
+            .with(
+                "CompoundColliders",
+                tnua_demos_crate::levels_setup::compound_colliders_3d::setup_level,
+            )
     });
     app.add_systems(Startup, setup_player);
     app.add_systems(
