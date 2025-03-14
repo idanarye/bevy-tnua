@@ -13,6 +13,7 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 ### Fixed
 - Improve the cast-inside-self check (Fixes
   https://github.com/idanarye/bevy-tnua/issues/85)
+  Note that it does cause https://github.com/idanarye/bevy-tnua/issues/87
 
 ## 0.9.0 - 2024-12-13
 ### Changed
