@@ -59,10 +59,10 @@ bevy = { version = "^0.15", default-features = false, features = [
 bevy-tnua = { path = ".." }
 bevy-tnua-physics-integration-layer = { path = "../physics-integration-layer" }
 
-bevy_rapier2d = { version = "^0.28", features = ["debug-render-2d"], optional = true }
+bevy_rapier2d = { version = "^0.29", features = ["debug-render-2d"], optional = true }
 bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
 
-bevy_rapier3d = { version = "^0.28", features = ["debug-render-3d"], optional = true }
+bevy_rapier3d = { version = "^0.29", features = ["debug-render-3d"], optional = true }
 bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
 avian2d = { version = "^0.2", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
