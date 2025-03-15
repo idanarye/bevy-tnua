@@ -116,7 +116,6 @@ fn update_rigid_body_trackers_system(
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
-    collisions: Res<Collisions>,
     mut query: Query<(
         Entity,
         &Position,
