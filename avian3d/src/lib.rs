@@ -76,6 +76,8 @@ impl Plugin for TnuaAvian3dPlugin {
             self.schedule,
             apply_motors_system.in_set(TnuaPipelineStages::Motors),
         );
+        app.register_required_components::<TnuaSubservientSensor, Position>();
+        app.register_required_components::<TnuaSubservientSensor, Rotation>();
     }
 }
 
@@ -120,7 +122,7 @@ fn update_proximity_sensors_system(
         Entity,
         &Position,
         &Rotation,
-        &Collider,
+        Option<&Collider>,
         &mut TnuaProximitySensor,
         Option<&TnuaAvian3dSensorShape>,
         Option<&mut TnuaGhostSensor>,
@@ -155,7 +157,9 @@ fn update_proximity_sensors_system(
             let transform = Transform {
                 translation: position.0.f32(),
                 rotation: rotation.0.f32(),
-                scale: collider.scale().f32(),
+                scale: collider
+                    .map(|collider| collider.scale().f32())
+                    .unwrap_or(Vec3::ONE),
             };
 
             // TODO: is there any point in doing these transformations as f64 when that feature

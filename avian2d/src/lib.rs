@@ -68,6 +68,8 @@ impl Plugin for TnuaAvian2dPlugin {
             self.schedule,
             apply_motors_system.in_set(TnuaPipelineStages::Motors),
         );
+        app.register_required_components::<TnuaSubservientSensor, Position>();
+        app.register_required_components::<TnuaSubservientSensor, Rotation>();
     }
 }
 
@@ -112,7 +114,7 @@ fn update_proximity_sensors_system(
         Entity,
         &Position,
         &Rotation,
-        &Collider,
+        Option<&Collider>,
         &mut TnuaProximitySensor,
         Option<&TnuaAvian2dSensorShape>,
         Option<&mut TnuaGhostSensor>,
@@ -147,7 +149,9 @@ fn update_proximity_sensors_system(
             let transform = Transform {
                 translation: position.f32().extend(0.0),
                 rotation: Quaternion::from(*rotation).f32(),
-                scale: collider.scale().f32().extend(1.0),
+                scale: collider
+                    .map(|collider| collider.scale().f32().extend(1.0))
+                    .unwrap_or(Vec3::ONE),
             };
             let cast_origin = transform.transform_point(sensor.cast_origin.f32());
             let cast_direction = sensor.cast_direction;
