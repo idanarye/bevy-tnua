@@ -294,9 +294,14 @@ fn update_proximity_sensors_system(
                             .shape()
                             .contains_point(&isometry, &intersection_point.into())
                         {
-                            // I hate having to add the `* 1.1` so much, but without
-                            // it it sometimes enters an infinte loop...
-                            cast_range_skip = proximity * 1.1;
+                            // I hate having to do this so much, but without it it sometimes enters
+                            // an infinte loop...
+                            cast_range_skip = proximity
+                                + if sensor.cast_range.is_finite() && 0.0 < sensor.cast_range {
+                                    0.1 * sensor.cast_range
+                                } else {
+                                    0.1
+                                };
                             continue;
                         };
                     }
