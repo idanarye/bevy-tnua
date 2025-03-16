@@ -68,6 +68,23 @@ impl Plugin for TnuaRapier2dPlugin {
             self.schedule,
             apply_motors_system.in_set(TnuaPipelineStages::Motors),
         );
+        app.add_systems(
+            Update,
+            ensure_subservient_sensors_are_linked_to_rapier_context,
+        );
+    }
+}
+
+fn ensure_subservient_sensors_are_linked_to_rapier_context(
+    query: Query<(Entity, &TnuaSubservientSensor), Without<RapierContextEntityLink>>,
+    links_query: Query<&RapierContextEntityLink>,
+    mut commands: Commands,
+) {
+    for (entity, subservient) in query.iter() {
+        let Ok(owner_link) = links_query.get(subservient.owner_entity) else {
+            continue;
+        };
+        commands.entity(entity).insert_if_new(*owner_link);
     }
 }
 
