@@ -16,6 +16,7 @@ use bevy_rapier3d::rapier::prelude::InteractionGroups;
 
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
@@ -110,9 +111,10 @@ fn update_rigid_body_trackers_system(
         &Velocity,
         &mut TnuaRigidBodyTracker,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
-    for (transform, velocity, mut tracker, tnua_toggle) in query.iter_mut() {
+    for (transform, velocity, mut tracker, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
@@ -124,7 +126,10 @@ fn update_rigid_body_trackers_system(
             rotation,
             velocity: velocity.linvel,
             angvel: velocity.angvel,
-            gravity: rapier_config.gravity,
+            gravity: tnua_gravity
+                .copied()
+                .map(|g| g.0)
+                .unwrap_or(rapier_config.gravity),
         };
     }
 }
@@ -373,9 +378,11 @@ fn apply_motors_system(
         &ReadMassProperties,
         &mut ExternalForce,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
-    for (motor, mut velocity, mass_properties, mut external_force, tnua_toggle) in query.iter_mut()
+    for (motor, mut velocity, mass_properties, mut external_force, tnua_toggle, tnua_gravity) in
+        query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
@@ -397,5 +404,6 @@ fn apply_motors_system(
             external_force.torque =
                 motor.ang.acceleration * mass_properties.get().principal_inertia;
         }
+        external_force.force += tnua_gravity.copied().unwrap_or_default().0
     }
 }
