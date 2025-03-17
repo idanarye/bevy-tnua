@@ -193,16 +193,18 @@ fn ui_system<C: Component + UiTunable>(
         level_selection.show_in_ui(ui);
         ui.collapsing("Physics Backend", |ui| {
             ui.checkbox(&mut physics_backend_settings.active, "Physics Enabled");
-            let mut gravity_angle = physics_backend_settings.gravity.truncate().to_angle();
-            ui.horizontal(|ui| {
-                ui.label("Gravity Angle:");
-                if ui.add(egui::Slider::new(&mut gravity_angle, -float_consts::PI..=0.0)).changed() {
-                    physics_backend_settings.gravity = Vector2::from_angle(gravity_angle).extend(0.0) * GRAVITY_MAGNITUDE;
-                }
-                if ui.button("Reset").clicked() {
-                    physics_backend_settings.gravity = Vector3::NEG_Y * GRAVITY_MAGNITUDE;
-                }
-            });
+            if physics_backend_settings.gravity != Vector3::ZERO {
+                let mut gravity_angle = physics_backend_settings.gravity.truncate().to_angle();
+                ui.horizontal(|ui| {
+                    ui.label("Gravity Angle:");
+                    if ui.add(egui::Slider::new(&mut gravity_angle, -float_consts::PI..=0.0)).changed() {
+                        physics_backend_settings.gravity = Vector2::from_angle(gravity_angle).extend(0.0) * GRAVITY_MAGNITUDE;
+                    }
+                    if ui.button("Reset").clicked() {
+                        physics_backend_settings.gravity = Vector3::NEG_Y * GRAVITY_MAGNITUDE;
+                    }
+                });
+            }
         });
         for (
             entity,

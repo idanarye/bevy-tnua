@@ -82,12 +82,23 @@ pub fn apply_platformer_controls(
         // with a third party plugin.
         let mut direction = Vector3::ZERO;
 
-        if config.dimensionality == Dimensionality::Dim3 {
-            if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
-                direction -= Vector3::Z;
+        match config.dimensionality {
+            Dimensionality::Dim2 => {}
+            Dimensionality::Dim3 => {
+                if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
+                    direction -= Vector3::Z;
+                }
+                if keyboard.any_pressed([KeyCode::ArrowDown, KeyCode::KeyS]) {
+                    direction += Vector3::Z;
+                }
             }
-            if keyboard.any_pressed([KeyCode::ArrowDown, KeyCode::KeyS]) {
-                direction += Vector3::Z;
+            Dimensionality::TopDown => {
+                if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
+                    direction += Vector3::Y;
+                }
+                if keyboard.any_pressed([KeyCode::ArrowDown, KeyCode::KeyS]) {
+                    direction -= Vector3::Y;
+                }
             }
         }
         if keyboard.any_pressed([KeyCode::ArrowLeft, KeyCode::KeyA]) {
@@ -111,6 +122,7 @@ pub fn apply_platformer_controls(
                 keyboard.any_pressed([KeyCode::Space, KeyCode::ArrowUp, KeyCode::KeyW])
             }
             Dimensionality::Dim3 => keyboard.any_pressed([KeyCode::Space]),
+            Dimensionality::TopDown => false,
         };
         let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
@@ -120,6 +132,7 @@ pub fn apply_platformer_controls(
         let crouch_buttons = match config.dimensionality {
             Dimensionality::Dim2 => CROUCH_BUTTONS_2D.iter().copied(),
             Dimensionality::Dim3 => CROUCH_BUTTONS_3D.iter().copied(),
+            Dimensionality::TopDown => [].iter().copied(),
         };
         let crouch_pressed = keyboard.any_pressed(crouch_buttons);
         let crouch_just_pressed = just_pressed.crouch;
@@ -485,6 +498,7 @@ fn collect_just_pressed_cache(
         let crouch_buttons = match config.dimensionality {
             Dimensionality::Dim2 => CROUCH_BUTTONS_2D.iter().copied(),
             Dimensionality::Dim3 => CROUCH_BUTTONS_3D.iter().copied(),
+            Dimensionality::TopDown => [].iter().copied(),
         };
         just_pressed.crouch = keyboard.any_just_pressed(crouch_buttons);
     }

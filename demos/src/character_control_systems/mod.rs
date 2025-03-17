@@ -5,4 +5,5 @@ pub mod platformer_control_systems;
 pub enum Dimensionality {
     Dim2,
     Dim3,
+    TopDown,
 }

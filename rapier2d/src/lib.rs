@@ -124,7 +124,11 @@ fn update_rigid_body_trackers_system(
             rotation,
             velocity: velocity.linvel.extend(0.0),
             angvel: Vec3::new(0.0, 0.0, velocity.angvel),
-            gravity: rapier_config.gravity.extend(0.0),
+            gravity: if rapier_config.gravity == Vec2::ZERO {
+                9.81 * Vec3::NEG_Z
+            } else {
+                rapier_config.gravity.extend(0.0)
+            },
         };
     }
 }
@@ -176,6 +180,20 @@ fn update_proximity_sensors_system(
 
             let cast_origin = transform.transform_point(sensor.cast_origin);
             let cast_direction = sensor.cast_direction;
+            if cast_direction.truncate() == Vec2::ZERO {
+                // Pretend there is ground below the character.
+                sensor.output = Some(TnuaProximitySensorOutput {
+                    entity: Entity::PLACEHOLDER,
+                    proximity: 0.0,
+                    normal: Dir3::Z,
+                    entity_linvel: Default::default(),
+                    entity_angvel: Default::default(),
+                });
+                if let Some(ghost_sensor) = ghost_sensor.as_mut() {
+                    ghost_sensor.0.clear();
+                }
+                return;
+            }
 
             struct CastResult {
                 entity: Entity,

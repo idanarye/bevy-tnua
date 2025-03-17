@@ -102,7 +102,11 @@ fn update_rigid_body_trackers_system(
             rotation: Quaternion::from(*rotation).adjust_precision(),
             velocity: linaer_velocity.0.extend(0.0),
             angvel: Vector3::new(0.0, 0.0, angular_velocity.0),
-            gravity: gravity.0.extend(0.0),
+            gravity: if gravity.0 == Vector2::ZERO {
+                9.81 * Vector3::NEG_Z
+            } else {
+                gravity.0.extend(0.0)
+            },
         };
     }
 }
@@ -155,8 +159,20 @@ fn update_proximity_sensors_system(
             };
             let cast_origin = transform.transform_point(sensor.cast_origin.f32());
             let cast_direction = sensor.cast_direction;
-            let cast_direction_2d = Dir2::new(cast_direction.truncate())
-                .expect("cast direction must be on the XY plane");
+            let Ok(cast_direction_2d) = Dir2::new(cast_direction.truncate()) else {
+                // Pretend there is ground below the character.
+                sensor.output = Some(TnuaProximitySensorOutput {
+                    entity: Entity::PLACEHOLDER,
+                    proximity: 0.0,
+                    normal: Dir3::Z,
+                    entity_linvel: Default::default(),
+                    entity_angvel: Default::default(),
+                });
+                if let Some(ghost_sensor) = ghost_sensor.as_mut() {
+                    ghost_sensor.0.clear();
+                }
+                return;
+            };
 
             struct CastResult {
                 entity: Entity,
