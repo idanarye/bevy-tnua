@@ -200,7 +200,7 @@ fn update_proximity_sensors_system(
                 let Ok((
                     entity_kinematic_data,
                     entity_collision_layers,
-                    entity_collision_parent,
+                    entity_collider_parent,
                     entity_is_ghost,
                     entity_is_sensor,
                 )) = other_object_query.get(entity)
@@ -208,7 +208,7 @@ fn update_proximity_sensors_system(
                     return false;
                 };
 
-                if let Some(parent) = entity_collision_parent {
+                if let Some(parent) = entity_collider_parent {
                     // Collider is child of our rigid body. ignore.
                     if parent.get() == owner_entity {
                         return true;
