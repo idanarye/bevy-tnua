@@ -199,7 +199,6 @@ fn update_proximity_sensors_system(
                     return false;
                 };
 
-
                 if let Some(parent) = entity_collider_parent {
                     // Collider is child of our rigid body. ignore.
                     if parent.get() == owner_entity {
