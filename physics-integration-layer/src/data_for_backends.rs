@@ -218,3 +218,6 @@ impl TnuaGhostSensor {
 /// See `TnuaSimpleFallThroughPlatformsHelper`.
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostPlatform;
+
+#[derive(Component, Debug)]
+pub struct TnuaGravity(pub Vector3);

@@ -19,6 +19,7 @@ use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
 
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
@@ -78,6 +79,7 @@ impl Plugin for TnuaAvian3dPlugin {
         );
         app.register_required_components::<TnuaSubservientSensor, Position>();
         app.register_required_components::<TnuaSubservientSensor, Rotation>();
+        app.register_required_components_with::<TnuaGravity, GravityScale>(|| GravityScale(0.0));
     }
 }
 
@@ -95,10 +97,18 @@ fn update_rigid_body_trackers_system(
         &AngularVelocity,
         &mut TnuaRigidBodyTracker,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
-    for (position, rotation, linaer_velocity, angular_velocity, mut tracker, tnua_toggle) in
-        query.iter_mut()
+    for (
+        position,
+        rotation,
+        linaer_velocity,
+        angular_velocity,
+        mut tracker,
+        tnua_toggle,
+        tnua_gravity,
+    ) in query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
@@ -110,7 +120,7 @@ fn update_rigid_body_trackers_system(
             rotation: rotation.adjust_precision(),
             velocity: linaer_velocity.0.adjust_precision(),
             angvel: angular_velocity.0.adjust_precision(),
-            gravity: gravity.0.adjust_precision(),
+            gravity: tnua_gravity.map(|g| g.0).unwrap_or(gravity.0),
         };
     }
 }
@@ -328,6 +338,7 @@ fn apply_motors_system(
         &mut ExternalForce,
         &mut ExternalTorque,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
     for (
@@ -339,6 +350,7 @@ fn apply_motors_system(
         mut external_force,
         mut external_torque,
         tnua_toggle,
+        tnua_gravity,
     ) in query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
@@ -363,6 +375,9 @@ fn apply_motors_system(
                 // angular acceleration yet - only angular impulses.
                 inertia.value() * motor.ang.acceleration,
             );
+        }
+        if let Some(gravity) = tnua_gravity {
+            external_force.apply_force(gravity.0);
         }
     }
 }
