@@ -131,6 +131,9 @@ fn main() {
             cfg.gravity = Vec2::Y * -9.81;
         });
     }
+
+    app.add_plugins(tnua_demos_crate::hacks::Register3dResourcesInThe2dDemos);
+
     app.run();
 }
 
