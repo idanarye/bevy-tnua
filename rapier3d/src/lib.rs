@@ -403,7 +403,7 @@ fn apply_motors_system(
                 motor.ang.acceleration * mass_properties.get().principal_inertia;
         }
         if let Some(gravity) = tnua_gravity {
-            external_force.force += gravity.0
+            external_force.force += gravity.0 * mass_properties.get().mass;
         }
     }
 }

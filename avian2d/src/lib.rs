@@ -363,7 +363,7 @@ fn apply_motors_system(
             );
         }
         if let Some(gravity) = tnua_gravity {
-            external_force.apply_force(gravity.0.truncate());
+            external_force.apply_force(gravity.0.truncate() * mass.value());
         }
     }
 }
