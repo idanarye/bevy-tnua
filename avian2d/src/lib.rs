@@ -70,6 +70,7 @@ impl Plugin for TnuaAvian2dPlugin {
         );
         app.register_required_components::<TnuaSubservientSensor, Position>();
         app.register_required_components::<TnuaSubservientSensor, Rotation>();
+        app.register_required_components_with::<TnuaGravity, GravityScale>(|| GravityScale(0.0));
     }
 }
 
@@ -110,10 +111,7 @@ fn update_rigid_body_trackers_system(
             rotation: Quaternion::from(*rotation).adjust_precision(),
             velocity: linaer_velocity.0.extend(0.0),
             angvel: Vector3::new(0.0, 0.0, angular_velocity.0),
-            gravity: tnua_gravity
-                .copied()
-                .map(|g| g.0)
-                .unwrap_or(gravity.0.extend(0.0)),
+            gravity: tnua_gravity.map(|g| g.0).unwrap_or(gravity.0.extend(0.0)),
         };
     }
 }
@@ -355,6 +353,8 @@ fn apply_motors_system(
                 inertia.value() * motor.ang.acceleration.z,
             );
         }
-        external_force.apply_force(tnua_gravity.copied().unwrap_or_default().0.xy());
+        if let Some(gravity) = tnua_gravity {
+            external_force.apply_force(gravity.0.truncate());
+        }
     }
 }

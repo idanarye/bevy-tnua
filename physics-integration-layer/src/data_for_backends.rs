@@ -219,11 +219,5 @@ impl TnuaGhostSensor {
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostPlatform;
 
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug)]
 pub struct TnuaGravity(pub Vector3);
-
-impl Default for TnuaGravity {
-    fn default() -> Self {
-        TnuaGravity(Vector3::ZERO)
-    }
-}

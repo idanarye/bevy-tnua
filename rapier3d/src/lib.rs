@@ -50,7 +50,8 @@ impl Plugin for TnuaRapier3dPlugin {
     fn build(&self, app: &mut App) {
         app.register_required_components::<TnuaProximitySensor, Velocity>()
             .register_required_components::<TnuaProximitySensor, ExternalForce>()
-            .register_required_components::<TnuaProximitySensor, ReadMassProperties>();
+            .register_required_components::<TnuaProximitySensor, ReadMassProperties>()
+            .register_required_components_with::<TnuaGravity, GravityScale>(|| GravityScale(0.0));
         app.configure_sets(
             self.schedule,
             TnuaSystemSet.before(PhysicsSet::SyncBackend).run_if(
@@ -126,10 +127,7 @@ fn update_rigid_body_trackers_system(
             rotation,
             velocity: velocity.linvel,
             angvel: velocity.angvel,
-            gravity: tnua_gravity
-                .copied()
-                .map(|g| g.0)
-                .unwrap_or(rapier_config.gravity),
+            gravity: tnua_gravity.map(|g| g.0).unwrap_or(rapier_config.gravity),
         };
     }
 }
@@ -404,6 +402,8 @@ fn apply_motors_system(
             external_force.torque =
                 motor.ang.acceleration * mass_properties.get().principal_inertia;
         }
-        external_force.force += tnua_gravity.copied().unwrap_or_default().0
+        if let Some(gravity) = tnua_gravity {
+            external_force.force += gravity.0
+        }
     }
 }
