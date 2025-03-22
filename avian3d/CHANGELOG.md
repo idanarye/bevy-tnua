@@ -20,6 +20,9 @@ NOTES:
   https://github.com/idanarye/bevy-tnua/issues/85)
   Note that it does cause https://github.com/idanarye/bevy-tnua/issues/87
 
+### Added
+- Support for `TnuaGravity`.
+
 ## 0.2.0 - 2024-12-21
 ### Changed
 - Upgrade to Bevy 0.15 and avian 0.2.

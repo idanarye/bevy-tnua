@@ -219,5 +219,6 @@ impl TnuaGhostSensor {
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostPlatform;
 
+/// Change the gravity for a Tnua-controlled character.
 #[derive(Component, Debug)]
 pub struct TnuaGravity(pub Vector3);

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - `impl AsF32 for Quat`
+- `TnuaGravity` for specifying the character's gravity separate from the
+  regular global gravity.
 
 ### Removed
 - `intersection_match_prevention_cutoff`. It is no longer used because

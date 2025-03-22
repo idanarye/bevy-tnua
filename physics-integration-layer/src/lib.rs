@@ -44,6 +44,21 @@
 //!
 //! * Ensure that [`TnuaSystemSet`] runs before the integration backend's systems.
 //!
+//! * Handle [`TnuaGravity`](data_for_backends::TnuaGravity) in whatever way the integration crate
+//!   sees fit. This usually entails:
+//!     * Feeding the gravity set in the `TnuaGravity` into the `TnuaRigidBodyTracker` instead of
+//!       the regular global gravity.
+//!     * Nullifying the regular global gravity. This can be done either by applying an opposing
+//!       force or by applying an opposing force or by using some facility offered by the physics
+//!       backend (e.g. both Rapier and Avian have a `GravityScale` component which can be used for
+//!       that purpose)
+//!     * Applying the gravity from `TnuaGravity` as a force.
+//!
+//!   If the physics backend has its own way to do per-rigid-body gravity, the integration crate
+//!   may prefer to sync `TnuaGravity` into that mechanism instead (and should support that
+//!   mechanism as the input source for `TnuaRigidBodyTracker::gravity` when it is used, even
+//!   if `TnuaGravity` is not used)
+//!
 //! The integration backend's systems must run with the same timing as the physics backend. If the
 //! physics backend supports running in a different schedule, the integration plugin should also
 //! support it by adding a `::new()` method that accepts a schedule and registers all the systems
