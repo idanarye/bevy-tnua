@@ -18,6 +18,7 @@ use bevy_rapier3d::rapier::prelude::InteractionGroups;
 
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
@@ -53,7 +54,8 @@ impl Plugin for TnuaRapier3dPlugin {
     fn build(&self, app: &mut App) {
         app.register_required_components::<TnuaProximitySensor, Velocity>()
             .register_required_components::<TnuaProximitySensor, ExternalForce>()
-            .register_required_components::<TnuaProximitySensor, ReadMassProperties>();
+            .register_required_components::<TnuaProximitySensor, ReadMassProperties>()
+            .register_required_components_with::<TnuaGravity, GravityScale>(|| GravityScale(0.0));
         app.configure_sets(
             self.schedule,
             TnuaSystemSet.before(PhysicsSet::SyncBackend).run_if(
@@ -73,6 +75,23 @@ impl Plugin for TnuaRapier3dPlugin {
             self.schedule,
             apply_motors_system.in_set(TnuaPipelineStages::Motors),
         );
+        app.add_systems(
+            Update,
+            ensure_subservient_sensors_are_linked_to_rapier_context,
+        );
+    }
+}
+
+fn ensure_subservient_sensors_are_linked_to_rapier_context(
+    query: Query<(Entity, &TnuaSubservientSensor), Without<RapierContextEntityLink>>,
+    links_query: Query<&RapierContextEntityLink>,
+    mut commands: Commands,
+) {
+    for (entity, subservient) in query.iter() {
+        let Ok(owner_link) = links_query.get(subservient.owner_entity) else {
+            continue;
+        };
+        commands.entity(entity).insert_if_new(*owner_link);
     }
 }
 
@@ -98,9 +117,10 @@ fn update_rigid_body_trackers_system(
         &Velocity,
         &mut TnuaRigidBodyTracker,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
-    for (transform, velocity, mut tracker, tnua_toggle) in query.iter_mut() {
+    for (transform, velocity, mut tracker, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
@@ -112,23 +132,22 @@ fn update_rigid_body_trackers_system(
             rotation,
             velocity: velocity.linvel,
             angvel: velocity.angvel,
-            gravity: rapier_config.gravity,
+            gravity: tnua_gravity.map(|g| g.0).unwrap_or(rapier_config.gravity),
         };
     }
 }
 
 pub(crate) fn get_collider(
-    rapier_context: &RapierContext,
+    rapier_colliders: &RapierContextColliders,
     entity: Entity,
 ) -> Option<&rapier::geometry::Collider> {
-    let collider_handle = rapier_context.entity2collider().get(&entity)?;
-    rapier_context.colliders.get(*collider_handle)
-    //if let Some(owner_collider) = rapier_context.entity2collider().get(&owner_entity).and_then(|handle| rapier_context.colliders.get(*handle)) {
+    let collider_handle = rapier_colliders.entity2collider().get(&entity)?;
+    rapier_colliders.colliders.get(*collider_handle)
 }
 
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
-    rapier_context_query: RapierContextAccess,
+    rapier_context_query: Query<RapierContext>,
     mut query: Query<(
         Entity,
         &RapierContextEntityLink,
@@ -159,8 +178,7 @@ fn update_proximity_sensors_system(
                 TnuaToggle::Enabled => {}
             }
 
-            let Some(rapier_context) = rapier_context_query.try_context(rapier_context_entity_link)
-            else {
+            let Ok(rapier_context) = rapier_context_query.get(rapier_context_entity_link.0) else {
                 return;
             };
 
@@ -183,7 +201,8 @@ fn update_proximity_sensors_system(
             let mut query_filter = QueryFilter::new().exclude_rigid_body(owner_entity);
             let owner_solver_groups: InteractionGroups;
 
-            if let Some(owner_collider) = get_collider(rapier_context, owner_entity) {
+            let owner_collider = get_collider(&rapier_context.colliders, owner_entity);
+            if let Some(owner_collider) = owner_collider {
                 let collision_groups = owner_collider.collision_groups();
                 query_filter.groups = Some(CollisionGroups {
                     memberships: Group::from_bits_truncate(collision_groups.memberships.bits()),
@@ -202,7 +221,9 @@ fn update_proximity_sensors_system(
                            already_visited_ghost_entities: &HashSet<Entity>|
              -> Option<CastResult> {
                 let predicate = |other_entity: Entity| {
-                    if let Some(other_collider) = get_collider(rapier_context, other_entity) {
+                    if let Some(other_collider) =
+                        get_collider(&rapier_context.colliders, other_entity)
+                    {
                         if !other_collider.solver_groups().test(owner_solver_groups) {
                             if has_ghost_sensor && ghost_platforms_query.contains(other_entity) {
                                 if already_visited_ghost_entities.contains(&other_entity) {
@@ -216,25 +237,6 @@ fn update_proximity_sensors_system(
                             return false;
                         }
                     }
-
-                    // This fixes https://github.com/idanarye/bevy-tnua/issues/14
-                    if let Some(contact) = rapier_context.contact_pair(owner_entity, other_entity) {
-                        let same_order = owner_entity == contact.collider1();
-                        for manifold in contact.manifolds() {
-                            if 0 < manifold.num_points() {
-                                let manifold_normal = if same_order {
-                                    manifold.local_n2()
-                                } else {
-                                    manifold.local_n1()
-                                };
-                                if sensor.intersection_match_prevention_cutoff
-                                    < manifold_normal.dot(*cast_direction)
-                                {
-                                    return false;
-                                }
-                            }
-                        }
-                    }
                     true
                 };
                 let query_filter = query_filter.predicate(&predicate);
@@ -246,7 +248,10 @@ fn update_proximity_sensors_system(
                         owner_rotation.to_scaled_axis().dot(*cast_direction) * *cast_direction,
                     );
                     rapier_context
+                        .query_pipeline
                         .cast_shape(
+                            rapier_context.colliders,
+                            rapier_context.rigidbody_set,
                             cast_origin,
                             owner_rotation,
                             *cast_direction,
@@ -271,7 +276,10 @@ fn update_proximity_sensors_system(
                         })
                 } else {
                     rapier_context
+                        .query_pipeline
                         .cast_ray_and_get_normal(
+                            rapier_context.colliders,
+                            rapier_context.rigidbody_set,
                             cast_origin,
                             *cast_direction,
                             cast_range,
@@ -291,6 +299,10 @@ fn update_proximity_sensors_system(
             if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                 ghost_sensor.0.clear();
             }
+            let isometry: rapier::na::Isometry3<f32> = {
+                let (_, rotation, translation) = transform.to_scale_rotation_translation();
+                (translation, rotation).into()
+            };
             sensor.output = 'sensor_output: loop {
                 if let Some(CastResult {
                     entity,
@@ -299,6 +311,26 @@ fn update_proximity_sensors_system(
                     normal,
                 }) = do_cast(cast_range_skip, &already_visited_ghost_entities)
                 {
+                    // Alternative fix for https://github.com/idanarye/bevy-tnua/issues/14 - one
+                    // that does not cause https://github.com/idanarye/bevy-tnua/issues/85
+                    // Note that this does not solve https://github.com/idanarye/bevy-tnua/issues/87
+                    if let Some(owner_collider) = owner_collider {
+                        if owner_collider
+                            .shape()
+                            .contains_point(&isometry, &intersection_point.into())
+                        {
+                            // I hate having to do this so much, but without it it sometimes enters
+                            // an infinte loop...
+                            cast_range_skip = proximity
+                                + if sensor.cast_range.is_finite() && 0.0 < sensor.cast_range {
+                                    0.1 * sensor.cast_range
+                                } else {
+                                    0.1
+                                };
+                            continue;
+                        };
+                    }
+
                     let entity_linvel;
                     let entity_angvel;
                     if let Ok((entity_transform, entity_velocity)) = other_object_query.get(entity)
@@ -343,7 +375,7 @@ fn update_proximity_sensors_system(
 }
 
 fn update_obstacle_radars_system(
-    rapier_world_query: Query<(&RapierContext, &RapierConfiguration)>,
+    rapier_world_query: Query<(RapierContext, &RapierConfiguration)>,
     mut radars_query: Query<(
         Entity,
         &RapierContextEntityLink,
@@ -369,7 +401,9 @@ fn update_obstacle_radars_system(
             radar_translation,
             Dir3::new(rapier_config.gravity).unwrap_or(Dir3::Y),
         );
-        rapier_context.intersections_with_shape(
+        rapier_context.query_pipeline.intersections_with_shape(
+            rapier_context.colliders,
+            rapier_context.rigidbody_set,
             radar_translation,
             radar_rotation,
             &Collider::cylinder(0.5 * radar.height, radar.radius),
@@ -385,6 +419,7 @@ fn update_obstacle_radars_system(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn apply_motors_system(
     mut query: Query<(
         &TnuaMotor,
@@ -392,9 +427,11 @@ fn apply_motors_system(
         &ReadMassProperties,
         &mut ExternalForce,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
-    for (motor, mut velocity, mass_properties, mut external_force, tnua_toggle) in query.iter_mut()
+    for (motor, mut velocity, mass_properties, mut external_force, tnua_toggle, tnua_gravity) in
+        query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
@@ -415,6 +452,9 @@ fn apply_motors_system(
         if motor.ang.acceleration.is_finite() {
             external_force.torque =
                 motor.ang.acceleration * mass_properties.get().principal_inertia;
+        }
+        if let Some(gravity) = tnua_gravity {
+            external_force.force += gravity.0 * mass_properties.get().mass;
         }
     }
 }

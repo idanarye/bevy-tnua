@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   with these queries.
 - The `TnuaVelChange::calc_boost` helper method.
 
+## 0.6.0 - 2025-03-22
+### Added
+- `impl AsF32 for Quat`
+- `TnuaGravity` for specifying the character's gravity separate from the
+  regular global gravity.
+
+### Removed
+- `intersection_match_prevention_cutoff`. It is no longer used because
+  https://github.com/idanarye/bevy-tnua/issues/85 replaced its usage with a
+  difference mechanism.
+
 ## 0.5.0 - 2024-12-13
 ### Changed
 - Upgrade to Bevy 0.15.

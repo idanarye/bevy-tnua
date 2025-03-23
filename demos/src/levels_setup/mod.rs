@@ -1,3 +1,5 @@
+pub mod compound_colliders_2d;
+pub mod compound_colliders_3d;
 pub mod for_2d_platformer;
 pub mod for_3d_platformer;
 mod helper;

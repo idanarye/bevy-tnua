@@ -117,7 +117,7 @@ impl<State> TnuaAnimatingState<State> {
         let is_same = self
             .state
             .as_ref()
-            .map_or(false, |old_state| comparison(old_state, &new_state));
+            .is_some_and(|old_state| comparison(old_state, &new_state));
         let old_state = self.state.replace(new_state);
         if is_same {
             TnuaAnimatingStateDirective::Maintain {

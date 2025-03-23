@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// The basic dash [action](TnuaAction).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TnuaBuiltinDash {
     /// The direction and distance of the dash.
     ///
@@ -178,7 +178,7 @@ impl TnuaAction for TnuaBuiltinDash {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub enum TnuaBuiltinDashState {
     #[default]
     PreDash,

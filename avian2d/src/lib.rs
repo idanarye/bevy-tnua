@@ -13,8 +13,8 @@ use avian2d::{prelude::*, schedule::PhysicsStepSet};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
-    TnuaGhostPlatform, TnuaGhostSensor, TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput,
-    TnuaRigidBodyTracker, TnuaToggle,
+    TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaProximitySensor,
+    TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaToggle,
 };
 use bevy_tnua_physics_integration_layer::math::*;
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
@@ -26,6 +26,20 @@ use obstacle_radar::TnuaObstacleRadar;
 /// Add this plugin to use avian2d as a physics backend.
 ///
 /// This plugin should be used in addition to `TnuaControllerPlugin`.
+/// Note that you should make sure both of these plugins use the same schedule.
+/// This should usually be `PhysicsSchedule`, which by default is `FixedUpdate`.
+///
+/// # Example
+///
+/// ```ignore
+/// App::new()
+///     .add_plugins((
+///         DefaultPlugins,
+///         PhysicsPlugins::default(),
+///         TnuaControllerPlugin::new(PhysicsSchedule),
+///         TnuaAvian2dPlugin::new(PhysicsSchedule),
+///     ));
+/// ```
 pub struct TnuaAvian2dPlugin {
     schedule: InternedScheduleLabel,
 }
@@ -43,8 +57,7 @@ impl Plugin for TnuaAvian2dPlugin {
         app.configure_sets(
             self.schedule,
             TnuaSystemSet
-                .before(PhysicsSet::Prepare)
-                .before(PhysicsStepSet::First)
+                .in_set(PhysicsStepSet::First)
                 .run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
         );
         app.add_systems(
@@ -60,6 +73,9 @@ impl Plugin for TnuaAvian2dPlugin {
             self.schedule,
             apply_motors_system.in_set(TnuaPipelineStages::Motors),
         );
+        app.register_required_components::<TnuaSubservientSensor, Position>();
+        app.register_required_components::<TnuaSubservientSensor, Rotation>();
+        app.register_required_components_with::<TnuaGravity, GravityScale>(|| GravityScale(0.0));
     }
 }
 
@@ -67,30 +83,40 @@ impl Plugin for TnuaAvian2dPlugin {
 #[derive(Component)]
 pub struct TnuaAvian2dSensorShape(pub Collider);
 
+#[allow(clippy::type_complexity)]
 fn update_rigid_body_trackers_system(
     gravity: Res<Gravity>,
     mut query: Query<(
-        &GlobalTransform,
+        &Position,
+        &Rotation,
         &LinearVelocity,
         &AngularVelocity,
         &mut TnuaRigidBodyTracker,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
-    for (transform, linaer_velocity, angular_velocity, mut tracker, tnua_toggle) in query.iter_mut()
+    for (
+        position,
+        rotation,
+        linaer_velocity,
+        angular_velocity,
+        mut tracker,
+        tnua_toggle,
+        tnua_gravity,
+    ) in query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
             TnuaToggle::Enabled => {}
         }
-        let (_, rotation, translation) = transform.to_scale_rotation_translation();
         *tracker = TnuaRigidBodyTracker {
-            translation: translation.adjust_precision(),
-            rotation: rotation.adjust_precision(),
+            translation: position.adjust_precision().extend(0.0),
+            rotation: Quaternion::from(*rotation).adjust_precision(),
             velocity: linaer_velocity.0.extend(0.0),
             angvel: Vector3::new(0.0, 0.0, angular_velocity.0),
-            gravity: gravity.0.extend(0.0),
+            gravity: tnua_gravity.map(|g| g.0).unwrap_or(gravity.0.extend(0.0)),
         };
     }
 }
@@ -98,10 +124,11 @@ fn update_rigid_body_trackers_system(
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
-    collisions: Res<Collisions>,
     mut query: Query<(
         Entity,
-        &GlobalTransform,
+        &Position,
+        &Rotation,
+        Option<&Collider>,
         &mut TnuaProximitySensor,
         Option<&TnuaAvian2dSensorShape>,
         Option<&mut TnuaGhostSensor>,
@@ -110,8 +137,9 @@ fn update_proximity_sensors_system(
     )>,
     collision_layers_query: Query<&CollisionLayers>,
     other_object_query: Query<(
-        Option<(&GlobalTransform, &LinearVelocity, &AngularVelocity)>,
+        Option<(&Position, &LinearVelocity, &AngularVelocity)>,
         Option<&CollisionLayers>,
+        Option<&ColliderParent>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
     )>,
@@ -119,7 +147,9 @@ fn update_proximity_sensors_system(
     query.par_iter_mut().for_each(
         |(
             owner_entity,
-            transform,
+            position,
+            rotation,
+            collider,
             mut sensor,
             shape,
             mut ghost_sensor,
@@ -131,6 +161,13 @@ fn update_proximity_sensors_system(
                 TnuaToggle::SenseOnly => {}
                 TnuaToggle::Enabled => {}
             }
+            let transform = Transform {
+                translation: position.f32().extend(0.0),
+                rotation: Quaternion::from(*rotation).f32(),
+                scale: collider
+                    .map(|collider| collider.scale().f32().extend(1.0))
+                    .unwrap_or(Vec3::ONE),
+            };
             let cast_origin = transform.transform_point(sensor.cast_origin.f32());
             let cast_direction = sensor.cast_direction;
             let cast_direction_2d = Dir2::new(cast_direction.truncate())
@@ -165,32 +202,10 @@ fn update_proximity_sensors_system(
                     normal,
                 } = cast_result;
 
-                // This fixes https://github.com/idanarye/bevy-tnua/issues/14
-                if let Some(contacts) = collisions.get(owner_entity, entity) {
-                    let same_order = owner_entity == contacts.entity1;
-                    for manifold in contacts.manifolds.iter() {
-                        if !manifold.contacts.is_empty() {
-                            let manifold_normal = if same_order {
-                                manifold.normal2
-                            } else {
-                                manifold.normal1
-                            };
-                            #[allow(clippy::useless_conversion)]
-                            if sensor.intersection_match_prevention_cutoff
-                                < manifold_normal.dot(cast_direction.truncate().into())
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                // TODO: see if https://github.com/idanarye/bevy-tnua/issues/14 replicates in Avian,
-                // and if figure out how to port its fix to Avian.
-
                 let Ok((
                     entity_kinematic_data,
                     entity_collision_layers,
+                    entity_collider_parent,
                     entity_is_ghost,
                     entity_is_sensor,
                 )) = other_object_query.get(entity)
@@ -198,16 +213,23 @@ fn update_proximity_sensors_system(
                     return false;
                 };
 
+                if let Some(parent) = entity_collider_parent {
+                    // Collider is child of our rigid body. ignore.
+                    if parent.get() == owner_entity {
+                        return true;
+                    }
+                }
+
                 let entity_linvel;
                 let entity_angvel;
-                if let Some((entity_transform, entity_linear_velocity, entity_angular_velocity)) =
+                if let Some((entity_position, entity_linear_velocity, entity_angular_velocity)) =
                     entity_kinematic_data
                 {
                     entity_angvel = Vector3::new(0.0, 0.0, entity_angular_velocity.0);
                     entity_linvel = entity_linear_velocity.0.extend(0.0)
                         + if 0.0 < entity_angvel.length_squared() {
-                            let relative_point = intersection_point
-                                - entity_transform.translation().truncate().adjust_precision();
+                            let relative_point =
+                                intersection_point - entity_position.adjust_precision();
                             // NOTE: no need to project relative_point on the
                             // rotation plane, it will not affect the cross
                             // product.
@@ -337,6 +359,7 @@ fn apply_motors_system(
         &mut ExternalForce,
         &mut ExternalTorque,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
     for (
@@ -348,6 +371,7 @@ fn apply_motors_system(
         mut external_force,
         mut external_torque,
         tnua_toggle,
+        tnua_gravity,
     ) in query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
@@ -372,6 +396,9 @@ fn apply_motors_system(
                 // angular acceleration yet - only angular impulses.
                 inertia.value() * motor.ang.acceleration.z,
             );
+        }
+        if let Some(gravity) = tnua_gravity {
+            external_force.apply_force(gravity.0.truncate() * mass.value());
         }
     }
 }

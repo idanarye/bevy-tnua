@@ -5,7 +5,7 @@ use bevy::prelude::*;
 
 /// An indication that a character was knocked back and "struggles" to get back to its original
 /// velocity.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct VelocityBoundary {
     base: Float,
     original_frontier: Float,

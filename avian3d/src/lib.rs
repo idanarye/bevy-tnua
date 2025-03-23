@@ -14,14 +14,15 @@ use avian3d::{
 };
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::AdjustPrecision;
 use bevy_tnua_physics_integration_layer::math::AsF32;
 use bevy_tnua_physics_integration_layer::math::Float;
 use bevy_tnua_physics_integration_layer::math::Vector3;
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
 pub use spatial_ext::TnuaSpatialExtAvian3d;
 
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
@@ -34,6 +35,20 @@ use bevy_tnua_physics_integration_layer::TnuaSystemSet;
 /// Add this plugin to use avian3d as a physics backend.
 ///
 /// This plugin should be used in addition to `TnuaControllerPlugin`.
+/// Note that you should make sure both of these plugins use the same schedule.
+/// This should usually be `PhysicsSchedule`, which by default is `FixedUpdate`.
+///
+/// # Example
+///
+/// ```ignore
+/// App::new()
+///     .add_plugins((
+///         DefaultPlugins,
+///         PhysicsPlugins::default(),
+///         TnuaControllerPlugin::new(PhysicsSchedule),
+///         TnuaAvian3dPlugin::new(PhysicsSchedule),
+///     ));
+/// ```
 pub struct TnuaAvian3dPlugin {
     schedule: InternedScheduleLabel,
 }
@@ -51,8 +66,7 @@ impl Plugin for TnuaAvian3dPlugin {
         app.configure_sets(
             self.schedule,
             TnuaSystemSet
-                .before(PhysicsSet::Prepare)
-                .before(PhysicsStepSet::First)
+                .in_set(PhysicsStepSet::First)
                 .run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
         );
         app.add_systems(
@@ -68,6 +82,9 @@ impl Plugin for TnuaAvian3dPlugin {
             self.schedule,
             apply_motors_system.in_set(TnuaPipelineStages::Motors),
         );
+        app.register_required_components::<TnuaSubservientSensor, Position>();
+        app.register_required_components::<TnuaSubservientSensor, Rotation>();
+        app.register_required_components_with::<TnuaGravity, GravityScale>(|| GravityScale(0.0));
     }
 }
 
@@ -75,30 +92,40 @@ impl Plugin for TnuaAvian3dPlugin {
 #[derive(Component)]
 pub struct TnuaAvian3dSensorShape(pub Collider);
 
+#[allow(clippy::type_complexity)]
 fn update_rigid_body_trackers_system(
     gravity: Res<Gravity>,
     mut query: Query<(
-        &GlobalTransform,
+        &Position,
+        &Rotation,
         &LinearVelocity,
         &AngularVelocity,
         &mut TnuaRigidBodyTracker,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
-    for (transform, linaer_velocity, angular_velocity, mut tracker, tnua_toggle) in query.iter_mut()
+    for (
+        position,
+        rotation,
+        linaer_velocity,
+        angular_velocity,
+        mut tracker,
+        tnua_toggle,
+        tnua_gravity,
+    ) in query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
             TnuaToggle::Enabled => {}
         }
-        let (_, rotation, translation) = transform.to_scale_rotation_translation();
         *tracker = TnuaRigidBodyTracker {
-            translation: translation.adjust_precision(),
+            translation: position.adjust_precision(),
             rotation: rotation.adjust_precision(),
             velocity: linaer_velocity.0.adjust_precision(),
             angvel: angular_velocity.0.adjust_precision(),
-            gravity: gravity.0.adjust_precision(),
+            gravity: tnua_gravity.map(|g| g.0).unwrap_or(gravity.0),
         };
     }
 }
@@ -106,10 +133,11 @@ fn update_rigid_body_trackers_system(
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
-    collisions: Res<Collisions>,
     mut query: Query<(
         Entity,
-        &GlobalTransform,
+        &Position,
+        &Rotation,
+        Option<&Collider>,
         &mut TnuaProximitySensor,
         Option<&TnuaAvian3dSensorShape>,
         Option<&mut TnuaGhostSensor>,
@@ -118,8 +146,9 @@ fn update_proximity_sensors_system(
     )>,
     collision_layers_query: Query<&CollisionLayers>,
     other_object_query: Query<(
-        Option<(&GlobalTransform, &LinearVelocity, &AngularVelocity)>,
+        Option<(&Position, &LinearVelocity, &AngularVelocity)>,
         Option<&CollisionLayers>,
+        Option<&ColliderParent>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
     )>,
@@ -127,7 +156,9 @@ fn update_proximity_sensors_system(
     query.par_iter_mut().for_each(
         |(
             owner_entity,
-            transform,
+            position,
+            rotation,
+            collider,
             mut sensor,
             shape,
             mut ghost_sensor,
@@ -139,6 +170,13 @@ fn update_proximity_sensors_system(
                 TnuaToggle::SenseOnly => {}
                 TnuaToggle::Enabled => {}
             }
+            let transform = Transform {
+                translation: position.0.f32(),
+                rotation: rotation.0.f32(),
+                scale: collider
+                    .map(|collider| collider.scale().f32())
+                    .unwrap_or(Vec3::ONE),
+            };
 
             // TODO: is there any point in doing these transformations as f64 when that feature
             // flag is active?
@@ -174,31 +212,10 @@ fn update_proximity_sensors_system(
                     normal,
                 } = cast_result;
 
-                // This fixes https://github.com/idanarye/bevy-tnua/issues/14
-                if let Some(contacts) = collisions.get(owner_entity, entity) {
-                    let same_order = owner_entity == contacts.entity1;
-                    for manifold in contacts.manifolds.iter() {
-                        if !manifold.contacts.is_empty() {
-                            let manifold_normal = if same_order {
-                                manifold.normal2.adjust_precision()
-                            } else {
-                                manifold.normal1.adjust_precision()
-                            };
-                            if sensor.intersection_match_prevention_cutoff
-                                < manifold_normal.dot(cast_direction.adjust_precision())
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-
-                // TODO: see if https://github.com/idanarye/bevy-tnua/issues/14 replicates in Avian,
-                // and if figure out how to port its fix to Avian.
-
                 let Ok((
                     entity_kinematic_data,
                     entity_collision_layers,
+                    entity_collider_parent,
                     entity_is_ghost,
                     entity_is_sensor,
                 )) = other_object_query.get(entity)
@@ -206,16 +223,23 @@ fn update_proximity_sensors_system(
                     return false;
                 };
 
+                if let Some(parent) = entity_collider_parent {
+                    // Collider is child of our rigid body. ignore.
+                    if parent.get() == owner_entity {
+                        return true;
+                    }
+                }
+
                 let entity_linvel;
                 let entity_angvel;
-                if let Some((entity_transform, entity_linear_velocity, entity_angular_velocity)) =
+                if let Some((entity_position, entity_linear_velocity, entity_angular_velocity)) =
                     entity_kinematic_data
                 {
                     entity_angvel = entity_angular_velocity.0.adjust_precision();
                     entity_linvel = entity_linear_velocity.0.adjust_precision()
                         + if 0.0 < entity_angvel.length_squared() {
-                            let relative_point = intersection_point
-                                - entity_transform.translation().adjust_precision();
+                            let relative_point =
+                                intersection_point - entity_position.adjust_precision();
                             // NOTE: no need to project relative_point on the
                             // rotation plane, it will not affect the cross
                             // product.
@@ -257,15 +281,16 @@ fn update_proximity_sensors_system(
 
             let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaAvian3dSensorShape(shape)) = shape {
-                let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
-                let owner_rotation = Quat::from_axis_angle(
-                    *cast_direction,
-                    owner_rotation.to_scaled_axis().dot(*cast_direction),
+                let owner_rotation = Quaternion::from_axis_angle(
+                    cast_direction.adjust_precision(),
+                    rotation
+                        .to_scaled_axis()
+                        .dot(cast_direction.adjust_precision()),
                 );
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
                     cast_origin,
-                    owner_rotation.adjust_precision(),
+                    owner_rotation,
                     cast_direction,
                     &ShapeCastConfig {
                         max_distance: sensor.cast_range,
@@ -348,6 +373,7 @@ fn apply_motors_system(
         &mut ExternalForce,
         &mut ExternalTorque,
         Option<&TnuaToggle>,
+        Option<&TnuaGravity>,
     )>,
 ) {
     for (
@@ -359,6 +385,7 @@ fn apply_motors_system(
         mut external_force,
         mut external_torque,
         tnua_toggle,
+        tnua_gravity,
     ) in query.iter_mut()
     {
         match tnua_toggle.copied().unwrap_or_default() {
@@ -383,6 +410,9 @@ fn apply_motors_system(
                 // angular acceleration yet - only angular impulses.
                 inertia.value() * motor.ang.acceleration,
             );
+        }
+        if let Some(gravity) = tnua_gravity {
+            external_force.apply_force(gravity.0 * mass.value());
         }
     }
 }

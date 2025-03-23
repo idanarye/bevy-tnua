@@ -19,6 +19,11 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 - `MotionHelper` for helping implementing motion commands. Users will probably
   only need this if the implement custom basis and actions.
 
+## 0.22.0 - 2025-03-22
+### Added
+- `concrete_basis_mut` and `concrete_action_mut` methods to `TnuaController`.
+- `reset_airborne_timer` method to `TnuaBuiltinWalkState`.
+
 ## 0.21.0 - 2024-12-13
 ### Changed
 - Upgrade to Bevy 0.15.

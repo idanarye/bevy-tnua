@@ -12,8 +12,20 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 - `TnuaSpatialExtRapier2d`/`TnuaSpatialExtRapier3d` - implementation for the
   `TnuaSpatialExt` trait.
 
+## 0.10.0 - 2025-03-22
+### Changed
+- Upgrade to bevy_rapier 0.29.
+
 ### Deprecated
 - Deprecate `TnuaRapier3dIOBundle` in favor or bevy required components.
+
+### Fixed
+- Improve the cast-inside-self check (Fixes
+  https://github.com/idanarye/bevy-tnua/issues/85)
+  Note that it does cause https://github.com/idanarye/bevy-tnua/issues/87
+
+### Added
+- Support for `TnuaGravity`.
 
 ## 0.9.0 - 2024-12-13
 ### Changed

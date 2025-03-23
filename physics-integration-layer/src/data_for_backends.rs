@@ -71,26 +71,6 @@ pub struct TnuaProximitySensor {
     /// Tnua will update this field according to its need. The backend only needs to read it.
     pub cast_range: Float,
     pub output: Option<TnuaProximitySensorOutput>,
-
-    /// Used to prevent collision with obstacles the character squeezed into sideways.
-    ///
-    /// This is used to prevent <https://github.com/idanarye/bevy-tnua/issues/14>. When casting,
-    /// Tnua checks if the entity the ray(/shape)cast hits is also in contact with the owner
-    /// collider. If so, Tnua compares the contact normal with the cast direction.
-    ///
-    /// For legitimate hits, these two directions should be opposite. If Tnua casts downwards and
-    /// hits the actual floor, the normal of the contact with it should point upward. Opposite
-    /// directions means the dot product is closer to `-1.0`.
-    ///
-    /// Illigitimage hits hits would have perpendicular directions - hitting a wall (sideways) when
-    /// casting downwards - which should give a dot product closer to `0.0`.
-    ///
-    /// This field is compared to the dot product to determine if the hit is valid or not, and can
-    /// usually be left at the default value of `-0.5`.
-    ///
-    /// Positive dot products should not happen (hitting the ceiling?), but it's trivial to
-    /// consider them as invalid.
-    pub intersection_match_prevention_cutoff: Float,
 }
 
 impl Default for TnuaProximitySensor {
@@ -100,7 +80,6 @@ impl Default for TnuaProximitySensor {
             cast_direction: Dir3::NEG_Y,
             cast_range: 0.0,
             output: None,
-            intersection_match_prevention_cutoff: -0.5,
         }
     }
 }
@@ -294,5 +273,9 @@ impl TnuaGhostSensor {
 /// See `TnuaSimpleFallThroughPlatformsHelper`.
 #[derive(Component, Default, Debug)]
 pub struct TnuaGhostPlatform;
+
+/// Change the gravity for a Tnua-controlled character.
+#[derive(Component, Debug)]
+pub struct TnuaGravity(pub Vector3);
 
 pub use crate::obstacle_radar::TnuaObstacleRadar;

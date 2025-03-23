@@ -22,7 +22,7 @@ use super::TnuaBuiltinWalk;
 /// upward toward the obstacle - which will bring about undesired physics behavior (especially if
 /// the player tries to move). To prevent that, use this action together with
 /// [`TnuaCrouchEnforcer`](crate::control_helpers::TnuaCrouchEnforcer).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TnuaBuiltinCrouch {
     /// Controls how low the character will crouch, compared to its regular float offset while
     /// standing.
@@ -180,7 +180,7 @@ impl TnuaBuiltinCrouch {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub enum TnuaBuiltinCrouchState {
     /// The character is transitioning from standing to crouching.
     #[default]

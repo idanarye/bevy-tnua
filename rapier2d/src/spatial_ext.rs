@@ -9,7 +9,7 @@ use crate::get_collider;
 
 #[derive(SystemParam)]
 pub struct TnuaSpatialExtRapier2d<'w, 's> {
-    rapier_context_query: RapierContextAccess<'w, 's>,
+    rapier_context_query: Query<'w, 's, RapierContext<'static>>,
     context_links_query: Query<'w, 's, &'static RapierContextEntityLink>,
     colliders_query: Query<'w, 's, (&'static Collider, &'static GlobalTransform)>,
 }
@@ -72,7 +72,7 @@ impl TnuaSpatialExt for TnuaSpatialExtRapier2d<'_, '_> {
                 if link1 != link2 {
                     return false;
                 }
-                let Some(rapier_context) = self.rapier_context_query.try_context(link1) else {
+                let Ok(rapier_context) = self.rapier_context_query.get(link1.0) else {
                     return false;
                 };
                 rapier_context
@@ -80,13 +80,13 @@ impl TnuaSpatialExt for TnuaSpatialExtRapier2d<'_, '_> {
                 // One of the entities is not in any physical world
                 return false;
             };
-        let Some(collider1) = get_collider(rapier_context, entity1) else {
+        let Some(collider1) = get_collider(rapier_context.colliders, entity1) else {
             return true;
         };
         if collider1.is_sensor() {
             return false;
         }
-        let Some(collider2) = get_collider(rapier_context, entity2) else {
+        let Some(collider2) = get_collider(rapier_context.colliders, entity2) else {
             return true;
         };
         if collider2.is_sensor() {

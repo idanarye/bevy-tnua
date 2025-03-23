@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        rust: [1.83.0, nightly]
+        rust: [1.85.1, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         id: cache
         with:
           path: ~/.cargo
@@ -81,7 +81,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         id: cache
         with:
           path: ~/.cargo
@@ -99,12 +99,12 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.83.0
+          toolchain: 1.85.1
           override: true
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         id: cache
         with:
           path: ~/.cargo
@@ -152,7 +152,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           target: wasm32-unknown-unknown
-          toolchain: 1.83.0
+          toolchain: 1.85.1
           override: true
       - name: Get package names
         id: get-package-names
@@ -233,7 +233,7 @@ jobs:
         run: |-
           chmod --recursive +r target/doc
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: target/doc
   deploy-ghpages:
@@ -246,4 +246,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4

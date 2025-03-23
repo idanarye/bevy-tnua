@@ -1,6 +1,7 @@
 pub mod app_setup_options;
 pub mod character_animating_systems;
 pub mod character_control_systems;
+pub mod hacks;
 pub mod level_mechanics;
 pub mod levels_setup;
 pub mod ui;
