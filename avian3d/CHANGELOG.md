@@ -15,6 +15,10 @@ NOTES:
 - `TnuaSpatialExtAvian2d`/`TnuaSpatialExtAvian3d` - implementation for the
   `TnuaSpatialExt` trait.
 
+## 0.3.1 - 2025-03-24
+### Fixed
+- Run `TnuaSystemSet` _before_ `PhysicsStepSet::First` rather than inside it.
+
 ## 0.3.0 - 2025-03-22
 ### Changed
 - Change the recommended schedule in the documentation.
