@@ -62,7 +62,9 @@ impl Plugin for TnuaAvian3dPlugin {
         app.configure_sets(
             self.schedule,
             TnuaSystemSet
-                .in_set(PhysicsStepSet::First)
+                // Need to run _before_ `First`, not after it. The documentation is misleading. See
+                // https://github.com/Jondolf/avian/issues/675
+                .before(PhysicsStepSet::First)
                 .run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
         );
         app.add_systems(

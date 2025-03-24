@@ -10,6 +10,8 @@ NOTES:
 * Avian used to be named bevy_xpbd. The old bevy-tnua-xpbd changelog can be seen [here](https://github.com/idanarye/bevy-tnua/blob/3cba881c8825633a8d8bdca1fe30e54500e655b8/xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Fixed
+- Run `TnuaSystemSet` _before_ `PhysicsStepSet::First` rather than inside it.
 
 ## 0.3.0 - 2025-03-22
 ### Changed
