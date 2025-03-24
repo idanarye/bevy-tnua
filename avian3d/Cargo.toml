@@ -1,7 +1,7 @@
 [package]
 name = "bevy-tnua-avian3d"
 description = "Avian 3D integration for bevy-tnua"
-version = "0.3.0"
+version = "0.3.1"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
