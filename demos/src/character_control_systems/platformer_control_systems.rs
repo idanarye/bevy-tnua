@@ -337,7 +337,7 @@ pub fn apply_platformer_controls(
                     let entity = action
                         .climbable_entity
                         .filter(|entity| obstacle_radar.has_blip(*entity))?;
-                    Some((entity, action.initiation_direction))
+                    Some((entity, action.clone()))
                 });
 
         let mut walljump_candidate = None;
@@ -350,36 +350,47 @@ pub fn apply_platformer_controls(
                 if let TnuaBlipSpatialRelation::Aeside(blip_direction) = blip.spatial_relation(0.5)
                 {
                     'maintain_climb: {
-                        if let Some((climbable_entity, initiation_direction)) = already_climbing_on
-                        {
-                            if climbable_entity != blip.entity() {
+                        if let Some((climbable_entity, action)) = already_climbing_on.as_ref() {
+                            if *climbable_entity != blip.entity() {
                                 break 'maintain_climb;
                             }
-                            let dot_initiation = direction.dot(initiation_direction);
+                            let dot_initiation = direction.dot(action.initiation_direction);
                             let initiation_direction = if 0.5 < dot_initiation {
-                                initiation_direction
+                                action.initiation_direction
                             } else {
                                 Vector3::ZERO
                             };
                             if initiation_direction == Vector3::ZERO {
-                                // let up_down = screen_space_direction.dot(Vector3::NEG_Z);
                                 let right_left = screen_space_direction.dot(Vector3::X);
                                 if 0.5 <= right_left.abs() {
                                     continue 'blips_loop;
                                 }
                             }
                             controller.action(TnuaBuiltinClimb {
-                                climbable_entity: Some(climbable_entity),
+                                anchor: blip.closest_point().get(),
+                                desired_climb_velocity: 20.0
+                                    * screen_space_direction.dot(Vector3::NEG_Z)
+                                    * Vector3::Y,
                                 initiation_direction,
+                                ..action.clone()
                             });
                         }
-                    }
-                    let dot_direction = direction.dot(blip_direction.adjust_precision());
-                    if 0.5 < dot_direction {
-                        controller.action(TnuaBuiltinClimb {
-                            climbable_entity: Some(blip.entity()),
-                            initiation_direction: direction,
-                        });
+                        let dot_direction = direction.dot(blip_direction.adjust_precision());
+                        if 0.5 < dot_direction {
+                            controller.action(TnuaBuiltinClimb {
+                                climbable_entity: Some(blip.entity()),
+                                anchor: blip.closest_point().get(),
+                                desired_vec_to_anchor: 0.5
+                                    * -blip
+                                        .normal_from_closest_point()
+                                        .reject_from_normalized(Vector3::Y),
+                                anchor_velocity: 50.0,
+                                anchor_acceleration: 100.0,
+                                desired_climb_velocity: Vector3::ZERO,
+                                climb_acceleration: 30.0,
+                                initiation_direction: direction.normalize_or_zero(),
+                            });
+                        }
                     }
                 }
             }

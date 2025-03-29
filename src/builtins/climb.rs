@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::AdjustPrecision;
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float};
 
 use crate::util::MotionHelper;
 use crate::TnuaActionContext;
@@ -8,8 +8,17 @@ use crate::{
     TnuaActionLifecycleStatus, TnuaMotor,
 };
 
+#[derive(Clone)]
 pub struct TnuaBuiltinClimb {
     pub climbable_entity: Option<Entity>,
+    pub anchor: Vector3,
+    pub desired_vec_to_anchor: Vector3,
+    pub anchor_velocity: Float,
+    pub anchor_acceleration: Float,
+
+    pub desired_climb_velocity: Vector3,
+    pub climb_acceleration: Float,
+
     /// The direction used to initiate the climb.
     ///
     /// This field is not used by the action itself. It's purpose is to help user controller
@@ -32,12 +41,24 @@ impl TnuaAction for TnuaBuiltinClimb {
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
-        // motor.lin.clear();
         motor
             .lin
             .cancel_on_axis(ctx.up_direction.adjust_precision());
         motor.lin += ctx.negate_gravity();
-        motor.lin += ctx.adjust_vertical_velocity(0.0, 30.0);
+        motor.lin += ctx.adjust_vertical_velocity(
+            self.desired_climb_velocity
+                .dot(ctx.up_direction.adjust_precision()),
+            self.climb_acceleration,
+        );
+
+        let vec_to_anchor = (self.anchor - ctx.tracker.translation)
+            .reject_from(ctx.up_direction().adjust_precision());
+        let horizontal_displacement = self.desired_vec_to_anchor - vec_to_anchor;
+
+        let desired_horizontal_velocity = -horizontal_displacement / ctx.frame_duration;
+
+        motor.lin +=
+            ctx.adjust_horizontal_velocity(desired_horizontal_velocity, self.anchor_acceleration);
 
         lifecycle_status.directive_simple()
     }

@@ -36,6 +36,12 @@ pub trait MotionHelper {
             v.project_onto_normalized(up_vector)
         })
     }
+
+    fn adjust_horizontal_velocity(&self, target: Vector3, acceleration: Float) -> TnuaVelChange {
+        self.adjust_velocity(target, acceleration, |v| {
+            v.reject_from_normalized(self.up_direction().adjust_precision())
+        })
+    }
 }
 
 impl MotionHelper for TnuaActionContext<'_> {
