@@ -19,6 +19,8 @@ pub struct TnuaBuiltinClimb {
     pub desired_climb_velocity: Vector3,
     pub climb_acceleration: Float,
 
+    pub desired_forward: Option<Dir3>,
+
     /// The direction used to initiate the climb.
     ///
     /// This field is not used by the action itself. It's purpose is to help user controller
@@ -59,6 +61,12 @@ impl TnuaAction for TnuaBuiltinClimb {
 
         motor.lin +=
             ctx.adjust_horizontal_velocity(desired_horizontal_velocity, self.anchor_acceleration);
+
+
+        if let Some(desired_forward) = self.desired_forward {
+            motor.ang.cancel_on_axis(ctx.up_direction.adjust_precision());
+            motor.ang += ctx.turn_to_direction(desired_forward, ctx.up_direction);
+        }
 
         lifecycle_status.directive_simple()
     }

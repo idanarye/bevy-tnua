@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaVelChange;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Vector3};
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Quaternion, Vector3};
 
 use crate::TnuaActionContext;
 
@@ -10,6 +10,8 @@ pub trait MotionHelper {
     fn up_direction(&self) -> Dir3;
     fn gravity(&self) -> Vector3;
     fn velocity(&self) -> Vector3;
+    fn rotation(&self) -> Quaternion;
+    fn angvel(&self) -> Vector3;
 
     fn negate_gravity(&self) -> TnuaVelChange {
         TnuaVelChange::acceleration(-self.gravity())
@@ -42,6 +44,23 @@ pub trait MotionHelper {
             v.reject_from_normalized(self.up_direction().adjust_precision())
         })
     }
+
+    /// Calculate the rotation around `up_direction` required to rotate the character from the
+    /// current forward to `desired_forward`.
+    fn turn_to_direction(&self, desired_forward: Dir3, up_direction: Dir3) -> TnuaVelChange {
+        let up_vector = up_direction.adjust_precision();
+        let current_forward = self.rotation().mul_vec3(Vector3::NEG_Z);
+        let rotation_along_up_axis = crate::util::rotation_arc_around_axis(
+            up_direction,
+            current_forward,
+            desired_forward.adjust_precision(),
+        )
+            .unwrap_or(0.0);
+        let desired_angvel = rotation_along_up_axis / self.frame_duration();
+        let existing_angvel = self.angvel().dot(up_vector);
+        let torque_to_turn = desired_angvel - existing_angvel;
+        TnuaVelChange::boost(torque_to_turn * up_vector)
+    }
 }
 
 impl MotionHelper for TnuaActionContext<'_> {
@@ -59,5 +78,13 @@ impl MotionHelper for TnuaActionContext<'_> {
 
     fn velocity(&self) -> Vector3 {
         self.tracker.velocity
+    }
+
+    fn rotation(&self) -> Quaternion {
+        self.tracker.rotation
+    }
+
+    fn angvel(&self) -> Vector3 {
+        self.tracker.angvel
     }
 }

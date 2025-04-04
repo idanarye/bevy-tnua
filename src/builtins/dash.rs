@@ -1,7 +1,7 @@
 use crate::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy::prelude::*;
 
-use crate::util::rotation_arc_around_axis;
+use crate::util::MotionHelper;
 use crate::{
     prelude::*, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor,
@@ -143,20 +143,8 @@ impl TnuaAction for TnuaBuiltinDash {
                     };
 
                     if let Some(desired_forward) = desired_forward {
-                        let up = ctx.up_direction;
-                        let up = up.adjust_precision();
-                        let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
-                        let rotation_along_up_axis = rotation_arc_around_axis(
-                            Dir3::Y,
-                            current_forward,
-                            desired_forward.adjust_precision(),
-                        )
-                        .unwrap_or(0.0);
-                        let desired_angvel = rotation_along_up_axis / ctx.frame_duration;
-                        let existing_angvel = ctx.tracker.angvel.dot(up);
-                        let torque_to_turn = desired_angvel - existing_angvel;
-                        motor.ang.cancel_on_axis(up);
-                        motor.ang.boost += torque_to_turn * up;
+                        motor.ang.cancel_on_axis(ctx.up_direction.adjust_precision());
+                        motor.ang += ctx.turn_to_direction(*desired_forward, ctx.up_direction);
                     }
 
                     TnuaActionLifecycleDirective::StillActive

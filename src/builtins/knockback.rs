@@ -1,7 +1,7 @@
 use crate::{
     math::{AdjustPrecision, Float, Vector3},
     prelude::*,
-    util::{calc_angular_velchange_to_force_forward, VelocityBoundary},
+    util::{MotionHelper, VelocityBoundary},
     TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor, TnuaVelChange,
 };
@@ -126,13 +126,7 @@ impl TnuaAction for TnuaBuiltinKnockback {
             motor
                 .ang
                 .cancel_on_axis(ctx.up_direction.adjust_precision());
-            motor.ang += calc_angular_velchange_to_force_forward(
-                force_forward,
-                ctx.tracker.rotation,
-                ctx.tracker.angvel,
-                ctx.up_direction,
-                ctx.frame_duration,
-            );
+            motor.ang += ctx.turn_to_direction(force_forward, ctx.up_direction);
         }
 
         TnuaActionLifecycleDirective::StillActive

@@ -368,26 +368,25 @@ pub fn apply_platformer_controls(
                             }
                             controller.action(TnuaBuiltinClimb {
                                 anchor: blip.closest_point().get(),
-                                desired_climb_velocity: 20.0
+                                desired_climb_velocity: 10.0
                                     * screen_space_direction.dot(Vector3::NEG_Z)
                                     * Vector3::Y,
                                 initiation_direction,
                                 ..action.clone()
                             });
-                        }
-                        let dot_direction = direction.dot(blip_direction.adjust_precision());
-                        if 0.5 < dot_direction {
+                        } else if 0.5 < direction.dot(blip_direction.adjust_precision()) {
+                            let direction_to_anchor = -blip
+                                .normal_from_closest_point()
+                                .reject_from_normalized(Vector3::Y);
                             controller.action(TnuaBuiltinClimb {
                                 climbable_entity: Some(blip.entity()),
                                 anchor: blip.closest_point().get(),
-                                desired_vec_to_anchor: 0.5
-                                    * -blip
-                                        .normal_from_closest_point()
-                                        .reject_from_normalized(Vector3::Y),
-                                anchor_velocity: 50.0,
-                                anchor_acceleration: 100.0,
+                                desired_vec_to_anchor: 0.5 * direction_to_anchor,
+                                anchor_velocity: 150.0,
+                                anchor_acceleration: 500.0,
                                 desired_climb_velocity: Vector3::ZERO,
                                 climb_acceleration: 30.0,
+                                desired_forward: Dir3::new(direction_to_anchor).ok(),
                                 initiation_direction: direction.normalize_or_zero(),
                             });
                         }
