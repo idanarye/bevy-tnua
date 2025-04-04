@@ -95,6 +95,10 @@ impl TnuaAction for TnuaBuiltinClimb {
     ) -> TnuaActionInitiationDirective {
         TnuaActionInitiationDirective::Allow
     }
+
+    fn target_entity(&self, _state: &Self::State) -> Option<Entity> {
+        self.climbable_entity
+    }
 }
 
 #[derive(Default, Debug)]

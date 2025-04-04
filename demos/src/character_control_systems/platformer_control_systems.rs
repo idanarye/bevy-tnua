@@ -1,18 +1,23 @@
+use std::cmp::Ordering;
+
 use bevy::{
     app::{FixedMain, RunFixedMainLoop},
     prelude::*,
 };
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts};
-use bevy_tnua::builtins::{
-    TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash,
-    TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
-};
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
+use bevy_tnua::{
+    builtins::{
+        TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash,
+        TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
+    },
+    control_helpers::TnuaBlipReuseAvoidance,
+};
 use bevy_tnua::{prelude::*, TnuaObstacleRadar};
 use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 
@@ -60,6 +65,9 @@ pub fn apply_platformer_controls(
         Option<&ForwardFromCamera>,
         // This is used to detect all the colliders in a small area around the character.
         &TnuaObstacleRadar,
+        // This is used to avoid re-initiating actions on the same obstacles until we return to
+        // them.
+        &mut TnuaBlipReuseAvoidance,
     )>,
     // This is used to run spatial queries on the physics backend. Note that `SpatialExtFacade` is
     // defined in the demos crates, and actual games that use Tnua should instead use the
@@ -91,6 +99,7 @@ pub fn apply_platformer_controls(
         mut air_actions_counter,
         forward_from_camera,
         obstacle_radar,
+        mut blip_reuse_avoidance,
     ) in query.iter_mut()
     {
         // This part is just keyboard input processing. In a real game this would probably be done
@@ -148,7 +157,12 @@ pub fn apply_platformer_controls(
         // * Did any air action just start?
         // * Did any air action just finished?
         // * Is any air action currently ongoing?
-        air_actions_counter.update(controller.as_mut());
+        air_actions_counter.update(controller.as_ref());
+
+        // This also needs to be called once per frame. It checks which obstacles needs to be
+        // blocked - e.g. because we've just finished an action on them and we don't want to
+        // reinitiate that action.
+        blip_reuse_avoidance.update(controller.as_ref(), obstacle_radar);
 
         // Here we will handle one-way platforms. It looks long and complex, but it's actual
         // several schemes with observable changes in behavior, and each implementation is rather
@@ -343,10 +357,12 @@ pub fn apply_platformer_controls(
         let mut walljump_candidate = None;
 
         'blips_loop: for blip in radar_lens.iter_blips() {
-            let obstacle_properties = obstacle_query
-                .get(blip.entity())
-                .expect("ObstacleQueryHelper has nothing that could fail when missing");
-            if obstacle_properties.climbable {
+            if !blip_reuse_avoidance.should_avoid(blip.entity())
+                && obstacle_query
+                    .get(blip.entity())
+                    .expect("ObstacleQueryHelper has nothing that could fail when missing")
+                    .climbable
+            {
                 if let TnuaBlipSpatialRelation::Aeside(blip_direction) = blip.spatial_relation(0.5)
                 {
                     'maintain_climb: {
@@ -379,17 +395,35 @@ pub fn apply_platformer_controls(
                                 ..config.climb.clone()
                             };
 
-                            if 0.0 < action.desired_climb_velocity.dot(Vector3::Y) {
-                                const LOOK_ABOVE: Float = 0.5;
-                                let closest_point = blip.closest_point().get();
-                                let closest_above = blip
-                                    .closest_point_from_offset(LOOK_ABOVE * Vector3::Y, false)
-                                    .get();
-                                if (closest_above - closest_point).dot(Vector3::Y)
-                                    < 0.9 * LOOK_ABOVE
-                                {
-                                    action.desired_climb_velocity = Vector3::ZERO;
-                                    action.climb_acceleration = Float::INFINITY;
+                            match action
+                                .desired_climb_velocity
+                                .dot(Vector3::Y)
+                                .partial_cmp(&0.0)
+                                .unwrap()
+                            {
+                                Ordering::Less => {
+                                    if !controller.is_airborne().unwrap() {
+                                        if initiation_direction == Vector3::ZERO {
+                                            break 'maintain_climb;
+                                        } else {
+                                            action.desired_climb_velocity = Vector3::ZERO;
+                                        }
+                                    }
+                                }
+                                Ordering::Equal => {}
+                                // Climbing up
+                                Ordering::Greater => {
+                                    const LOOK_ABOVE: Float = 0.5;
+                                    let closest_point = blip.closest_point().get();
+                                    let closest_above = blip
+                                        .closest_point_from_offset(LOOK_ABOVE * Vector3::Y, false)
+                                        .get();
+                                    if (closest_above - closest_point).dot(Vector3::Y)
+                                        < 0.9 * LOOK_ABOVE
+                                    {
+                                        action.desired_climb_velocity = Vector3::ZERO;
+                                        action.climb_acceleration = Float::INFINITY;
+                                    }
                                 }
                             }
 

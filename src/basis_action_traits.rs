@@ -429,6 +429,11 @@ pub trait TnuaAction: 'static + Send + Sync {
         ctx: TnuaActionContext,
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective;
+
+    /// If the action targets an entity, return that entity
+    fn target_entity(&self, _state: &Self::State) -> Option<Entity> {
+        None
+    }
 }
 
 pub trait DynamicAction: Send + Sync + Any + 'static {
@@ -447,6 +452,7 @@ pub trait DynamicAction: Send + Sync + Any + 'static {
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective;
     fn violates_coyote_time(&self) -> bool;
+    fn target_entity(&self) -> Option<Entity>;
 }
 
 pub(crate) struct BoxableAction<A: TnuaAction> {
@@ -496,5 +502,9 @@ impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
 
     fn violates_coyote_time(&self) -> bool {
         A::VIOLATES_COYOTE_TIME
+    }
+
+    fn target_entity(&self) -> Option<Entity> {
+        self.input.target_entity(&self.state)
     }
 }

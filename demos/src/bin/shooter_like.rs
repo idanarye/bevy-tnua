@@ -8,8 +8,8 @@ use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy_rapier3d::{prelude as rapier, prelude::*};
 use bevy_tnua::builtins::TnuaBuiltinCrouch;
 use bevy_tnua::control_helpers::{
-    TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
-    TnuaSimpleFallThroughPlatformsHelper,
+    TnuaBlipReuseAvoidance, TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin,
+    TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy_tnua::{prelude::*, TnuaObstacleRadar};
@@ -192,6 +192,10 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // configured so that it'll generate collision data without generating forces for the actual
     // physics simulation.
     cmd.insert(TnuaObstacleRadar::new(1.0, 3.0));
+
+    // We use the blip reuse avoidance helper to avoid initiating actions on obstacles we've just
+    // finished an action with.
+    cmd.insert(TnuaBlipReuseAvoidance::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim3,
