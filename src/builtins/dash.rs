@@ -143,7 +143,9 @@ impl TnuaAction for TnuaBuiltinDash {
                     };
 
                     if let Some(desired_forward) = desired_forward {
-                        motor.ang.cancel_on_axis(ctx.up_direction.adjust_precision());
+                        motor
+                            .ang
+                            .cancel_on_axis(ctx.up_direction.adjust_precision());
                         motor.ang += ctx.turn_to_direction(*desired_forward, ctx.up_direction);
                     }
 

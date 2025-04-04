@@ -55,7 +55,7 @@ pub trait MotionHelper {
             current_forward,
             desired_forward.adjust_precision(),
         )
-            .unwrap_or(0.0);
+        .unwrap_or(0.0);
         let desired_angvel = rotation_along_up_axis / self.frame_duration();
         let existing_angvel = self.angvel().dot(up_vector);
         let torque_to_turn = desired_angvel - existing_angvel;

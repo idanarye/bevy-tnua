@@ -366,14 +366,34 @@ pub fn apply_platformer_controls(
                                     continue 'blips_loop;
                                 }
                             }
-                            controller.action(TnuaBuiltinClimb {
+
+                            let mut action = TnuaBuiltinClimb {
+                                climbable_entity: Some(blip.entity()),
                                 anchor: blip.closest_point().get(),
                                 desired_climb_velocity: 10.0
                                     * screen_space_direction.dot(Vector3::NEG_Z)
                                     * Vector3::Y,
                                 initiation_direction,
-                                ..action.clone()
-                            });
+                                desired_vec_to_anchor: action.desired_vec_to_anchor,
+                                desired_forward: action.desired_forward,
+                                ..config.climb.clone()
+                            };
+
+                            if 0.0 < action.desired_climb_velocity.dot(Vector3::Y) {
+                                const LOOK_ABOVE: Float = 0.5;
+                                let closest_point = blip.closest_point().get();
+                                let closest_above = blip
+                                    .closest_point_from_offset(LOOK_ABOVE * Vector3::Y, false)
+                                    .get();
+                                if (closest_above - closest_point).dot(Vector3::Y)
+                                    < 0.9 * LOOK_ABOVE
+                                {
+                                    action.desired_climb_velocity = Vector3::ZERO;
+                                    action.climb_acceleration = Float::INFINITY;
+                                }
+                            }
+
+                            controller.action(action);
                         } else if 0.5 < direction.dot(blip_direction.adjust_precision()) {
                             let direction_to_anchor = -blip
                                 .normal_from_closest_point()
@@ -382,12 +402,9 @@ pub fn apply_platformer_controls(
                                 climbable_entity: Some(blip.entity()),
                                 anchor: blip.closest_point().get(),
                                 desired_vec_to_anchor: 0.5 * direction_to_anchor,
-                                anchor_velocity: 150.0,
-                                anchor_acceleration: 500.0,
-                                desired_climb_velocity: Vector3::ZERO,
-                                climb_acceleration: 30.0,
                                 desired_forward: Dir3::new(direction_to_anchor).ok(),
                                 initiation_direction: direction.normalize_or_zero(),
+                                ..config.climb.clone()
                             });
                         }
                     }
@@ -539,6 +556,7 @@ pub struct CharacterMotionConfigForPlatformerDemo {
     pub one_way_platforms_min_proximity: Float,
     pub falling_through: FallingThroughControlScheme,
     pub knockback: TnuaBuiltinKnockback,
+    pub climb: TnuaBuiltinClimb,
 }
 
 impl UiTunable for CharacterMotionConfigForPlatformerDemo {

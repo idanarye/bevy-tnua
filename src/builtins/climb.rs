@@ -29,6 +29,22 @@ pub struct TnuaBuiltinClimb {
     pub initiation_direction: Vector3,
 }
 
+impl Default for TnuaBuiltinClimb {
+    fn default() -> Self {
+        Self {
+            climbable_entity: None,
+            anchor: Vector3::NAN,
+            desired_vec_to_anchor: Vector3::ZERO,
+            anchor_velocity: 150.0,
+            anchor_acceleration: 500.0,
+            desired_climb_velocity: Vector3::ZERO,
+            climb_acceleration: 30.0,
+            desired_forward: None,
+            initiation_direction: Vector3::ZERO,
+        }
+    }
+}
+
 impl TnuaAction for TnuaBuiltinClimb {
     const NAME: &'static str = "TnuaBuiltinClimb";
 
@@ -62,9 +78,10 @@ impl TnuaAction for TnuaBuiltinClimb {
         motor.lin +=
             ctx.adjust_horizontal_velocity(desired_horizontal_velocity, self.anchor_acceleration);
 
-
         if let Some(desired_forward) = self.desired_forward {
-            motor.ang.cancel_on_axis(ctx.up_direction.adjust_precision());
+            motor
+                .ang
+                .cancel_on_axis(ctx.up_direction.adjust_precision());
             motor.ang += ctx.turn_to_direction(desired_forward, ctx.up_direction);
         }
 
