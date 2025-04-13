@@ -222,3 +222,6 @@ pub struct TnuaGhostPlatform;
 /// Change the gravity for a Tnua-controlled character.
 #[derive(Component, Debug)]
 pub struct TnuaGravity(pub Vector3);
+
+#[derive(Component, Default, Debug)]
+pub struct TnuaNotPlatform;

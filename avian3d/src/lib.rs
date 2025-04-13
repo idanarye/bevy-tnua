@@ -17,7 +17,7 @@ use bevy_tnua_physics_integration_layer::math::Float;
 use bevy_tnua_physics_integration_layer::math::Vector3;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
 
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
+use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostPlatform, TnuaNotPlatform};
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
@@ -148,6 +148,7 @@ fn update_proximity_sensors_system(
         Option<&ColliderParent>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
+        Has<TnuaNotPlatform>,
     )>,
 ) {
     query.par_iter_mut().for_each(
@@ -215,10 +216,15 @@ fn update_proximity_sensors_system(
                     entity_collider_parent,
                     entity_is_ghost,
                     entity_is_sensor,
+                    entity_is_not_platform,
                 )) = other_object_query.get(entity)
                 else {
                     return false;
                 };
+
+                if entity_is_not_platform {
+                    return true;
+                }
 
                 if let Some(parent) = entity_collider_parent {
                     // Collider is child of our rigid body. ignore.
