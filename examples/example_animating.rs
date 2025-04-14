@@ -133,7 +133,7 @@ fn prepare_animations(
     let Some(gltf) = gltf_assets.get(&handle.0) else {
         return;
     };
-    let Ok(animation_player_entity) = animation_player_query.get_single() else {
+    let Ok(animation_player_entity) = animation_player_query.single() else {
         return;
     };
 
@@ -156,7 +156,7 @@ fn prepare_animations(
 }
 
 fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut TnuaController>) {
-    let Ok(mut controller) = query.get_single_mut() else {
+    let Ok(mut controller) = query.single_mut() else {
         return;
     };
 
@@ -210,10 +210,10 @@ fn handle_animating(
 ) {
     // An actual game should match the animation player and the controller. Here we cheat for
     // simplicity and use the only controller and only player.
-    let Ok((controller, mut animating_state)) = player_query.get_single_mut() else {
+    let Ok((controller, mut animating_state)) = player_query.single_mut() else {
         return;
     };
-    let Ok(mut animation_player) = animation_player_query.get_single_mut() else {
+    let Ok(mut animation_player) = animation_player_query.single_mut() else {
         return;
     };
     let Some(animation_nodes) = animation_nodes else {

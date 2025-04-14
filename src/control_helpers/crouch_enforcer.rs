@@ -213,7 +213,9 @@ fn update_crouch_enforcer(
                         ..Default::default()
                     },
                 ));
-                cmd.set_parent(owner_entity);
+                cmd.insert(ChildOf {
+                    parent: owner_entity,
+                });
                 (crouch_enforcer.modify_sensor)(&mut cmd);
                 let sensor_entity = cmd.id();
                 crouch_enforcer.sensor_entity = Some(sensor_entity);

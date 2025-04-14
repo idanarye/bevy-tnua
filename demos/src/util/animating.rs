@@ -1,6 +1,6 @@
 use bevy::gltf::Gltf;
+use bevy::platform_support::collections::HashMap;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 
 #[derive(Component)]
 pub struct AnimationsHandler {
@@ -15,7 +15,7 @@ pub struct GltfSceneHandler {
 
 pub fn animation_patcher_system(
     animation_players_query: Query<Entity, Added<AnimationPlayer>>,
-    parents_query: Query<&Parent>,
+    child_of_query: Query<&ChildOf>,
     scene_handlers_query: Query<&GltfSceneHandler>,
     gltf_assets: Res<Assets<Gltf>>,
     mut animation_graphs_assets: ResMut<Assets<AnimationGraph>>,
@@ -28,7 +28,7 @@ pub fn animation_patcher_system(
                 let gltf = gltf_assets.get(names_from).unwrap();
                 let mut graph = AnimationGraph::new();
                 let root_node = graph.root;
-                let mut animations = HashMap::<String, AnimationNodeIndex>::new();
+                let mut animations = HashMap::<String, AnimationNodeIndex>::default();
 
                 for (name, clip) in gltf.named_animations.iter() {
                     let node_index = graph.add_clip(clip.clone(), 1.0, root_node);
@@ -46,8 +46,8 @@ pub fn animation_patcher_system(
                     .insert(AnimationGraphHandle(animation_graphs_assets.add(graph)));
                 break;
             }
-            entity = if let Ok(parent) = parents_query.get(entity) {
-                **parent
+            entity = if let Ok(child_of) = child_of_query.get(entity) {
+                child_of.parent
             } else {
                 break;
             };

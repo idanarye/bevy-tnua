@@ -3,9 +3,7 @@ name = "tnua-demos-crate"
 version = "0.0.0"
 publish = false
 edition = "2021"
-exclude = [
-    "assets",
-]
+exclude = ["assets"]
 
 [features]
 default = [
@@ -14,13 +12,13 @@ default = [
     "avian3d?/f32",
     "avian3d?/parry-f32",
     # Comment these out when Bevy gets upgraded and a dependency lags behind
-    "egui",
+    # "egui",
 ]
 egui = ["dep:bevy_egui", "dep:egui_plot", "dep:egui_extras"]
 framepace = ["dep:bevy_framepace"] # Not a default feature
-rapier = []
-rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
-rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
+# rapier = []
+# rapier2d = ["rapier", "dep:bevy_rapier2d", "dep:bevy-tnua-rapier2d"]
+# rapier3d = ["rapier", "dep:bevy_rapier3d", "dep:bevy-tnua-rapier3d"]
 f64 = [
     "avian2d?/f64",
     "avian2d?/parry-f64",
@@ -35,8 +33,8 @@ avian2d = ["avian", "dep:avian2d", "dep:bevy-tnua-avian2d"]
 avian3d = ["avian", "dep:avian3d", "dep:bevy-tnua-avian3d"]
 
 [dependencies]
-bevy = { version = "^0.15", default-features = false, features = [
-     "animation",
+bevy = { version = "0.16.0-rc.3", default-features = false, features = [
+    "animation",
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
@@ -59,19 +57,34 @@ bevy = { version = "^0.15", default-features = false, features = [
 bevy-tnua = { path = ".." }
 bevy-tnua-physics-integration-layer = { path = "../physics-integration-layer" }
 
-bevy_rapier2d = { version = "^0.29", features = ["debug-render-2d"], optional = true }
-bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
+# bevy_rapier2d = { version = "^0.29", features = [
+#     "debug-render-2d",
+# ], optional = true }
+# bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
 
-bevy_rapier3d = { version = "^0.29", features = ["debug-render-3d"], optional = true }
-bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
+# bevy_rapier3d = { version = "^0.29", features = [
+#     "debug-render-3d",
+# ], optional = true }
+# bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
-avian2d = { version = "^0.2", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
+avian2d = { git = "https://github.com/Jondolf/avian.git", rev = "f041bf678dd8b75cf4408fc08cc3c6036bcdafb4", default-features = false, features = [
+    "2d",
+    "debug-plugin",
+    "parallel",
+], optional = true }
 bevy-tnua-avian2d = { path = "../avian2d", default-features = false, optional = true }
 
-avian3d = { version = "^0.2", default-features = false, features = ["3d","debug-plugin", "parallel"], optional = true }
+avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "f041bf678dd8b75cf4408fc08cc3c6036bcdafb4", default-features = false, features = [
+    "3d",
+    "debug-plugin",
+    "parallel",
+], optional = true }
 bevy-tnua-avian3d = { path = "../avian3d", default-features = false, optional = true }
 
-bevy_egui = { version = "0.33", optional = true, default-features = false, features = ["default_fonts", "render"] }
+bevy_egui = { version = "0.33", optional = true, default-features = false, features = [
+    "default_fonts",
+    "render",
+] }
 egui_plot = { version = "0.31", optional = true }
 egui_extras = { version = "0.31", optional = true }
 
@@ -80,4 +93,9 @@ bevy_framepace = { version = "0.18", optional = true }
 clap = { version = "^4", features = ["derive"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "^0.3", features = ["Window", "Location", "Url", "UrlSearchParams"] }
+web-sys = { version = "^0.3", features = [
+    "Window",
+    "Location",
+    "Url",
+    "UrlSearchParams",
+] }

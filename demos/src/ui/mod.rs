@@ -9,6 +9,7 @@ pub mod tuning;
 
 use std::marker::PhantomData;
 
+use bevy::ecs::component::Mutable;
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy::window::{PresentMode, PrimaryWindow};
@@ -43,7 +44,7 @@ impl<C: Component + UiTunable> Default for DemoUi<C> {
 
 const GRAVITY_MAGNITUDE: Float = 9.81;
 
-impl<C: Component + UiTunable> Plugin for DemoUi<C> {
+impl<C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<C> {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "egui")]
         app.add_plugins(EguiPlugin);
@@ -123,7 +124,7 @@ fn apply_selectors(
 
 #[cfg(feature = "egui")]
 #[allow(clippy::type_complexity)]
-fn ui_system<C: Component + UiTunable>(
+fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
     mut egui_context: EguiContexts,
     mut physics_backend_settings: ResMut<DemoUiPhysicsBackendSettings>,
     mut query: Query<(
@@ -145,7 +146,7 @@ fn ui_system<C: Component + UiTunable>(
 ) {
     use std::any::TypeId;
 
-    let Ok(mut primary_window) = primary_window_query.get_single_mut() else {
+    let Ok(mut primary_window) = primary_window_query.single_mut() else {
         return;
     };
     let mut egui_window = egui::Window::new("Tnua");
