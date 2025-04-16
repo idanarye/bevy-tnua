@@ -178,6 +178,41 @@ impl LevelSetupHelper2d<'_, '_> {
         ));
         cmd
     }
+
+    pub fn spawn_dynamic_rectangle(
+        &mut self,
+        name: impl ToString,
+        color: impl Into<Color>,
+        transform: Transform,
+        size: Vector2,
+    ) -> EntityCommands {
+        let mut cmd = self.spawn_named(name);
+
+        cmd.insert((
+            Sprite {
+                custom_size: Some(size.f32()),
+                color: color.into(),
+                ..Default::default()
+            },
+            transform,
+        ));
+
+        #[cfg(feature = "rapier2d")]
+        {
+            cmd.insert(rapier::RigidBody::Dynamic);
+            cmd.insert(rapier::Collider::cuboid(
+                0.5 * size.x.f32(),
+                0.5 * size.y.f32(),
+            ));
+        }
+        #[cfg(feature = "avian2d")]
+        {
+            cmd.insert(avian::RigidBody::Dynamic);
+            cmd.insert(avian::Collider::rectangle(size.x, size.y));
+        }
+
+        cmd
+    }
 }
 
 pub trait LevelSetupHelper2dEntityCommandsExtension {

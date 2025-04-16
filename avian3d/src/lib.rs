@@ -17,10 +17,10 @@ use bevy_tnua_physics_integration_layer::math::Float;
 use bevy_tnua_physics_integration_layer::math::Vector3;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
 
-use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostPlatform, TnuaNotPlatform};
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
+use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostPlatform, TnuaNotPlatform};
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
 };
