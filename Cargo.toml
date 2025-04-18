@@ -42,13 +42,11 @@ thiserror = "2.0.12"
 
 [dev-dependencies]
 bevy = { version = "0.16.0-rc.5", default-features = false, features = [
-    # "std",
-    "bevy_log",
-
     "animation",
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
+    "bevy_log",
     # "bevy_scene",
     # "bevy_winit",
     "bevy_render",

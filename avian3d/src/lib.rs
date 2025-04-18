@@ -13,7 +13,6 @@ use avian3d::{
 use bevy::ecs::relationship::Relationship;
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
-// use bevy::ecs::relationship::Relationship;
 use bevy_tnua_physics_integration_layer::math::AsF32;
 use bevy_tnua_physics_integration_layer::math::Float;
 use bevy_tnua_physics_integration_layer::math::Vector3;
