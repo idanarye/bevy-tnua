@@ -10,6 +10,7 @@ use avian3d::{
     dynamics::rigid_body::mass_properties::components::GlobalAngularInertia, prelude::*,
     schedule::PhysicsStepSet,
 };
+use bevy::ecs::relationship::Relationship;
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::AsF32;
@@ -145,7 +146,7 @@ fn update_proximity_sensors_system(
     other_object_query: Query<(
         Option<(&Position, &LinearVelocity, &AngularVelocity)>,
         Option<&CollisionLayers>,
-        Option<&ColliderParent>,
+        Option<&ColliderOf>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
     )>,
@@ -212,7 +213,7 @@ fn update_proximity_sensors_system(
                 let Ok((
                     entity_kinematic_data,
                     entity_collision_layers,
-                    entity_collider_parent,
+                    entity_collider_of,
                     entity_is_ghost,
                     entity_is_sensor,
                 )) = other_object_query.get(entity)
@@ -220,9 +221,9 @@ fn update_proximity_sensors_system(
                     return false;
                 };
 
-                if let Some(parent) = entity_collider_parent {
+                if let Some(relation) = entity_collider_of {
                     // Collider is child of our rigid body. ignore.
-                    if parent.get() == owner_entity {
+                    if relation.get() == owner_entity {
                         return true;
                     }
                 }

@@ -136,7 +136,7 @@ fn update_proximity_sensors_system(
     other_object_query: Query<(
         Option<(&Position, &LinearVelocity, &AngularVelocity)>,
         Option<&CollisionLayers>,
-        Option<&ColliderParent>,
+        Option<&ColliderOf>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
     )>,

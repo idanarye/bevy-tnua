@@ -1,8 +1,10 @@
 [workspace]
 members = [
     "physics-integration-layer",
-    "rapier2d", "rapier3d",
-    "avian2d", "avian3d",
+    "rapier2d",
+    "rapier3d",
+    "avian2d",
+    "avian3d",
     "demos",
 ]
 default-members = [".", "demos"]
@@ -27,23 +29,24 @@ categories.workspace = true
 keywords.workspace = true
 documentation = "https://docs.rs/bevy-tnua"
 readme = "README.md"
-exclude = [
-    "assets",
-]
+exclude = ["assets"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.15", default-features = false }
+bevy = { version = "0.16.0-rc.5", default-features = false, features = [
+    "bevy_log",
+] }
 bevy-tnua-physics-integration-layer = { version = "^0.6", path = "physics-integration-layer" }
 thiserror = "2.0.12"
 
 [dev-dependencies]
-bevy = { version = "^0.15", default-features = false, features = [
-     "animation",
+bevy = { version = "0.16.0-rc.5", default-features = false, features = [
+    "animation",
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
+    "bevy_log",
     # "bevy_scene",
     # "bevy_winit",
     "bevy_render",
@@ -59,7 +62,12 @@ bevy = { version = "^0.15", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-avian3d = { version = "^0.2", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
+avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "7211ecfebb263412f3f0dc095c6e16e12615a229", features = [
+    "3d",
+    "debug-plugin",
+    "parallel",
+    "parry-f32",
+] }
 bevy-tnua-avian3d = { path = "avian3d" }
 
 [package.metadata.docs.rs]

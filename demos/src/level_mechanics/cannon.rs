@@ -81,6 +81,6 @@ fn handle_collision(
             continue;
         }
         (bullet.effect)(&mut commands.entity(player_entity));
-        commands.entity(bullet_entity).despawn_recursive();
+        commands.entity(bullet_entity).despawn();
     }
 }

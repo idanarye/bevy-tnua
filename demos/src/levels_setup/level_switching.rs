@@ -75,7 +75,7 @@ impl Plugin for LevelSwitchingPlugin {
         app.add_event::<SwitchToLevel>();
         app.add_systems(Update, (handle_level_switching, handle_player_positioning));
         app.add_systems(Startup, move |mut writer: EventWriter<SwitchToLevel>| {
-            writer.send(SwitchToLevel(level_index));
+            writer.write(SwitchToLevel(level_index));
         });
     }
 }
@@ -122,7 +122,7 @@ fn handle_level_switching(
     };
     switchable_levels.current = *new_level_index;
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
     commands.run_system(switchable_levels.current().level);
 }
@@ -192,6 +192,6 @@ fn handle_player_positioning(
         }
     }
     if position_player.ttl.tick(time.delta()).finished() {
-        commands.entity(positioner_entity).despawn_recursive();
+        commands.entity(positioner_entity).despawn();
     }
 }

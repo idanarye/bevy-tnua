@@ -97,7 +97,7 @@ fn setup_player(
 }
 
 fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut TnuaController>) {
-    let Ok(mut controller) = query.get_single_mut() else {
+    let Ok(mut controller) = query.single_mut() else {
         return;
     };
 
