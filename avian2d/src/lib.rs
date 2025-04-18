@@ -11,7 +11,8 @@ use avian2d::{prelude::*, schedule::PhysicsStepSet};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
-    TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaNotPlatform, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaToggle
+    TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaNotPlatform,
+    TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaToggle,
 };
 use bevy_tnua_physics_integration_layer::math::*;
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
