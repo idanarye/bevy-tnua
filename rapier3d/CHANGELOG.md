@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d.
 
 ## [Unreleased]
+### Added
+- Support for `TnuaNotPlatform`.
 
 ## 0.10.0 - 2025-03-22
 ### Changed
