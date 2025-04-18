@@ -75,7 +75,7 @@ impl Plugin for LevelSwitchingPlugin {
         app.add_event::<SwitchToLevel>();
         app.add_systems(Update, (handle_level_switching, handle_player_positioning));
         app.add_systems(Startup, move |mut writer: EventWriter<SwitchToLevel>| {
-            writer.send(SwitchToLevel(level_index));
+            writer.write(SwitchToLevel(level_index));
         });
     }
 }

@@ -1,5 +1,5 @@
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
-use bevy::platform_support::collections::hash_map::{Entry, HashMap};
+use bevy::platform::collections::hash_map::{Entry, HashMap};
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 

@@ -13,7 +13,7 @@ readme = "../README.md"
 
 [dependencies]
 # bevy_render is required because bevy_rapier uses bevy::render::primitives::Aabb
-bevy = { version = "0.16.0-rc.3", default-features = false, features = [
+bevy = { version = "0.16.0-rc.5", default-features = false, features = [
     "bevy_render",
 ] }
 bevy_rapier2d = { version = "^0.29", default-features = false, features = [

@@ -34,14 +34,14 @@ exclude = ["assets"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.16.0-rc.3", default-features = false, features = [
+bevy = { version = "0.16.0-rc.5", default-features = false, features = [
     "bevy_log",
 ] }
 bevy-tnua-physics-integration-layer = { version = "^0.6", path = "physics-integration-layer" }
 thiserror = "2.0.12"
 
 [dev-dependencies]
-bevy = { version = "0.16.0-rc.3", default-features = false, features = [
+bevy = { version = "0.16.0-rc.5", default-features = false, features = [
     # "std",
     "bevy_log",
 
@@ -64,51 +64,7 @@ bevy = { version = "0.16.0-rc.3", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-bevy_a11y = "=0.16.0-rc.3"
-bevy_animation = "=0.16.0-rc.3"
-bevy_app = "=0.16.0-rc.3"
-bevy_asset = "=0.16.0-rc.3"
-bevy_audio = "=0.16.0-rc.3"
-bevy_color = "=0.16.0-rc.3"
-bevy_core_pipeline = "=0.16.0-rc.3"
-bevy_derive = "=0.16.0-rc.3"
-bevy_dev_tools = "=0.16.0-rc.3"
-bevy_diagnostic = "=0.16.0-rc.3"
-bevy_dylib = "=0.16.0-rc.3"
-bevy_ecs = "=0.16.0-rc.3"
-bevy_encase_derive = "=0.16.0-rc.3"
-bevy_gilrs = "=0.16.0-rc.3"
-bevy_gizmos = "=0.16.0-rc.3"
-bevy_gltf = "=0.16.0-rc.3"
-bevy_image = "=0.16.0-rc.3"
-bevy_input = "=0.16.0-rc.3"
-bevy_input_focus = "=0.16.0-rc.3"
-bevy_internal = "=0.16.0-rc.3"
-bevy_log = "=0.16.0-rc.3"
-bevy_macro_utils = "=0.16.0-rc.3"
-bevy_math = "=0.16.0-rc.3"
-bevy_mesh = "=0.16.0-rc.3"
-bevy_mikktspace = "=0.16.0-rc.3"
-bevy_pbr = "=0.16.0-rc.3"
-bevy_picking = "=0.16.0-rc.3"
-bevy_platform_support = "=0.16.0-rc.3"
-bevy_ptr = "=0.16.0-rc.3"
-bevy_reflect = "=0.16.0-rc.3"
-bevy_remote = "=0.16.0-rc.3"
-bevy_render = "=0.16.0-rc.3"
-bevy_scene = "=0.16.0-rc.3"
-bevy_sprite = "=0.16.0-rc.3"
-bevy_state = "=0.16.0-rc.3"
-bevy_tasks = "=0.16.0-rc.3"
-bevy_text = "=0.16.0-rc.3"
-bevy_time = "=0.16.0-rc.3"
-bevy_transform = "=0.16.0-rc.3"
-bevy_ui = "=0.16.0-rc.3"
-bevy_utils = "=0.16.0-rc.3"
-bevy_window = "=0.16.0-rc.3"
-bevy_winit = "=0.16.0-rc.3"
-
-avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "f041bf678dd8b75cf4408fc08cc3c6036bcdafb4", features = [
+avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "7211ecfebb263412f3f0dc095c6e16e12615a229", features = [
     "3d",
     "debug-plugin",
     "parallel",

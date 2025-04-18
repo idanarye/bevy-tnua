@@ -1,5 +1,5 @@
 use bevy::gltf::Gltf;
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -47,7 +47,7 @@ pub fn animation_patcher_system(
                 break;
             }
             entity = if let Ok(child_of) = child_of_query.get(entity) {
-                child_of.parent
+                child_of.parent()
             } else {
                 break;
             };

@@ -33,7 +33,7 @@ avian2d = ["avian", "dep:avian2d", "dep:bevy-tnua-avian2d"]
 avian3d = ["avian", "dep:avian3d", "dep:bevy-tnua-avian3d"]
 
 [dependencies]
-bevy = { version = "0.16.0-rc.3", default-features = false, features = [
+bevy = { version = "0.16.0-rc.5", default-features = false, features = [
     "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -67,14 +67,14 @@ bevy-tnua-physics-integration-layer = { path = "../physics-integration-layer" }
 # ], optional = true }
 # bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
-avian2d = { git = "https://github.com/Jondolf/avian.git", rev = "f041bf678dd8b75cf4408fc08cc3c6036bcdafb4", default-features = false, features = [
+avian2d = { git = "https://github.com/Jondolf/avian.git", rev = "7211ecfebb263412f3f0dc095c6e16e12615a229", default-features = false, features = [
     "2d",
     "debug-plugin",
     "parallel",
 ], optional = true }
 bevy-tnua-avian2d = { path = "../avian2d", default-features = false, optional = true }
 
-avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "f041bf678dd8b75cf4408fc08cc3c6036bcdafb4", default-features = false, features = [
+avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "7211ecfebb263412f3f0dc095c6e16e12615a229", default-features = false, features = [
     "3d",
     "debug-plugin",
     "parallel",

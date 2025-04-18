@@ -1,4 +1,4 @@
-use bevy::{platform_support::collections::HashSet, prelude::*};
+use bevy::{platform::collections::HashSet, prelude::*};
 use bevy_tnua_physics_integration_layer::math::Float;
 
 use crate::{TnuaGhostSensor, TnuaProximitySensor};
