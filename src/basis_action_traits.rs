@@ -286,6 +286,17 @@ impl TnuaActionLifecycleStatus {
         }
     }
 
+    /// Continue - unless the action is cancelled into another action.
+    pub fn directive_linger(&self) -> TnuaActionLifecycleDirective {
+        match self {
+            TnuaActionLifecycleStatus::Initiated => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::CancelledFrom => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::StillFed => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::NoLongerFed => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::CancelledInto => TnuaActionLifecycleDirective::Finished,
+        }
+    }
+
     /// Determine if the action just started, whether from no action or to replace another action.
     pub fn just_started(&self) -> bool {
         match self {

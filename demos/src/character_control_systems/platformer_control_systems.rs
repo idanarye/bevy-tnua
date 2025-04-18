@@ -507,8 +507,9 @@ pub fn apply_platformer_controls(
         }
 
         if jump {
+            let action_flow_status = controller.action_flow_status().clone();
             if matches!(
-                controller.action_flow_status().ongoing(),
+                action_flow_status.ongoing(),
                 Some(TnuaBuiltinJump::NAME | "walljump")
             ) {
                 controller.prolong_action();
@@ -525,6 +526,7 @@ pub fn apply_platformer_controls(
                     },
                 );
             } else {
+                let current_action_name = controller.action_name();
                 controller.action(TnuaBuiltinJump {
                     // Jumping, like crouching, is an action that we either feed or don't. However,
                     // because it can be used in midair, we want to set its `allow_in_air`. The air
@@ -543,7 +545,9 @@ pub fn apply_platformer_controls(
                     // (maintaining the jump) and 2 for any other action. Of course, if the player
                     // releases the button and presses it again it'll return 2.
                     allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME)
-                        <= config.actions_in_air,
+                        <= config.actions_in_air
+                        // We also want to be able to jump from a climb.
+                        || current_action_name == Some(TnuaBuiltinClimb::NAME),
                     ..config.jump.clone()
                 });
             }
