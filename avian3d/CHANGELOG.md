@@ -10,6 +10,12 @@ NOTES:
 * Avian used to be named bevy_xpbd. The old bevy-tnua-xpbd changelog can be seen [here](https://github.com/idanarye/bevy-tnua/blob/3cba881c8825633a8d8bdca1fe30e54500e655b8/xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- Support for `TnuaNotPlatform`.
+
+### Changed
+- Some ray/shape cast checks on the collider also look at the rigid body
+  (through the `ColliderParent`)
 
 ## 0.3.1 - 2025-03-24
 ### Fixed

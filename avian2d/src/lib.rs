@@ -11,8 +11,8 @@ use avian2d::{prelude::*, schedule::PhysicsStepSet};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
-    TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaProximitySensor,
-    TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaToggle,
+    TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaNotPlatform,
+    TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaToggle,
 };
 use bevy_tnua_physics_integration_layer::math::*;
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
@@ -139,6 +139,7 @@ fn update_proximity_sensors_system(
         Option<&ColliderParent>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
+        Has<TnuaNotPlatform>,
     )>,
 ) {
     query.par_iter_mut().for_each(
@@ -200,21 +201,48 @@ fn update_proximity_sensors_system(
                 } = cast_result;
 
                 let Ok((
-                    entity_kinematic_data,
-                    entity_collision_layers,
+                    mut entity_kinematic_data,
+                    mut entity_collision_layers,
                     entity_collider_parent,
-                    entity_is_ghost,
-                    entity_is_sensor,
+                    mut entity_is_ghost,
+                    mut entity_is_sensor,
+                    mut entity_is_not_platform,
                 )) = other_object_query.get(entity)
                 else {
                     return false;
                 };
 
                 if let Some(parent) = entity_collider_parent {
+                    let parent_entity = parent.get();
+
                     // Collider is child of our rigid body. ignore.
-                    if parent.get() == owner_entity {
+                    if parent_entity == owner_entity {
                         return true;
                     }
+
+                    if let Ok((
+                        parent_kinematic_data,
+                        parent_collision_layers,
+                        _,
+                        parent_is_ghost,
+                        parent_is_sensor,
+                        parent_is_not_platform,
+                    )) = other_object_query.get(parent_entity)
+                    {
+                        if entity_kinematic_data.is_none() {
+                            entity_kinematic_data = parent_kinematic_data;
+                        }
+                        if entity_collision_layers.is_none() {
+                            entity_collision_layers = parent_collision_layers;
+                        }
+                        entity_is_ghost = entity_is_ghost || parent_is_ghost;
+                        entity_is_sensor = entity_is_sensor || parent_is_sensor;
+                        entity_is_not_platform = entity_is_not_platform || parent_is_not_platform;
+                    }
+                }
+
+                if entity_is_not_platform {
+                    return true;
                 }
 
                 let entity_linvel;

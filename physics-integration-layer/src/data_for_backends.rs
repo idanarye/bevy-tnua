@@ -222,3 +222,9 @@ pub struct TnuaGhostPlatform;
 /// Change the gravity for a Tnua-controlled character.
 #[derive(Component, Debug)]
 pub struct TnuaGravity(pub Vector3);
+
+/// Marker component for colliders which Tnua should not treat as platform.
+///
+/// This means that the ray/shape cast ignores these hits.
+#[derive(Component, Default, Debug)]
+pub struct TnuaNotPlatform;
