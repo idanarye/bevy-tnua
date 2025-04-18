@@ -32,6 +32,8 @@
 //!       crate, that specifies the shape to cast in a way the integration crate can pass on to the
 //!       physics engine. The name of that component should be
 //!       `Tnua<physics-engine-name>SensorShape`.
+//!     * The detection should skip entities marked with the
+//!       [`TnuaNotPlatform`](data_for_backends::TnuaNotPlatform) component.
 //!
 //!   The integration crate may update all these components in one system or multiple systems as it
 //!   sees fit.

@@ -3,6 +3,8 @@ use std::ops::{Add, AddAssign};
 use crate::math::{AdjustPrecision, Float, Quaternion, Vector3};
 use bevy::prelude::*;
 
+pub use crate::obstacle_radar::TnuaObstacleRadar;
+
 /// Allows disabling Tnua for a specific entity.
 ///
 /// This can be used to let some other system  temporarily take control over a character.
@@ -278,4 +280,8 @@ pub struct TnuaGhostPlatform;
 #[derive(Component, Debug)]
 pub struct TnuaGravity(pub Vector3);
 
-pub use crate::obstacle_radar::TnuaObstacleRadar;
+/// Marker component for colliders which Tnua should not treat as platform.
+///
+/// This means that the ray/shape cast ignores these hits.
+#[derive(Component, Default, Debug)]
+pub struct TnuaNotPlatform;

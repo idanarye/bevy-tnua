@@ -16,10 +16,10 @@ use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::rapier;
 use bevy_rapier2d::rapier::prelude::InteractionGroups;
 
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostPlatform;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
+use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostPlatform, TnuaNotPlatform};
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
 };
@@ -161,6 +161,7 @@ fn update_proximity_sensors_system(
         Option<&TnuaToggle>,
     )>,
     ghost_platforms_query: Query<(), With<TnuaGhostPlatform>>,
+    not_platform_query: Query<(), With<TnuaNotPlatform>>,
     other_object_query_query: Query<(&GlobalTransform, &Velocity)>,
 ) {
     query.par_iter_mut().for_each(
@@ -225,6 +226,9 @@ fn update_proximity_sensors_system(
                            already_visited_ghost_entities: &HashSet<Entity>|
              -> Option<CastResult> {
                 let predicate = |other_entity: Entity| {
+                    if not_platform_query.contains(other_entity) {
+                        return false;
+                    }
                     if let Some(other_collider) =
                         get_collider(&rapier_context.colliders, other_entity)
                     {

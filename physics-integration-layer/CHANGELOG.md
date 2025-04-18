@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
+- `TnuaNotPlatform` - marker component for colliders which Tnua should not
+  treat as platform (which mean the ray/shape cast ignores them)
 - `TnuaObstacleRadar` component for detecting nearby colliders.
 - `TnuaSpatialExt` trait for allowing physics backend integration crates to
   offer spatial queries in user systems. This is mostly so that the main

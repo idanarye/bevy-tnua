@@ -126,6 +126,10 @@ fn main() {
                 tnua_demos_crate::levels_setup::compound_colliders_3d::setup_level,
             )
             .with(
+                "DynamicBodies",
+                tnua_demos_crate::levels_setup::dynamic_bodies_3d::setup_level,
+            )
+            .with(
                 "JungleGym",
                 tnua_demos_crate::levels_setup::jungle_gym::setup_level,
             )
