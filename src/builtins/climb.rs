@@ -24,6 +24,9 @@ pub struct TnuaBuiltinClimb {
 
     pub desired_forward: Option<Dir3>,
 
+    pub hard_stop_up: Option<Vector3>,
+    pub hard_stop_down: Option<Vector3>,
+
     /// The direction used to initiate the climb.
     ///
     /// This field is not used by the action itself. It's purpose is to help user controller
@@ -44,6 +47,8 @@ impl Default for TnuaBuiltinClimb {
             climb_acceleration: 30.0,
             coyote_time: 0.15,
             desired_forward: None,
+            hard_stop_up: None,
+            hard_stop_down: None,
             initiation_direction: Vector3::ZERO,
         }
     }
@@ -84,6 +89,13 @@ impl TnuaAction for TnuaBuiltinClimb {
                             .dot(ctx.up_direction.adjust_precision()),
                         self.climb_acceleration,
                     );
+
+                    if let Some(stop_at) = self.hard_stop_up {
+                        motor.lin += ctx.hard_stop(ctx.up_direction, stop_at, &motor.lin);
+                    }
+                    if let Some(stop_at) = self.hard_stop_down {
+                        motor.lin += ctx.hard_stop(-ctx.up_direction, stop_at, &motor.lin);
+                    }
 
                     let vec_to_anchor = (self.anchor - ctx.tracker.translation)
                         .reject_from(ctx.up_direction().adjust_precision());

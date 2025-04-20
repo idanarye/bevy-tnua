@@ -395,6 +395,7 @@ pub fn apply_platformer_controls(
                                 ..config.climb.clone()
                             };
 
+                            const LOOK_ABOVE_OR_BELOW: Float = 5.0;
                             match action
                                 .desired_climb_velocity
                                 .dot(Vector3::Y)
@@ -402,7 +403,17 @@ pub fn apply_platformer_controls(
                                 .unwrap()
                             {
                                 Ordering::Less => {
-                                    if !controller.is_airborne().unwrap() {
+                                    if controller.is_airborne().unwrap() {
+                                        let extent = blip.probe_extent_from_closest_point(
+                                            -Dir3::Y,
+                                            LOOK_ABOVE_OR_BELOW,
+                                        );
+                                        if extent < 0.9 * LOOK_ABOVE_OR_BELOW {
+                                            action.hard_stop_down = Some(
+                                                blip.closest_point().get() - extent * Vector3::Y,
+                                            );
+                                        }
+                                    } else {
                                         if initiation_direction == Vector3::ZERO {
                                             break 'maintain_climb;
                                         } else {
@@ -413,12 +424,13 @@ pub fn apply_platformer_controls(
                                 Ordering::Equal => {}
                                 // Climbing up
                                 Ordering::Greater => {
-                                    const LOOK_ABOVE: Float = 0.5;
-                                    if blip.probe_extent_from_closest_point(Dir3::Y, LOOK_ABOVE)
-                                        < 0.9 * LOOK_ABOVE
-                                    {
-                                        action.desired_climb_velocity = Vector3::ZERO;
-                                        action.climb_acceleration = Float::INFINITY;
+                                    let extent = blip.probe_extent_from_closest_point(
+                                        Dir3::Y,
+                                        LOOK_ABOVE_OR_BELOW,
+                                    );
+                                    if extent < 0.9 * LOOK_ABOVE_OR_BELOW {
+                                        action.hard_stop_up =
+                                            Some(blip.closest_point().get() + extent * Vector3::Y);
                                     }
                                 }
                             }

@@ -105,11 +105,14 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
     /// If the geometry does not reach the desired distance, and it ends in a right angle or acute
     /// angle, the distance to that point will be returned.
     ///
-    /// If the geometry does not reach the desired distance, and it "ends" in an obstute angle, the
+    /// If the geometry does not reach the desired distance, and it "ends" in an obtuse angle, the
     /// returned value will be between that point and `probe_at_distance`.
     ///
     /// This is useful to detect when the character is near the top of a wall or of a climbable
     /// object.
+    ///
+    /// Maybe have weird results if used on concave colliders, and the distance may not be accurate
+    /// in genral, so always use a threshold
     pub fn probe_extent_from_closest_point(
         &self,
         direction: Dir3,

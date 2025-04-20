@@ -9,6 +9,7 @@ pub trait MotionHelper {
     fn frame_duration(&self) -> Float;
     fn up_direction(&self) -> Dir3;
     fn gravity(&self) -> Vector3;
+    fn position(&self) -> Vector3;
     fn velocity(&self) -> Vector3;
     fn rotation(&self) -> Quaternion;
     fn angvel(&self) -> Vector3;
@@ -61,6 +62,28 @@ pub trait MotionHelper {
         let torque_to_turn = desired_angvel - existing_angvel;
         TnuaVelChange::boost(torque_to_turn * up_vector)
     }
+
+    fn hard_stop(
+        &self,
+        direction: Dir3,
+        stop_at: Vector3,
+        current_vel_change: &TnuaVelChange,
+    ) -> TnuaVelChange {
+        let expected_velocity =
+            self.velocity() + current_vel_change.calc_mean_boost(self.frame_duration());
+        let expected_velocity_in_direction = expected_velocity.dot(direction.adjust_precision());
+        if expected_velocity_in_direction <= 0.0 {
+            return TnuaVelChange::default();
+        }
+        let distance_in_direction = (stop_at - self.position()).dot(direction.adjust_precision());
+        let max_allowed_velocity = distance_in_direction / self.frame_duration();
+        let velocity_to_cut = expected_velocity_in_direction - max_allowed_velocity;
+        if 0.0 < velocity_to_cut {
+            TnuaVelChange::boost(velocity_to_cut * -direction.adjust_precision())
+        } else {
+            TnuaVelChange::default()
+        }
+    }
 }
 
 impl MotionHelper for TnuaActionContext<'_> {
@@ -74,6 +97,10 @@ impl MotionHelper for TnuaActionContext<'_> {
 
     fn gravity(&self) -> Vector3 {
         self.tracker.gravity
+    }
+
+    fn position(&self) -> Vector3 {
+        self.tracker.translation
     }
 
     fn velocity(&self) -> Vector3 {

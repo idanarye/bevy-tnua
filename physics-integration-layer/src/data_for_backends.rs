@@ -170,6 +170,10 @@ impl TnuaVelChange {
         self.acceleration * frame_duration + self.boost
     }
 
+    pub fn calc_mean_boost(&self, frame_duration: Float) -> Vector3 {
+        0.5 * self.acceleration * frame_duration + self.boost
+    }
+
     pub fn calc_acceleration(&self, frame_duration: Float) -> Vector3 {
         self.acceleration + self.boost / frame_duration
     }

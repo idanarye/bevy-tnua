@@ -35,4 +35,15 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
         .spawn_cylinder("Vine", Transform::from_xyz(5.0, 1.0, 5.0), 0.1, 10.0)
         .make_sensor()
         .insert(Climbable);
+
+    helper
+        .with_color(css::PALE_GREEN)
+        .spawn_cylinder(
+            "Higher Vine",
+            Transform::from_xyz(-8.0, 10.0, 0.0),
+            0.1,
+            5.0,
+        )
+        .make_sensor()
+        .insert(Climbable);
 }
