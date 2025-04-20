@@ -97,6 +97,31 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
             / offsets.len() as Float
     }
 
+    /// Try traversing the geometry from the [`closest_point`](Self::closest_point) along
+    /// `direction` until reaching `probe_at_distance`.
+    ///
+    /// If the geometry reaches that distance (and behind), that distance will be returned.
+    ///
+    /// If the geometry does not reach the desired distance, and it ends in a right angle or acute
+    /// angle, the distance to that point will be returned.
+    ///
+    /// If the geometry does not reach the desired distance, and it "ends" in an obstute angle, the
+    /// returned value will be between that point and `probe_at_distance`.
+    ///
+    /// This is useful to detect when the character is near the top of a wall or of a climbable
+    /// object.
+    pub fn probe_extent_from_closest_point(
+        &self,
+        direction: Dir3,
+        probe_at_distance: Float,
+    ) -> Float {
+        let closest_point = self.closest_point().get();
+        let closest_above = self
+            .closest_point_from_offset(probe_at_distance * direction.adjust_precision(), false)
+            .get();
+        (closest_above - closest_point).dot(direction.adjust_precision())
+    }
+
     pub fn direction_to_closest_point(&self) -> Result<Dir3, InvalidDirectionError> {
         match self.closest_point() {
             TnuaPointProjectionResult::Outside(closest_point) => {

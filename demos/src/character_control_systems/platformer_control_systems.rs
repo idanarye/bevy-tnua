@@ -414,11 +414,7 @@ pub fn apply_platformer_controls(
                                 // Climbing up
                                 Ordering::Greater => {
                                     const LOOK_ABOVE: Float = 0.5;
-                                    let closest_point = blip.closest_point().get();
-                                    let closest_above = blip
-                                        .closest_point_from_offset(LOOK_ABOVE * Vector3::Y, false)
-                                        .get();
-                                    if (closest_above - closest_point).dot(Vector3::Y)
+                                    if blip.probe_extent_from_closest_point(Dir3::Y, LOOK_ABOVE)
                                         < 0.9 * LOOK_ABOVE
                                     {
                                         action.desired_climb_velocity = Vector3::ZERO;
