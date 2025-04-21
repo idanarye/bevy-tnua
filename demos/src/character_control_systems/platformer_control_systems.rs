@@ -444,7 +444,7 @@ pub fn apply_platformer_controls(
                                 climbable_entity: Some(blip.entity()),
                                 anchor: blip.closest_point().get(),
                                 desired_vec_to_anchor: 0.5 * direction_to_anchor,
-                                desired_forward: Dir3::new(direction_to_anchor).ok(),
+                                desired_forward: Dir3::new(direction_to_anchor.f32()).ok(),
                                 initiation_direction: direction.normalize_or_zero(),
                                 ..config.climb.clone()
                             });
