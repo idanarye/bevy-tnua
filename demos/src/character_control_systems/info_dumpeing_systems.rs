@@ -1,4 +1,5 @@
 use bevy::{color::palettes::css, prelude::*};
+use bevy_tnua::prelude::TnuaController;
 use bevy_tnua::{
     math::AsF32, radar_lens::TnuaRadarLens, TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor,
 };
@@ -10,16 +11,18 @@ use super::spatial_ext_facade::SpatialExtFacade;
 pub fn character_control_info_dumping_system(
     mut query: Query<(
         &mut InfoSource,
+        &TnuaController,
         &TnuaProximitySensor,
         Option<&TnuaGhostSensor>,
         Option<&TnuaObstacleRadar>,
     )>,
     names_query: Query<&Name>,
 ) {
-    for (mut info_source, sensor, ghost_sensor, obstacle_radar) in query.iter_mut() {
+    for (mut info_source, controller, sensor, ghost_sensor, obstacle_radar) in query.iter_mut() {
         if !info_source.is_active() {
             continue;
         }
+        info_source.label("Action", controller.action_name().unwrap_or_default());
         if let Some(sensor_output) = sensor.output.as_ref() {
             if let Ok(name) = names_query.get(sensor_output.entity) {
                 info_source.label("Standing on", name.as_str());

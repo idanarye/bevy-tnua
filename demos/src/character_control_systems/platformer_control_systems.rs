@@ -106,7 +106,9 @@ pub fn apply_platformer_controls(
         // with a third party plugin.
         let mut direction = Vector3::ZERO;
 
-        if config.dimensionality == Dimensionality::Dim3 {
+        let is_climbing = controller.action_name() == Some(TnuaBuiltinClimb::NAME);
+
+        if config.dimensionality == Dimensionality::Dim3 || is_climbing {
             if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
                 direction -= Vector3::Z;
             }
@@ -132,20 +134,22 @@ pub fn apply_platformer_controls(
             screen_space_direction
         };
 
-        let jump = match config.dimensionality {
-            Dimensionality::Dim2 => {
+        let jump = match (config.dimensionality, is_climbing) {
+            (Dimensionality::Dim2, true) => keyboard.any_pressed([KeyCode::Space]),
+            (Dimensionality::Dim2, false) => {
                 keyboard.any_pressed([KeyCode::Space, KeyCode::ArrowUp, KeyCode::KeyW])
             }
-            Dimensionality::Dim3 => keyboard.any_pressed([KeyCode::Space]),
+            (Dimensionality::Dim3, _) => keyboard.any_pressed([KeyCode::Space]),
         };
         let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
         let turn_in_place = forward_from_camera.is_none()
             && keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
-        let crouch_buttons = match config.dimensionality {
-            Dimensionality::Dim2 => CROUCH_BUTTONS_2D.iter().copied(),
-            Dimensionality::Dim3 => CROUCH_BUTTONS_3D.iter().copied(),
+        let crouch_buttons = match (config.dimensionality, is_climbing) {
+            (Dimensionality::Dim2, true) => CROUCH_BUTTONS_3D.iter().copied(),
+            (Dimensionality::Dim2, false) => CROUCH_BUTTONS_2D.iter().copied(),
+            (Dimensionality::Dim3, _) => CROUCH_BUTTONS_3D.iter().copied(),
         };
         let crouch_pressed = keyboard.any_pressed(crouch_buttons);
         let crouch_just_pressed = just_pressed.crouch;
@@ -437,9 +441,12 @@ pub fn apply_platformer_controls(
 
                             controller.action(action);
                         } else if 0.5 < direction.dot(blip_direction.adjust_precision()) {
-                            let direction_to_anchor = -blip
-                                .normal_from_closest_point()
-                                .reject_from_normalized(Vector3::Y);
+                            let direction_to_anchor = match config.dimensionality {
+                                Dimensionality::Dim2 => Vector3::ZERO,
+                                Dimensionality::Dim3 => -blip
+                                    .normal_from_closest_point()
+                                    .reject_from_normalized(Vector3::Y),
+                            };
                             controller.action(TnuaBuiltinClimb {
                                 climbable_entity: Some(blip.entity()),
                                 anchor: blip.closest_point().get(),

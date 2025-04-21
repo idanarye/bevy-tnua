@@ -121,6 +121,10 @@ fn main() {
                 "DynamicBodies",
                 tnua_demos_crate::levels_setup::dynamic_bodies_2d::setup_level,
             )
+            .with(
+                "JungleGym",
+                tnua_demos_crate::levels_setup::jungle_gym_2d::setup_level,
+            )
     });
     app.add_systems(Startup, setup_player);
     app.add_systems(
