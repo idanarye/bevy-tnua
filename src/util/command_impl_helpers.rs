@@ -5,6 +5,10 @@ use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Quaterni
 
 use crate::TnuaActionContext;
 
+/// Helper trait for implementing basis and actions.
+///
+/// Methods of this trait typically return a [`TnuaVelChange`] that can be added to
+/// [`motor.lin`](crate::TnuaMotor::lin) or [`motor.ang`](crate::TnuaMotor::ang).
 pub trait MotionHelper {
     fn frame_duration(&self) -> Float;
     fn up_direction(&self) -> Dir3;
@@ -14,10 +18,14 @@ pub trait MotionHelper {
     fn rotation(&self) -> Quaternion;
     fn angvel(&self) -> Vector3;
 
+    /// A force for cancelling out the gravity.
     fn negate_gravity(&self) -> TnuaVelChange {
         TnuaVelChange::acceleration(-self.gravity())
     }
 
+    /// A force for setting the velocity to the desired velocity, with acceleration constraints.
+    ///
+    /// The `dimlim` parameter can be used to only set the velocity on certain axis/plane.
     fn adjust_velocity(
         &self,
         target: Vector3,
@@ -33,6 +41,7 @@ pub trait MotionHelper {
         }
     }
 
+    /// A force for setting the vertical velocity to the desired velocity, with acceleration constraints.
     fn adjust_vertical_velocity(&self, target: Float, acceleration: Float) -> TnuaVelChange {
         let up_vector = self.up_direction().adjust_precision();
         self.adjust_velocity(up_vector * target, acceleration, |v| {
@@ -40,6 +49,7 @@ pub trait MotionHelper {
         })
     }
 
+    /// A force for setting the horizontal velocity to the desired velocity, with acceleration constraints.
     fn adjust_horizontal_velocity(&self, target: Vector3, acceleration: Float) -> TnuaVelChange {
         self.adjust_velocity(target, acceleration, |v| {
             v.reject_from_normalized(self.up_direction().adjust_precision())
@@ -63,6 +73,20 @@ pub trait MotionHelper {
         TnuaVelChange::boost(torque_to_turn * up_vector)
     }
 
+    /// A force for stopping the character right before reaching a certain point.
+    ///
+    /// Please note that unlike most [`MotionHelper`] methods that "stack" on impulses and forces
+    /// already applied, this one needs to be able to "cancel" the previous changes (on the
+    /// relevant axis, at least) which is why it has a `current_vel_change` argument. Due to that,
+    /// this must be the **last** velchange applied to the motor (at least, to it's
+    /// [`lin`](crate::TnuaMotor::lin) field, on the axis of `direction`)
+    ///
+    /// `direction` is the direction _from_ the character _toward_ that point. So, for example, in
+    /// order to stop a character climbing a ladder when reaching the top of the ladder, `stop_at`
+    /// needs to be the coordinates of the top of the ladder while `direction` needs to be
+    /// `Dir3::Y` (the UP direction)
+    ///
+    /// Velocities perpendicular to the `direction` will not be affected.
     fn hard_stop(
         &self,
         direction: Dir3,
