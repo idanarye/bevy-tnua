@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaVelChange;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Quaternion, Vector3};
 
-use crate::TnuaActionContext;
+use crate::{TnuaActionContext, TnuaBasisContext};
 
 /// Helper trait for implementing basis and actions.
 ///
@@ -107,6 +107,36 @@ pub trait MotionHelper {
         } else {
             TnuaVelChange::default()
         }
+    }
+}
+
+impl MotionHelper for TnuaBasisContext<'_> {
+    fn frame_duration(&self) -> Float {
+        self.frame_duration
+    }
+
+    fn up_direction(&self) -> Dir3 {
+        self.up_direction
+    }
+
+    fn gravity(&self) -> Vector3 {
+        self.tracker.gravity
+    }
+
+    fn position(&self) -> Vector3 {
+        self.tracker.translation
+    }
+
+    fn velocity(&self) -> Vector3 {
+        self.tracker.velocity
+    }
+
+    fn rotation(&self) -> Quaternion {
+        self.tracker.rotation
+    }
+
+    fn angvel(&self) -> Vector3 {
+        self.tracker.angvel
     }
 }
 
