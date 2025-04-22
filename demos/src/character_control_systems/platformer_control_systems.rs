@@ -387,7 +387,7 @@ pub fn apply_platformer_controls(
                     let mut action = TnuaBuiltinClimb {
                         climbable_entity: Some(blip.entity()),
                         anchor: blip.closest_point().get(),
-                        desired_climb_velocity: 10.0
+                        desired_climb_velocity: config.climb_speed
                             * screen_space_direction.dot(Vector3::NEG_Z)
                             * Vector3::Y,
                         initiation_direction,
@@ -494,10 +494,8 @@ pub fn apply_platformer_controls(
                                 contact_point_with_wall: blip.closest_point().get(),
                                 normal,
                                 force_forward: Some(blip_direction),
-                                max_fall_speed: 2.0,
                                 maintain_distance: Some(0.7),
-                                max_sideways_speed: 1.0,
-                                max_sideways_acceleration: 60.0,
+                                ..config.wall_slide.clone()
                             });
                         }
                     }
@@ -603,6 +601,8 @@ pub struct CharacterMotionConfigForPlatformerDemo {
     pub one_way_platforms_min_proximity: Float,
     pub falling_through: FallingThroughControlScheme,
     pub knockback: TnuaBuiltinKnockback,
+    pub wall_slide: TnuaBuiltinWallSlide,
+    pub climb_speed: Float,
     pub climb: TnuaBuiltinClimb,
 }
 
@@ -633,6 +633,13 @@ impl UiTunable for CharacterMotionConfigForPlatformerDemo {
         });
         ui.collapsing("Knockback:", |ui| {
             self.knockback.tune(ui);
+        });
+        ui.collapsing("Wall Slide:", |ui| {
+            self.wall_slide.tune(ui);
+        });
+        ui.collapsing("Climb", |ui| {
+            ui.add(egui::Slider::new(&mut self.climb_speed, 0.0..=30.0).text("Climb Speed"));
+            self.climb.tune(ui);
         });
     }
 }

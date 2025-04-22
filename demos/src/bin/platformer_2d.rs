@@ -215,7 +215,9 @@ fn setup_player(mut commands: Commands) {
         one_way_platforms_min_proximity: 1.0,
         falling_through: FallingThroughControlScheme::SingleFall,
         knockback: Default::default(),
+        wall_slide: Default::default(),
         climb: Default::default(),
+        climb_speed: 10.0,
     });
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.

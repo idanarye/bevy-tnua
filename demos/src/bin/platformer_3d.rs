@@ -224,6 +224,8 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         one_way_platforms_min_proximity: 1.0,
         falling_through: FallingThroughControlScheme::SingleFall,
         knockback: Default::default(),
+        wall_slide: Default::default(),
+        climb_speed: 10.0,
         climb: Default::default(),
     });
 

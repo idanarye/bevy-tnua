@@ -6,6 +6,7 @@ use crate::{
 };
 use bevy::prelude::*;
 
+#[derive(Clone)]
 pub struct TnuaBuiltinWallSlide {
     pub wall_entity: Option<Entity>,
     pub contact_point_with_wall: Vector3,
@@ -15,6 +16,21 @@ pub struct TnuaBuiltinWallSlide {
     pub maintain_distance: Option<Float>,
     pub max_sideways_speed: Float,
     pub max_sideways_acceleration: Float,
+}
+
+impl Default for TnuaBuiltinWallSlide {
+    fn default() -> Self {
+        Self {
+            wall_entity: None,
+            contact_point_with_wall: Vector3::ZERO,
+            normal: Dir3::Y,
+            force_forward: None, // obvisouly invalid value
+            max_fall_speed: 2.0,
+            maintain_distance: None,
+            max_sideways_speed: 1.0,
+            max_sideways_acceleration: 60.0,
+        }
+    }
 }
 
 impl TnuaAction for TnuaBuiltinWallSlide {
