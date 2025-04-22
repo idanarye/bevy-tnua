@@ -6,15 +6,45 @@ use crate::{
 };
 use bevy::prelude::*;
 
+/// An [action](TnuaAction) for sliding on walls.
 #[derive(Clone)]
 pub struct TnuaBuiltinWallSlide {
+    /// The entity of the wall to slide on.
     pub wall_entity: Option<Entity>,
+
+    /// The on the wall where the character touches it.
+    ///
+    /// Note that this does not actually have to be on an actual wall. It can be a point in the
+    /// middle of the air, and the action will cause the character to pretend there is a wall there
+    /// and slide on it.
     pub contact_point_with_wall: Vector3,
+
+    /// The wall's normal
     pub normal: Dir3,
+
+    /// Force the character to face in a particular direction.
     pub force_forward: Option<Dir3>,
+
+    /// When the character slides faster than that speed, slow it down.
     pub max_fall_speed: Float,
+    
+    /// A distance to maintain from the wall.
+    ///
+    /// Specifically - the distance from
+    /// [`contact_point_with_wall`](Self::contact_point_with_wall) in the direction of the
+    /// [`normal`](Self::normal).
     pub maintain_distance: Option<Float>,
+
+    /// The maximum speed the character is allowed to move sideways on the wall while sliding
+    /// down on it.
     pub max_sideways_speed: Float,
+
+    /// The maximum acceleration the character is allowed to move sideways on the wall while
+    /// sliding down on it.
+    ///
+    /// Note that this also apply to the acceleration used to brake the character's horitonztal
+    /// movement when it enters the wall slide faster than
+    /// [`max_sideways_speed`](Self::max_sideways_speed).
     pub max_sideways_acceleration: Float,
 }
 
