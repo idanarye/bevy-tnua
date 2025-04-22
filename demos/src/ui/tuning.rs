@@ -285,12 +285,7 @@ impl UiTunable for TnuaBuiltinWallSlide {
 impl UiTunable for TnuaBuiltinClimb {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
-        slider_or_infinity(
-            ui,
-            "Anchor Velocity",
-            &mut self.anchor_velocity,
-            0.0..=300.0,
-        );
+        slider_or_infinity(ui, "Anchor Speed", &mut self.anchor_speed, 0.0..=300.0);
         slider_or_infinity(
             ui,
             "Anchor Acceleration",

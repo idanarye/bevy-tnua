@@ -27,7 +27,7 @@ pub struct TnuaBuiltinWallSlide {
 
     /// When the character slides faster than that speed, slow it down.
     pub max_fall_speed: Float,
-    
+
     /// A distance to maintain from the wall.
     ///
     /// Specifically - the distance from

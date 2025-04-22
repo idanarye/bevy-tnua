@@ -8,23 +8,53 @@ use crate::{
     TnuaActionLifecycleStatus, TnuaMotor,
 };
 
+/// An [action](TnuaAction) for climbing on things.
 #[derive(Clone)]
 pub struct TnuaBuiltinClimb {
+    /// The entity being climbed on.
     pub climbable_entity: Option<Entity>,
+
+    /// A point on the climbed entity where the character touches it.
+    ///
+    /// Note that this does not actually have to be on any actual collider. It can be a point
+    /// in the middle of the air, and the action will cause the character to pretend there is something there and climb on it.
     pub anchor: Vector3,
+
+    /// The position of the [`anchor`](Self::anchor) compared to the character.
+    ///
+    /// The action will try to maintain this horizontal relative position.
     pub desired_vec_to_anchor: Vector3,
-    pub anchor_velocity: Float,
+
+    /// Speed for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
+    pub anchor_speed: Float,
+
+    /// Acceleration for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
     pub anchor_acceleration: Float,
 
+    /// The velocity to climb at (move up/down the entity)
     pub desired_climb_velocity: Vector3,
+
+    /// The acceleration to climb at.
     pub climb_acceleration: Float,
 
     /// The time, in seconds, the character can still jump after letting go.
     pub coyote_time: Float,
 
+    /// Force the character to face in a particular direction.
     pub desired_forward: Option<Dir3>,
 
+    /// Prevent the character from climbing above this point.
+    ///
+    /// Tip: use
+    /// [`probe_extent_from_closest_point`](crate::radar_lens::TnuaRadarBlipLens::probe_extent_from_closest_point)
+    /// to find this point.
     pub hard_stop_up: Option<Vector3>,
+
+    /// Prevent the character from climbing below this point.
+    ///
+    /// Tip: use
+    /// [`probe_extent_from_closest_point`](crate::radar_lens::TnuaRadarBlipLens::probe_extent_from_closest_point)
+    /// to find this point.
     pub hard_stop_down: Option<Vector3>,
 
     /// The direction used to initiate the climb.
@@ -41,7 +71,7 @@ impl Default for TnuaBuiltinClimb {
             climbable_entity: None,
             anchor: Vector3::NAN,
             desired_vec_to_anchor: Vector3::ZERO,
-            anchor_velocity: 150.0,
+            anchor_speed: 150.0,
             anchor_acceleration: 500.0,
             desired_climb_velocity: Vector3::ZERO,
             climb_acceleration: 30.0,
@@ -112,7 +142,7 @@ impl TnuaAction for TnuaBuiltinClimb {
                     let desired_horizontal_velocity = -horizontal_displacement / ctx.frame_duration;
 
                     motor.lin += ctx.adjust_horizontal_velocity(
-                        desired_horizontal_velocity.clamp_length_max(self.anchor_velocity),
+                        desired_horizontal_velocity.clamp_length_max(self.anchor_speed),
                         self.anchor_acceleration,
                     );
 
