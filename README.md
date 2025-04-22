@@ -36,6 +36,9 @@ Note that:
 * Animation helpers (not the animation itself, but Tnua has facilities that help deciding which animation to play)
 * [Jump/fall through platforms](https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms)
 * Air actions
+* Obstacle actions:
+  * Wall sliding (and jumping)
+  * Climbing
 
 ## Demos:
 

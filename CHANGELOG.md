@@ -12,6 +12,7 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   that helps user systems to figure out what the detected obstacles are and how
   the character can use them for movement actions.
 - `TnuaBuiltinWallSlide` action for sliding down walls.
+- `TnuaBuiltinClimb` action for climbing on things.
 - `calc_angular_velchange_to_force_forward` utility function.
 - `TnuaController::prolong_action`.
 - `vertical_displacement` and `force_forward` fields for `TnuaBuiltinJump`.

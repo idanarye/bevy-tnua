@@ -34,6 +34,12 @@
 //!       `Tnua<physics-engine-name>SensorShape`.
 //!     * The detection should skip entities marked with the
 //!       [`TnuaNotPlatform`](data_for_backends::TnuaNotPlatform) component.
+//!   * [`TnuaObstacleRadar`](data_for_backends::TnuaObstacleRadar) with all the entities within
+//!     proximity (defined by `radius` and `height` fields on the radar component). The system must
+//!     first call the
+//!     [`pre_marking_update`](data_for_backends::TnuaObstacleRadar::pre_marking_update) method,
+//!     and only then call [`mark_seen`](data_for_backends::TnuaObstacleRadar::mark_seen) on each
+//!     entity still within range in the current frame.
 //!
 //!   The integration crate may update all these components in one system or multiple systems as it
 //!   sees fit.
@@ -60,6 +66,10 @@
 //!   may prefer to sync `TnuaGravity` into that mechanism instead (and should support that
 //!   mechanism as the input source for `TnuaRigidBodyTracker::gravity` when it is used, even
 //!   if `TnuaGravity` is not used)
+//!
+//! * Define a type that implements [`TnuaSpatialExt`](spatial_ext::TnuaSpatialExt). That type will
+//!   typically be a [`SystemParam`](bevy::ecs::system::SystemParam) that contains queries and
+//!   resources for getting the required information from the physics backend.
 //!
 //! The integration backend's systems must run with the same timing as the physics backend. If the
 //! physics backend supports running in a different schedule, the integration plugin should also
