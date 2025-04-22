@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy_tnua::builtins::{
-    TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinJumpState,
-    TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
+    TnuaBuiltinClimb, TnuaBuiltinClimbState, TnuaBuiltinCrouch, TnuaBuiltinDash,
+    TnuaBuiltinJumpState, TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
 };
-use bevy_tnua::math::Float;
+use bevy_tnua::math::{Float, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 
@@ -21,7 +21,7 @@ pub enum AnimationState {
     KnockedBack,
     WallSliding,
     WallJumping,
-    Climbing,
+    Climbing(Float),
 }
 
 #[allow(clippy::unnecessary_cast)]
@@ -96,7 +96,16 @@ pub fn animate_platformer_character(
                 Some(TnuaBuiltinKnockback::NAME) => AnimationState::KnockedBack,
                 Some(TnuaBuiltinWallSlide::NAME) => AnimationState::WallSliding,
                 Some("walljump") => AnimationState::WallJumping,
-                Some(TnuaBuiltinClimb::NAME) => AnimationState::Climbing,
+                Some(TnuaBuiltinClimb::NAME) => {
+                    let Some((_, action_state)) = controller.concrete_action::<TnuaBuiltinClimb>()
+                    else {
+                        continue;
+                    };
+                    let TnuaBuiltinClimbState::Climbing { climbing_velocity } = action_state else {
+                        continue;
+                    };
+                    AnimationState::Climbing(0.3 * climbing_velocity.dot(Vector3::Y))
+                }
                 Some(other) => panic!("Unknown action {other}"),
                 None => {
                     // If there is no action going on, we'll base the animation on the state of the
@@ -124,7 +133,9 @@ pub fn animate_platformer_character(
                 // Some animation states have parameters, that we may want to use to control the
                 // animation (without necessarily replacing it). In this case - control the speed
                 // of the animation based on the speed of the movement.
-                AnimationState::Running(speed) | AnimationState::Crawling(speed) => {
+                AnimationState::Running(speed)
+                | AnimationState::Crawling(speed)
+                | AnimationState::Climbing(speed) => {
                     for (_, active_animation) in player.playing_animations_mut() {
                         active_animation.set_speed(*speed as f32);
                     }
@@ -199,9 +210,10 @@ pub fn animate_platformer_character(
                             .start(handler.animations["WallJumping"])
                             .set_speed(2.0);
                     }
-                    AnimationState::Climbing => {
+                    AnimationState::Climbing(speed) => {
                         player
                             .start(handler.animations["VineClimbing"])
+                            .set_speed(*speed as f32)
                             .repeat()
                             .set_speed(1.0);
                     }

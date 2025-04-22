@@ -72,7 +72,7 @@ impl TnuaAction for TnuaBuiltinClimb {
         // allow jumping through multiple states but failing if we get into loop.
         for _ in 0..2 {
             return match state {
-                TnuaBuiltinClimbState::Climbing => {
+                TnuaBuiltinClimbState::Climbing { climbing_velocity } => {
                     if matches!(lifecycle_status, TnuaActionLifecycleStatus::NoLongerFed) {
                         *state = TnuaBuiltinClimbState::Coyote(Timer::from_seconds(
                             self.coyote_time as f32,
@@ -80,6 +80,14 @@ impl TnuaAction for TnuaBuiltinClimb {
                         ));
                         continue;
                     }
+
+                    // TODO: maybe this should try to predict the next-frame velocity? Is there a
+                    // point?
+                    *climbing_velocity = ctx
+                        .tracker
+                        .velocity
+                        .project_onto(ctx.up_direction.adjust_precision());
+
                     motor
                         .lin
                         .cancel_on_axis(ctx.up_direction.adjust_precision());
@@ -143,9 +151,16 @@ impl TnuaAction for TnuaBuiltinClimb {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub enum TnuaBuiltinClimbState {
-    #[default]
-    Climbing,
+    Climbing { climbing_velocity: Vector3 },
     Coyote(Timer),
+}
+
+impl Default for TnuaBuiltinClimbState {
+    fn default() -> Self {
+        Self::Climbing {
+            climbing_velocity: Vector3::ZERO,
+        }
+    }
 }
