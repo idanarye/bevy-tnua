@@ -112,7 +112,7 @@ impl TnuaAction for TnuaBuiltinClimb {
                     let desired_horizontal_velocity = -horizontal_displacement / ctx.frame_duration;
 
                     motor.lin += ctx.adjust_horizontal_velocity(
-                        desired_horizontal_velocity,
+                        desired_horizontal_velocity.clamp_length_max(self.anchor_velocity),
                         self.anchor_acceleration,
                     );
 
