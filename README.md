@@ -92,6 +92,7 @@ Tnua is broken into different crates that update separately, so this is broken i
 
 | bevy | bevy-tnua-physics-integration-layer | bevy-tnua  |
 |------|-------------------------------------|------------|
+| 0.15 | 0.7                                 | 0.23       |
 | 0.15 | 0.6                                 | 0.22       |
 | 0.15 | 0.5                                 | 0.21       |
 | 0.14 | 0.4                                 | 0.19-0.20  |
@@ -103,6 +104,7 @@ Tnua is broken into different crates that update separately, so this is broken i
 
 | bevy | bevy-tnua-physics-integration-layer | bevy-tnua-rapier | bevy_rapier |
 |------|-------------------------------------|------------------|-------------|
+| 0.15 | 0.7                                 | 0.11             | 0.29        |
 | 0.15 | 0.6                                 | 0.10             | 0.29        |
 | 0.15 | 0.5                                 | 0.8, 0.9         | 0.28        |
 | 0.14 | 0.4                                 | 0.7              | 0.27        |
@@ -116,6 +118,7 @@ Tnua is broken into different crates that update separately, so this is broken i
 
 | bevy | bevy-tnua-physics-integration-layer | bevy-tnua-avian | avian |
 |------|-------------------------------------|-----------------|-------|
+| 0.15 | 0.7                                 | 0.4             | 0.2   |
 | 0.15 | 0.6                                 | 0.3             | 0.2   |
 | 0.15 | 0.5                                 | 0.2             | 0.2   |
 | 0.14 | 0.4                                 | 0.1             | 0.1   |
