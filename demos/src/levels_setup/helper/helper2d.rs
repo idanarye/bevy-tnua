@@ -217,6 +217,7 @@ impl LevelSetupHelper2d<'_, '_> {
 
 pub trait LevelSetupHelper2dEntityCommandsExtension {
     fn make_kinematic(&mut self) -> &mut Self;
+    fn make_sensor(&mut self) -> &mut Self;
 }
 
 impl LevelSetupHelper2dEntityCommandsExtension for EntityCommands<'_> {
@@ -229,6 +230,15 @@ impl LevelSetupHelper2dEntityCommandsExtension for EntityCommands<'_> {
                 rapier::Velocity::default(),
                 rapier::RigidBody::KinematicVelocityBased,
             ),
+        ))
+    }
+
+    fn make_sensor(&mut self) -> &mut Self {
+        self.insert((
+            #[cfg(feature = "avian2d")]
+            avian::Sensor,
+            #[cfg(feature = "rapier2d")]
+            rapier::Sensor,
         ))
     }
 }

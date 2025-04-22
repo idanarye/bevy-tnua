@@ -1,7 +1,9 @@
 use std::ops::{Add, AddAssign};
 
-use crate::math::{Float, Quaternion, Vector3};
+use crate::math::{AdjustPrecision, Float, Quaternion, Vector3};
 use bevy::prelude::*;
+
+pub use crate::obstacle_radar::TnuaObstacleRadar;
 
 /// Allows disabling Tnua for a specific entity.
 ///
@@ -136,6 +138,29 @@ impl TnuaVelChange {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.acceleration = Vector3::ZERO;
+        self.boost = Vector3::ZERO;
+    }
+
+    pub fn project_onto(&self, rhs: Vector3) -> Self {
+        Self {
+            acceleration: self.acceleration.project_onto(rhs),
+            boost: self.boost.project_onto(rhs),
+        }
+    }
+
+    pub fn project_onto_normalized(&self, rhs: Vector3) -> Self {
+        Self {
+            acceleration: self.acceleration.project_onto_normalized(rhs),
+            boost: self.boost.project_onto_normalized(rhs),
+        }
+    }
+
+    pub fn project_onto_dir(&self, rhs: Dir3) -> Self {
+        self.project_onto_normalized(rhs.adjust_precision())
+    }
+
     pub fn cancel_on_axis(&mut self, axis: Vector3) {
         self.acceleration = self.acceleration.reject_from(axis);
         self.boost = self.boost.reject_from(axis);
@@ -143,6 +168,42 @@ impl TnuaVelChange {
 
     pub fn calc_boost(&self, frame_duration: Float) -> Vector3 {
         self.acceleration * frame_duration + self.boost
+    }
+
+    pub fn calc_mean_boost(&self, frame_duration: Float) -> Vector3 {
+        0.5 * self.acceleration * frame_duration + self.boost
+    }
+
+    pub fn calc_acceleration(&self, frame_duration: Float) -> Vector3 {
+        self.acceleration + self.boost / frame_duration
+    }
+
+    pub fn apply_boost_limit(
+        &mut self,
+        frame_duration: Float,
+        component_direction: Dir3,
+        component_limit: Float,
+    ) {
+        let regular_boost = self.calc_boost(frame_duration);
+        let regular = regular_boost.dot(component_direction.adjust_precision());
+        let to_cut = regular - component_limit;
+        if to_cut <= 0.0 {
+            return;
+        }
+        let boost_part = self.boost.dot(component_direction.adjust_precision());
+        if to_cut <= boost_part {
+            // Can do the entire cut by just reducing the boost
+            self.boost -= to_cut * component_direction.adjust_precision();
+            return;
+        }
+        // Even nullifying the boost is not enough, and we don't want to
+        // reverse it, so we're going to cut the acceleration as well.
+        self.boost = self
+            .boost
+            .reject_from(component_direction.adjust_precision());
+        let to_cut_from_acceleration = to_cut - boost_part;
+        let acceleration_to_cut = to_cut_from_acceleration / frame_duration;
+        self.acceleration -= acceleration_to_cut * component_direction.adjust_precision();
     }
 }
 

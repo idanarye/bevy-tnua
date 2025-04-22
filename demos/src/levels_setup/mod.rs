@@ -5,6 +5,8 @@ pub mod dynamic_bodies_3d;
 pub mod for_2d_platformer;
 pub mod for_3d_platformer;
 mod helper;
+pub mod jungle_gym;
+pub mod jungle_gym_2d;
 pub mod level_switching;
 pub mod pushback_3d;
 

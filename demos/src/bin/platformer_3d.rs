@@ -6,12 +6,12 @@ use bevy::prelude::*;
 use bevy_rapier3d::{prelude as rapier, prelude::*};
 use bevy_tnua::builtins::TnuaBuiltinCrouch;
 use bevy_tnua::control_helpers::{
-    TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin, TnuaSimpleAirActionsCounter,
-    TnuaSimpleFallThroughPlatformsHelper,
+    TnuaBlipReuseAvoidance, TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin,
+    TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{float_consts, AsF32, Vector3};
-use bevy_tnua::prelude::*;
+use bevy_tnua::{prelude::*, TnuaObstacleRadar};
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "avian3d")]
 use bevy_tnua_avian3d::*;
@@ -21,6 +21,7 @@ use bevy_tnua_rapier3d::*;
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 #[cfg(feature = "egui")]
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
+use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_radar_visualization_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
 };
@@ -105,6 +106,7 @@ fn main() {
         Update,
         character_control_info_dumping_system.in_set(DemoInfoUpdateSystemSet),
     );
+    app.add_systems(Update, character_control_radar_visualization_system);
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
         CharacterMotionConfigForPlatformerDemo,
     >::default());
@@ -126,6 +128,10 @@ fn main() {
             .with(
                 "DynamicBodies",
                 tnua_demos_crate::levels_setup::dynamic_bodies_3d::setup_level,
+            )
+            .with(
+                "JungleGym",
+                tnua_demos_crate::levels_setup::jungle_gym::setup_level,
             )
     });
     app.add_systems(Startup, setup_player);
@@ -184,6 +190,18 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // `TnuaController` is used in this example.
     cmd.insert(TnuaController::default());
 
+    // The obstacle radar is used to detect obstacles around the player that the player can use
+    // for environment actions (e.g. climbing). The physics backend integration plugin is
+    // responsible for generating the collider in a child object. The collider is a cylinder around
+    // the player character (it needs to be a little bigger than the character's collider),
+    // configured so that it'll generate collision data without generating forces for the actual
+    // physics simulation.
+    cmd.insert(TnuaObstacleRadar::new(1.0, 3.0));
+
+    // We use the blip reuse avoidance helper to avoid initiating actions on obstacles we've just
+    // finished an action with.
+    cmd.insert(TnuaBlipReuseAvoidance::default());
+
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim3,
         speed: 20.0,
@@ -206,6 +224,9 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         one_way_platforms_min_proximity: 1.0,
         falling_through: FallingThroughControlScheme::SingleFall,
         knockback: Default::default(),
+        wall_slide: Default::default(),
+        climb_speed: 10.0,
+        climb: Default::default(),
     });
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.

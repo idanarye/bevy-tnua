@@ -1,7 +1,13 @@
+mod command_impl_helpers;
+mod velocity_boundary;
+
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{
-    AdjustPrecision, Float, Quaternion, Vector2, Vector3,
+use bevy_tnua_physics_integration_layer::{
+    data_for_backends::TnuaVelChange,
+    math::{AdjustPrecision, Float, Quaternion, Vector2, Vector3},
 };
+pub use command_impl_helpers::MotionHelper;
+pub use velocity_boundary::VelocityBoundary;
 
 /// Calculate the kinetic energy required to jump to a certain height when different gravity is
 /// applied in different segments of the jump.
@@ -128,6 +134,33 @@ impl SegmentedJumpInitialVelocityCalculator {
     }
 }
 
+pub struct SegmentedJumpDurationCalculator {
+    velocity: Float,
+    duration: Float,
+}
+
+impl SegmentedJumpDurationCalculator {
+    pub fn new(initial_velocity: Float) -> Self {
+        Self {
+            velocity: initial_velocity,
+            duration: 0.0,
+        }
+    }
+
+    pub fn add_segment(&mut self, gravity: Float, velocity_threshold: Float) -> &mut Self {
+        if velocity_threshold < self.velocity {
+            let lost_velocity = self.velocity - velocity_threshold;
+            self.velocity = velocity_threshold;
+            self.duration += lost_velocity / gravity;
+        }
+        self
+    }
+
+    pub fn duration(&self) -> Float {
+        self.duration
+    }
+}
+
 /// Calculate the rotation around `around_axis` required to rotate the character from
 /// `current_forward` to `desired_forward`.
 pub fn rotation_arc_around_axis(
@@ -155,4 +188,27 @@ pub(crate) fn calc_boost(
     frame_duration: Float,
 ) -> Vector3 {
     vel_change.acceleration * frame_duration + vel_change.boost
+}
+
+pub fn calc_angular_velchange_to_force_forward(
+    force_forward: Dir3,
+    current_rotation: Quaternion,
+    current_angvel: Vector3,
+    up_direction: Dir3,
+    frame_duration: Float,
+) -> TnuaVelChange {
+    let current_forward = current_rotation.mul_vec3(Vector3::NEG_Z);
+    let rotation_along_up_axis = rotation_arc_around_axis(
+        up_direction,
+        current_forward,
+        force_forward.adjust_precision(),
+    )
+    .unwrap_or(0.0);
+    let desired_angvel = rotation_along_up_axis / frame_duration;
+
+    let existing_angvel = current_angvel.dot(up_direction.adjust_precision());
+
+    let torque_to_turn = desired_angvel - existing_angvel;
+
+    TnuaVelChange::boost(torque_to_turn * up_direction.adjust_precision())
 }

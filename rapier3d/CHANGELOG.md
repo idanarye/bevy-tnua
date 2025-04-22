@@ -9,6 +9,9 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 ## [Unreleased]
 ### Added
 - Support for `TnuaNotPlatform`.
+- Support for `TnuaObstacleRadar`.
+- `TnuaSpatialExtRapier2d`/`TnuaSpatialExtRapier3d` - implementation for the
+  `TnuaSpatialExt` trait.
 
 ## 0.10.0 - 2025-03-22
 ### Changed

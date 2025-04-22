@@ -235,6 +235,19 @@ impl TnuaController {
         }
     }
 
+    /// Re-feed the same action that is currently active.
+    ///
+    /// This is useful when matching on [`action_name`](Self::action_name) and wanting to continue
+    /// feeding the **exact same** action with the **exact same** input without having to use
+    /// [`concrete_action`](Self::concrete_action).
+    pub fn prolong_action(&mut self) {
+        if let Some((current_name, _)) = self.current_action {
+            if let Some(fed_action) = self.actions_being_fed.get_mut(current_name) {
+                fed_action.fed_this_frame = true;
+            }
+        }
+    }
+
     /// The name of the currently running action.
     ///
     /// When using an action with it's default name, prefer to match this against

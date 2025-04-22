@@ -12,6 +12,9 @@ NOTES:
 ## [Unreleased]
 ### Added
 - Support for `TnuaNotPlatform`.
+- Support for `TnuaObstacleRadar`.
+- `TnuaSpatialExtAvian2d`/`TnuaSpatialExtAvian3d` - implementation for the
+  `TnuaSpatialExt` trait.
 
 ### Changed
 - Some ray/shape cast checks on the collider also look at the rigid body

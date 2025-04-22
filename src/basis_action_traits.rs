@@ -286,6 +286,17 @@ impl TnuaActionLifecycleStatus {
         }
     }
 
+    /// Continue - unless the action is cancelled into another action.
+    pub fn directive_linger(&self) -> TnuaActionLifecycleDirective {
+        match self {
+            TnuaActionLifecycleStatus::Initiated => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::CancelledFrom => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::StillFed => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::NoLongerFed => TnuaActionLifecycleDirective::StillActive,
+            TnuaActionLifecycleStatus::CancelledInto => TnuaActionLifecycleDirective::Finished,
+        }
+    }
+
     /// Determine if the action just started, whether from no action or to replace another action.
     pub fn just_started(&self) -> bool {
         match self {
@@ -429,6 +440,11 @@ pub trait TnuaAction: 'static + Send + Sync {
         ctx: TnuaActionContext,
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective;
+
+    /// If the action targets an entity, return that entity
+    fn target_entity(&self, _state: &Self::State) -> Option<Entity> {
+        None
+    }
 }
 
 pub trait DynamicAction: Send + Sync + Any + 'static {
@@ -447,6 +463,7 @@ pub trait DynamicAction: Send + Sync + Any + 'static {
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective;
     fn violates_coyote_time(&self) -> bool;
+    fn target_entity(&self) -> Option<Entity>;
 }
 
 pub(crate) struct BoxableAction<A: TnuaAction> {
@@ -496,5 +513,9 @@ impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
 
     fn violates_coyote_time(&self) -> bool {
         A::VIOLATES_COYOTE_TIME
+    }
+
+    fn target_entity(&self) -> Option<Entity> {
+        self.input.target_entity(&self.state)
     }
 }

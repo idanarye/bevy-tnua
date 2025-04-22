@@ -1,7 +1,10 @@
 #[cfg(feature = "egui")]
 use std::ops::RangeInclusive;
 
-use bevy_tnua::builtins::{TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinKnockback};
+use bevy_tnua::builtins::{
+    TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinKnockback,
+    TnuaBuiltinWallSlide,
+};
 #[allow(unused_imports)]
 use bevy_tnua::math::{float_consts, Float};
 use bevy_tnua::prelude::*;
@@ -257,5 +260,44 @@ impl UiTunable for TnuaBuiltinKnockback {
             &mut self.air_acceleration_limit,
             0.0..=20.0,
         );
+    }
+}
+
+impl UiTunable for TnuaBuiltinWallSlide {
+    #[cfg(feature = "egui")]
+    fn tune(&mut self, ui: &mut egui::Ui) {
+        slider_or_infinity(ui, "Max Fall Speed", &mut self.max_fall_speed, 0.0..=10.0);
+        slider_or_infinity(
+            ui,
+            "Max Sideways Speed",
+            &mut self.max_sideways_speed,
+            0.0..=10.0,
+        );
+        slider_or_infinity(
+            ui,
+            "Max Sideways Acceleration",
+            &mut self.max_sideways_acceleration,
+            0.0..=100.0,
+        );
+    }
+}
+
+impl UiTunable for TnuaBuiltinClimb {
+    #[cfg(feature = "egui")]
+    fn tune(&mut self, ui: &mut egui::Ui) {
+        slider_or_infinity(ui, "Anchor Speed", &mut self.anchor_speed, 0.0..=300.0);
+        slider_or_infinity(
+            ui,
+            "Anchor Acceleration",
+            &mut self.anchor_acceleration,
+            0.0..=1000.0,
+        );
+        slider_or_infinity(
+            ui,
+            "Climb Acceleration",
+            &mut self.climb_acceleration,
+            0.0..=100.0,
+        );
+        ui.add(egui::Slider::new(&mut self.coyote_time, 0.0..=1.0).text("Coyote Time"));
     }
 }
