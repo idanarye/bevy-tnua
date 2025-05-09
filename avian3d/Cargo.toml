@@ -13,7 +13,7 @@ readme = "../README.md"
 
 [dependencies]
 bevy = { version = "0.16.0-rc.5", default-features = false }
-avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "7211ecfebb263412f3f0dc095c6e16e12615a229", default-features = false, features = [
+avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "f0d5b86b582c0d7074f0b084dd666e549acc767e", default-features = false, features = [
     "3d",
     "debug-plugin",
     "parallel",

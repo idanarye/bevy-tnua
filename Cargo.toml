@@ -34,14 +34,14 @@ exclude = ["assets"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.16.0-rc.5", default-features = false, features = [
+bevy = { version = "0.16.0", default-features = false, features = [
     "bevy_log",
 ] }
 bevy-tnua-physics-integration-layer = { version = "^0.6", path = "physics-integration-layer" }
 thiserror = "2.0.12"
 
 [dev-dependencies]
-bevy = { version = "0.16.0-rc.5", default-features = false, features = [
+bevy = { version = "0.16.0", default-features = false, features = [
     "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -62,7 +62,7 @@ bevy = { version = "0.16.0-rc.5", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "7211ecfebb263412f3f0dc095c6e16e12615a229", features = [
+avian3d = { git = "https://github.com/Jondolf/avian.git", rev = "f0d5b86b582c0d7074f0b084dd666e549acc767e", features = [
     "3d",
     "debug-plugin",
     "parallel",
