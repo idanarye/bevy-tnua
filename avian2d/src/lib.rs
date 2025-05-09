@@ -9,6 +9,7 @@
 use avian2d::math::{AdjustPrecision, AsF32};
 use avian2d::{prelude::*, schedule::PhysicsStepSet};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
+use bevy::ecs::relationship::Relationship;
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaProximitySensor,
