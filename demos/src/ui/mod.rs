@@ -61,7 +61,10 @@ impl<C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<C> {
         );
         app.add_systems(EguiContextPass, apply_selectors);
         #[cfg(feature = "egui")]
-        app.add_systems(EguiContextPass, ui_system::<C>.after(DemoInfoUpdateSystemSet));
+        app.add_systems(
+            EguiContextPass,
+            ui_system::<C>.after(DemoInfoUpdateSystemSet),
+        );
         #[cfg(feature = "egui")]
         app.add_systems(EguiContextPass, plot_source_rolling_update);
 

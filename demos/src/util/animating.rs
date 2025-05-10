@@ -1,6 +1,6 @@
 use bevy::gltf::Gltf;
-use bevy::prelude::*;
 use bevy::platform::collections::HashMap;
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct AnimationsHandler {
