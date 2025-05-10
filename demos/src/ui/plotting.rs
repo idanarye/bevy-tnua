@@ -70,7 +70,7 @@ impl PlotSource {
                 .show_axes([false, true]);
             plot.show(ui, |plot_ui| {
                 for (field, curve) in plot_fields.iter().zip(plot_data) {
-                    plot_ui.line(egui_plot::Line::new(curve).name(field));
+                    plot_ui.line(egui_plot::Line::new(*field, curve));
                 }
             });
         }

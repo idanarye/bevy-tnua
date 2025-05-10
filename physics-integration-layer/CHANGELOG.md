@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 0.8.0 - 2025-05-10
+### Changed
+- Upgrade to Bevy 0.16.
+
 ## 0.7.0 - 2025-04-23
 ### Added
 - `TnuaNotPlatform` - marker component for colliders which Tnua should not

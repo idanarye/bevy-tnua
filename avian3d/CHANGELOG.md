@@ -11,6 +11,10 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.5.0 - 2025-05-10
+### Changed
+- Upgrade to Bevy 0.16 and Avian 0.3.
+
 ## 0.4.0 - 2025-04-23
 ### Added
 - Support for `TnuaNotPlatform`.

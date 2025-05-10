@@ -8,6 +8,10 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+## 0.24.0 - 2025-05-10
+### Changed
+- Upgrade to Bevy 0.16.
+
 ## 0.23.0 - 2025-04-23
 ### Added
 - `TnuaRadarLens` - a wrapper around `TnuaObstacleRadar` and `TnuaSpatialExt`
