@@ -401,7 +401,7 @@ fn grab_ungrab_mouse(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    let Ok(mut window) = primary_window_query.get_single_mut() else {
+    let Ok(mut window) = primary_window_query.single_mut() else {
         return;
     };
     if window.cursor_options.visible {
@@ -436,7 +436,7 @@ fn apply_camera_controls(
         mouse_motion.clear();
         Vec2::ZERO
     };
-    let Ok((player_transform, mut forward_from_camera)) = player_character_query.get_single_mut()
+    let Ok((player_transform, mut forward_from_camera)) = player_character_query.single_mut()
     else {
         return;
     };

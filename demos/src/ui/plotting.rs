@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
 
+use bevy::ecs::schedule::ScheduleConfigs;
+use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::*;
 use bevy_egui::egui;
 use egui_plot::{Corner, Legend, Plot};
@@ -121,7 +123,7 @@ pub fn plot_source_rolling_update(time: Res<Time>, mut query: Query<&mut PlotSou
 
 pub fn make_update_plot_data_system<V: Component>(
     get_linvel: impl 'static + Send + Sync + Fn(&V) -> Vec3,
-) -> bevy::ecs::schedule::SystemConfigs {
+) -> ScheduleConfigs<ScheduleSystem> {
     (move |mut query_rapier2d: Query<(&mut PlotSource, &Transform, &V)>| {
         for (mut plot_source, transform, velocity) in query_rapier2d.iter_mut() {
             let linvel = get_linvel(velocity);

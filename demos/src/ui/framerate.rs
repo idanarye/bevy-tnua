@@ -14,7 +14,7 @@ pub struct DemoFrameratePlugin;
 
 impl Plugin for DemoFrameratePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(FrameTimeDiagnosticsPlugin);
+        app.add_plugins(FrameTimeDiagnosticsPlugin::default());
 
         #[cfg(feature = "framepace")]
         app.add_plugins((FramepacePlugin, FramepaceDiagnosticsPlugin));

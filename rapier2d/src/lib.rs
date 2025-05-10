@@ -11,7 +11,7 @@ mod spatial_ext;
 
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy::platform::collections::HashSet;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::rapier;
 use bevy_rapier2d::rapier::prelude::InteractionGroups;

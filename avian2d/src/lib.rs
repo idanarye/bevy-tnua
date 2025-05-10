@@ -141,7 +141,7 @@ fn update_proximity_sensors_system(
     other_object_query: Query<(
         Option<(&Position, &LinearVelocity, &AngularVelocity)>,
         Option<&CollisionLayers>,
-        Option<&ColliderParent>,
+        Option<&ColliderOf>,
         Has<TnuaGhostPlatform>,
         Has<Sensor>,
         Has<TnuaNotPlatform>,
@@ -208,7 +208,7 @@ fn update_proximity_sensors_system(
                 let Ok((
                     mut entity_kinematic_data,
                     mut entity_collision_layers,
-                    entity_collider_parent,
+                    entity_collider_of,
                     mut entity_is_ghost,
                     mut entity_is_sensor,
                     mut entity_is_not_platform,
@@ -217,8 +217,8 @@ fn update_proximity_sensors_system(
                     return false;
                 };
 
-                if let Some(parent) = entity_collider_parent {
-                    let parent_entity = parent.get();
+                if let Some(collider_of) = entity_collider_of {
+                    let parent_entity = collider_of.body;
 
                     // Collider is child of our rigid body. ignore.
                     if parent_entity == owner_entity {

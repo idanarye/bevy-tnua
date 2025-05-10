@@ -186,6 +186,10 @@ jobs:
 
           function build_for_backend () {
               physics_backend=$1
+              if [[ ${{ env.all_physics_backends }} != *$physics_backend* ]]; then
+                  echo Skipping $physics_backend because it is not in the list
+                  return 0
+              fi
               if [ -z ${2+x} ]; then
                   demo_suffix=$physics_backend
               else

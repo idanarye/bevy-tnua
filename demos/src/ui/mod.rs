@@ -9,9 +9,11 @@ pub mod tuning;
 
 use std::marker::PhantomData;
 
+use bevy::ecs::component::Mutable;
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy::window::{PresentMode, PrimaryWindow};
+use bevy_egui::EguiContextPass;
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 #[allow(unused_imports)]
@@ -29,11 +31,11 @@ use tuning::UiTunable;
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
 pub struct DemoInfoUpdateSystemSet;
 
-pub struct DemoUi<C: Component + UiTunable> {
+pub struct DemoUi<C: Component<Mutability = Mutable> + UiTunable> {
     _phantom: PhantomData<C>,
 }
 
-impl<C: Component + UiTunable> Default for DemoUi<C> {
+impl<C: Component<Mutability = Mutable> + UiTunable> Default for DemoUi<C> {
     fn default() -> Self {
         Self {
             _phantom: Default::default(),
@@ -43,23 +45,25 @@ impl<C: Component + UiTunable> Default for DemoUi<C> {
 
 const GRAVITY_MAGNITUDE: Float = 9.81;
 
-impl<C: Component + UiTunable> Plugin for DemoUi<C> {
+impl<C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<C> {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "egui")]
-        app.add_plugins(EguiPlugin);
+        app.add_plugins(EguiPlugin {
+            enable_multipass_for_primary_context: true,
+        });
         app.insert_resource(DemoUiPhysicsBackendSettings {
             active: true,
             gravity: Vector3::NEG_Y * GRAVITY_MAGNITUDE,
         });
         app.configure_sets(
-            Update,
+            EguiContextPass,
             DemoInfoUpdateSystemSet.after(bevy_tnua::TnuaUserControlsSystemSet),
         );
-        app.add_systems(Update, apply_selectors);
+        app.add_systems(EguiContextPass, apply_selectors);
         #[cfg(feature = "egui")]
-        app.add_systems(Update, ui_system::<C>.after(DemoInfoUpdateSystemSet));
+        app.add_systems(EguiContextPass, ui_system::<C>.after(DemoInfoUpdateSystemSet));
         #[cfg(feature = "egui")]
-        app.add_systems(Update, plot_source_rolling_update);
+        app.add_systems(EguiContextPass, plot_source_rolling_update);
 
         #[cfg(feature = "egui")]
         app.add_plugins(framerate::DemoFrameratePlugin);
@@ -123,7 +127,7 @@ fn apply_selectors(
 
 #[cfg(feature = "egui")]
 #[allow(clippy::type_complexity)]
-fn ui_system<C: Component + UiTunable>(
+fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
     mut egui_context: EguiContexts,
     mut physics_backend_settings: ResMut<DemoUiPhysicsBackendSettings>,
     mut query: Query<(
@@ -145,7 +149,7 @@ fn ui_system<C: Component + UiTunable>(
 ) {
     use std::any::TypeId;
 
-    let Ok(mut primary_window) = primary_window_query.get_single_mut() else {
+    let Ok(mut primary_window) = primary_window_query.single_mut() else {
         return;
     };
     let mut egui_window = egui::Window::new("Tnua");

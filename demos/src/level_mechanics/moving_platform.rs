@@ -1,3 +1,5 @@
+use bevy::ecs::schedule::ScheduleConfigs;
+use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::*;
 use bevy_tnua::math::{AdjustPrecision, Float, Vector3};
 
@@ -60,9 +62,9 @@ impl MovingPlatform {
         }
     }
 
-    fn make_system<V: Component>(
+    fn make_system<V: Component<Mutability = bevy::ecs::component::Mutable>>(
         mut updater: impl 'static + Send + Sync + FnMut(&mut V, Vector3),
-    ) -> bevy::ecs::schedule::SystemConfigs {
+    ) -> ScheduleConfigs<ScheduleSystem> {
         (move |time: Res<Time>,
                mut query: Query<(&mut MovingPlatform, &GlobalTransform, &mut V)>| {
             for (mut moving_platform, transform, mut velocity) in query.iter_mut() {

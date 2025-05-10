@@ -27,6 +27,8 @@ fn shoot(
             if let Some(cannon_name) = cannon_name.as_ref() {
                 cmd.insert(Name::new(format!("{cannon_name} projectile")));
             }
+            #[cfg(feature = "avian3d")]
+            cmd.insert(avian3d::prelude::CollisionEventsEnabled);
             #[cfg(feature = "rapier3d")]
             cmd.insert(bevy_rapier3d::geometry::ActiveEvents::COLLISION_EVENTS);
             (cannon.cmd)(&mut cmd);
@@ -81,6 +83,6 @@ fn handle_collision(
             continue;
         }
         (bullet.effect)(&mut commands.entity(player_entity));
-        commands.entity(bullet_entity).despawn_recursive();
+        commands.entity(bullet_entity).despawn();
     }
 }
