@@ -428,7 +428,7 @@ fn apply_camera_controls(
     mut camera_query: Query<&mut Transform, With<Camera>>,
 ) {
     let mouse_controls_camera = primary_window_query
-        .get_single()
+        .single()
         .is_ok_and(|w| !w.cursor_options.visible);
     let total_delta = if mouse_controls_camera {
         mouse_motion.read().map(|event| event.delta).sum()
