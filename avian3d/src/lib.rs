@@ -91,7 +91,7 @@ impl Plugin for TnuaAvian3dPlugin {
 }
 
 /// Add this component to make [`TnuaProximitySensor`] cast a shape instead of a ray.
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct TnuaAvian3dSensorShape(pub Collider);
 
 #[allow(clippy::type_complexity)]
