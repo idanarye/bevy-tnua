@@ -107,7 +107,7 @@ pub struct TnuaRapier2dIOBundle {
 }
 
 /// Add this component to make [`TnuaProximitySensor`] cast a shape instead of a ray.
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct TnuaRapier2dSensorShape(pub Collider);
 
 fn update_rigid_body_trackers_system(
