@@ -13,6 +13,7 @@ use bevy::ecs::component::Mutable;
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy::window::{PresentMode, PrimaryWindow};
+#[cfg(feature = "egui")]
 use bevy_egui::EguiContextPass;
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
@@ -55,10 +56,13 @@ impl<C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<C> {
             active: true,
             gravity: Vector3::NEG_Y * GRAVITY_MAGNITUDE,
         });
+
+        #[cfg(feature = "egui")]
         app.configure_sets(
             EguiContextPass,
             DemoInfoUpdateSystemSet.after(bevy_tnua::TnuaUserControlsSystemSet),
         );
+        #[cfg(feature = "egui")]
         app.add_systems(EguiContextPass, apply_selectors);
         #[cfg(feature = "egui")]
         app.add_systems(

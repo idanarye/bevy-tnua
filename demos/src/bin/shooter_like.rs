@@ -3,7 +3,7 @@ use avian3d::{prelude as avian, prelude::*};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
-use bevy::window::{CursorGrabMode, PrimaryWindow};
+use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
 use bevy_tnua::builtins::TnuaBuiltinCrouch;
@@ -128,7 +128,7 @@ fn main() {
         let system = apply_camera_controls;
         #[cfg(feature = "rapier")]
         let system = system.after(bevy_rapier3d::prelude::PhysicsSet::SyncBackend);
-        system.before(bevy::transform::TransformSystem::TransformPropagate)
+        system.before(bevy::transform::TransformSystems::Propagate)
     });
     app.add_systems(
         match app_setup_configuration.schedule_to_use {
@@ -399,37 +399,37 @@ fn grab_ungrab_mouse(
     #[cfg(feature = "egui")] mut egui_context: bevy_egui::EguiContexts,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     keyboard: Res<ButtonInput<KeyCode>>,
-    mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
+    mut primary_window_query: Query<&mut CursorOptions, With<PrimaryWindow>>,
 ) {
-    let Ok(mut window) = primary_window_query.single_mut() else {
+    let Ok(mut cursor_options) = primary_window_query.single_mut() else {
         return;
     };
-    if window.cursor_options.visible {
+    if cursor_options.visible {
         if mouse_buttons.just_pressed(MouseButton::Left) {
             #[cfg(feature = "egui")]
             if egui_context.ctx_mut().is_pointer_over_area() {
                 return;
             }
-            window.cursor_options.grab_mode = CursorGrabMode::Locked;
-            window.cursor_options.visible = false;
+            cursor_options.grab_mode = CursorGrabMode::Locked;
+            cursor_options.visible = false;
         }
     } else if keyboard.just_released(KeyCode::Escape)
         || mouse_buttons.just_pressed(MouseButton::Left)
     {
-        window.cursor_options.grab_mode = CursorGrabMode::None;
-        window.cursor_options.visible = true;
+        cursor_options.grab_mode = CursorGrabMode::None;
+        cursor_options.visible = true;
     }
 }
 
 fn apply_camera_controls(
-    primary_window_query: Query<&Window, With<PrimaryWindow>>,
+    primary_window_query: Query<&CursorOptions, With<PrimaryWindow>>,
     mut mouse_motion: EventReader<MouseMotion>,
     mut player_character_query: Query<(&GlobalTransform, &mut ForwardFromCamera)>,
     mut camera_query: Query<&mut Transform, With<Camera>>,
 ) {
     let mouse_controls_camera = primary_window_query
         .single()
-        .is_ok_and(|w| !w.cursor_options.visible);
+        .is_ok_and(|cursor_options| !cursor_options.visible);
     let total_delta = if mouse_controls_camera {
         mouse_motion.read().map(|event| event.delta).sum()
     } else {

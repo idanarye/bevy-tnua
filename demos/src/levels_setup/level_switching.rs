@@ -92,7 +92,7 @@ impl SwitchableLevel {
     }
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct SwitchToLevel(pub usize);
 
 #[derive(Resource)]
