@@ -39,6 +39,7 @@ bevy = { version = "0.17.0-rc", default-features = false, features = [
 ]}
 bevy-tnua-physics-integration-layer = { version = "0.9.0-rc", path = "physics-integration-layer" }
 thiserror = "2.0.12"
+derive_more = { version = "1", default_features = false, features = ["from"] }
 
 [dev-dependencies]
 bevy = { version = "0.17.0-rc", default-features = false, features = [

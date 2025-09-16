@@ -14,9 +14,9 @@ default = [
     "avian3d?/f32",
     "avian3d?/parry-f32",
     # Comment these out when Bevy gets upgraded and a dependency lags behind
-    "egui",
+    #"egui",
 ]
-egui = ["dep:bevy_egui", "dep:egui_plot", "dep:egui_extras"]
+#egui = ["dep:bevy_egui", "dep:egui_plot", "dep:egui_extras"]
 framepace = ["dep:bevy_framepace"] # Not a default feature
 # rapier = []
 # rapier2d = [
@@ -59,10 +59,12 @@ bevy = { version = "0.17.0-rc", default-features = false, features = [
     "bevy_window",
     "bevy_ui",
     "bevy_log",
+    "bevy_sprite_render",
     # "png",
     # "hdr",
     # "vorbis",
     "x11",
+    "bevy_gizmos",
     # "filesystem_watcher",
 ] }
 bevy-tnua = { path = ".." }
@@ -80,9 +82,9 @@ bevy-tnua-avian2d = { path = "../avian2d", default-features = false, optional = 
 avian3d = { version = "^0.3", default-features = false, features = ["3d","debug-plugin", "parallel"], git = "https://github.com/Jondolf/avian", branch = "bevy-0.17", optional = true }
 bevy-tnua-avian3d = { path = "../avian3d", default-features = false, optional = true }
 
-bevy_egui = { version = "0.34", optional = true, default-features = false, features = ["default_fonts", "render"] }
-egui_plot = { version = "0.32", optional = true }
-egui_extras = { version = "0.31", optional = true }
+#bevy_egui = { version = "0.34", optional = true, default-features = false, features = ["default_fonts", "render"] }
+#egui_plot = { version = "0.32", optional = true }
+#egui_extras = { version = "0.31", optional = true }
 
 bevy_framepace = { version = "0.19", optional = true }
 

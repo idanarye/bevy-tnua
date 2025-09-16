@@ -8,10 +8,7 @@
 //!   `TnuaCrouchEnforcer`, that can be affected with a closure.
 mod spatial_ext;
 
-use avian3d::{
-    dynamics::rigid_body::mass_properties::components::GlobalAngularInertia, prelude::*,
-    schedule::PhysicsStepSet,
-};
+use avian3d::{prelude::*, schedule::PhysicsStepSet};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::AsF32;
@@ -396,53 +393,38 @@ fn update_obstacle_radars_system(
 fn apply_motors_system(
     mut query: Query<(
         &TnuaMotor,
-        &mut LinearVelocity,
-        &mut AngularVelocity,
-        &ComputedMass,
-        &GlobalAngularInertia,
-        &mut ExternalForce,
-        &mut ExternalTorque,
+        &ComputedAngularInertia,
+        &Rotation,
+        Forces,
         Option<&TnuaToggle>,
         Option<&TnuaGravity>,
     )>,
 ) {
-    for (
-        motor,
-        mut linare_velocity,
-        mut angular_velocity,
-        mass,
-        inertia,
-        mut external_force,
-        mut external_torque,
-        tnua_toggle,
-        tnua_gravity,
-    ) in query.iter_mut()
-    {
+    for (motor, inertia, rotation, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
-                *external_force = Default::default();
                 return;
             }
             TnuaToggle::Enabled => {}
         }
         if motor.lin.boost.is_finite() {
-            linare_velocity.0 += motor.lin.boost;
+            *forces.linear_velocity_mut() += motor.lin.boost;
         }
         if motor.lin.acceleration.is_finite() {
-            external_force.set_force(motor.lin.acceleration * mass.value());
+            forces.apply_linear_acceleration(motor.lin.acceleration);
         }
         if motor.ang.boost.is_finite() {
-            angular_velocity.0 += motor.ang.boost;
+            *forces.angular_velocity_mut() += motor.ang.boost;
         }
         if motor.ang.acceleration.is_finite() {
-            external_torque.set_torque(
+            forces.apply_torque(
                 // NOTE: I did not actually verify that this is the correct formula. Nothing uses
                 // angular acceleration yet - only angular impulses.
-                inertia.value() * motor.ang.acceleration,
+                inertia.rotated(rotation.0).value() * motor.ang.acceleration,
             );
         }
         if let Some(gravity) = tnua_gravity {
-            external_force.apply_force(gravity.0 * mass.value());
+            forces.apply_linear_acceleration(gravity.0);
         }
     }
 }
