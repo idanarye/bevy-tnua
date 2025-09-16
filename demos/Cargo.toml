@@ -50,6 +50,7 @@ bevy = { version = "0.17.0-rc", default-features = false, features = [
     "bevy_gilrs",
     # "bevy_scene",
     # "bevy_winit",
+    "reflect_auto_register",
     "bevy_render",
     "bevy_gltf",
     "ktx2",
