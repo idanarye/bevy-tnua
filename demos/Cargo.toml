@@ -18,17 +18,17 @@ default = [
 ]
 egui = ["dep:bevy_egui", "dep:egui_plot", "dep:egui_extras"]
 framepace = ["dep:bevy_framepace"] # Not a default feature
-rapier = []
-rapier2d = [
-    "rapier",
-    "dep:bevy_rapier2d",
-    "dep:bevy-tnua-rapier2d",
-]
-rapier3d = [
-    "rapier",
-    "dep:bevy_rapier3d",
-    "dep:bevy-tnua-rapier3d",
-]
+# rapier = []
+# rapier2d = [
+#     "rapier",
+#     "dep:bevy_rapier2d",
+#     "dep:bevy-tnua-rapier2d",
+# ]
+# rapier3d = [
+#     "rapier",
+#     "dep:bevy_rapier3d",
+#     "dep:bevy-tnua-rapier3d",
+# ]
 f64 = [
     "avian2d?/f64",
     "avian2d?/parry-f64",
@@ -43,7 +43,7 @@ avian2d = ["avian", "dep:avian2d", "dep:bevy-tnua-avian2d"]
 avian3d = ["avian", "dep:avian3d", "dep:bevy-tnua-avian3d"]
 
 [dependencies]
-bevy = { version = "^0.16", default-features = false, features = [
+bevy = { version = "0.17.0-rc", default-features = false, features = [
      "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -53,7 +53,7 @@ bevy = { version = "^0.16", default-features = false, features = [
     "bevy_render",
     "bevy_gltf",
     "ktx2",
-    "zstd",
+    "zstd_rust",
     "tonemapping_luts",
     "bevy_text",
     "bevy_window",
@@ -74,10 +74,10 @@ bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
 bevy_rapier3d = { version = "^0.30", features = ["debug-render-3d"], optional = true }
 bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
-avian2d = { version = "^0.3", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
+avian2d = { version = "^0.3", default-features = false, features = ["2d","debug-plugin", "parallel"], git = "https://github.com/Jondolf/avian", branch = "bevy-0.17", optional = true}
 bevy-tnua-avian2d = { path = "../avian2d", default-features = false, optional = true }
 
-avian3d = { version = "^0.3", default-features = false, features = ["3d","debug-plugin", "parallel"], optional = true }
+avian3d = { version = "^0.3", default-features = false, features = ["3d","debug-plugin", "parallel"], git = "https://github.com/Jondolf/avian", branch = "bevy-0.17", optional = true }
 bevy-tnua-avian3d = { path = "../avian3d", default-features = false, optional = true }
 
 bevy_egui = { version = "0.34", optional = true, default-features = false, features = ["default_fonts", "render"] }
