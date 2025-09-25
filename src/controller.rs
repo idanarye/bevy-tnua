@@ -631,6 +631,8 @@ fn apply_controller_system(
 
             sensor.cast_range = sensor_cast_range_for_basis.max(sensor_case_range_for_action);
             sensor.cast_direction = -up_direction;
+            // TODO: Maybe add the horizontal rotation as well somehow?
+            sensor.cast_shape_rotation = Quat::from_rotation_arc(Vec3::Y, *up_direction)
         }
 
         // Cycle actions_being_fed

@@ -244,6 +244,8 @@ fn update_proximity_sensors_system(
                 let cast_origin = cast_origin + cast_range_skip * *cast_direction;
                 let cast_range = sensor.cast_range - cast_range_skip;
                 if let Some(TnuaRapier3dSensorShape(shape)) = shape {
+                    // TODO: can I bake `owner_rotation` into
+                    // `sensor.cast_shape_rotation`?
                     let (_, owner_rotation, _) = transform.to_scale_rotation_translation();
                     let owner_rotation = Quat::from_scaled_axis(
                         owner_rotation.to_scaled_axis().dot(*cast_direction) * *cast_direction,
@@ -254,7 +256,7 @@ fn update_proximity_sensors_system(
                             rapier_context.colliders,
                             rapier_context.rigidbody_set,
                             cast_origin,
-                            owner_rotation,
+                            owner_rotation.mul_quat(sensor.cast_shape_rotation),
                             *cast_direction,
                             shape,
                             ShapeCastOptions {

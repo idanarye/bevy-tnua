@@ -7,13 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d.
 
 ## [Unreleased]
-
 ### Removed
 - [**BREAKING**] `Default` implementation from `TnuaRapier2dPlugin` and
   `TnuaRapier3dPlugin`. Since the schedule must match the physics backend
   schedules, and since Avian and Rapier have different default schedules, it's
   better for Tnua users to be actively aware which schedule they are operating
   under.
+
+### Fixed
+- When using `TnuaRapier2dSensorShape`/`TnuaRapier3dSensorShape`, rotate the
+  shape according to changes in gravity direction.
 
 ## 0.12.0 - 2025-05-16
 ### Changed

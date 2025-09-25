@@ -311,6 +311,8 @@ fn update_proximity_sensors_system(
 
             let query_filter = SpatialQueryFilter::from_excluded_entities([owner_entity]);
             if let Some(TnuaAvian3dSensorShape(shape)) = shape {
+                // TODO: can I bake `owner_rotation` into
+                // `sensor.cast_shape_rotation`?
                 let owner_rotation = Quaternion::from_axis_angle(
                     cast_direction.adjust_precision(),
                     rotation
@@ -320,7 +322,7 @@ fn update_proximity_sensors_system(
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
                     cast_origin,
-                    owner_rotation,
+                    owner_rotation.mul_quat(sensor.cast_shape_rotation.adjust_precision()),
                     cast_direction,
                     &ShapeCastConfig {
                         max_distance: sensor.cast_range,

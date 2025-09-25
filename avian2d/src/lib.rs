@@ -304,7 +304,11 @@ fn update_proximity_sensors_system(
                 spatial_query_pipeline.shape_hits_callback(
                     shape,
                     cast_origin.truncate().adjust_precision(),
-                    0.0,
+                    sensor
+                        .cast_shape_rotation
+                        .to_scaled_axis()
+                        .z
+                        .adjust_precision(),
                     cast_direction_2d,
                     &ShapeCastConfig {
                         max_distance: sensor.cast_range,

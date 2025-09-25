@@ -198,6 +198,9 @@ fn update_crouch_enforcer(
             {
                 subservient_sensor.cast_origin = crouch_enforcer.offset;
                 subservient_sensor.cast_direction = cast_direction;
+                // TODO: Maybe add the horizontal rotation as well somehow?
+                subservient_sensor.cast_shape_rotation =
+                    Quat::from_rotation_arc(Vec3::Y, *subservient_sensor.cast_direction);
                 subservient_sensor.cast_range = cast_range;
             } else {
                 let mut cmd = commands.spawn((

@@ -254,7 +254,7 @@ fn update_proximity_sensors_system(
                             rapier_context.colliders,
                             rapier_context.rigidbody_set,
                             cast_origin.truncate(),
-                            0.0,
+                            sensor.cast_shape_rotation.to_scaled_axis().z,
                             cast_direction.truncate(),
                             shape,
                             ShapeCastOptions {

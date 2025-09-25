@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
-
 ### Removed
 - [**BREAKING**] `Default` implementation from `TnuaControllerPlugin` and
   `TnuaCrouchEnforcer`. Since the schedule must match the physics backend
@@ -17,6 +16,11 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ### Added
 - `TnuaController::up_direction`
+
+### Fixed
+- Set `TnuaProximitySensor::cast_shape_rotation` so that When using shapecast
+  the physics backends will rotate the shape according to changes in gravity
+  direction.
 
 ## 0.24.0 - 2025-05-10
 ### Changed
