@@ -13,6 +13,8 @@ NOTES:
 ### Fixed
 - When using `TnuaAvian2dSensorShape`/`TnuaAvian3dSensorShape`, rotate the
   shape according to changes in gravity direction.
+- Automatically add `ColliderOf` for `TnuaSubservientSensor` based on the Bevy
+  parent.
 
 ## 0.5.0 - 2025-05-10
 ### Changed
