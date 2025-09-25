@@ -40,15 +40,28 @@ impl LevelSwitchingPlugin {
         }
     }
 
+    pub fn add<M>(
+        &mut self,
+        name: impl ToString,
+        system: impl 'static + Send + Sync + Clone + IntoSystem<(), (), M>,
+    ) {
+        self.levels.push((
+            name.to_string(),
+            Box::new(move |world| world.register_system(system.clone())),
+        ));
+    }
+
     pub fn with<M>(
         mut self,
         name: impl ToString,
         system: impl 'static + Send + Sync + Clone + IntoSystem<(), (), M>,
     ) -> Self {
-        self.levels.push((
-            name.to_string(),
-            Box::new(move |world| world.register_system(system.clone())),
-        ));
+        self.add(name, system);
+        self
+    }
+
+    pub fn with_levels(mut self, levels_adder: impl FnOnce(&mut Self)) -> Self {
+        levels_adder(&mut self);
         self
     }
 }

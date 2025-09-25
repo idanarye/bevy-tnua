@@ -17,7 +17,7 @@ impl<'a, X: TnuaSpatialExt> TnuaRadarLens<'a, X> {
         Self { radar, ext }
     }
 
-    pub fn iter_blips(&self) -> impl Iterator<Item = TnuaRadarBlipLens<X>> {
+    pub fn iter_blips(&'_ self) -> impl Iterator<Item = TnuaRadarBlipLens<'_, X>> {
         self.radar.iter_blips().filter_map(|entity| {
             Some(TnuaRadarBlipLens {
                 radar_lens: self,

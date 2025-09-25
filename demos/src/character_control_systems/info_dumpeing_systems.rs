@@ -8,6 +8,7 @@ use crate::ui::info::InfoSource;
 
 use super::spatial_ext_facade::SpatialExtFacade;
 
+#[allow(clippy::type_complexity)]
 pub fn character_control_info_dumping_system(
     mut query: Query<(
         &mut InfoSource,

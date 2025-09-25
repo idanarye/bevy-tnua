@@ -110,10 +110,10 @@ impl<State> TnuaAnimatingState<State> {
     /// The comparison function decides if its the same animation (possibly with different
     /// parameters) or a different animation.
     pub fn update_by(
-        &mut self,
+        &'_ mut self,
         new_state: State,
         comparison: impl FnOnce(&State, &State) -> bool,
-    ) -> TnuaAnimatingStateDirective<State> {
+    ) -> TnuaAnimatingStateDirective<'_, State> {
         let is_same = self
             .state
             .as_ref()
@@ -134,7 +134,7 @@ impl<State> TnuaAnimatingState<State> {
     /// Consider a new animation to play.
     ///
     /// The new animation is considered the same if and only if it is equal to the old animation.
-    pub fn update_by_value(&mut self, new_state: State) -> TnuaAnimatingStateDirective<State>
+    pub fn update_by_value(&'_ mut self, new_state: State) -> TnuaAnimatingStateDirective<'_, State>
     where
         State: PartialEq,
     {
@@ -149,9 +149,9 @@ impl<State> TnuaAnimatingState<State> {
     /// If the `State` is not an `enum`, using this method will not result in undefined behavior,
     /// but the behavior is unspecified.
     pub fn update_by_discriminant(
-        &mut self,
+        &'_ mut self,
         new_state: State,
-    ) -> TnuaAnimatingStateDirective<State> {
+    ) -> TnuaAnimatingStateDirective<'_, State> {
         self.update_by(new_state, |a, b| discriminant(a) == discriminant(b))
     }
 

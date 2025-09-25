@@ -31,7 +31,7 @@ use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian2d")]
 use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
 use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
-use tnua_demos_crate::levels_setup::IsPlayer;
+use tnua_demos_crate::levels_setup::{levels_for_2d, IsPlayer};
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
@@ -107,25 +107,10 @@ fn main() {
         CharacterMotionConfigForPlatformerDemo,
     >::default());
     app.add_systems(Startup, setup_camera_and_lights);
-    app.add_plugins({
+    app.add_plugins(
         LevelSwitchingPlugin::new(app_setup_configuration.level_to_load.as_ref())
-            .with(
-                "Default",
-                tnua_demos_crate::levels_setup::for_2d_platformer::setup_level,
-            )
-            .with(
-                "CompoundColliders",
-                tnua_demos_crate::levels_setup::compound_colliders_2d::setup_level,
-            )
-            .with(
-                "DynamicBodies",
-                tnua_demos_crate::levels_setup::dynamic_bodies_2d::setup_level,
-            )
-            .with(
-                "JungleGym",
-                tnua_demos_crate::levels_setup::jungle_gym_2d::setup_level,
-            )
-    });
+            .with_levels(levels_for_2d),
+    );
     app.add_systems(Startup, setup_player);
     app.add_systems(
         match app_setup_configuration.schedule_to_use {

@@ -25,12 +25,12 @@ pub struct LevelSetupHelper2d<'w, 's> {
 }
 
 impl LevelSetupHelper2d<'_, '_> {
-    pub fn spawn_named(&mut self, name: impl ToString) -> EntityCommands {
+    pub fn spawn_named(&'_ mut self, name: impl ToString) -> EntityCommands<'_> {
         self.commands
             .spawn((LevelObject, Name::new(name.to_string())))
     }
 
-    pub fn spawn_floor(&mut self, color: impl Into<Color>) -> EntityCommands {
+    pub fn spawn_floor(&'_ mut self, color: impl Into<Color>) -> EntityCommands<'_> {
         let mut cmd = self.spawn_named("Floor");
         cmd.insert(Sprite {
             custom_size: Some(Vec2::new(128.0, 0.5)),
@@ -50,12 +50,12 @@ impl LevelSetupHelper2d<'_, '_> {
     }
 
     pub fn spawn_rectangle(
-        &mut self,
+        &'_ mut self,
         name: impl ToString,
         color: impl Into<Color>,
         transform: Transform,
         size: Vector2,
-    ) -> EntityCommands {
+    ) -> EntityCommands<'_> {
         let mut cmd = self.spawn_named(name);
 
         cmd.insert((
@@ -82,12 +82,12 @@ impl LevelSetupHelper2d<'_, '_> {
     }
 
     pub fn spawn_compound_rectangles(
-        &mut self,
+        &'_ mut self,
         name: impl ToString,
         color: impl Into<Color>,
         transform: Transform,
         parts: &[(Vector2, Float, Vector2)],
-    ) -> EntityCommands {
+    ) -> EntityCommands<'_> {
         let mut cmd = self.spawn_named(name);
 
         cmd.insert((
@@ -145,13 +145,13 @@ impl LevelSetupHelper2d<'_, '_> {
     }
 
     pub fn spawn_text_circle(
-        &mut self,
+        &'_ mut self,
         name: impl ToString,
         text: impl ToString,
         text_scale: Float,
         transform: Transform,
         #[allow(unused)] radius: Float,
-    ) -> EntityCommands {
+    ) -> EntityCommands<'_> {
         let font = self.asset_server.load("FiraSans-Bold.ttf");
         let child = self
             .spawn((
@@ -180,12 +180,12 @@ impl LevelSetupHelper2d<'_, '_> {
     }
 
     pub fn spawn_dynamic_rectangle(
-        &mut self,
+        &'_ mut self,
         name: impl ToString,
         color: impl Into<Color>,
         transform: Transform,
         size: Vector2,
-    ) -> EntityCommands {
+    ) -> EntityCommands<'_> {
         let mut cmd = self.spawn_named(name);
 
         cmd.insert((

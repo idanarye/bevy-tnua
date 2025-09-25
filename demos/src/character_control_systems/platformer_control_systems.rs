@@ -411,12 +411,10 @@ pub fn apply_platformer_controls(
                                     action.hard_stop_down =
                                         Some(blip.closest_point().get() - extent * Vector3::Y);
                                 }
+                            } else if initiation_direction == Vector3::ZERO {
+                                continue 'blips_loop;
                             } else {
-                                if initiation_direction == Vector3::ZERO {
-                                    continue 'blips_loop;
-                                } else {
-                                    action.desired_climb_velocity = Vector3::ZERO;
-                                }
+                                action.desired_climb_velocity = Vector3::ZERO;
                             }
                         }
                         Ordering::Equal => {}
