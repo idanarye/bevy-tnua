@@ -10,9 +10,13 @@ NOTES:
 * Avian used to be named bevy_xpbd. The old bevy-tnua-xpbd changelog can be seen [here](https://github.com/idanarye/bevy-tnua/blob/3cba881c8825633a8d8bdca1fe30e54500e655b8/xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
-### Fixed
+
+## 0.6.0 - 2025-09-26
+### Changed
 - When using `TnuaAvian2dSensorShape`/`TnuaAvian3dSensorShape`, rotate the
   shape according to changes in gravity direction.
+
+### Fixed
 - Automatically add `ColliderOf` for `TnuaSubservientSensor` based on the Bevy
   parent.
 
