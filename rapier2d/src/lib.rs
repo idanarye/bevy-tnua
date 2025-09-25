@@ -31,7 +31,9 @@ pub use spatial_ext::TnuaSpatialExtRapier2d;
 
 /// Add this plugin to use bevy_rapier2d as a physics backend.
 ///
-/// This plugin should be used in addition to `TnuaControllerPlugin`.
+/// This plugin should be used in addition to `TnuaControllerPlugin`, and both plugins must use the
+/// same schedule - which should match the schedule Rapier runs in. By default, Rapier runs in
+/// [`PostUpdate`] - which means this plugin and `TnuaControllerPlugin` should run in [`Update`].
 pub struct TnuaRapier2dPlugin {
     schedule: InternedScheduleLabel,
 }
@@ -41,12 +43,6 @@ impl TnuaRapier2dPlugin {
         Self {
             schedule: schedule.intern(),
         }
-    }
-}
-
-impl Default for TnuaRapier2dPlugin {
-    fn default() -> Self {
-        Self::new(Update)
     }
 }
 

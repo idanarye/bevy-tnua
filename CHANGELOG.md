@@ -8,6 +8,13 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+### Removed
+- [**BREAKING**] `Default` implementation from `TnuaControllerPlugin` and
+  `TnuaCrouchEnforcer`. Since the schedule must match the physics backend
+  schedules, and since Avian and Rapier have different default schedules, it's
+  better for Tnua users to be actively aware which schedule they are operating
+  under.
+
 ### Added
 - `TnuaController::up_direction`
 

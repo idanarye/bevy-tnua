@@ -29,9 +29,11 @@ use bevy_tnua_physics_integration_layer::TnuaPipelineStages;
 use bevy_tnua_physics_integration_layer::TnuaSystemSet;
 pub use spatial_ext::TnuaSpatialExtRapier3d;
 
-/// Add this plugin to use bevy_rapier3d as a physics backend.
+/// Add this plugin to use bevy_rapier2d as a physics backend.
 ///
-/// This plugin should be used in addition to `TnuaControllerPlugin`.
+/// This plugin should be used in addition to `TnuaControllerPlugin`, and both plugins must use the
+/// same schedule - which should match the schedule Rapier runs in. By default, Rapier runs in
+/// [`PostUpdate`] - which means this plugin and `TnuaControllerPlugin` should run in [`Update`].
 pub struct TnuaRapier3dPlugin {
     schedule: InternedScheduleLabel,
 }
@@ -41,12 +43,6 @@ impl TnuaRapier3dPlugin {
         Self {
             schedule: schedule.intern(),
         }
-    }
-}
-
-impl Default for TnuaRapier3dPlugin {
-    fn default() -> Self {
-        Self::new(Update)
     }
 }
 

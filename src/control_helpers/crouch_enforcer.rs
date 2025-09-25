@@ -13,6 +13,10 @@ pub struct TnuaCrouchEnforcerPlugin {
     schedule: InternedScheduleLabel,
 }
 
+/// A plugin required for making [`TnuaCrouchEnforcer`] work.
+///
+/// Must run in the same schedule as
+/// ['TnuaControllerPlugin'](crate::prelude::TnuaControllerPlugin).
 impl TnuaCrouchEnforcerPlugin {
     pub fn new(schedule: impl ScheduleLabel) -> Self {
         Self {
@@ -21,13 +25,6 @@ impl TnuaCrouchEnforcerPlugin {
     }
 }
 
-impl Default for TnuaCrouchEnforcerPlugin {
-    fn default() -> Self {
-        Self::new(Update)
-    }
-}
-
-/// A plugin required for making [`TnuaCrouchEnforcer`] work.
 impl Plugin for TnuaCrouchEnforcerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(

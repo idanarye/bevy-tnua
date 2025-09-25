@@ -62,7 +62,7 @@ fn main() {
                 app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
                 // To use Tnua with bevy_rapier3d, you need the `TnuaRapier3dPlugin` plugin from
                 // bevy-tnua-rapier3d.
-                app.add_plugins(TnuaRapier3dPlugin::default());
+                app.add_plugins(TnuaRapier3dPlugin::new(Update));
             }
             ScheduleToUse::FixedUpdate => {
                 app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule());
@@ -89,11 +89,11 @@ fn main() {
     match app_setup_configuration.schedule_to_use {
         ScheduleToUse::Update => {
             // This is Tnua's main plugin.
-            app.add_plugins(TnuaControllerPlugin::default());
+            app.add_plugins(TnuaControllerPlugin::new(Update));
 
             // This plugin supports `TnuaCrouchEnforcer`, which prevents the character from standing up
             // while obstructed by an obstacle.
-            app.add_plugins(TnuaCrouchEnforcerPlugin::default());
+            app.add_plugins(TnuaCrouchEnforcerPlugin::new(Update));
         }
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));

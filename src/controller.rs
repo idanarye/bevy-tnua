@@ -19,6 +19,13 @@ use crate::{
 ///
 /// Will not work without a physics backend plugin (like `TnuaRapier2dPlugin` or
 /// `TnuaRapier3dPlugin`)
+///
+/// Make sure the schedule for this plugin, the physics backend plugin, and the physics backend
+/// itself are all using the same timestep. This usually means that the physics backend is in e.g.
+/// `FixedPostUpdate` and the Tnua plugins are at `PostUpdate`.
+///
+/// **DO NOT mix `Update` with `FixedUpdate`!** This will mess up Tnua's calculations, resulting in
+/// very unstable character motion.
 pub struct TnuaControllerPlugin {
     schedule: InternedScheduleLabel,
 }
@@ -28,12 +35,6 @@ impl TnuaControllerPlugin {
         Self {
             schedule: schedule.intern(),
         }
-    }
-}
-
-impl Default for TnuaControllerPlugin {
-    fn default() -> Self {
-        Self::new(Update)
     }
 }
 
