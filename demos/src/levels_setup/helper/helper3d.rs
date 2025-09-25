@@ -252,6 +252,30 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
 
         cmd
     }
+
+    pub fn spawn_ball(
+        &'_ mut self,
+        name: impl ToString,
+        transform: Transform,
+        radius: Float,
+    ) -> EntityCommands<'_> {
+        let mut cmd = self.spawn_mesh_without_physics(
+            name,
+            transform,
+            Sphere {
+                radius: radius.f32(),
+            },
+        );
+
+        cmd.insert((
+            #[cfg(feature = "rapier3d")]
+            rapier::Collider::ball(radius),
+            #[cfg(feature = "avian3d")]
+            (avian::RigidBody::Static, avian::Collider::sphere(radius)),
+        ));
+
+        cmd
+    }
 }
 
 pub trait LevelSetupHelper3dEntityCommandsExtension {

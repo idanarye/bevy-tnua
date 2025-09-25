@@ -8,6 +8,8 @@ mod helper;
 pub mod jungle_gym;
 pub mod jungle_gym_2d;
 pub mod level_switching;
+pub mod planet_2d;
+pub mod planet_3d;
 pub mod pushback_3d;
 
 pub use level_switching::{IsPlayer, LevelObject, PositionPlayer};
@@ -19,6 +21,7 @@ pub fn levels_for_2d(plugin: &mut LevelSwitchingPlugin) {
     plugin.add("CompoundColliders", compound_colliders_2d::setup_level);
     plugin.add("DynamicBodies", dynamic_bodies_2d::setup_level);
     plugin.add("JungleGym", jungle_gym_2d::setup_level);
+    plugin.add("Planet", planet_2d::setup_level);
 }
 
 pub fn levels_for_3d(plugin: &mut LevelSwitchingPlugin) {
@@ -27,4 +30,5 @@ pub fn levels_for_3d(plugin: &mut LevelSwitchingPlugin) {
     plugin.add("CompoundColliders", compound_colliders_3d::setup_level);
     plugin.add("DynamicBodies", dynamic_bodies_3d::setup_level);
     plugin.add("JungleGym", jungle_gym::setup_level);
+    plugin.add("Planet", planet_3d::setup_level);
 }

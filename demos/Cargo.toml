@@ -87,6 +87,7 @@ egui_extras = { version = "0.31", optional = true }
 bevy_framepace = { version = "0.19", optional = true }
 
 clap = { version = "^4", features = ["derive"] }
+ordered-float = "5.0.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "^0.3", features = ["Window", "Location", "Url", "UrlSearchParams"] }

@@ -213,6 +213,34 @@ impl LevelSetupHelper2d<'_, '_> {
 
         cmd
     }
+
+    pub fn spawn_circle(
+        &'_ mut self,
+        name: impl ToString,
+        //color: impl Into<Color>,
+        transform: Transform,
+        #[allow(unused)] radius: Float,
+    ) -> EntityCommands<'_> {
+        let mut cmd = self.spawn_named(name);
+
+        cmd.insert((
+            // Sprite {
+            // custom_size: Some(size.f32()),
+            // color: color.into(),
+            // ..Default::default()
+            // },
+            transform,
+        ));
+
+        cmd.insert((
+            #[cfg(feature = "rapier2d")]
+            rapier::Collider::ball(radius),
+            #[cfg(feature = "avian2d")]
+            (avian::RigidBody::Static, avian::Collider::circle(radius)),
+        ));
+
+        cmd
+    }
 }
 
 pub trait LevelSetupHelper2dEntityCommandsExtension {
