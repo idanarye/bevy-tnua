@@ -93,6 +93,7 @@ pub struct TnuaController {
     current_action: Option<(&'static str, Box<dyn DynamicAction>)>,
     contender_action: Option<(&'static str, Box<dyn DynamicAction>, Stopwatch)>,
     action_flow_status: TnuaActionFlowStatus,
+    up_direction: Option<Dir3>,
 }
 
 impl TnuaController {
@@ -313,6 +314,17 @@ impl TnuaController {
             None => Err(TnuaControllerHasNoBasis),
         }
     }
+
+    /// Returns the direction considered as up.
+    ///
+    /// Note that the up direction is based on gravity, as reported by
+    /// [`TnuaRigidBodyTracker::gravity`], and that it'd typically be one frame behind since it
+    /// gets updated in the same system that applies the controller logic. If this is unacceptable,
+    /// consider using [`TnuaRigidBodyTracker::gravity`] directly or deducing the up direction via
+    /// different means.
+    pub fn up_direction(&self) -> Option<Dir3> {
+        self.up_direction
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -402,6 +414,11 @@ fn apply_controller_system(
 
         let controller = controller.as_mut();
 
+        let up_direction = Dir3::new(-tracker.gravity.f32()).ok();
+        controller.up_direction = up_direction;
+        // TODO: support the case where there is no up direction at all?
+        let up_direction = up_direction.unwrap_or(Dir3::Y);
+
         match controller.action_flow_status {
             TnuaActionFlowStatus::NoAction | TnuaActionFlowStatus::ActionOngoing(_) => {}
             TnuaActionFlowStatus::ActionEnded(_) => {
@@ -417,7 +434,6 @@ fn apply_controller_system(
         }
 
         if let Some((_, basis)) = controller.current_basis.as_mut() {
-            let up_direction = Dir3::new(-tracker.gravity.f32()).unwrap_or(Dir3::Y);
             let basis = basis.as_mut();
             basis.apply(
                 TnuaBasisContext {

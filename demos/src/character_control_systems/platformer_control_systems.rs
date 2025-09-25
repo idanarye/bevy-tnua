@@ -125,14 +125,17 @@ pub fn apply_platformer_controls(
 
         let screen_space_direction = direction.clamp_length_max(1.0);
 
-        let direction = if let Some(forward_from_camera) = forward_from_camera {
-            Transform::default()
-                .looking_to(forward_from_camera.forward.f32(), Vec3::Y)
-                .transform_point(screen_space_direction.f32())
-                .adjust_precision()
-        } else {
-            screen_space_direction
-        };
+        let transform_for_controls = calculate_transform_for_controls(
+            forward_from_camera
+                .and_then(|ffc| Dir3::new(ffc.forward.f32()).ok())
+                .unwrap_or(Dir3::NEG_Z),
+            Dir3::Y, // TOOD: does this change in shooter?
+            controller.up_direction().unwrap_or(Dir3::Y),
+        );
+
+        let direction = transform_for_controls
+            .transform_point(screen_space_direction.f32())
+            .adjust_precision();
 
         let jump = match (config.dimensionality, is_climbing) {
             (Dimensionality::Dim2, true) => keyboard.any_pressed([KeyCode::Space]),
@@ -687,6 +690,20 @@ impl Default for ForwardFromCamera {
             pitch_angle: 0.0,
         }
     }
+}
+
+pub fn calculate_transform_for_controls(
+    camera_forward: Dir3,
+    camera_up: Dir3,
+    controller_up: Dir3,
+) -> Transform {
+    let dot = camera_forward.dot(controller_up.into());
+    let quat = if dot <= 0.0 {
+        Quat::from_rotation_arc(*camera_up, *controller_up)
+    } else {
+        Quat::from_rotation_arc(-*camera_up, *controller_up)
+    };
+    Transform::default().with_rotation(quat)
 }
 
 /// Since the fixed timestep schedule does not cache just pressed states that happened

@@ -113,7 +113,10 @@ fn main() {
     app.add_systems(Startup, setup_camera_and_lights);
     app.add_plugins(
         LevelSwitchingPlugin::new(app_setup_configuration.level_to_load.as_ref())
-            .with_levels(levels_for_3d),
+            .with_levels(levels_for_3d)
+            // TODO: enable this level if I ever decide to make the shooter controlers
+            // work with non-standard gravity direction.
+            .without("Planet"),
     );
     app.add_systems(Startup, setup_player);
     app.add_systems(Update, grab_ungrab_mouse);

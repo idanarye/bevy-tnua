@@ -60,6 +60,11 @@ impl LevelSwitchingPlugin {
         self
     }
 
+    pub fn without(mut self, name: &str) -> Self {
+        self.levels.retain(|(level_name, _)| level_name != name);
+        self
+    }
+
     pub fn with_levels(mut self, levels_adder: impl FnOnce(&mut Self)) -> Self {
         levels_adder(&mut self);
         self

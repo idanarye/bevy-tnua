@@ -8,6 +8,9 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+### Added
+- `TnuaController::up_direction`
+
 ## 0.24.0 - 2025-05-10
 ### Changed
 - Upgrade to Bevy 0.16.
