@@ -8,7 +8,7 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 
 ## [Unreleased]
 
-## 0.12.0 - 2025-09-26
+## 0.13.0 - 2025-09-26
 ### Removed
 - [**BREAKING**] `Default` implementation from `TnuaRapier2dPlugin` and
   `TnuaRapier3dPlugin`. Since the schedule must match the physics backend
