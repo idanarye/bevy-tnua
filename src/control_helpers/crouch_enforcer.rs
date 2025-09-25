@@ -3,7 +3,7 @@ use std::any::Any;
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::{Float, Vector3};
+use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Quaternion, Vector3};
 
 use crate::controller::TnuaController;
 use crate::subservient_sensors::TnuaSubservientSensor;
@@ -196,11 +196,15 @@ fn update_crouch_enforcer(
                 .sensor_entity
                 .and_then(|entity| sensors_query.get_mut(entity).ok())
             {
-                subservient_sensor.cast_origin = crouch_enforcer.offset;
-                subservient_sensor.cast_direction = cast_direction;
                 // TODO: Maybe add the horizontal rotation as well somehow?
-                subservient_sensor.cast_shape_rotation =
-                    Quat::from_rotation_arc(Vec3::Y, *subservient_sensor.cast_direction);
+                subservient_sensor.cast_shape_rotation = Quaternion::from_rotation_arc(
+                    Vector3::Y,
+                    subservient_sensor.cast_direction.adjust_precision(),
+                );
+                subservient_sensor.cast_origin = subservient_sensor
+                    .cast_shape_rotation
+                    .mul_vec3(crouch_enforcer.offset);
+                subservient_sensor.cast_direction = cast_direction;
                 subservient_sensor.cast_range = cast_range;
             } else {
                 let mut cmd = commands.spawn((

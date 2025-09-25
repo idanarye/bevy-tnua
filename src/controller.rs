@@ -3,7 +3,9 @@ use bevy::platform::collections::hash_map::Entry;
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use bevy_tnua_physics_integration_layer::math::{AsF32, Float};
+use bevy_tnua_physics_integration_layer::math::{
+    AdjustPrecision, AsF32, Float, Quaternion, Vector3,
+};
 
 use crate::basis_action_traits::{
     BoxableAction, BoxableBasis, DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext,
@@ -632,7 +634,8 @@ fn apply_controller_system(
             sensor.cast_range = sensor_cast_range_for_basis.max(sensor_case_range_for_action);
             sensor.cast_direction = -up_direction;
             // TODO: Maybe add the horizontal rotation as well somehow?
-            sensor.cast_shape_rotation = Quat::from_rotation_arc(Vec3::Y, *up_direction)
+            sensor.cast_shape_rotation =
+                Quaternion::from_rotation_arc(Vector3::Y, up_direction.adjust_precision())
         }
 
         // Cycle actions_being_fed

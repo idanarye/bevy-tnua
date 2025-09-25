@@ -3,7 +3,7 @@ use bevy_tnua::builtins::{
     TnuaBuiltinClimb, TnuaBuiltinClimbState, TnuaBuiltinCrouch, TnuaBuiltinDash,
     TnuaBuiltinJumpState, TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
 };
-use bevy_tnua::math::{Float, Vector3};
+use bevy_tnua::math::{AdjustPrecision, Float, Vector3};
 use bevy_tnua::prelude::*;
 use bevy_tnua::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 
@@ -82,7 +82,12 @@ pub fn animate_platformer_character(
                     };
                     let speed =
                         Some(basis_state.running_velocity.length()).filter(|speed| 0.01 < *speed);
-                    let is_crouching = basis_state.standing_offset.y < -0.4;
+                    let is_crouching = basis_state.standing_offset.dot(
+                        controller
+                            .up_direction()
+                            .unwrap_or(Dir3::Y)
+                            .adjust_precision(),
+                    ) < -0.4;
                     match (speed, is_crouching) {
                         (None, false) => AnimationState::Standing,
                         (None, true) => AnimationState::Crouching,

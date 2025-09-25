@@ -71,7 +71,7 @@ pub struct TnuaProximitySensor {
     /// The direction in world coord system (unmodified by the entity's transform)
     pub cast_direction: Dir3,
     /// Rotation for the sensor shape. Ignored if there is no sensor shape.
-    pub cast_shape_rotation: Quat,
+    pub cast_shape_rotation: Quaternion,
     /// The maximum detection range.
     pub cast_range: Float,
     pub output: Option<TnuaProximitySensorOutput>,
@@ -82,7 +82,7 @@ impl Default for TnuaProximitySensor {
         Self {
             cast_origin: Vector3::ZERO,
             cast_direction: Dir3::NEG_Y,
-            cast_shape_rotation: Quat::IDENTITY,
+            cast_shape_rotation: Quaternion::IDENTITY,
             cast_range: 0.0,
             output: None,
         }
