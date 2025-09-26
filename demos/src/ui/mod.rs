@@ -13,7 +13,7 @@ use bevy::ecs::component::Mutable;
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy::window::{PresentMode, PrimaryWindow};
-use bevy_egui::EguiContextPass;
+use bevy_egui::EguiPrimaryContextPass;
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 #[allow(unused_imports)]
@@ -48,25 +48,23 @@ const GRAVITY_MAGNITUDE: Float = 9.81;
 impl<C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<C> {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "egui")]
-        app.add_plugins(EguiPlugin {
-            enable_multipass_for_primary_context: true,
-        });
+        app.add_plugins(EguiPlugin::default());
         app.insert_resource(DemoUiPhysicsBackendSettings {
             active: true,
             gravity: Vector3::NEG_Y * GRAVITY_MAGNITUDE,
         });
         app.configure_sets(
-            EguiContextPass,
+            EguiPrimaryContextPass,
             DemoInfoUpdateSystemSet.after(bevy_tnua::TnuaUserControlsSystemSet),
         );
-        app.add_systems(EguiContextPass, apply_selectors);
+        app.add_systems(EguiPrimaryContextPass, apply_selectors);
         #[cfg(feature = "egui")]
         app.add_systems(
-            EguiContextPass,
+            EguiPrimaryContextPass,
             ui_system::<C>.after(DemoInfoUpdateSystemSet),
         );
         #[cfg(feature = "egui")]
-        app.add_systems(EguiContextPass, plot_source_rolling_update);
+        app.add_systems(EguiPrimaryContextPass, plot_source_rolling_update);
 
         #[cfg(feature = "egui")]
         app.add_plugins(framerate::DemoFrameratePlugin);
@@ -162,7 +160,7 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
             .movable(false)
             .resizable(false);
     }
-    egui_window.show(egui_context.ctx_mut(), |ui| {
+    egui_window.show(egui_context.ctx_mut().unwrap(), |ui| {
         //if let Some(window) = web_sys::window() {
             //ui.label(format!("URL {:?}", window.location().search()));
             //if ui.button("change").clicked() {

@@ -79,7 +79,7 @@ pub fn apply_platformer_controls(
     obstacle_query: Query<ObstacleQueryHelper>,
 ) {
     #[cfg(feature = "egui")]
-    if egui_context.ctx_mut().wants_keyboard_input() {
+    if egui_context.ctx_mut().unwrap().wants_keyboard_input() {
         for (_, mut controller, ..) in query.iter_mut() {
             // The basis remembers its last frame status, so if we cannot feed it proper input this
             // frame (for example - because the GUI takes the input focus) we need to neutralize
