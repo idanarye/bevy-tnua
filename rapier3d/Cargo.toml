@@ -14,7 +14,7 @@ readme = "../README.md"
 [dependencies]
 # bevy_render is required because bevy_rapier uses bevy::render::primitives::Aabb
 bevy = { version = "^0.16", default-features = false, features = ["bevy_render"] }
-bevy_rapier3d = { version = "^0.30", default-features = false, features = ["dim3"]}
+bevy_rapier3d = { version = "^0.31", default-features = false, features = ["dim3"]}
 bevy-tnua-physics-integration-layer = { version = "^0.9", path = "../physics-integration-layer" }
 
 [package.metadata.docs.rs]
