@@ -239,37 +239,41 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     }),
                     ("flat (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-                            0.0, 0.49,
-                        )));
+                        cmd.insert(TnuaRapier3dSensorShape(
+                            bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.49),
+                        ));
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.49, 0.0)));
                     }),
                     ("flat (exact)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-                            0.0, 0.5,
-                        )));
+                        cmd.insert(TnuaRapier3dSensorShape(
+                            bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.5),
+                        ));
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.5, 0.0)));
                     }),
                     ("flat (overfit)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-                            0.0, 0.51,
-                        )));
+                        cmd.insert(TnuaRapier3dSensorShape(
+                            bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.51),
+                        ));
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.51, 0.0)));
                     }),
                     ("ball (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::ball(0.49)));
+                        cmd.insert(TnuaRapier3dSensorShape(
+                            bevy_rapier3d::parry::shape::SharedShape::ball(0.49),
+                        ));
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::sphere(0.49)));
                     }),
                     ("ball (exact)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
-                        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::ball(0.5)));
+                        cmd.insert(TnuaRapier3dSensorShape(
+                            bevy_rapier3d::parry::shape::SharedShape::ball(0.5),
+                        ));
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::sphere(0.5)));
                     }),
@@ -350,9 +354,9 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // `TnuaCrouchEnforcer` can be used to prevent the character from standing up when obstructed.
     cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vector3::Y, |cmd| {
         #[cfg(feature = "rapier3d")]
-        cmd.insert(TnuaRapier3dSensorShape(rapier::Collider::cylinder(
-            0.0, 0.5,
-        )));
+        cmd.insert(TnuaRapier3dSensorShape(
+            bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.5),
+        ));
         #[cfg(feature = "avian3d")]
         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.5, 0.0)));
     }));

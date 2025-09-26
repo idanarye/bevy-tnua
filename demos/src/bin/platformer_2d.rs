@@ -225,7 +225,9 @@ fn setup_player(mut commands: Commands) {
                     }),
                     ("Flat (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
-                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.49, 0.0)));
+                        cmd.insert(TnuaRapier2dSensorShape(
+                            bevy_rapier2d::parry::shape::SharedShape::cuboid(0.49, 0.0),
+                        ));
                         #[cfg(feature = "avian2d")]
                         cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(
                             0.99, 0.0,
@@ -233,13 +235,17 @@ fn setup_player(mut commands: Commands) {
                     }),
                     ("Flat (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
-                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
+                        cmd.insert(TnuaRapier2dSensorShape(
+                            bevy_rapier2d::parry::shape::SharedShape::cuboid(0.5, 0.0),
+                        ));
                         #[cfg(feature = "avian2d")]
                         cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.0, 0.0)));
                     }),
                     ("flat (overfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
-                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.51, 0.0)));
+                        cmd.insert(TnuaRapier2dSensorShape(
+                            bevy_rapier2d::parry::shape::SharedShape::cuboid(0.51, 0.0),
+                        ));
                         #[cfg(feature = "avian2d")]
                         cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(
                             1.01, 0.0,
@@ -247,13 +253,17 @@ fn setup_player(mut commands: Commands) {
                     }),
                     ("Ball (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
-                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.49)));
+                        cmd.insert(TnuaRapier2dSensorShape(
+                            bevy_rapier2d::parry::shape::SharedShape::ball(0.49),
+                        ));
                         #[cfg(feature = "avian2d")]
                         cmd.insert(TnuaAvian2dSensorShape(avian::Collider::circle(0.49)));
                     }),
                     ("Ball (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
-                        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::ball(0.5)));
+                        cmd.insert(TnuaRapier2dSensorShape(
+                            bevy_rapier2d::parry::shape::SharedShape::ball(0.5),
+                        ));
                         #[cfg(feature = "avian2d")]
                         cmd.insert(TnuaAvian2dSensorShape(avian::Collider::circle(0.5)));
                     }),
@@ -335,7 +345,9 @@ fn setup_player(mut commands: Commands) {
         // It needs a sensor shape because it needs to do a shapecast upwards. Without a sensor shape
         // it'd do a raycast.
         #[cfg(feature = "rapier2d")]
-        cmd.insert(TnuaRapier2dSensorShape(rapier::Collider::cuboid(0.5, 0.0)));
+        cmd.insert(TnuaRapier2dSensorShape(
+            bevy_rapier2d::parry::shape::SharedShape::cuboid(0.5, 0.0),
+        ));
         #[cfg(feature = "avian2d")]
         cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.0, 0.0)));
     }));

@@ -106,8 +106,12 @@ pub struct TnuaRapier2dIOBundle {
 }
 
 /// Add this component to make [`TnuaProximitySensor`] cast a shape instead of a ray.
+///
+/// The [`SharedShape`](parry::shape::SharedShape) can be constructed using the re-exported
+/// [`bevy_rapier2d::parry`], or by constructing a [`Collider`] first and taking it's
+/// [`raw`](Collider::raw) field.
 #[derive(Component)]
-pub struct TnuaRapier2dSensorShape(pub Collider);
+pub struct TnuaRapier2dSensorShape(pub parry::shape::SharedShape);
 
 #[allow(clippy::type_complexity)]
 fn update_rigid_body_trackers_system(
@@ -257,7 +261,7 @@ fn update_proximity_sensors_system(
                                 cast_origin.truncate(),
                                 sensor.cast_shape_rotation.to_scaled_axis().z,
                                 cast_direction.truncate(),
-                                &*shape.raw.0,
+                                shape.as_ref(),
                                 ShapeCastOptions {
                                     max_time_of_impact: cast_range,
                                     target_distance: 0.0,

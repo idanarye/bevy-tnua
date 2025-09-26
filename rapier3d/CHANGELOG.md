@@ -9,6 +9,9 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 ## [Unreleased]
 ### Changed
 - Upgrade to bevy_rapier 0.31.
+- [**BREAKING**] `TnuaRapier2dSensorShape` and `TnuaRapier3dPlugin` use Parry's
+  `SharedShape` directly instead of bevy_rapier's `Collider`. Note that the
+  `SharedShape` can be retrieved from the `Collider` by taking its `raw` field.
 
 ## 0.13.0 - 2025-09-26
 ### Removed
