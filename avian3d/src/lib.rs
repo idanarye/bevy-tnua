@@ -8,7 +8,7 @@
 //!   `TnuaCrouchEnforcer`, that can be affected with a closure.
 mod spatial_ext;
 
-use avian3d::{prelude::*, schedule::PhysicsStepSet};
+use avian3d::{prelude::*, schedule::PhysicsStepSystems};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::AsF32;
@@ -65,7 +65,7 @@ impl Plugin for TnuaAvian3dPlugin {
             TnuaSystemSet
                 // Need to run _before_ `First`, not after it. The documentation is misleading. See
                 // https://github.com/Jondolf/avian/issues/675
-                .before(PhysicsStepSet::First)
+                .before(PhysicsStepSystems::First)
                 .run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
         );
         app.add_systems(
