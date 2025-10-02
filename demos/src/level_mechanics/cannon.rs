@@ -52,7 +52,7 @@ impl CannonBullet {
 }
 
 fn handle_collision(
-    #[cfg(feature = "avian3d")] mut avian_reader: EventReader<avian3d::prelude::CollisionStarted>,
+    #[cfg(feature = "avian3d")] mut avian_reader: EventReader<avian3d::prelude::CollisionStart>,
     #[cfg(feature = "rapier3d")] mut rapier_reader: EventReader<
         bevy_rapier3d::prelude::CollisionEvent,
     >,
@@ -62,7 +62,11 @@ fn handle_collision(
 ) {
     let events = std::iter::empty::<(Entity, Entity)>();
     #[cfg(feature = "avian3d")]
-    let events = events.chain(avian_reader.read().map(|event| (event.0, event.1)));
+    let events = events.chain(
+        avian_reader
+            .read()
+            .map(|event| (event.collider1, event.collider2)),
+    );
     #[cfg(feature = "rapier3d")]
     let events = events.chain(rapier_reader.read().filter_map(|event| {
         use bevy_rapier3d::pipeline::CollisionEvent;
