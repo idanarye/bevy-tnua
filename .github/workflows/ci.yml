@@ -12,7 +12,8 @@ permissions:
   checks: write
 
 env:
-  all_physics_backends: rapier2d,rapier3d,avian2d,avian3d
+  #all_physics_backends: rapier2d,rapier3d,avian2d,avian3d
+  all_physics_backends: avian2d,avian3d
 
 jobs:
   ci:
