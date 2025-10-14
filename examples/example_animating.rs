@@ -26,7 +26,7 @@ fn main() {
         .add_systems(
             FixedUpdate,
             (
-                apply_controls.in_set(TnuaUserControlsSystemSet),
+                apply_controls.in_set(TnuaUserControlsSystems),
                 prepare_animations,
                 handle_animating,
             ),

@@ -35,7 +35,7 @@ pub enum TnuaToggle {
 /// Tnua takes the position and rotation of the rigid body from its `GlobalTransform`, but things
 /// like velocity are dependent on the physics engine. The physics backend is responsible for
 /// updating this component from the physics engine during
-/// [`TnuaPipelineStages::Sensors`](crate::TnuaPipelineStages::Sensors).
+/// [`TnuaPipelineSystems::Sensors`](crate::TnuaPipelineSystems::Sensors).
 #[derive(Component, Debug)]
 pub struct TnuaRigidBodyTracker {
     pub translation: Vector3,
@@ -62,7 +62,7 @@ impl Default for TnuaRigidBodyTracker {
 /// Distance from another collider in a certain direction, and information on that collider.
 ///
 /// The physics backend is responsible for updating this component from the physics engine during
-/// [`TnuaPipelineStages::Sensors`](crate::TnuaPipelineStages::Sensors), usually by casting a ray
+/// [`TnuaPipelineSystems::Sensors`](crate::TnuaPipelineSystems::Sensors), usually by casting a ray
 /// or a shape in the `cast_direction`.
 #[derive(Component, Debug)]
 pub struct TnuaProximitySensor {
@@ -237,7 +237,7 @@ impl AddAssign for TnuaVelChange {
 /// Instructions on how to move forces to the rigid body.
 ///
 /// The physics backend is responsible for reading this component during
-/// [`TnuaPipelineStages::Sensors`](crate::TnuaPipelineStages::Sensors) and apply the forces to the
+/// [`TnuaPipelineSystems::Sensors`](crate::TnuaPipelineSystems::Sensors) and apply the forces to the
 /// rigid body.
 ///
 /// This documentation uses the term "forces", but in fact these numbers ignore mass and are

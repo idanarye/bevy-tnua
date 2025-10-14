@@ -26,8 +26,8 @@ use bevy_tnua_physics_integration_layer::data_for_backends::{
 };
 use bevy_tnua_physics_integration_layer::obstacle_radar::TnuaObstacleRadar;
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
-use bevy_tnua_physics_integration_layer::TnuaPipelineStages;
-use bevy_tnua_physics_integration_layer::TnuaSystemSet;
+use bevy_tnua_physics_integration_layer::TnuaPipelineSystems;
+use bevy_tnua_physics_integration_layer::TnuaSystems;
 pub use spatial_ext::TnuaSpatialExtRapier2d;
 
 use self::helpers::PretendToBeRapierContext;
@@ -57,7 +57,7 @@ impl Plugin for TnuaRapier2dPlugin {
             .register_required_components_with::<TnuaGravity, GravityScale>(|| GravityScale(0.0));
         app.configure_sets(
             self.schedule,
-            TnuaSystemSet.before(PhysicsSet::SyncBackend).run_if(
+            TnuaSystems.before(PhysicsSet::SyncBackend).run_if(
                 |rapier_config: Single<&RapierConfiguration>| rapier_config.physics_pipeline_active,
             ),
         );
@@ -68,11 +68,11 @@ impl Plugin for TnuaRapier2dPlugin {
                 update_proximity_sensors_system,
                 update_obstacle_radars_system,
             )
-                .in_set(TnuaPipelineStages::Sensors),
+                .in_set(TnuaPipelineSystems::Sensors),
         );
         app.add_systems(
             self.schedule,
-            apply_motors_system.in_set(TnuaPipelineStages::Motors),
+            apply_motors_system.in_set(TnuaPipelineSystems::Motors),
         );
         app.add_systems(
             Update,

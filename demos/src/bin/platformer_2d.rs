@@ -36,7 +36,7 @@ use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
-use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
+use tnua_demos_crate::ui::DemoInfoUpdateSystems;
 
 fn main() {
     tnua_demos_crate::verify_physics_backends_features!("rapier2d", "avian2d");
@@ -100,7 +100,7 @@ fn main() {
     #[cfg(feature = "egui")]
     app.add_systems(
         Update,
-        character_control_info_dumping_system.in_set(DemoInfoUpdateSystemSet),
+        character_control_info_dumping_system.in_set(DemoInfoUpdateSystems),
     );
     app.add_systems(Update, character_control_radar_visualization_system);
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
@@ -117,7 +117,7 @@ fn main() {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
         },
-        apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
+        apply_platformer_controls.in_set(TnuaUserControlsSystems),
     );
     app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     #[cfg(feature = "rapier2d")]

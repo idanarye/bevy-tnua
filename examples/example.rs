@@ -19,10 +19,7 @@ fn main() {
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(
-            FixedUpdate,
-            apply_controls.in_set(TnuaUserControlsSystemSet),
-        )
+        .add_systems(FixedUpdate, apply_controls.in_set(TnuaUserControlsSystems))
         .run();
 }
 

@@ -56,7 +56,7 @@ impl Plugin for TnuaAvian2dPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(
             self.schedule,
-            TnuaSystemSet
+            TnuaSystems
                 // Need to run _before_ `First`, not after it. The documentation is misleading. See
                 // https://github.com/Jondolf/avian/issues/675
                 .before(PhysicsStepSystems::First)
@@ -69,11 +69,11 @@ impl Plugin for TnuaAvian2dPlugin {
                 update_proximity_sensors_system,
                 update_obstacle_radars_system,
             )
-                .in_set(TnuaPipelineStages::Sensors),
+                .in_set(TnuaPipelineSystems::Sensors),
         );
         app.add_systems(
             self.schedule,
-            apply_motors_system.in_set(TnuaPipelineStages::Motors),
+            apply_motors_system.in_set(TnuaPipelineSystems::Motors),
         );
         app.add_systems(
             Update,

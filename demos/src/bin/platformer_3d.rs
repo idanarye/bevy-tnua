@@ -37,7 +37,7 @@ use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
 #[cfg(feature = "egui")]
-use tnua_demos_crate::ui::DemoInfoUpdateSystemSet;
+use tnua_demos_crate::ui::DemoInfoUpdateSystems;
 use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
 use tnua_demos_crate::{
     character_animating_systems::platformer_animating_systems::{
@@ -104,7 +104,7 @@ fn main() {
     #[cfg(feature = "egui")]
     app.add_systems(
         Update,
-        character_control_info_dumping_system.in_set(DemoInfoUpdateSystemSet),
+        character_control_info_dumping_system.in_set(DemoInfoUpdateSystems),
     );
     app.add_systems(Update, character_control_radar_visualization_system);
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
@@ -121,7 +121,7 @@ fn main() {
             ScheduleToUse::Update => Update.intern(),
             ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
         },
-        apply_platformer_controls.in_set(TnuaUserControlsSystemSet),
+        apply_platformer_controls.in_set(TnuaUserControlsSystems),
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);

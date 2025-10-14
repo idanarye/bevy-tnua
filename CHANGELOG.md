@@ -8,6 +8,11 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+## 0.26.0 - 2025-10-14
+### Changed
+- Upgrade to Bevy 0.17.
+- Rename `TnuaUserControlsSystemSet` to `TnuaUserControlsSystems`.
+
 ## 0.25.0 - 2025-09-26
 ### Removed
 - [**BREAKING**] `Default` implementation from `TnuaControllerPlugin` and

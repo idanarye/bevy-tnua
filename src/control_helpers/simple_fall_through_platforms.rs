@@ -10,7 +10,7 @@ use crate::{TnuaGhostSensor, TnuaProximitySensor};
 ///
 /// Place this component on the characetr entity (the one that has the [`TnuaProximitySensor`] and
 /// the [`TnuaGhostSensor`]) and inside a system that runs in
-/// [`TnuaUserControlsSystemSet`](crate::TnuaUserControlsSystemSet) (typically the player controls
+/// [`TnuaUserControlsSystems`](crate::TnuaUserControlsSystems) (typically the player controls
 /// system) use [`with`](Self::with) and call one of the methods of [the returned handle
 /// object](TnuaHandleForSimpleFallThroughPlatformsHelper) every frame. See the description of
 /// these methods to determine which one to call.

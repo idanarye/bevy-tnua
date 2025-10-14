@@ -13,8 +13,8 @@ use crate::basis_action_traits::{
     TnuaBasisContext,
 };
 use crate::{
-    TnuaBasis, TnuaMotor, TnuaPipelineStages, TnuaProximitySensor, TnuaRigidBodyTracker,
-    TnuaSystemSet, TnuaToggle, TnuaUserControlsSystemSet,
+    TnuaBasis, TnuaMotor, TnuaPipelineSystems, TnuaProximitySensor, TnuaRigidBodyTracker,
+    TnuaSystems, TnuaToggle, TnuaUserControlsSystems,
 };
 
 /// The main for supporting Tnua character controller.
@@ -45,18 +45,18 @@ impl Plugin for TnuaControllerPlugin {
         app.configure_sets(
             self.schedule,
             (
-                TnuaPipelineStages::Sensors,
-                TnuaPipelineStages::SubservientSensors,
-                TnuaUserControlsSystemSet,
-                TnuaPipelineStages::Logic,
-                TnuaPipelineStages::Motors,
+                TnuaPipelineSystems::Sensors,
+                TnuaPipelineSystems::SubservientSensors,
+                TnuaUserControlsSystems,
+                TnuaPipelineSystems::Logic,
+                TnuaPipelineSystems::Motors,
             )
                 .chain()
-                .in_set(TnuaSystemSet),
+                .in_set(TnuaSystems),
         );
         app.add_systems(
             self.schedule,
-            apply_controller_system.in_set(TnuaPipelineStages::Logic),
+            apply_controller_system.in_set(TnuaPipelineSystems::Logic),
         );
     }
 }

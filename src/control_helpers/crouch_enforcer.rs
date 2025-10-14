@@ -7,7 +7,7 @@ use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Quaterni
 
 use crate::controller::TnuaController;
 use crate::subservient_sensors::TnuaSubservientSensor;
-use crate::{TnuaAction, TnuaPipelineStages, TnuaProximitySensor};
+use crate::{TnuaAction, TnuaPipelineSystems, TnuaProximitySensor};
 
 pub struct TnuaCrouchEnforcerPlugin {
     schedule: InternedScheduleLabel,
@@ -29,7 +29,7 @@ impl Plugin for TnuaCrouchEnforcerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             self.schedule,
-            update_crouch_enforcer.in_set(TnuaPipelineStages::SubservientSensors),
+            update_crouch_enforcer.in_set(TnuaPipelineSystems::SubservientSensors),
         );
     }
 }

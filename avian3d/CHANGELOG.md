@@ -11,6 +11,10 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.7.0 - 2025-10-14
+### Changed
+- Upgrade to Bevy 0.17 and Avian 0.4.
+
 ## 0.6.0 - 2025-09-26
 ### Changed
 - When using `TnuaAvian2dSensorShape`/`TnuaAvian3dSensorShape`, rotate the

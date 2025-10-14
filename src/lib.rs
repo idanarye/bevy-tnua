@@ -72,7 +72,7 @@
 //!
 //! To control the character, update the [`TnuaController`](prelude::TnuaController) by feeding it
 //! a [basis](TnuaBasis) and zero or more [actions](TnuaAction). For some of the advanced features
-//! to work, the system that does this needs to be placed inside the [`TnuaUserControlsSystemSet`]
+//! to work, the system that does this needs to be placed inside the [`TnuaUserControlsSystems`]
 //! system set.
 //!
 //! ```no_run
@@ -142,7 +142,7 @@ pub use basis_action_traits::{
 pub mod prelude {
     pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
     pub use crate::controller::{TnuaController, TnuaControllerPlugin};
-    pub use crate::{TnuaAction, TnuaPipelineStages, TnuaUserControlsSystemSet};
+    pub use crate::{TnuaAction, TnuaPipelineSystems, TnuaUserControlsSystems};
 }
 
 pub use bevy_tnua_physics_integration_layer::data_for_backends::*;
@@ -152,4 +152,4 @@ use bevy::prelude::*;
 
 /// The user controls should be applied in this system set.
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
-pub struct TnuaUserControlsSystemSet;
+pub struct TnuaUserControlsSystems;

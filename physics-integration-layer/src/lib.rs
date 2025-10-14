@@ -8,8 +8,8 @@
 //! To integrate a Bevy physics engine with Tnua, one should create a plugin named
 //! `Tnua<physics-engine-name>Plugin`, which:
 //!
-//! * Configures [`TnuaSystemSet`] to not run when the physics engine is paused.
-//! * Add systems, to the [`TnuaPipelineStages::Sensors`] stage, that update:
+//! * Configures [`TnuaSystems`] to not run when the physics engine is paused.
+//! * Add systems, to the [`TnuaPipelineSystems::Sensors`] stage, that update:
 //!   * [`TnuaRigidBodyTracker`](data_for_backends::TnuaRigidBodyTracker) with the objects current
 //!     kinematic status (position, rotation, velocity, angular velocity) as well as the gravity
 //!     currently applied to it.
@@ -44,13 +44,13 @@
 //!   The integration crate may update all these components in one system or multiple systems as it
 //!   sees fit.
 //!
-//! * Add a system, to the [`TnuaPipelineStages::Motors`] stage, that applies all the impulses and
+//! * Add a system, to the [`TnuaPipelineSystems::Motors`] stage, that applies all the impulses and
 //!   accelerations from [`TnuaMotor`](data_for_backends::TnuaMotor) components.
 //!
 //!   Here, too, if it makes sense to split this work into multiple systems the integration crate
 //!   may do so at its own discretion.
 //!
-//! * Ensure that [`TnuaSystemSet`] runs before the integration backend's systems.
+//! * Ensure that [`TnuaSystems`] runs before the integration backend's systems.
 //!
 //! * Handle [`TnuaGravity`](data_for_backends::TnuaGravity) in whatever way the integration crate
 //!   sees fit. This usually entails:
@@ -95,16 +95,16 @@ pub mod obstacle_radar;
 pub mod spatial_ext;
 pub mod subservient_sensors;
 
-/// Umbrella system set for [`TnuaPipelineStages`].
+/// Umbrella system set for [`TnuaPipelineSystems`].
 ///
 /// The physics backends' plugins are responsible for preventing this entire system set from
 /// running when the physics backend itself is paused.
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
-pub struct TnuaSystemSet;
+pub struct TnuaSystems;
 
 /// The various stages of the Tnua pipeline.
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
-pub enum TnuaPipelineStages {
+pub enum TnuaPipelineSystems {
     /// Data is read from the physics backend.
     Sensors,
     /// Data is propagated through the subservient sensors.

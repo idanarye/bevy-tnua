@@ -29,7 +29,7 @@ use self::plotting::{make_update_plot_data_system, plot_source_rolling_update};
 use tuning::UiTunable;
 
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
-pub struct DemoInfoUpdateSystemSet;
+pub struct DemoInfoUpdateSystems;
 
 pub struct DemoUi<C: Component<Mutability = Mutable> + UiTunable> {
     _phantom: PhantomData<C>,
@@ -55,13 +55,13 @@ impl<C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<C> {
         });
         app.configure_sets(
             EguiPrimaryContextPass,
-            DemoInfoUpdateSystemSet.after(bevy_tnua::TnuaUserControlsSystemSet),
+            DemoInfoUpdateSystems.after(bevy_tnua::TnuaUserControlsSystems),
         );
         app.add_systems(EguiPrimaryContextPass, apply_selectors);
         #[cfg(feature = "egui")]
         app.add_systems(
             EguiPrimaryContextPass,
-            ui_system::<C>.after(DemoInfoUpdateSystemSet),
+            ui_system::<C>.after(DemoInfoUpdateSystems),
         );
         #[cfg(feature = "egui")]
         app.add_systems(EguiPrimaryContextPass, plot_source_rolling_update);
