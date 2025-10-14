@@ -10,6 +10,9 @@ NOTES:
 * Avian used to be named bevy_xpbd. The old bevy-tnua-xpbd changelog can be seen [here](https://github.com/idanarye/bevy-tnua/blob/3cba881c8825633a8d8bdca1fe30e54500e655b8/xpbd3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Fixed
+- When proximity sensor hits static rigid body, consider its linear and angular
+  velocities as zero even when the components say otherwise.
 
 ## 0.7.0 - 2025-10-14
 ### Changed

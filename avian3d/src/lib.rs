@@ -164,7 +164,12 @@ fn update_proximity_sensors_system(
     )>,
     collision_layers_query: Query<&CollisionLayers>,
     other_object_query: Query<(
-        Option<(&Position, &LinearVelocity, &AngularVelocity)>,
+        Option<(
+            &Position,
+            &LinearVelocity,
+            &AngularVelocity,
+            Option<&RigidBody>,
+        )>,
         Option<&CollisionLayers>,
         Option<&ColliderOf>,
         Has<TnuaGhostPlatform>,
@@ -278,21 +283,30 @@ fn update_proximity_sensors_system(
 
                 let entity_linvel;
                 let entity_angvel;
-                if let Some((entity_position, entity_linear_velocity, entity_angular_velocity)) =
-                    entity_kinematic_data
+                if let Some((
+                    entity_position,
+                    entity_linear_velocity,
+                    entity_angular_velocity,
+                    rigid_body,
+                )) = entity_kinematic_data
                 {
-                    entity_angvel = entity_angular_velocity.0.adjust_precision();
-                    entity_linvel = entity_linear_velocity.0.adjust_precision()
-                        + if 0.0 < entity_angvel.length_squared() {
-                            let relative_point =
-                                intersection_point - entity_position.adjust_precision();
-                            // NOTE: no need to project relative_point on the
-                            // rotation plane, it will not affect the cross
-                            // product.
-                            entity_angvel.cross(relative_point)
-                        } else {
-                            Vector3::ZERO
-                        };
+                    if rigid_body == Some(&RigidBody::Static) {
+                        entity_angvel = Vector3::ZERO;
+                        entity_linvel = Vector3::ZERO;
+                    } else {
+                        entity_angvel = entity_angular_velocity.0.adjust_precision();
+                        entity_linvel = entity_linear_velocity.0.adjust_precision()
+                            + if 0.0 < entity_angvel.length_squared() {
+                                let relative_point =
+                                    intersection_point - entity_position.adjust_precision();
+                                // NOTE: no need to project relative_point on the
+                                // rotation plane, it will not affect the cross
+                                // product.
+                                entity_angvel.cross(relative_point)
+                            } else {
+                                Vector3::ZERO
+                            };
+                    }
                 } else {
                     entity_angvel = Vector3::ZERO;
                     entity_linvel = Vector3::ZERO;
