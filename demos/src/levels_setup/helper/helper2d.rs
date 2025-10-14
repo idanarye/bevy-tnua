@@ -157,7 +157,7 @@ impl LevelSetupHelper2d<'_, '_> {
             .spawn((
                 LevelObject,
                 Text::new(text.to_string()),
-                TextLayout::new_with_justify(JustifyText::Center),
+                TextLayout::new_with_justify(Justify::Center),
                 TextFont {
                     font,
                     font_size: 72.0,

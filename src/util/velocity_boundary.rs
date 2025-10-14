@@ -62,7 +62,7 @@ impl VelocityBoundary {
     }
 
     pub fn is_cleared(&self) -> bool {
-        self.no_push_timer.finished() || self.frontier <= self.base
+        self.no_push_timer.is_finished() || self.frontier <= self.base
     }
 
     /// Calculate how a boost needs to be adjusted according to the boundary.

@@ -32,12 +32,11 @@ jobs:
         rust: [1.90.0, nightly]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          override: true
       - name: Ready cache
         if: matrix.os == 'ubuntu-latest'
         run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
@@ -55,29 +54,22 @@ jobs:
    name: Rustfmt
    runs-on: ubuntu-latest
    steps:
-     - uses: actions/checkout@v2
-     - uses: actions-rs/toolchain@v1
+     - uses: actions/checkout@v3
+     - uses: dtolnay/rust-toolchain@master
        with:
-         profile: minimal
-         toolchain: stable
-         override: true
+         toolchain: 1.90.0
          components: rustfmt
      - name: Run fmt --all -- --check
-       uses: actions-rs/cargo@v1
-       with:
-         command: fmt
-         args: --all -- --check
+       run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
+          toolchain: 1.90.0
           components: clippy
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
@@ -96,12 +88,10 @@ jobs:
     name: Docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: 1.90.0
-          override: true
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
       - name: Cache cargo
@@ -111,10 +101,7 @@ jobs:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Run doc tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --doc --features ${{ env.all_physics_backends }}
+        run: cargo test --doc --features ${{ env.all_physics_backends }}
       - name: Get package names
         id: get-package-names
         run: |-
@@ -146,15 +133,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: jetli/wasm-bindgen-action@v0.1.0
         with:
           version: 'latest'
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          target: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown
           toolchain: 1.90.0
-          override: true
       - name: Get package names
         id: get-package-names
         run: |-
@@ -197,7 +183,7 @@ jobs:
                   demo_suffix=$physics_backend-$2
               fi
               special_flags=${@:3}
-              cargo build \
+              RUSTFLAGS='--cfg getrandom_backend="wasm_js"' cargo build \
                   --package tnua-demos-crate \
                   --bins \
                   --release \

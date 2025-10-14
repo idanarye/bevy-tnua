@@ -9,7 +9,7 @@ use crate::levels_setup::level_switching::{SwitchToLevel, SwitchableLevels};
 #[allow(unused)]
 pub struct LevelSelectionParam<'w> {
     switchable_levels: Option<Res<'w, SwitchableLevels>>,
-    writer: Option<ResMut<'w, Events<SwitchToLevel>>>,
+    writer: Option<ResMut<'w, Messages<SwitchToLevel>>>,
 }
 
 impl LevelSelectionParam<'_> {
@@ -34,7 +34,7 @@ impl LevelSelectionParam<'_> {
                 None
             });
         if let Some(new_idx) = response.inner.flatten() {
-            writer.send(SwitchToLevel(new_idx));
+            writer.write(SwitchToLevel(new_idx));
         }
     }
 }

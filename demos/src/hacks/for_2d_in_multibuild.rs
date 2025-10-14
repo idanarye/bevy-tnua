@@ -8,8 +8,8 @@ pub struct Register3dResourcesInThe2dDemos;
 impl Plugin for Register3dResourcesInThe2dDemos {
     fn build(&self, #[allow(unused)] app: &mut App) {
         #[cfg(feature = "avian3d")]
-        app.add_event::<avian3d::prelude::CollisionStarted>();
+        app.add_message::<avian3d::prelude::CollisionStart>();
         #[cfg(feature = "rapier3d")]
-        app.add_event::<bevy_rapier3d::prelude::CollisionEvent>();
+        app.add_message::<bevy_rapier3d::prelude::CollisionEvent>();
     }
 }

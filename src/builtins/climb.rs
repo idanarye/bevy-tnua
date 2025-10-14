@@ -156,7 +156,7 @@ impl TnuaAction for TnuaBuiltinClimb {
                     lifecycle_status.directive_simple()
                 }
                 TnuaBuiltinClimbState::Coyote(timer) => {
-                    if timer.tick(ctx.frame_duration_as_duration()).finished() {
+                    if timer.tick(ctx.frame_duration_as_duration()).is_finished() {
                         TnuaActionLifecycleDirective::Finished
                     } else {
                         lifecycle_status.directive_linger()

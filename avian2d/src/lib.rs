@@ -9,7 +9,7 @@
 mod spatial_ext;
 
 use avian2d::math::{AdjustPrecision, AsF32};
-use avian2d::{prelude::*, schedule::PhysicsStepSet};
+use avian2d::{prelude::*, schedule::PhysicsStepSystems};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
@@ -59,7 +59,7 @@ impl Plugin for TnuaAvian2dPlugin {
             TnuaSystemSet
                 // Need to run _before_ `First`, not after it. The documentation is misleading. See
                 // https://github.com/Jondolf/avian/issues/675
-                .before(PhysicsStepSet::First)
+                .before(PhysicsStepSystems::First)
                 .run_if(|physics_time: Res<Time<Physics>>| !physics_time.is_paused()),
         );
         app.add_systems(
@@ -405,53 +405,36 @@ fn update_obstacle_radars_system(
 fn apply_motors_system(
     mut query: Query<(
         &TnuaMotor,
-        &mut LinearVelocity,
-        &mut AngularVelocity,
         &ComputedMass,
         &ComputedAngularInertia,
-        &mut ExternalForce,
-        &mut ExternalTorque,
+        Forces,
         Option<&TnuaToggle>,
         Option<&TnuaGravity>,
     )>,
 ) {
-    for (
-        motor,
-        mut linare_velocity,
-        mut angular_velocity,
-        mass,
-        inertia,
-        mut external_force,
-        mut external_torque,
-        tnua_toggle,
-        tnua_gravity,
-    ) in query.iter_mut()
-    {
+    for (motor, mass, inertia, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
-                *external_force = Default::default();
                 return;
             }
             TnuaToggle::Enabled => {}
         }
         if motor.lin.boost.is_finite() {
-            linare_velocity.0 += motor.lin.boost.truncate();
+            forces.apply_linear_impulse(motor.lin.boost.truncate() * mass.value());
         }
         if motor.lin.acceleration.is_finite() {
-            external_force.set_force(motor.lin.acceleration.truncate() * mass.value());
+            forces.apply_force(motor.lin.acceleration.truncate() * mass.value());
         }
         if motor.ang.boost.is_finite() {
-            angular_velocity.0 += motor.ang.boost.z;
+            forces.apply_angular_impulse(inertia.value() * motor.ang.boost.z);
         }
         if motor.ang.acceleration.is_finite() {
-            external_torque.set_torque(
-                // NOTE: I did not actually verify that this is the correct formula. Nothing uses
-                // angular acceleration yet - only angular impulses.
-                inertia.value() * motor.ang.acceleration.z,
-            );
+            // NOTE: I did not actually verify that this is correct. Nothing uses angular
+            // acceleration yet - only angular impulses.
+            forces.apply_angular_acceleration(motor.ang.acceleration.z);
         }
         if let Some(gravity) = tnua_gravity {
-            external_force.apply_force(gravity.0.truncate() * mass.value());
+            forces.apply_force(gravity.0.truncate() * mass.value());
         }
     }
 }

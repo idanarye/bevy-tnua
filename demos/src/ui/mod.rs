@@ -12,7 +12,7 @@ use std::marker::PhantomData;
 use bevy::ecs::component::Mutable;
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
-use bevy::window::{PresentMode, PrimaryWindow};
+use bevy::window::{CursorOptions, PresentMode, PrimaryWindow};
 use bevy_egui::EguiPrimaryContextPass;
 #[cfg(feature = "egui")]
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
@@ -141,7 +141,7 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
         Option<&mut CommandAlteringSelectors>,
     )>,
     mut commands: Commands,
-    mut primary_window_query: Query<&mut Window, With<PrimaryWindow>>,
+    mut primary_window_query: Query<(&mut Window, &CursorOptions), With<PrimaryWindow>>,
     mut level_selection: level_selection::LevelSelectionParam,
     mut framerate: framerate::DemoFramerateParam,
     #[cfg(target_arch = "wasm32")] app_setup_configuration: Res<
@@ -150,23 +150,18 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
 ) {
     use std::any::TypeId;
 
-    let Ok(mut primary_window) = primary_window_query.single_mut() else {
+    let Ok((mut primary_window, primary_window_cursor_options)) = primary_window_query.single_mut()
+    else {
         return;
     };
     let mut egui_window = egui::Window::new("Tnua");
-    if !primary_window.cursor_options.visible {
+    if !primary_window_cursor_options.visible {
         egui_window = egui::Window::new("Tnua")
             .interactable(false)
             .movable(false)
             .resizable(false);
     }
     egui_window.show(egui_context.ctx_mut().unwrap(), |ui| {
-        //if let Some(window) = web_sys::window() {
-            //ui.label(format!("URL {:?}", window.location().search()));
-            //if ui.button("change").clicked() {
-                //let _ = window.location().set_search("yes=no");
-            //}
-        //}
         #[cfg(target_arch = "wasm32")]
         if let Some(new_schedule) = app_setup_configuration.schedule_to_use.pick_different_option(ui) {
             app_setup_configuration.change_and_reload_page(|cfg| {

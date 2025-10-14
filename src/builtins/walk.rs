@@ -444,7 +444,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         state
             .airborne_timer
             .as_ref()
-            .is_some_and(|timer| timer.finished())
+            .is_some_and(|timer| timer.is_finished())
     }
 
     fn violate_coyote_time(&self, state: &mut Self::State) {

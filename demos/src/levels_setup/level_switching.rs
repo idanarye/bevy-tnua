@@ -90,9 +90,9 @@ impl Plugin for LevelSwitchingPlugin {
             0
         };
         app.insert_resource(SwitchableLevels { current: 0, levels });
-        app.add_event::<SwitchToLevel>();
+        app.add_message::<SwitchToLevel>();
         app.add_systems(Update, (handle_level_switching, handle_player_positioning));
-        app.add_systems(Startup, move |mut writer: EventWriter<SwitchToLevel>| {
+        app.add_systems(Startup, move |mut writer: MessageWriter<SwitchToLevel>| {
             writer.write(SwitchToLevel(level_index));
         });
     }
@@ -110,7 +110,7 @@ impl SwitchableLevel {
     }
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct SwitchToLevel(pub usize);
 
 #[derive(Resource)]
@@ -130,7 +130,7 @@ impl SwitchableLevels {
 
 #[allow(clippy::type_complexity)]
 fn handle_level_switching(
-    mut reader: EventReader<SwitchToLevel>,
+    mut reader: MessageReader<SwitchToLevel>,
     mut switchable_levels: ResMut<SwitchableLevels>,
     query: Query<Entity, Or<(With<LevelObject>, With<PositionPlayer>)>>,
     mut commands: Commands,
@@ -209,7 +209,7 @@ fn handle_player_positioning(
             velocity.0 = Default::default();
         }
     }
-    if position_player.ttl.tick(time.delta()).finished() {
+    if position_player.ttl.tick(time.delta()).is_finished() {
         commands.entity(positioner_entity).despawn();
     }
 }

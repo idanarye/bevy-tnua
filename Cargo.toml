@@ -34,14 +34,14 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.16", default-features = false, features = [
+bevy = { version = "^0.17", default-features = false, features = [
     "bevy_log",
 ]}
 bevy-tnua-physics-integration-layer = { version = "^0.9", path = "physics-integration-layer" }
 thiserror = "2.0.12"
 
 [dev-dependencies]
-bevy = { version = "^0.16", default-features = false, features = [
+bevy = { version = "^0.17", default-features = false, features = [
      "animation",
     "bevy_asset",
     # "bevy_audio",
@@ -52,17 +52,18 @@ bevy = { version = "^0.16", default-features = false, features = [
     "bevy_gltf",
     "bevy_window",
     "ktx2",
-    "zstd",
+    "zstd_rust",
     "tonemapping_luts",
     "bevy_text",
     "bevy_log",
+    "reflect_auto_register",
     # "png",
     # "hdr",
     # "vorbis",
     "x11",
     # "filesystem_watcher",
 ] }
-avian3d = { version = "^0.3", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
+avian3d = { version = "^0.4", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
 bevy-tnua-avian3d = { path = "avian3d" }
 
 [package.metadata.docs.rs]

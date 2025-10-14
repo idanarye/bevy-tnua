@@ -1,4 +1,6 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
+#[cfg(feature = "avian3d")]
+use bevy_tnua::math::AdjustPrecision;
 
 use crate::levels_setup::{IsPlayer, LevelObject};
 
@@ -28,7 +30,10 @@ fn shoot(
                 cmd.insert(Name::new(format!("{cannon_name} projectile")));
             }
             #[cfg(feature = "avian3d")]
-            cmd.insert(avian3d::prelude::CollisionEventsEnabled);
+            cmd.insert((
+                avian3d::prelude::CollisionEventsEnabled,
+                avian3d::prelude::Position(cannon_transform.translation().adjust_precision()),
+            ));
             #[cfg(feature = "rapier3d")]
             cmd.insert(bevy_rapier3d::geometry::ActiveEvents::COLLISION_EVENTS);
             (cannon.cmd)(&mut cmd);
@@ -52,8 +57,8 @@ impl CannonBullet {
 }
 
 fn handle_collision(
-    #[cfg(feature = "avian3d")] mut avian_reader: EventReader<avian3d::prelude::CollisionStarted>,
-    #[cfg(feature = "rapier3d")] mut rapier_reader: EventReader<
+    #[cfg(feature = "avian3d")] mut avian_reader: MessageReader<avian3d::prelude::CollisionStart>,
+    #[cfg(feature = "rapier3d")] mut rapier_reader: MessageReader<
         bevy_rapier3d::prelude::CollisionEvent,
     >,
     bullets_query: Query<&CannonBullet>,
@@ -62,7 +67,11 @@ fn handle_collision(
 ) {
     let events = std::iter::empty::<(Entity, Entity)>();
     #[cfg(feature = "avian3d")]
-    let events = events.chain(avian_reader.read().map(|event| (event.0, event.1)));
+    let events = events.chain(
+        avian_reader
+            .read()
+            .map(|event| (event.collider1, event.collider2)),
+    );
     #[cfg(feature = "rapier3d")]
     let events = events.chain(rapier_reader.read().filter_map(|event| {
         use bevy_rapier3d::pipeline::CollisionEvent;
