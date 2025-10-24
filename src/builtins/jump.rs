@@ -140,7 +140,7 @@ impl Default for TnuaBuiltinJump {
 
 impl TnuaAction for TnuaBuiltinJump {
     const NAME: &'static str = "TnuaBuiltinJump";
-    type State = TnuaBuiltinJumpState;
+    type Memory = TnuaBuiltinJumpMemory;
     const VIOLATES_COYOTE_TIME: bool = true;
 
     fn initiation_decision(
@@ -160,7 +160,7 @@ impl TnuaAction for TnuaBuiltinJump {
 
     fn apply(
         &self,
-        state: &mut Self::State,
+        memory: &mut Self::Memory,
         ctx: TnuaActionContext,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut crate::TnuaMotor,
@@ -179,7 +179,7 @@ impl TnuaAction for TnuaBuiltinJump {
                 .add_final_segment(gravity + self.takeoff_extra_gravity)
                 .kinetic_energy()
                 .expect("`add_final_segment` should have covered remaining height");
-            *state = TnuaBuiltinJumpState::StartingJump {
+            *memory = TnuaBuiltinJumpMemory::StartingJump {
                 origin: ctx.tracker.translation,
                 desired_energy: kinetic_energy,
             };
@@ -189,13 +189,13 @@ impl TnuaAction for TnuaBuiltinJump {
 
         if let Some(force_forward) = self.force_forward {
             let disable_force_forward = self.disable_force_forward_after_peak
-                && match state {
-                    TnuaBuiltinJumpState::NoJump => true,
-                    TnuaBuiltinJumpState::StartingJump { .. } => false,
-                    TnuaBuiltinJumpState::SlowDownTooFastSlopeJump { .. } => false,
-                    TnuaBuiltinJumpState::MaintainingJump { .. } => false,
-                    TnuaBuiltinJumpState::StoppedMaintainingJump => true,
-                    TnuaBuiltinJumpState::FallSection => true,
+                && match memory {
+                    TnuaBuiltinJumpMemory::NoJump => true,
+                    TnuaBuiltinJumpMemory::StartingJump { .. } => false,
+                    TnuaBuiltinJumpMemory::SlowDownTooFastSlopeJump { .. } => false,
+                    TnuaBuiltinJumpMemory::MaintainingJump { .. } => false,
+                    TnuaBuiltinJumpMemory::StoppedMaintainingJump => true,
+                    TnuaBuiltinJumpMemory::FallSection => true,
                 };
             if !disable_force_forward {
                 motor
@@ -214,9 +214,9 @@ impl TnuaAction for TnuaBuiltinJump {
         // TODO: Once `std::mem::variant_count` gets stabilized, use that instead. The idea is to
         // allow jumping through multiple states but failing if we get into loop.
         for _ in 0..7 {
-            return match state {
-                TnuaBuiltinJumpState::NoJump => panic!(),
-                TnuaBuiltinJumpState::StartingJump {
+            return match memory {
+                TnuaBuiltinJumpMemory::NoJump => panic!(),
+                TnuaBuiltinJumpMemory::StartingJump {
                     origin,
                     desired_energy,
                 } => {
@@ -242,7 +242,7 @@ impl TnuaAction for TnuaBuiltinJump {
                     motor.lin.cancel_on_axis(up);
                     motor.lin.boost += (desired_upward_velocity - relative_velocity) * up;
                     if 0.0 <= extra_height {
-                        *state = TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
+                        *memory = TnuaBuiltinJumpMemory::SlowDownTooFastSlopeJump {
                             origin: *origin,
                             desired_energy: *desired_energy,
                             zero_potential_energy_at: ctx.tracker.translation - extra_height * up,
@@ -250,17 +250,17 @@ impl TnuaAction for TnuaBuiltinJump {
                     }
                     self.directive_simple_or_reschedule(lifecycle_status)
                 }
-                TnuaBuiltinJumpState::SlowDownTooFastSlopeJump {
+                TnuaBuiltinJumpMemory::SlowDownTooFastSlopeJump {
                     origin,
                     desired_energy,
                     zero_potential_energy_at,
                 } => {
                     let upward_velocity = up.dot(effective_velocity);
                     if upward_velocity <= ctx.basis.vertical_velocity() {
-                        *state = TnuaBuiltinJumpState::FallSection;
+                        *memory = TnuaBuiltinJumpMemory::FallSection;
                         continue;
                     } else if !lifecycle_status.is_active() {
-                        *state = TnuaBuiltinJumpState::StoppedMaintainingJump;
+                        *memory = TnuaBuiltinJumpMemory::StoppedMaintainingJump;
                         continue;
                     }
                     let relative_velocity = effective_velocity.dot(up);
@@ -300,7 +300,7 @@ impl TnuaAction for TnuaBuiltinJump {
                                 0.0,
                             );
                         }
-                        *state = TnuaBuiltinJumpState::MaintainingJump {
+                        *memory = TnuaBuiltinJumpMemory::MaintainingJump {
                             wait_one_frame_before_updating_velocity_boundary: true,
                             velocity_boundary,
                         };
@@ -315,7 +315,7 @@ impl TnuaAction for TnuaBuiltinJump {
                         self.directive_simple_or_reschedule(lifecycle_status)
                     }
                 }
-                TnuaBuiltinJumpState::MaintainingJump {
+                TnuaBuiltinJumpMemory::MaintainingJump {
                     wait_one_frame_before_updating_velocity_boundary,
                     velocity_boundary,
                 } => {
@@ -347,7 +347,7 @@ impl TnuaAction for TnuaBuiltinJump {
 
                     let relevant_upward_velocity = effective_velocity.dot(up);
                     if relevant_upward_velocity <= 0.0 {
-                        *state = TnuaBuiltinJumpState::FallSection;
+                        *memory = TnuaBuiltinJumpMemory::FallSection;
                         motor.lin.cancel_on_axis(up);
                     } else {
                         motor.lin.cancel_on_axis(up);
@@ -365,12 +365,12 @@ impl TnuaAction for TnuaBuiltinJump {
                         }
                         TnuaActionLifecycleStatus::CancelledInto => self.finish_or_reschedule(),
                         TnuaActionLifecycleStatus::NoLongerFed => {
-                            *state = TnuaBuiltinJumpState::StoppedMaintainingJump;
+                            *memory = TnuaBuiltinJumpMemory::StoppedMaintainingJump;
                             TnuaActionLifecycleDirective::StillActive
                         }
                     }
                 }
-                TnuaBuiltinJumpState::StoppedMaintainingJump => {
+                TnuaBuiltinJumpMemory::StoppedMaintainingJump => {
                     if matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto) {
                         self.finish_or_reschedule()
                     } else {
@@ -383,7 +383,7 @@ impl TnuaAction for TnuaBuiltinJump {
                         } else {
                             let upward_velocity = up.dot(effective_velocity);
                             if upward_velocity <= 0.0 {
-                                *state = TnuaBuiltinJumpState::FallSection;
+                                *memory = TnuaBuiltinJumpMemory::FallSection;
                                 continue;
                             }
 
@@ -399,7 +399,7 @@ impl TnuaAction for TnuaBuiltinJump {
                         }
                     }
                 }
-                TnuaBuiltinJumpState::FallSection => {
+                TnuaBuiltinJumpMemory::FallSection => {
                     let landed = ctx
                         .basis
                         .displacement()
@@ -445,7 +445,7 @@ impl TnuaBuiltinJump {
 }
 
 #[derive(Default, Debug, Clone)]
-pub enum TnuaBuiltinJumpState {
+pub enum TnuaBuiltinJumpMemory {
     #[default]
     NoJump,
     // FreeFall,

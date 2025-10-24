@@ -6,10 +6,10 @@ mod knockback;
 mod walk;
 mod wall_slide;
 
-pub use climb::{TnuaBuiltinClimb, TnuaBuiltinClimbState};
-pub use crouch::{TnuaBuiltinCrouch, TnuaBuiltinCrouchState};
-pub use dash::{TnuaBuiltinDash, TnuaBuiltinDashState};
-pub use jump::{TnuaBuiltinJump, TnuaBuiltinJumpState};
-pub use knockback::{TnuaBuiltinKnockback, TnuaBuiltinKnockbackState};
-pub use walk::{TnuaBuiltinWalk, TnuaBuiltinWalkState};
-pub use wall_slide::{TnuaBuiltinWallSlide, TnuaBuiltinWallSlideState};
+pub use climb::{TnuaBuiltinClimb, TnuaBuiltinClimbMemory};
+pub use crouch::{TnuaBuiltinCrouch, TnuaBuiltinCrouchMemory};
+pub use dash::{TnuaBuiltinDash, TnuaBuiltinDashMemory};
+pub use jump::{TnuaBuiltinJump, TnuaBuiltinJumpMemory};
+pub use knockback::{TnuaBuiltinKnockback, TnuaBuiltinKnockbackMemory};
+pub use walk::{TnuaBuiltinWalk, TnuaBuiltinWalkMemory};
+pub use wall_slide::{TnuaBuiltinWallSlide, TnuaBuiltinWallSlideMemory};

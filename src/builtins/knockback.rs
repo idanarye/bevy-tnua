@@ -79,18 +79,18 @@ impl Default for TnuaBuiltinKnockback {
 
 impl TnuaAction for TnuaBuiltinKnockback {
     const NAME: &'static str = "TnuaBuiltinKnockback";
-    type State = TnuaBuiltinKnockbackState;
+    type Memory = TnuaBuiltinKnockbackMemory;
     const VIOLATES_COYOTE_TIME: bool = true;
 
     fn apply(
         &self,
-        state: &mut Self::State,
+        memory: &mut Self::Memory,
         ctx: TnuaActionContext,
         _lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
-        match state {
-            TnuaBuiltinKnockbackState::Shove => {
+        match memory {
+            TnuaBuiltinKnockbackMemory::Shove => {
                 let Some(boundary) = VelocityBoundary::new(
                     ctx.tracker.velocity,
                     ctx.tracker.velocity + self.shove,
@@ -99,9 +99,9 @@ impl TnuaAction for TnuaBuiltinKnockback {
                     return TnuaActionLifecycleDirective::Finished;
                 };
                 motor.lin += TnuaVelChange::boost(self.shove);
-                *state = TnuaBuiltinKnockbackState::Pushback { boundary };
+                *memory = TnuaBuiltinKnockbackMemory::Pushback { boundary };
             }
-            TnuaBuiltinKnockbackState::Pushback { boundary } => {
+            TnuaBuiltinKnockbackMemory::Pushback { boundary } => {
                 boundary.update(ctx.tracker.velocity, ctx.frame_duration_as_duration());
                 if boundary.is_cleared() {
                     return TnuaActionLifecycleDirective::Finished;
@@ -142,12 +142,12 @@ impl TnuaAction for TnuaBuiltinKnockback {
 }
 
 #[derive(Default, Clone, Debug)]
-pub enum TnuaBuiltinKnockbackState {
+pub enum TnuaBuiltinKnockbackMemory {
     /// Applying the [`shove`](TnuaBuiltinKnockback::shove) impulse to the character.
     #[default]
     Shove,
     /// Hindering the character's ability to overcome the
-    /// [`Shove`](TnuaBuiltinKnockbackState::Shove) while waiting for it to overcome it despite the
+    /// [`Shove`](TnuaBuiltinKnockbackMemory::Shove) while waiting for it to overcome it despite the
     /// hindrance.
     Pushback { boundary: VelocityBoundary },
 }

@@ -74,7 +74,7 @@ struct FedEntry {
 /// * A basis - this is the main movement command - usually
 ///   [`TnuaBuiltinWalk`](crate::builtins::TnuaBuiltinWalk), but there can be others. It is the
 ///   game code's responsibility to ensure only one basis is fed at any given time, because basis
-///   can hold state and replacing the basis type restarts the state.
+///   can hold memory and replacing the basis type restarts the memory.
 ///
 ///   Refer to the documentation of [the implementors of
 ///   `TnuaBasis`](crate::TnuaBasis#implementors) for more information.
@@ -155,18 +155,18 @@ impl TnuaController {
     /// This is mainly useful for animation. When multiple basis types are used in the game,
     /// [`basis_name`](Self::basis_name) be used to determine the type of the current basis first,
     /// to avoid having to try multiple downcasts.
-    pub fn concrete_basis<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
+    pub fn concrete_basis<B: TnuaBasis>(&self) -> Option<(&B, &B::Memory)> {
         let (_, basis) = self.current_basis.as_ref()?;
         let boxable_basis: &BoxableBasis<B> = basis.as_any().downcast_ref()?;
-        Some((&boxable_basis.input, &boxable_basis.state))
+        Some((&boxable_basis.input, &boxable_basis.memory))
     }
 
     /// The currently running basis, together with its state, as mutable.
     /// Useful if you need to touch the state of a running action to respond to game events.
-    pub fn concrete_basis_mut<B: TnuaBasis>(&mut self) -> Option<(&B, &mut B::State)> {
+    pub fn concrete_basis_mut<B: TnuaBasis>(&mut self) -> Option<(&B, &mut B::Memory)> {
         let (_, basis) = self.current_basis.as_mut()?;
         let boxable_basis: &mut BoxableBasis<B> = basis.as_mut_any().downcast_mut()?;
-        Some((&boxable_basis.input, &mut boxable_basis.state))
+        Some((&boxable_basis.input, &mut boxable_basis.memory))
     }
 
     /// Feed an action with [its default name](TnuaBasis::NAME).
@@ -273,10 +273,10 @@ impl TnuaController {
     /// This is mainly useful for animation. When multiple action types are used in the game,
     /// [`action_name`](Self::action_name) be used to determine the type of the current action
     /// first, to avoid having to try multiple downcasts.
-    pub fn concrete_action<A: TnuaAction>(&self) -> Option<(&A, &A::State)> {
+    pub fn concrete_action<A: TnuaAction>(&self) -> Option<(&A, &A::Memory)> {
         let (_, action) = self.current_action.as_ref()?;
         let boxable_action: &BoxableAction<A> = action.as_any().downcast_ref()?;
-        Some((&boxable_action.input, &boxable_action.state))
+        Some((&boxable_action.input, &boxable_action.memory))
     }
 
     /// The currently running action, together with its state, as mutable.
@@ -284,10 +284,10 @@ impl TnuaController {
     ///
     /// If the action is replaced, the state will be lost. If you need to keep the state, you should
     /// store it separately.
-    pub fn concrete_action_mut<A: TnuaAction>(&mut self) -> Option<(&A, &mut A::State)> {
+    pub fn concrete_action_mut<A: TnuaAction>(&mut self) -> Option<(&A, &mut A::Memory)> {
         let (_, action) = self.current_action.as_mut()?;
         let boxable_action: &mut BoxableAction<A> = action.as_mut_any().downcast_mut()?;
-        Some((&boxable_action.input, &mut boxable_action.state))
+        Some((&boxable_action.input, &mut boxable_action.memory))
     }
 
     /// Indicator for the state and flow of movement actions.

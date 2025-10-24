@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use avian3d::prelude::*;
 
 use bevy_tnua::{
-    builtins::TnuaBuiltinJumpState, prelude::*, TnuaAnimatingState, TnuaAnimatingStateDirective,
+    builtins::TnuaBuiltinJumpMemory, prelude::*, TnuaAnimatingState, TnuaAnimatingStateDirective,
 };
 use bevy_tnua_avian3d::*;
 
@@ -231,18 +231,18 @@ fn handle_animating(
         // generate these names automatically, which may result in a change to the name.
         Some(TnuaBuiltinJump::NAME) => {
             // In case of jump, we want to cast it so that we can get the concrete jump state.
-            let (_, jump_state) = controller
+            let (_, jump_memory) = controller
                 .concrete_action::<TnuaBuiltinJump>()
                 .expect("action name mismatch");
             // Depending on the state of the jump, we need to decide if we want to play the jump
             // animation or the fall animation.
-            match jump_state {
-                TnuaBuiltinJumpState::NoJump => return,
-                TnuaBuiltinJumpState::StartingJump { .. } => AnimationState::Jumping,
-                TnuaBuiltinJumpState::SlowDownTooFastSlopeJump { .. } => AnimationState::Jumping,
-                TnuaBuiltinJumpState::MaintainingJump { .. } => AnimationState::Jumping,
-                TnuaBuiltinJumpState::StoppedMaintainingJump => AnimationState::Jumping,
-                TnuaBuiltinJumpState::FallSection => AnimationState::Falling,
+            match jump_memory {
+                TnuaBuiltinJumpMemory::NoJump => return,
+                TnuaBuiltinJumpMemory::StartingJump { .. } => AnimationState::Jumping,
+                TnuaBuiltinJumpMemory::SlowDownTooFastSlopeJump { .. } => AnimationState::Jumping,
+                TnuaBuiltinJumpMemory::MaintainingJump { .. } => AnimationState::Jumping,
+                TnuaBuiltinJumpMemory::StoppedMaintainingJump => AnimationState::Jumping,
+                TnuaBuiltinJumpMemory::FallSection => AnimationState::Falling,
             }
         }
         // Tnua should only have the `action_name` of the actions you feed to it. If it has
@@ -253,19 +253,19 @@ fn handle_animating(
         None => {
             // If there is no action going on, we'll base the animation on the state of the
             // basis.
-            let Some((_, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>() else {
+            let Some((_, basis_memory)) = controller.concrete_basis::<TnuaBuiltinWalk>() else {
                 // Since we only use the walk basis in this example, if we can't get get this
                 // basis' state it probably means the system ran before any basis was set, so we
                 // just stkip this frame.
                 return;
             };
-            if basis_state.standing_on_entity().is_none() {
+            if basis_memory.standing_on_entity().is_none() {
                 // The walk basis keeps track of what the character is standing on. If it doesn't
                 // stand on anything, `standing_on_entity` will be empty - which means the
                 // character has walked off a cliff and needs to fall.
                 AnimationState::Falling
             } else {
-                let speed = basis_state.running_velocity.length();
+                let speed = basis_memory.running_velocity.length();
                 if 0.01 < speed {
                     AnimationState::Running(0.1 * speed)
                 } else {

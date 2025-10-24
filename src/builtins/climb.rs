@@ -87,13 +87,13 @@ impl Default for TnuaBuiltinClimb {
 impl TnuaAction for TnuaBuiltinClimb {
     const NAME: &'static str = "TnuaBuiltinClimb";
 
-    type State = TnuaBuiltinClimbState;
+    type Memory = TnuaBuiltinClimbMemory;
 
     const VIOLATES_COYOTE_TIME: bool = true;
 
     fn apply(
         &self,
-        state: &mut Self::State,
+        memory: &mut Self::Memory,
         ctx: TnuaActionContext,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
@@ -101,10 +101,10 @@ impl TnuaAction for TnuaBuiltinClimb {
         // TODO: Once `std::mem::variant_count` gets stabilized, use that instead. The idea is to
         // allow jumping through multiple states but failing if we get into loop.
         for _ in 0..2 {
-            return match state {
-                TnuaBuiltinClimbState::Climbing { climbing_velocity } => {
+            return match memory {
+                TnuaBuiltinClimbMemory::Climbing { climbing_velocity } => {
                     if matches!(lifecycle_status, TnuaActionLifecycleStatus::NoLongerFed) {
-                        *state = TnuaBuiltinClimbState::Coyote(Timer::from_seconds(
+                        *memory = TnuaBuiltinClimbMemory::Coyote(Timer::from_seconds(
                             self.coyote_time.f32(),
                             TimerMode::Once,
                         ));
@@ -155,7 +155,7 @@ impl TnuaAction for TnuaBuiltinClimb {
 
                     lifecycle_status.directive_simple()
                 }
-                TnuaBuiltinClimbState::Coyote(timer) => {
+                TnuaBuiltinClimbMemory::Coyote(timer) => {
                     if timer.tick(ctx.frame_duration_as_duration()).is_finished() {
                         TnuaActionLifecycleDirective::Finished
                     } else {
@@ -176,18 +176,18 @@ impl TnuaAction for TnuaBuiltinClimb {
         TnuaActionInitiationDirective::Allow
     }
 
-    fn target_entity(&self, _state: &Self::State) -> Option<Entity> {
+    fn target_entity(&self, _memory: &Self::Memory) -> Option<Entity> {
         self.climbable_entity
     }
 }
 
 #[derive(Debug)]
-pub enum TnuaBuiltinClimbState {
+pub enum TnuaBuiltinClimbMemory {
     Climbing { climbing_velocity: Vector3 },
     Coyote(Timer),
 }
 
-impl Default for TnuaBuiltinClimbState {
+impl Default for TnuaBuiltinClimbMemory {
     fn default() -> Self {
         Self::Climbing {
             climbing_velocity: Vector3::ZERO,

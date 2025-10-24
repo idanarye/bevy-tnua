@@ -117,7 +117,7 @@ impl TnuaCrouchEnforcer {
 pub trait TnuaCrouchEnforcedAction: TnuaAction + Clone {
     /// The range, from the sensor's offset (as set by [`TnuaCrouchEnforcer::new`]), to check for a
     /// ceiling. If the sensor finds anything within that range - the crouch will be enforced.
-    fn range_to_cast_up(&self, state: &Self::State) -> Float;
+    fn range_to_cast_up(&self, memory: &Self::Memory) -> Float;
 
     /// Modify the action so that it won't be cancellable by another action.
     fn prevent_cancellation(&mut self);
@@ -148,8 +148,8 @@ impl<A: TnuaCrouchEnforcedAction> DynamicCrouchEnforcedAction for BoxableCrouchE
     }
 
     fn range_to_cast_up(&self, controller: &TnuaController) -> Option<Float> {
-        if let Some((action, state)) = controller.concrete_action::<A>() {
-            Some(action.range_to_cast_up(state))
+        if let Some((action, memory)) = controller.concrete_action::<A>() {
+            Some(action.range_to_cast_up(memory))
         } else {
             None
         }

@@ -50,7 +50,7 @@ pub trait TnuaBasis: 'static + Send + Sync {
     ///
     /// 3. Inspect the basis from game code systems, like an animation controlling system that
     ///    needs to know which animation to play based on the basis' current state.
-    type State: Default + Send + Sync;
+    type Memory: Default + Send + Sync;
 
     /// This is where the basis affects the character's motion.
     ///
@@ -61,27 +61,27 @@ pub trait TnuaBasis: 'static + Send + Sync {
     /// action's [`apply`](TnuaAction::apply) will also run and typically change some of the things
     /// the basis did to the motor.
     ///                                                              
-    /// It can also update the state.
-    fn apply(&self, state: &mut Self::State, ctx: TnuaBasisContext, motor: &mut TnuaMotor);
+    /// It can also update the memory.
+    fn apply(&self, memory: &mut Self::Memory, ctx: TnuaBasisContext, motor: &mut TnuaMotor);
 
     /// A value to configure the range of the ground proximity sensor according to the basis'
     /// needs.
-    fn proximity_sensor_cast_range(&self, state: &Self::State) -> Float;
+    fn proximity_sensor_cast_range(&self, memory: &Self::Memory) -> Float;
 
     /// The displacement of the character from where the basis wants it to be.
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn displacement(&self, state: &Self::State) -> Option<Vector3>;
+    fn displacement(&self, memory: &Self::Memory) -> Option<Vector3>;
 
     /// The velocity of the character, relative the what the basis considers its frame of
     /// reference.
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn effective_velocity(&self, state: &Self::State) -> Vector3;
+    fn effective_velocity(&self, memory: &Self::Memory) -> Vector3;
 
     /// The vertical velocity the character requires to stay the same height if it wants to move in
     /// [`effective_velocity`](Self::effective_velocity).
-    fn vertical_velocity(&self, state: &Self::State) -> Float;
+    fn vertical_velocity(&self, memory: &Self::Memory) -> Float;
 
     /// Nullify the fields of the basis that represent user input.
     fn neutralize(&mut self);
@@ -89,7 +89,7 @@ pub trait TnuaBasis: 'static + Send + Sync {
     /// Can be queried by an action to determine if the character should be considered "in the air".
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn is_airborne(&self, state: &Self::State) -> bool;
+    fn is_airborne(&self, memory: &Self::Memory) -> bool;
 
     /// If the basis is at coyote time - finish the coyote time.
     ///
@@ -98,7 +98,7 @@ pub trait TnuaBasis: 'static + Send + Sync {
     /// for example, unaccounted air jumps.
     ///
     /// If the character is fully grounded, this method must not change that.
-    fn violate_coyote_time(&self, state: &mut Self::State);
+    fn violate_coyote_time(&self, memory: &mut Self::Memory);
 }
 
 /// Helper trait for accessing a basis and its trait with dynamic dispatch.
@@ -136,14 +136,14 @@ pub trait DynamicBasis: Send + Sync + Any + 'static {
 
 pub(crate) struct BoxableBasis<B: TnuaBasis> {
     pub(crate) input: B,
-    pub(crate) state: B::State,
+    pub(crate) memory: B::Memory,
 }
 
 impl<B: TnuaBasis> BoxableBasis<B> {
     pub(crate) fn new(basis: B) -> Self {
         Self {
             input: basis,
-            state: Default::default(),
+            memory: Default::default(),
         }
     }
 }
@@ -158,23 +158,23 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
     }
 
     fn apply(&mut self, ctx: TnuaBasisContext, motor: &mut TnuaMotor) {
-        self.input.apply(&mut self.state, ctx, motor);
+        self.input.apply(&mut self.memory, ctx, motor);
     }
 
     fn proximity_sensor_cast_range(&self) -> Float {
-        self.input.proximity_sensor_cast_range(&self.state)
+        self.input.proximity_sensor_cast_range(&self.memory)
     }
 
     fn displacement(&self) -> Option<Vector3> {
-        self.input.displacement(&self.state)
+        self.input.displacement(&self.memory)
     }
 
     fn effective_velocity(&self) -> Vector3 {
-        self.input.effective_velocity(&self.state)
+        self.input.effective_velocity(&self.memory)
     }
 
     fn vertical_velocity(&self) -> Float {
-        self.input.vertical_velocity(&self.state)
+        self.input.vertical_velocity(&self.memory)
     }
 
     fn neutralize(&mut self) {
@@ -182,11 +182,11 @@ impl<B: TnuaBasis> DynamicBasis for BoxableBasis<B> {
     }
 
     fn is_airborne(&self) -> bool {
-        self.input.is_airborne(&self.state)
+        self.input.is_airborne(&self.memory)
     }
 
     fn violate_coyote_time(&mut self) {
-        self.input.violate_coyote_time(&mut self.state)
+        self.input.violate_coyote_time(&mut self.memory)
     }
 }
 
@@ -213,9 +213,9 @@ impl<'a> TnuaActionContext<'a> {
     /// Can be used to get the concrete basis.
     ///
     /// Use with care - actions that use it will only be usable with one basis.
-    pub fn concrete_basis<B: TnuaBasis>(&self) -> Option<(&B, &B::State)> {
+    pub fn concrete_basis<B: TnuaBasis>(&self) -> Option<(&B, &B::Memory)> {
         let boxable_basis: &BoxableBasis<B> = self.basis.as_any().downcast_ref()?;
-        Some((&boxable_basis.input, &boxable_basis.state))
+        Some((&boxable_basis.input, &boxable_basis.memory))
     }
 
     /// "Downgrade" to a basis context.
@@ -376,7 +376,7 @@ pub enum TnuaActionInitiationDirective {
 /// The type that implements this trait is called the action _input_, and is expected to be
 /// overwritten each frame by the controller system of the game code - although unlike basis the
 /// input will probably be the exact same. Configuration is considered as part of the input. If the
-/// action needs to persist data between frames it must keep it in its [state](Self::State).
+/// action needs to persist data between frames it must keep it in its [memory](Self::Memory).
 pub trait TnuaAction: 'static + Send + Sync {
     /// The default name of the action.
     ///
@@ -395,7 +395,7 @@ pub trait TnuaAction: 'static + Send + Sync {
     ///
     /// 3. Inspect the action from game code systems, like an animation controlling system that
     ///    needs to know which animation to play based on the action's current state.
-    type State: Default + Send + Sync;
+    type Memory: Default + Send + Sync;
 
     /// Set this to true for actions that may launch the character into the air.
     const VIOLATES_COYOTE_TIME: bool;
@@ -407,13 +407,13 @@ pub trait TnuaAction: 'static + Send + Sync {
     /// [`apply`](TnuaBasis::apply). Here the action can modify some aspects of or even completely
     /// overwrite what the basis did.
     ///                                                              
-    /// It can also update the state.
+    /// It can also update the memory.
     ///
     /// The returned value of this action determines whether or not the action will continue in the
     /// next frame.
     fn apply(
         &self,
-        state: &mut Self::State,
+        memory: &mut Self::Memory,
         ctx: TnuaActionContext,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
@@ -442,7 +442,7 @@ pub trait TnuaAction: 'static + Send + Sync {
     ) -> TnuaActionInitiationDirective;
 
     /// If the action targets an entity, return that entity
-    fn target_entity(&self, _state: &Self::State) -> Option<Entity> {
+    fn target_entity(&self, _memory: &Self::Memory) -> Option<Entity> {
         None
     }
 }
@@ -468,14 +468,14 @@ pub trait DynamicAction: Send + Sync + Any + 'static {
 
 pub(crate) struct BoxableAction<A: TnuaAction> {
     pub(crate) input: A,
-    pub(crate) state: A::State,
+    pub(crate) memory: A::Memory,
 }
 
 impl<A: TnuaAction> BoxableAction<A> {
     pub(crate) fn new(basis: A) -> Self {
         Self {
             input: basis,
-            state: Default::default(),
+            memory: Default::default(),
         }
     }
 }
@@ -496,7 +496,7 @@ impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
         self.input
-            .apply(&mut self.state, ctx, lifecycle_status, motor)
+            .apply(&mut self.memory, ctx, lifecycle_status, motor)
     }
 
     fn proximity_sensor_cast_range(&self) -> Float {
@@ -516,6 +516,6 @@ impl<A: TnuaAction> DynamicAction for BoxableAction<A> {
     }
 
     fn target_entity(&self) -> Option<Entity> {
-        self.input.target_entity(&self.state)
+        self.input.target_entity(&self.memory)
     }
 }

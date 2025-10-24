@@ -13,7 +13,7 @@ use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
 use bevy_tnua::{
     builtins::{
-        TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash,
+        TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinCrouchMemory, TnuaBuiltinDash,
         TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
     },
     control_helpers::TnuaBlipReuseAvoidance,
@@ -307,10 +307,10 @@ pub fn apply_platformer_controls(
             // `TnuaController::concrete_action` can be used to determine if an action is currently
             // running, and query its status. Here, we use it to check if the character is
             // currently crouching, so that we can limit its speed.
-            if let Some((_, state)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
+            if let Some((_, memory)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
                 // If the crouch is finished (last stages of standing up) we don't need to slow the
                 // character down.
-                if matches!(state, TnuaBuiltinCrouchState::Rising) {
+                if matches!(memory, TnuaBuiltinCrouchMemory::Rising) {
                     1.0
                 } else {
                     0.2

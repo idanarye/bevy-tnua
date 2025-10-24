@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- Rename the "state" (of basis and actions) to "memory". The term "state" will
+  now be used to describe the compund input+config+memory of the basis/action
+  currently in effect.
 
 ## 0.26.0 - 2025-10-14
 ### Changed

@@ -144,10 +144,15 @@ impl Default for TnuaBuiltinWalk {
 
 impl TnuaBasis for TnuaBuiltinWalk {
     const NAME: &'static str = "TnuaBuiltinWalk";
-    type State = TnuaBuiltinWalkState;
+    type Memory = TnuaBuiltinWalkMemory;
 
-    fn apply(&self, state: &mut Self::State, ctx: TnuaBasisContext, motor: &mut crate::TnuaMotor) {
-        if let Some(stopwatch) = &mut state.airborne_timer {
+    fn apply(
+        &self,
+        memory: &mut Self::Memory,
+        ctx: TnuaBasisContext,
+        motor: &mut crate::TnuaMotor,
+    ) {
+        if let Some(stopwatch) = &mut memory.airborne_timer {
             #[allow(clippy::unnecessary_cast)]
             stopwatch.tick(Duration::from_secs_f64(ctx.frame_duration as f64));
         }
@@ -158,7 +163,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         let slipping_vector: Option<Vector3>;
 
         if let Some(sensor_output) = &ctx.proximity_sensor.output {
-            state.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
+            memory.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
             let sideways_unnormalized = sensor_output
                 .normal
                 .cross(*ctx.up_direction)
@@ -192,12 +197,12 @@ impl TnuaBasis for TnuaBuiltinWalk {
                 }
             };
 
-            if state.airborne_timer.is_some() {
+            if memory.airborne_timer.is_some() {
                 considered_in_air = true;
                 impulse_to_offset = Vector3::ZERO;
-                state.standing_on = None;
+                memory.standing_on = None;
             } else {
-                if let Some(standing_on_state) = &state.standing_on {
+                if let Some(standing_on_state) = &memory.standing_on {
                     if standing_on_state.entity != sensor_output.entity {
                         impulse_to_offset = Vector3::ZERO;
                     } else {
@@ -210,26 +215,26 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
                 if slipping_vector.is_none() {
                     considered_in_air = false;
-                    state.standing_on = Some(StandingOnState {
+                    memory.standing_on = Some(StandingOnState {
                         entity: sensor_output.entity,
                         entity_linvel: sensor_output.entity_linvel,
                     });
                 } else {
                     considered_in_air = true;
-                    state.standing_on = None;
+                    memory.standing_on = None;
                 }
             }
         } else {
-            state.effective_velocity = ctx.tracker.velocity;
+            memory.effective_velocity = ctx.tracker.velocity;
             climb_vectors = None;
             considered_in_air = true;
             impulse_to_offset = Vector3::ZERO;
             slipping_vector = None;
-            state.standing_on = None;
+            memory.standing_on = None;
         }
-        state.effective_velocity += impulse_to_offset;
+        memory.effective_velocity += impulse_to_offset;
 
-        let velocity_on_plane = state
+        let velocity_on_plane = memory
             .effective_velocity
             .reject_from(ctx.up_direction.adjust_precision());
 
@@ -248,8 +253,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
         };
         let max_acceleration = direction_change_factor * relevant_acceleration_limit;
 
-        state.vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
-            state.effective_velocity.dot(climb_vectors.direction)
+        memory.vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
+            memory.effective_velocity.dot(climb_vectors.direction)
                 * climb_vectors
                     .direction
                     .dot(ctx.up_direction.adjust_precision())
@@ -283,11 +288,11 @@ impl TnuaBasis for TnuaBuiltinWalk {
                 let Some(slipping_vector) = slipping_vector else {
                     break 'slipping_boost Vector3::ZERO;
                 };
-                let vertical_velocity = if 0.0 <= state.vertical_velocity {
+                let vertical_velocity = if 0.0 <= memory.vertical_velocity {
                     ctx.tracker.gravity.dot(ctx.up_direction.adjust_precision())
                         * ctx.frame_duration
                 } else {
-                    state.vertical_velocity
+                    memory.vertical_velocity
                 };
 
                 let Ok((slipping_direction, slipping_per_vertical_unit)) =
@@ -319,10 +324,10 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
         let upward_impulse: TnuaVelChange = 'upward_impulse: {
             let should_disable_due_to_slipping =
-                slipping_vector.is_some() && state.vertical_velocity <= 0.0;
+                slipping_vector.is_some() && memory.vertical_velocity <= 0.0;
             for _ in 0..2 {
                 #[allow(clippy::unnecessary_cast)]
-                match &mut state.airborne_timer {
+                match &mut memory.airborne_timer {
                     None => {
                         if let (false, Some(sensor_output)) =
                             (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
@@ -330,11 +335,11 @@ impl TnuaBasis for TnuaBuiltinWalk {
                             // not doing the jump calculation here
                             let spring_offset =
                                 self.float_height - sensor_output.proximity.adjust_precision();
-                            state.standing_offset =
+                            memory.standing_offset =
                                 -spring_offset * ctx.up_direction.adjust_precision();
-                            break 'upward_impulse self.spring_force(state, &ctx, spring_offset);
+                            break 'upward_impulse self.spring_force(memory, &ctx, spring_offset);
                         } else {
-                            state.airborne_timer = Some(Timer::from_seconds(
+                            memory.airborne_timer = Some(Timer::from_seconds(
                                 self.coyote_time as f32,
                                 TimerMode::Once,
                             ));
@@ -346,11 +351,11 @@ impl TnuaBasis for TnuaBuiltinWalk {
                             (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
                         {
                             if sensor_output.proximity.adjust_precision() <= self.float_height {
-                                state.airborne_timer = None;
+                                memory.airborne_timer = None;
                                 continue;
                             }
                         }
-                        if state.vertical_velocity <= 0.0 {
+                        if memory.vertical_velocity <= 0.0 {
                             break 'upward_impulse TnuaVelChange::acceleration(
                                 -self.free_fall_extra_gravity * ctx.up_direction.adjust_precision(),
                             );
@@ -365,11 +370,11 @@ impl TnuaBasis for TnuaBuiltinWalk {
         };
 
         motor.lin = walk_vel_change + TnuaVelChange::boost(impulse_to_offset) + upward_impulse;
-        let new_velocity = state.effective_velocity
+        let new_velocity = memory.effective_velocity
             + motor.lin.boost
             + ctx.frame_duration * motor.lin.acceleration
             - impulse_to_offset;
-        state.running_velocity = new_velocity.reject_from(ctx.up_direction.adjust_precision());
+        memory.running_velocity = new_velocity.reject_from(ctx.up_direction.adjust_precision());
 
         // Tilt
 
@@ -416,23 +421,23 @@ impl TnuaBasis for TnuaBuiltinWalk {
         );
     }
 
-    fn proximity_sensor_cast_range(&self, _state: &Self::State) -> Float {
+    fn proximity_sensor_cast_range(&self, _memory: &Self::Memory) -> Float {
         self.float_height + self.cling_distance
     }
 
-    fn displacement(&self, state: &Self::State) -> Option<Vector3> {
-        match state.airborne_timer {
-            None => Some(state.standing_offset),
+    fn displacement(&self, memory: &Self::Memory) -> Option<Vector3> {
+        match memory.airborne_timer {
+            None => Some(memory.standing_offset),
             Some(_) => None,
         }
     }
 
-    fn effective_velocity(&self, state: &Self::State) -> Vector3 {
-        state.effective_velocity
+    fn effective_velocity(&self, memory: &Self::Memory) -> Vector3 {
+        memory.effective_velocity
     }
 
-    fn vertical_velocity(&self, state: &Self::State) -> Float {
-        state.vertical_velocity
+    fn vertical_velocity(&self, memory: &Self::Memory) -> Float {
+        memory.vertical_velocity
     }
 
     fn neutralize(&mut self) {
@@ -440,15 +445,15 @@ impl TnuaBasis for TnuaBuiltinWalk {
         self.desired_forward = None;
     }
 
-    fn is_airborne(&self, state: &Self::State) -> bool {
-        state
+    fn is_airborne(&self, memory: &Self::Memory) -> bool {
+        memory
             .airborne_timer
             .as_ref()
             .is_some_and(|timer| timer.is_finished())
     }
 
-    fn violate_coyote_time(&self, state: &mut Self::State) {
-        if let Some(timer) = &mut state.airborne_timer {
+    fn violate_coyote_time(&self, memory: &mut Self::Memory) {
+        if let Some(timer) = &mut memory.airborne_timer {
             timer.set_duration(Duration::ZERO);
         }
     }
@@ -463,16 +468,16 @@ impl TnuaBuiltinWalk {
     /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) may rely on it.
     pub fn spring_force(
         &self,
-        state: &TnuaBuiltinWalkState,
+        memory: &TnuaBuiltinWalkMemory,
         ctx: &TnuaBasisContext,
         spring_offset: Float,
     ) -> TnuaVelChange {
         let spring_force: Float = spring_offset * self.spring_strength;
 
-        let relative_velocity = state
+        let relative_velocity = memory
             .effective_velocity
             .dot(ctx.up_direction.adjust_precision())
-            - state.vertical_velocity;
+            - memory.vertical_velocity;
 
         let gravity_compensation = -ctx.tracker.gravity;
 
@@ -492,7 +497,7 @@ struct StandingOnState {
 }
 
 #[derive(Default, Clone, Debug)]
-pub struct TnuaBuiltinWalkState {
+pub struct TnuaBuiltinWalkMemory {
     airborne_timer: Option<Timer>,
     /// The current distance of the character from the distance its supposed to float at.
     pub standing_offset: Vector3,
@@ -507,7 +512,7 @@ pub struct TnuaBuiltinWalkState {
     pub running_velocity: Vector3,
 }
 
-impl TnuaBuiltinWalkState {
+impl TnuaBuiltinWalkMemory {
     /// Returns the entity that the character currently stands on.
     pub fn standing_on_entity(&self) -> Option<Entity> {
         Some(self.standing_on.as_ref()?.entity)

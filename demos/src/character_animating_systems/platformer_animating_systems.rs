@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_tnua::builtins::{
-    TnuaBuiltinClimb, TnuaBuiltinClimbState, TnuaBuiltinCrouch, TnuaBuiltinDash,
-    TnuaBuiltinJumpState, TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
+    TnuaBuiltinClimb, TnuaBuiltinClimbMemory, TnuaBuiltinCrouch, TnuaBuiltinDash,
+    TnuaBuiltinJumpMemory, TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
 };
 use bevy_tnua::math::{AdjustPrecision, Float, Vector3};
 use bevy_tnua::prelude::*;
@@ -57,32 +57,32 @@ pub fn animate_platformer_character(
                 Some(TnuaBuiltinJump::NAME) => {
                     // In case of jump, we want to cast it so that we can get the concrete jump
                     // state.
-                    let (_, jump_state) = controller
+                    let (_, jump_memory) = controller
                         .concrete_action::<TnuaBuiltinJump>()
                         .expect("action name mismatch");
                     // Depending on the state of the jump, we need to decide if we want to play the
                     // jump animation or the fall animation.
-                    match jump_state {
-                        TnuaBuiltinJumpState::NoJump => continue,
-                        TnuaBuiltinJumpState::StartingJump { .. } => AnimationState::Jumping,
-                        TnuaBuiltinJumpState::SlowDownTooFastSlopeJump { .. } => {
+                    match jump_memory {
+                        TnuaBuiltinJumpMemory::NoJump => continue,
+                        TnuaBuiltinJumpMemory::StartingJump { .. } => AnimationState::Jumping,
+                        TnuaBuiltinJumpMemory::SlowDownTooFastSlopeJump { .. } => {
                             AnimationState::Jumping
                         }
-                        TnuaBuiltinJumpState::MaintainingJump { .. } => AnimationState::Jumping,
-                        TnuaBuiltinJumpState::StoppedMaintainingJump => AnimationState::Jumping,
-                        TnuaBuiltinJumpState::FallSection => AnimationState::Falling,
+                        TnuaBuiltinJumpMemory::MaintainingJump { .. } => AnimationState::Jumping,
+                        TnuaBuiltinJumpMemory::StoppedMaintainingJump => AnimationState::Jumping,
+                        TnuaBuiltinJumpMemory::FallSection => AnimationState::Falling,
                     }
                 }
                 Some(TnuaBuiltinCrouch::NAME) => {
                     // In case of crouch, we need the state of the basis to determine - based on
                     // the speed - if the charcter is just crouching or also crawling.
-                    let Some((_, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>()
+                    let Some((_, basis_memory)) = controller.concrete_basis::<TnuaBuiltinWalk>()
                     else {
                         continue;
                     };
                     let speed =
-                        Some(basis_state.running_velocity.length()).filter(|speed| 0.01 < *speed);
-                    let is_crouching = basis_state.standing_offset.dot(
+                        Some(basis_memory.running_velocity.length()).filter(|speed| 0.01 < *speed);
+                    let is_crouching = basis_memory.standing_offset.dot(
                         controller
                             .up_direction()
                             .unwrap_or(Dir3::Y)
@@ -102,11 +102,12 @@ pub fn animate_platformer_character(
                 Some(TnuaBuiltinWallSlide::NAME) => AnimationState::WallSliding,
                 Some("walljump") => AnimationState::WallJumping,
                 Some(TnuaBuiltinClimb::NAME) => {
-                    let Some((_, action_state)) = controller.concrete_action::<TnuaBuiltinClimb>()
+                    let Some((_, action_memory)) = controller.concrete_action::<TnuaBuiltinClimb>()
                     else {
                         continue;
                     };
-                    let TnuaBuiltinClimbState::Climbing { climbing_velocity } = action_state else {
+                    let TnuaBuiltinClimbMemory::Climbing { climbing_velocity } = action_memory
+                    else {
                         continue;
                     };
                     AnimationState::Climbing(0.3 * climbing_velocity.dot(Vector3::Y))
@@ -115,14 +116,14 @@ pub fn animate_platformer_character(
                 None => {
                     // If there is no action going on, we'll base the animation on the state of the
                     // basis.
-                    let Some((_, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>()
+                    let Some((_, basis_memory)) = controller.concrete_basis::<TnuaBuiltinWalk>()
                     else {
                         continue;
                     };
-                    if basis_state.standing_on_entity().is_none() {
+                    if basis_memory.standing_on_entity().is_none() {
                         AnimationState::Falling
                     } else {
-                        let speed = basis_state.running_velocity.length();
+                        let speed = basis_memory.running_velocity.length();
                         if 0.01 < speed {
                             AnimationState::Running(0.1 * speed)
                         } else {

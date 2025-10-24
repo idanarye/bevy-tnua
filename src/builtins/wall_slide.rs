@@ -66,13 +66,13 @@ impl Default for TnuaBuiltinWallSlide {
 impl TnuaAction for TnuaBuiltinWallSlide {
     const NAME: &'static str = "TnuaBuiltinWallSlide";
 
-    type State = TnuaBuiltinWallSlideState;
+    type Memory = TnuaBuiltinWallSlideMemory;
 
     const VIOLATES_COYOTE_TIME: bool = true;
 
     fn apply(
         &self,
-        _state: &mut Self::State,
+        _memory: &mut Self::Memory,
         ctx: crate::TnuaActionContext,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
@@ -161,4 +161,4 @@ impl TnuaAction for TnuaBuiltinWallSlide {
 }
 
 #[derive(Default, Debug)]
-pub struct TnuaBuiltinWallSlideState {}
+pub struct TnuaBuiltinWallSlideMemory {}

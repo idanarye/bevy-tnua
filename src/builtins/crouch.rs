@@ -66,7 +66,7 @@ impl Default for TnuaBuiltinCrouch {
 
 impl TnuaAction for TnuaBuiltinCrouch {
     const NAME: &'static str = "TnuaBuiltinCrouch";
-    type State = TnuaBuiltinCrouchState;
+    type Memory = TnuaBuiltinCrouchMemory;
     const VIOLATES_COYOTE_TIME: bool = false;
 
     fn initiation_decision(
@@ -83,12 +83,12 @@ impl TnuaAction for TnuaBuiltinCrouch {
 
     fn apply(
         &self,
-        state: &mut Self::State,
+        memory: &mut Self::Memory,
         ctx: TnuaActionContext,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
-        let Some((walk_basis, walk_state)) = ctx.concrete_basis::<TnuaBuiltinWalk>() else {
+        let Some((walk_basis, walk_memory)) = ctx.concrete_basis::<TnuaBuiltinWalk>() else {
             error!("Cannot crouch - basis is not TnuaBuiltinWalk");
             return TnuaActionLifecycleDirective::Finished;
         };
@@ -104,17 +104,17 @@ impl TnuaAction for TnuaBuiltinCrouch {
             TnuaActionLifecycleStatus::CancelledFrom => {}
             TnuaActionLifecycleStatus::StillFed => {}
             TnuaActionLifecycleStatus::NoLongerFed => {
-                *state = TnuaBuiltinCrouchState::Rising;
+                *memory = TnuaBuiltinCrouchMemory::Rising;
             }
             TnuaActionLifecycleStatus::CancelledInto => {
                 if !self.uncancellable {
-                    *state = TnuaBuiltinCrouchState::Rising;
+                    *memory = TnuaBuiltinCrouchMemory::Rising;
                 }
             }
         }
 
         let spring_force = |spring_offset: Float| -> TnuaVelChange {
-            walk_basis.spring_force(walk_state, &ctx.as_basis_context(), spring_offset)
+            walk_basis.spring_force(walk_memory, &ctx.as_basis_context(), spring_offset)
         };
 
         let impulse_or_spring_force = |spring_offset: Float| -> TnuaVelChange {
@@ -135,22 +135,22 @@ impl TnuaAction for TnuaBuiltinCrouch {
             motor.lin += vel_change;
         };
 
-        match state {
-            TnuaBuiltinCrouchState::Sinking => {
+        match memory {
+            TnuaBuiltinCrouchMemory::Sinking => {
                 if spring_offset_down < -0.01 {
                     set_vel_change(impulse_or_spring_force(spring_offset_down));
                 } else {
-                    *state = TnuaBuiltinCrouchState::Maintaining;
+                    *memory = TnuaBuiltinCrouchMemory::Maintaining;
                     set_vel_change(spring_force(spring_offset_down));
                 }
                 lifecycle_status.directive_simple()
             }
-            TnuaBuiltinCrouchState::Maintaining => {
+            TnuaBuiltinCrouchMemory::Maintaining => {
                 set_vel_change(spring_force(spring_offset_down));
                 // If it's finished/cancelled, something else should changed its state
                 TnuaActionLifecycleDirective::StillActive
             }
-            TnuaBuiltinCrouchState::Rising => {
+            TnuaBuiltinCrouchMemory::Rising => {
                 if 0.01 < spring_offset_up {
                     set_vel_change(impulse_or_spring_force(spring_offset_up));
 
@@ -181,7 +181,7 @@ impl TnuaBuiltinCrouch {
 }
 
 #[derive(Default, Debug, Clone)]
-pub enum TnuaBuiltinCrouchState {
+pub enum TnuaBuiltinCrouchMemory {
     /// The character is transitioning from standing to crouching.
     #[default]
     Sinking,
@@ -192,7 +192,7 @@ pub enum TnuaBuiltinCrouchState {
 }
 
 impl TnuaCrouchEnforcedAction for TnuaBuiltinCrouch {
-    fn range_to_cast_up(&self, _state: &Self::State) -> Float {
+    fn range_to_cast_up(&self, _memory: &Self::Memory) -> Float {
         -self.float_offset
     }
 
