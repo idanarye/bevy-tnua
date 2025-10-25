@@ -14,9 +14,9 @@ use bevy_tnua::math::{float_consts, AsF32, Vector3};
 use bevy_tnua::{prelude::*, TnuaObstacleRadar};
 use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "avian2d")]
-use bevy_tnua_avian2d::*;
+use bevy_tnua_avian2d::prelude::*;
 #[cfg(feature = "rapier2d")]
-use bevy_tnua_rapier2d::*;
+use bevy_tnua_rapier2d::prelude::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::{

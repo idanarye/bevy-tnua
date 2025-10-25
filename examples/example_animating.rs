@@ -9,7 +9,7 @@ use avian3d::prelude::*;
 use bevy_tnua::{
     builtins::TnuaBuiltinJumpState, prelude::*, TnuaAnimatingState, TnuaAnimatingStateDirective,
 };
-use bevy_tnua_avian3d::*;
+use bevy_tnua_avian3d::prelude::*;
 
 fn main() {
     App::new()

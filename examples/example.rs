@@ -3,7 +3,7 @@ use bevy::{color::palettes::css, prelude::*};
 use avian3d::prelude::*;
 
 use bevy_tnua::prelude::*;
-use bevy_tnua_avian3d::*;
+use bevy_tnua_avian3d::prelude::*;
 
 fn main() {
     App::new()
