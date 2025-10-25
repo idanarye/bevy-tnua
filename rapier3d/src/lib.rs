@@ -32,6 +32,10 @@ pub use spatial_ext::TnuaSpatialExtRapier3d;
 
 use self::helpers::PretendToBeRapierContext;
 
+pub mod prelude {
+    pub use crate::{TnuaRapier3dPlugin, TnuaRapier3dSensorShape, TnuaSpatialExtRapier3d};
+}
+
 /// Add this plugin to use bevy_rapier2d as a physics backend.
 ///
 /// This plugin should be used in addition to `TnuaControllerPlugin`, and both plugins must use the

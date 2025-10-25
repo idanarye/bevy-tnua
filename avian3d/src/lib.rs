@@ -29,6 +29,10 @@ use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSen
 use bevy_tnua_physics_integration_layer::TnuaPipelineSystems;
 use bevy_tnua_physics_integration_layer::TnuaSystems;
 
+pub mod prelude {
+    pub use crate::{TnuaAvian3dPlugin, TnuaAvian3dSensorShape, TnuaSpatialExtAvian3d};
+}
+
 /// Add this plugin to use avian3d as a physics backend.
 ///
 /// This plugin should be used in addition to `TnuaControllerPlugin`.
