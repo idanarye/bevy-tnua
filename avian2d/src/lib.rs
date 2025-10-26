@@ -23,6 +23,10 @@ pub use spatial_ext::TnuaSpatialExtAvian2d;
 use bevy_tnua_physics_integration_layer::*;
 use obstacle_radar::TnuaObstacleRadar;
 
+pub mod prelude {
+    pub use crate::{TnuaAvian2dPlugin, TnuaAvian2dSensorShape, TnuaSpatialExtAvian2d};
+}
+
 /// Add this plugin to use avian2d as a physics backend.
 ///
 /// This plugin should be used in addition to `TnuaControllerPlugin`.

@@ -15,9 +15,9 @@ use bevy_tnua::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, V
 use bevy_tnua::{prelude::*, TnuaObstacleRadar};
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
 #[cfg(feature = "avian3d")]
-use bevy_tnua_avian3d::*;
+use bevy_tnua_avian3d::prelude::*;
 #[cfg(feature = "rapier3d")]
-use bevy_tnua_rapier3d::*;
+use bevy_tnua_rapier3d::prelude::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{

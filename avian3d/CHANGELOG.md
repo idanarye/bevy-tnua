@@ -11,6 +11,10 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.8.0 - 2025-10-26
+### Added
+- `prelude` module.
+
 ## 0.7.1 - 2025-10-15
 ### Fixed
 - When proximity sensor hits static rigid body, consider its linear and angular
