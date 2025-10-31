@@ -132,6 +132,8 @@ pub mod builtins;
 pub mod control_helpers;
 pub mod controller;
 pub mod radar_lens;
+pub mod schemes_controller;
+pub mod schemes_traits;
 pub mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
