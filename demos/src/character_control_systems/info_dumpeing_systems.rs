@@ -4,9 +4,8 @@ use bevy_tnua::{
     math::AsF32, radar_lens::TnuaRadarLens, TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor,
 };
 
-use crate::ui::info::InfoSource;
-
 use super::spatial_ext_facade::SpatialExtFacade;
+use crate::ui::info::InfoSource;
 
 #[allow(clippy::type_complexity)]
 pub fn character_control_info_dumping_system(
@@ -23,6 +22,7 @@ pub fn character_control_info_dumping_system(
         if !info_source.is_active() {
             continue;
         }
+        info_source.label("Controller up", format!("{:?}", controller.up_direction()));
         info_source.label("Action", controller.action_name().unwrap_or_default());
         if let Some(sensor_output) = sensor.output.as_ref() {
             if let Ok(name) = names_query.get(sensor_output.entity) {

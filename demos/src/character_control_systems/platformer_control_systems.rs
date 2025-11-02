@@ -60,9 +60,8 @@ pub fn apply_platformer_controls(
         // air dash per jump - only a single "pool" of air action "energy" shared by all air
         // actions.
         &mut TnuaSimpleAirActionsCounter,
-        // This is used in the shooter-like demo to control the forward direction of the
-        // character.
-        Option<&ForwardFromCamera>,
+        // This is a helper for tracking where the camera is looking at
+        Option<&CameraController>,
         // This is used to detect all the colliders in a small area around the character.
         &TnuaObstacleRadar,
         // This is used to avoid re-initiating actions on the same obstacles until we return to
@@ -97,7 +96,7 @@ pub fn apply_platformer_controls(
         ghost_sensor,
         mut fall_through_helper,
         mut air_actions_counter,
-        forward_from_camera,
+        camera_contoller,
         obstacle_radar,
         mut blip_reuse_avoidance,
     ) in query.iter_mut()
@@ -125,14 +124,9 @@ pub fn apply_platformer_controls(
 
         let screen_space_direction = direction.clamp_length_max(1.0);
 
-        let transform_for_controls = calculate_transform_for_controls(
-            forward_from_camera
-                .and_then(|ffc| Dir3::new(ffc.forward.f32()).ok())
-                .unwrap_or(Dir3::NEG_Z),
-            Dir3::Y, // TOOD: does this change in shooter?
-            controller.up_direction().unwrap_or(Dir3::Y),
-        );
-
+        let transform_for_controls = camera_contoller
+            .map(|c| c.calculate_transform_for_controls(Dir3::NEG_Z))
+            .unwrap_or_default();
         let direction = transform_for_controls
             .transform_point(screen_space_direction.f32())
             .adjust_precision();
@@ -146,7 +140,7 @@ pub fn apply_platformer_controls(
         };
         let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
-        let turn_in_place = forward_from_camera.is_none()
+        let turn_in_place = !camera_contoller.map(|c| c.following()).unwrap_or(false)
             && keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
         let crouch_buttons = match (config.dimensionality, is_climbing) {
@@ -330,9 +324,11 @@ pub fn apply_platformer_controls(
             } else {
                 direction * speed_factor * config.speed
             },
-            desired_forward: if let Some(forward_from_camera) = forward_from_camera {
+            desired_forward: if let Some(CameraController::Following { forward, .. }) =
+                camera_contoller
+            {
                 // With shooters, we want the character model to follow the camera.
-                Dir3::new(forward_from_camera.forward.f32()).ok()
+                Dir3::new(forward.f32()).ok()
             } else {
                 // For platformers, we only want ot change direction when the character tries to
                 // moves (or when the player explicitly wants to set the direction)
@@ -574,7 +570,7 @@ pub fn apply_platformer_controls(
                 // When set, the `desired_forward` of the dash action "overrides" the
                 // `desired_forward` of the walk basis. Like the displacement, it gets "frozen" -
                 // allowing to easily maintain a forward direction during the dash.
-                desired_forward: if forward_from_camera.is_none() {
+                desired_forward: if !camera_contoller.map(|c| c.following()).unwrap_or(false) {
                     Dir3::new(direction.f32()).ok()
                 } else {
                     // For shooters, we want to allow rotating mid-dash if the player moves the
@@ -678,32 +674,59 @@ impl UiTunable for FallingThroughControlScheme {
 }
 
 #[derive(Component)]
-pub struct ForwardFromCamera {
-    pub forward: Vector3,
-    pub pitch_angle: Float,
+pub enum CameraController {
+    Following {
+        forward: Vector3,
+        pitch_angle: Float,
+    },
+    LookingAt {
+        from: Vector3,
+        to: Vector3,
+    },
 }
 
-impl Default for ForwardFromCamera {
-    fn default() -> Self {
-        Self {
+impl CameraController {
+    /// Default camera value for following the player
+    /// the actual value will be immediately overridden by the
+    /// shooter like camera set
+    pub fn default_following() -> Self {
+        Self::Following {
             forward: Vector3::NEG_Z,
             pitch_angle: 0.0,
         }
     }
+    /// Default look direction for the platformer demo. The values can be tweaked in the egui UI
+    /// (requires the "egui" feature)
+    pub fn default_looking_at() -> Self {
+        Self::LookingAt {
+            from: Vector3::new(30.0, 20.0, 30.0),
+            to: Vector3::ZERO,
+        }
+    }
+    /// A handy function to create a transformation from screen space direction into the forward
+    /// direction of the camera. The screenspace direction is typicaly just `Vec3::NEG_Z`;
+    pub fn calculate_transform_for_controls(&self, screenspace_forward: Dir3) -> Transform {
+        let forward = match self {
+            Self::Following { forward, .. } => forward.normalize(),
+            Self::LookingAt { from, to } => (to - from).normalize(),
+        };
+        Transform::default().with_rotation(Quat::from_rotation_arc(*screenspace_forward, forward))
+    }
+    /// Returns true if the camera is following the player, i.e., the shooter like demo
+    pub fn following(&self) -> bool {
+        matches!(self, Self::Following { .. })
+    }
 }
 
+#[inline]
 pub fn calculate_transform_for_controls(
     camera_forward: Dir3,
-    camera_up: Dir3,
-    controller_up: Dir3,
+    screenspace_forward: Dir3,
 ) -> Transform {
-    let dot = camera_forward.dot(controller_up.into());
-    let quat = if dot <= 0.0 {
-        Quat::from_rotation_arc(*camera_up, *controller_up)
-    } else {
-        Quat::from_rotation_arc(-*camera_up, *controller_up)
-    };
-    Transform::default().with_rotation(quat)
+    Transform::default().with_rotation(Quat::from_rotation_arc(
+        *screenspace_forward,
+        *camera_forward,
+    ))
 }
 
 /// Since the fixed timestep schedule does not cache just pressed states that happened
