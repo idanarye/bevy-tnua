@@ -76,10 +76,10 @@ bevy_rapier2d = { version = "^0.31", features = ["debug-render-2d"], optional = 
 bevy_rapier3d = { version = "^0.31", features = ["debug-render-3d"], optional = true }
 # bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
-avian2d = { version = "^0.4", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
+avian2d = { version = "^0.4.1", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
 bevy-tnua-avian2d = { path = "../avian2d", default-features = false, optional = true }
 
-avian3d = { version = "^0.4", default-features = false, features = ["3d","debug-plugin", "parallel"], optional = true }
+avian3d = { version = "^0.4.1", default-features = false, features = ["3d","debug-plugin", "parallel"], optional = true }
 bevy-tnua-avian3d = { path = "../avian3d", default-features = false, optional = true }
 
 bevy_egui = { version = "0.38", optional = true, default-features = false, features = ["default_fonts", "render"] }

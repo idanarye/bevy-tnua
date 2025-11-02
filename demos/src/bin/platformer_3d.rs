@@ -279,7 +279,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     }),
                 ],
             )
-            .with_checkbox("Lock Tilt", false, |mut cmd, lock_tilt| {
+            .with_checkbox("Lock Tilt", true, |mut cmd, lock_tilt| {
                 // Tnua will automatically apply angular impulses/forces to fix the tilt and make
                 // the character stand upward, but it is also possible to just let the physics
                 // engine prevent rotation (other than around the Y axis, for turning)
