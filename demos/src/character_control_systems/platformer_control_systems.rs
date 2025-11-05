@@ -673,16 +673,19 @@ impl UiTunable for FallingThroughControlScheme {
     }
 }
 
+/// A simple component to control the camera use by the `shooter_like` and `platformer_3d` demos.
+/// In the `shooter_like` demo, this component is mutated in by the player movement.
+/// In the `platformer_3d` demo, the camera position is updated via the UI (requires the "egui" feature).
+/// This component is not used in the `platformer_2d` demo.
 #[derive(Component)]
 pub enum CameraController {
+    /// A camera controller that follows the player
     Following {
         forward: Vector3,
         pitch_angle: Float,
     },
-    LookingAt {
-        from: Vector3,
-        to: Vector3,
-    },
+    /// A fixed camera that is located at `from` and looks at `to`
+    LookingAt { from: Vector3, to: Vector3 },
 }
 
 impl CameraController {
@@ -695,7 +698,7 @@ impl CameraController {
             pitch_angle: 0.0,
         }
     }
-    /// Default look direction for the platformer demo. The values can be tweaked in the egui UI
+    /// Default look direction for the `platformer_3d` demo. The values can be tweaked in the egui UI
     /// (requires the "egui" feature)
     pub fn default_looking_at() -> Self {
         Self::LookingAt {
@@ -704,15 +707,17 @@ impl CameraController {
         }
     }
     /// A handy function to create a transformation from screen space direction into the forward
-    /// direction of the camera. The screenspace direction is typicaly just `Vec3::NEG_Z`;
-    pub fn calculate_transform_for_controls(&self, screenspace_forward: Dir3) -> Transform {
+    /// direction of the camera. The screen space direction is typically just `Vec3::NEG_Z`;
+    #[inline]
+    pub fn calculate_transform_for_controls(&self, screen_space_forward: Dir3) -> Transform {
         let forward = match self {
             Self::Following { forward, .. } => forward.normalize(),
             Self::LookingAt { from, to } => (to - from).normalize(),
         };
-        Transform::default().with_rotation(Quat::from_rotation_arc(*screenspace_forward, forward))
+        Transform::default().with_rotation(Quat::from_rotation_arc(*screen_space_forward, forward))
     }
-    /// Returns true if the camera is following the player, i.e., the shooter like demo
+    /// Returns true if the camera is following the player, i.e., the `shooter_like` demo
+    #[inline]
     pub fn following(&self) -> bool {
         matches!(self, Self::Following { .. })
     }
