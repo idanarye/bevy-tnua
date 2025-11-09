@@ -145,7 +145,7 @@ pub fn apply_platformer_controls(
         };
         let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
-        let turn_in_place = !camera_contoller.map(|c| c.following()).unwrap_or(false)
+        let turn_in_place = !camera_contoller.map(|c| c.third_person()).unwrap_or(false)
             && keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
         let crouch_buttons = match (config.dimensionality, is_climbing) {
@@ -329,7 +329,7 @@ pub fn apply_platformer_controls(
             } else {
                 direction * speed_factor * config.speed
             },
-            desired_forward: if let Some(CameraController::Following { forward, .. }) =
+            desired_forward: if let Some(CameraController::ThirdPerson { forward, .. }) =
                 camera_contoller
             {
                 // With shooters, we want the character model to follow the camera.
@@ -575,7 +575,7 @@ pub fn apply_platformer_controls(
                 // When set, the `desired_forward` of the dash action "overrides" the
                 // `desired_forward` of the walk basis. Like the displacement, it gets "frozen" -
                 // allowing to easily maintain a forward direction during the dash.
-                desired_forward: if camera_contoller.map(|c| c.following()).unwrap_or(false) {
+                desired_forward: if camera_contoller.map(|c| c.third_person()).unwrap_or(false) {
                     // For shooters, we want to allow rotating mid-dash if the player moves the
                     // mouse.
                     None
@@ -685,7 +685,7 @@ impl UiTunable for FallingThroughControlScheme {
 #[derive(Component)]
 pub enum CameraController {
     /// A camera controller that follows the player
-    Following {
+    ThirdPerson {
         forward: Vector3,
         pitch_angle: Float,
     },
@@ -697,8 +697,8 @@ impl CameraController {
     /// Default camera value for following the player
     /// the actual value will be immediately overridden by the
     /// shooter like camera set
-    pub fn default_following() -> Self {
-        Self::Following {
+    pub fn default_third_person() -> Self {
+        Self::ThirdPerson {
             forward: Vector3::NEG_Z,
             pitch_angle: 0.0,
         }
@@ -720,7 +720,7 @@ impl CameraController {
         player_up: Dir3,
     ) -> Transform {
         let forward = match self {
-            Self::Following { forward, .. } => *forward,
+            Self::ThirdPerson { forward, .. } => *forward,
             Self::LookingAt { from, to } => to - from,
         };
         let forward = (forward - forward.dot(*player_up) * player_up).normalize();
@@ -728,8 +728,8 @@ impl CameraController {
     }
     /// Returns true if the camera is following the player, i.e., the `shooter_like` demo
     #[inline]
-    pub fn following(&self) -> bool {
-        matches!(self, Self::Following { .. })
+    pub fn third_person(&self) -> bool {
+        matches!(self, Self::ThirdPerson { .. })
     }
 }
 

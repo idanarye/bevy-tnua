@@ -228,7 +228,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 
     // cmd.insert(ForwardFromCamera::default());
-    cmd.insert(CameraController::default_following());
+    cmd.insert(CameraController::default_third_person());
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
     cmd.insert(TnuaToggle::default());
@@ -446,7 +446,7 @@ fn apply_camera_controls(
     let Ok((player_transform, camera_controller)) = player_character_query.single_mut() else {
         return;
     };
-    let CameraController::Following {
+    let CameraController::ThirdPerson {
         forward,
         pitch_angle,
     } = &mut camera_controller.into_inner()
