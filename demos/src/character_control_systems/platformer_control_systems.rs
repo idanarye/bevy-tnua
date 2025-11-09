@@ -125,7 +125,12 @@ pub fn apply_platformer_controls(
         let screen_space_direction = direction.clamp_length_max(1.0);
 
         let transform_for_controls = camera_contoller
-            .map(|c| c.calculate_transform_for_controls(Dir3::NEG_Z))
+            .map(|c| {
+                c.calculate_transform_for_controls(
+                    Dir3::NEG_Z,
+                    controller.up_direction().unwrap_or(Dir3::Y),
+                )
+            })
             .unwrap_or_default();
         let direction = transform_for_controls
             .transform_point(screen_space_direction.f32())
@@ -709,11 +714,16 @@ impl CameraController {
     /// A handy function to create a transformation from screen space direction into the forward
     /// direction of the camera. The screen space direction is typically just `Vec3::NEG_Z`;
     #[inline]
-    pub fn calculate_transform_for_controls(&self, screen_space_forward: Dir3) -> Transform {
+    pub fn calculate_transform_for_controls(
+        &self,
+        screen_space_forward: Dir3,
+        player_up: Dir3,
+    ) -> Transform {
         let forward = match self {
-            Self::Following { forward, .. } => forward.normalize(),
-            Self::LookingAt { from, to } => (to - from).normalize(),
+            Self::Following { forward, .. } => *forward,
+            Self::LookingAt { from, to } => to - from,
         };
+        let forward = (forward - forward.dot(*player_up) * player_up).normalize();
         Transform::default().with_rotation(Quat::from_rotation_arc(*screen_space_forward, forward))
     }
     /// Returns true if the camera is following the player, i.e., the `shooter_like` demo
@@ -721,17 +731,6 @@ impl CameraController {
     pub fn following(&self) -> bool {
         matches!(self, Self::Following { .. })
     }
-}
-
-#[inline]
-pub fn calculate_transform_for_controls(
-    camera_forward: Dir3,
-    screenspace_forward: Dir3,
-) -> Transform {
-    Transform::default().with_rotation(Quat::from_rotation_arc(
-        *screenspace_forward,
-        *camera_forward,
-    ))
 }
 
 /// Since the fixed timestep schedule does not cache just pressed states that happened
