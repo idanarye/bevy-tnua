@@ -127,7 +127,7 @@ fn main() {
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
-    app.add_systems(Update, apply_camera_controls);
+    app.add_systems(Update, apply_camera_transform);
     app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     app.run();
 }
@@ -150,7 +150,9 @@ fn setup_camera_and_lights(mut commands: Commands) {
     ));
 }
 
-fn apply_camera_controls(
+/// Updates the camera trasfrom from the the [`CameraController`] component.
+/// The [`CameraController`] itself is updated via the UI (requires "egui" features).
+fn apply_camera_transform(
     camera_controller: Single<&CameraController>,
     mut camera_query: Single<&mut Transform, With<Camera>>,
 ) {
