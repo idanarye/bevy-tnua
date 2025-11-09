@@ -242,7 +242,7 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
                     (true, ThingToShow::Settings, "settings"),
                     (plot_source.is_some(), ThingToShow::Plots, "plots"),
                     (info_source.is_some(), ThingToShow::Info, "info"),
-                    (!camera_controller.as_ref().map(|c| c.following()).unwrap_or(true), ThingToShow::Camera, "camera")
+                    (camera_controller.as_ref().map(|c| !c.following()).unwrap_or(false), ThingToShow::Camera, "camera")
                 ] {
                     let mut selected = is_open && option == thing_to_show;
                     ui.add_enabled_ui(possible, |ui| {
@@ -308,16 +308,15 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
                         if let Some(mut camera) = camera_controller {
                             if let CameraController::LookingAt{ from, to } = camera.deref_mut() {
                                 ui.label("Looking From: ");
-                                ui.add(egui::Slider::new(&mut from.x, -30.0..=30.0));   
-                                ui.add(egui::Slider::new(&mut from.y, -30.0..=30.0));   
-                                ui.add(egui::Slider::new(&mut from.z, -30.0..=30.0));   
+                                ui.add(egui::Slider::new(&mut from.x, -30.0..=30.0));
+                                ui.add(egui::Slider::new(&mut from.y, -30.0..=30.0));
+                                ui.add(egui::Slider::new(&mut from.z, -30.0..=30.0));
                                 ui.label("Looking At: ");
-                                ui.add(egui::Slider::new(&mut to.x, -30.0..=30.0));   
-                                ui.add(egui::Slider::new(&mut to.y, -30.0..=30.0));   
-                                ui.add(egui::Slider::new(&mut to.z, -30.0..=30.0));   
+                                ui.add(egui::Slider::new(&mut to.x, -30.0..=30.0));
+                                ui.add(egui::Slider::new(&mut to.y, -30.0..=30.0));
+                                ui.add(egui::Slider::new(&mut to.z, -30.0..=30.0));
                             }
                         }
-                        
                     }
                 }
             });
