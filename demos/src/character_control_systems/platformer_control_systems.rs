@@ -575,12 +575,12 @@ pub fn apply_platformer_controls(
                 // When set, the `desired_forward` of the dash action "overrides" the
                 // `desired_forward` of the walk basis. Like the displacement, it gets "frozen" -
                 // allowing to easily maintain a forward direction during the dash.
-                desired_forward: if !camera_contoller.map(|c| c.following()).unwrap_or(false) {
-                    Dir3::new(direction.f32()).ok()
-                } else {
+                desired_forward: if camera_contoller.map(|c| c.following()).unwrap_or(false) {
                     // For shooters, we want to allow rotating mid-dash if the player moves the
                     // mouse.
                     None
+                } else {
+                    Dir3::new(direction.f32()).ok()
                 },
                 allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
                     <= config.actions_in_air,
