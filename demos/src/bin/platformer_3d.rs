@@ -37,7 +37,6 @@ use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
-use tnua_demos_crate::ui::tuning::UiTunable;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::DemoInfoUpdateSystems;
 use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
@@ -162,7 +161,7 @@ fn apply_camera_transform(
         return;
     };
     let camera = camera_query.deref_mut().deref_mut();
-    *camera = Transform::from_translation(*from).looking_at(*to, Vec3::Y);
+    *camera = Transform::from_translation(from.f32()).looking_at(to.f32(), Vec3::Y);
 }
 
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {

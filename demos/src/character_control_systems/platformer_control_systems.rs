@@ -9,7 +9,7 @@ use bevy_egui::{egui, EguiContexts};
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Vector3};
+use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
 use bevy_tnua::{
     builtins::{
@@ -723,8 +723,12 @@ impl CameraController {
             Self::ThirdPerson { forward, .. } => *forward,
             Self::LookingAt { from, to } => to - from,
         };
-        let forward = (forward - forward.dot(*player_up) * player_up).normalize();
-        Transform::default().with_rotation(Quat::from_rotation_arc(*screen_space_forward, forward))
+        let forward = (forward
+            - forward.dot(player_up.adjust_precision()) * player_up.adjust_precision())
+        .normalize();
+        Transform::default().with_rotation(
+            Quaternion::from_rotation_arc(screen_space_forward.adjust_precision(), forward).f32(),
+        )
     }
     /// Returns true if the camera is following the player, i.e., the `shooter_like` demo
     #[inline]
