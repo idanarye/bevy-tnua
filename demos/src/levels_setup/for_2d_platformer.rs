@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 use bevy::{color::palettes::css, prelude::*};
 
 #[cfg(feature = "avian2d")]
