@@ -707,8 +707,8 @@ impl CameraController {
     /// (requires the "egui" feature)
     pub fn default_looking_at() -> Self {
         Self::LookingAt {
-            from: Vector3::new(30.0, 20.0, 30.0),
-            to: Vector3::ZERO,
+            from: Vector3::new(0.0, 16.0, 40.0),
+            to: Vector3::new(0.0, 10.0, 0.0),
         }
     }
     /// A handy function to create a transformation from screen space direction into the forward
