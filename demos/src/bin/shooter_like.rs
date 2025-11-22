@@ -24,7 +24,7 @@ use tnua_demos_crate::character_animating_systems::platformer_animating_systems:
     animate_platformer_character, AnimationState,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CameraController, CharacterMotionConfigForPlatformerDemo,
+    apply_platformer_controls, CameraControllerMounted, CharacterMotionConfigForPlatformerDemo,
     FallingThroughControlScheme,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
@@ -227,8 +227,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         climb_speed: 10.0,
     });
 
-    // cmd.insert(ForwardFromCamera::default());
-    cmd.insert(CameraController::default_third_person());
+    cmd.insert(CameraControllerMounted::default());
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
     cmd.insert(TnuaToggle::default());
@@ -431,7 +430,7 @@ fn grab_ungrab_mouse(
 fn apply_camera_controls(
     primary_window_query: Query<&CursorOptions, With<PrimaryWindow>>,
     mut mouse_motion: MessageReader<MouseMotion>,
-    mut player_character_query: Query<(&GlobalTransform, &mut CameraController)>,
+    mut player_character_query: Query<(&GlobalTransform, &mut CameraControllerMounted)>,
     mut camera_query: Query<&mut Transform, With<Camera>>,
 ) {
     let mouse_controls_camera = primary_window_query
@@ -446,14 +445,10 @@ fn apply_camera_controls(
     let Ok((player_transform, camera_controller)) = player_character_query.single_mut() else {
         return;
     };
-    let CameraController::ThirdPerson {
+    let CameraControllerMounted {
         forward,
         pitch_angle,
-    } = &mut camera_controller.into_inner()
-    else {
-        // or panic!
-        return;
-    };
+    } = &mut camera_controller.into_inner();
     let yaw = Quaternion::from_rotation_y(-0.01 * total_delta.x.adjust_precision());
     *forward = yaw.mul_vec3(*forward);
 

@@ -23,7 +23,7 @@ use bevy_tnua::math::{float_consts, Float, Vector2, Vector3};
 use bevy_tnua::TnuaToggle;
 
 #[cfg(feature = "egui")]
-use crate::character_control_systems::platformer_control_systems::CameraController;
+use crate::character_control_systems::platformer_control_systems::CameraControllerFloating;
 
 use self::component_alterbation::CommandAlteringSelectors;
 #[cfg(feature = "egui")]
@@ -134,7 +134,6 @@ fn apply_selectors(
 fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
     mut egui_context: EguiContexts,
     mut physics_backend_settings: ResMut<DemoUiPhysicsBackendSettings>,
-    // mut camera_controller: Option<Single<&mut CameraController>>,
     mut query: Query<(
         Entity,
         &TrackedEntity,
@@ -143,7 +142,7 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
         &mut TnuaToggle,
         Option<&mut C>,
         Option<&mut CommandAlteringSelectors>,
-        Option<&mut CameraController>,
+        Option<&mut CameraControllerFloating>,
     )>,
     mut commands: Commands,
     mut primary_window_query: Query<(&mut Window, &CursorOptions), With<PrimaryWindow>>,
@@ -242,7 +241,7 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
                     (true, ThingToShow::Settings, "settings"),
                     (plot_source.is_some(), ThingToShow::Plots, "plots"),
                     (info_source.is_some(), ThingToShow::Info, "info"),
-                    (camera_controller.as_ref().map(|c| !c.third_person()).unwrap_or(false), ThingToShow::Camera, "camera")
+                    (camera_controller.is_some(), ThingToShow::Camera, "camera")
                 ] {
                     let mut selected = is_open && option == thing_to_show;
                     ui.add_enabled_ui(possible, |ui| {
@@ -306,16 +305,15 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
                     ThingToShow::Camera => {
                         use core::ops::DerefMut;
                         if let Some(mut camera) = camera_controller {
-                            if let CameraController::LookingAt{ from, to } = camera.deref_mut() {
-                                ui.label("Looking From: ");
-                                ui.add(egui::Slider::new(&mut from.x, -30.0..=30.0));
-                                ui.add(egui::Slider::new(&mut from.y, -30.0..=30.0));
-                                ui.add(egui::Slider::new(&mut from.z, -30.0..=30.0));
-                                ui.label("Looking At: ");
-                                ui.add(egui::Slider::new(&mut to.x, -30.0..=30.0));
-                                ui.add(egui::Slider::new(&mut to.y, -30.0..=30.0));
-                                ui.add(egui::Slider::new(&mut to.z, -30.0..=30.0));
-                            }
+                            let CameraControllerFloating{ looking_from: from, looking_to: to } = camera.deref_mut();
+                            ui.label("Looking From: ");
+                            ui.add(egui::Slider::new(&mut from.x, -30.0..=30.0));
+                            ui.add(egui::Slider::new(&mut from.y, -30.0..=30.0));
+                            ui.add(egui::Slider::new(&mut from.z, -30.0..=30.0));
+                            ui.label("Looking At: ");
+                            ui.add(egui::Slider::new(&mut to.x, -30.0..=30.0));
+                            ui.add(egui::Slider::new(&mut to.y, -30.0..=30.0));
+                            ui.add(egui::Slider::new(&mut to.z, -30.0..=30.0));
                         }
                     }
                 }
