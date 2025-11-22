@@ -23,7 +23,8 @@ use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_radar_visualization_system;
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
+    apply_platformer_controls, CameraControllerFloating, CharacterMotionConfigForPlatformerDemo,
+    FallingThroughControlScheme,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
@@ -125,6 +126,7 @@ fn main() {
     );
     app.add_systems(Update, animation_patcher_system);
     app.add_systems(Update, animate_platformer_character);
+    app.add_systems(Update, apply_camera_transform);
     app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
     app.run();
 }
@@ -132,7 +134,7 @@ fn main() {
 fn setup_camera_and_lights(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
+        Transform::from_xyz(30.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
     ));
 
     commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
@@ -147,13 +149,31 @@ fn setup_camera_and_lights(mut commands: Commands) {
     ));
 }
 
+/// Updates the camera trasfrom from the the [`CameraControllerFloating`] component. The
+/// [`CameraControllerFloating`] itself is updated via the UI (requires "egui" features).
+fn apply_camera_transform(
+    camera_controller: Single<&CameraControllerFloating>,
+    mut camera_query: Single<&mut Transform, With<Camera>>,
+) {
+    use core::ops::DerefMut;
+    let CameraControllerFloating {
+        looking_from: from,
+        looking_to: to,
+    } = &mut camera_controller.into_inner();
+    let camera = camera_query.deref_mut().deref_mut();
+    *camera = Transform::from_translation(from.f32()).looking_at(to.f32(), Vec3::Y);
+}
+
 fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut cmd = commands.spawn(IsPlayer);
     cmd.insert(SceneRoot(asset_server.load("player.glb#Scene0")));
     cmd.insert(GltfSceneHandler {
         names_from: asset_server.load("player.glb"),
     });
-
+    cmd.insert(CameraControllerFloating {
+        looking_from: Vector3::new(0.0, 16.0, 40.0),
+        looking_to: Vector3::new(0.0, 10.0, 0.0),
+    });
     // The character entity must be configured as a dynamic rigid body of the physics backend.
     #[cfg(feature = "rapier3d")]
     {
@@ -279,7 +299,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     }),
                 ],
             )
-            .with_checkbox("Lock Tilt", false, |mut cmd, lock_tilt| {
+            .with_checkbox("Lock Tilt", true, |mut cmd, lock_tilt| {
                 // Tnua will automatically apply angular impulses/forces to fix the tilt and make
                 // the character stand upward, but it is also possible to just let the physics
                 // engine prevent rotation (other than around the Y axis, for turning)

@@ -24,8 +24,8 @@ use tnua_demos_crate::character_animating_systems::platformer_animating_systems:
     animate_platformer_character, AnimationState,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
-    ForwardFromCamera,
+    apply_platformer_controls, CameraControllerMounted, CharacterMotionConfigForPlatformerDemo,
+    FallingThroughControlScheme,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::character_control_systems::{
@@ -120,12 +120,18 @@ fn main() {
     );
     app.add_systems(Startup, setup_player);
     app.add_systems(Update, grab_ungrab_mouse);
-    app.add_systems(PostUpdate, {
-        let system = apply_camera_controls;
-        #[cfg(feature = "rapier")]
-        let system = system.after(bevy_rapier3d::prelude::PhysicsSet::SyncBackend);
-        system.before(bevy::transform::TransformSystems::Propagate)
-    });
+    app.add_systems(
+        match app_setup_configuration.schedule_to_use {
+            ScheduleToUse::Update => PostUpdate.intern(),
+            ScheduleToUse::FixedUpdate => FixedPostUpdate.intern(),
+        },
+        {
+            let system = apply_camera_controls;
+            #[cfg(feature = "rapier")]
+            let system = system.after(bevy_rapier3d::prelude::PhysicsSet::SyncBackend);
+            system.before(bevy::transform::TransformSystems::Propagate)
+        },
+    );
     app.add_systems(
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => Update.intern(),
@@ -221,7 +227,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         climb_speed: 10.0,
     });
 
-    cmd.insert(ForwardFromCamera::default());
+    cmd.insert(CameraControllerMounted::default());
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
     cmd.insert(TnuaToggle::default());
@@ -424,7 +430,7 @@ fn grab_ungrab_mouse(
 fn apply_camera_controls(
     primary_window_query: Query<&CursorOptions, With<PrimaryWindow>>,
     mut mouse_motion: MessageReader<MouseMotion>,
-    mut player_character_query: Query<(&GlobalTransform, &mut ForwardFromCamera)>,
+    mut player_character_query: Query<(&GlobalTransform, &mut CameraControllerMounted)>,
     mut camera_query: Query<&mut Transform, With<Camera>>,
 ) {
     let mouse_controls_camera = primary_window_query
@@ -436,27 +442,26 @@ fn apply_camera_controls(
         mouse_motion.clear();
         Vec2::ZERO
     };
-    let Ok((player_transform, mut forward_from_camera)) = player_character_query.single_mut()
-    else {
+    let Ok((player_transform, camera_controller)) = player_character_query.single_mut() else {
         return;
     };
-
+    let CameraControllerMounted {
+        forward,
+        pitch_angle,
+    } = &mut camera_controller.into_inner();
     let yaw = Quaternion::from_rotation_y(-0.01 * total_delta.x.adjust_precision());
-    forward_from_camera.forward = yaw.mul_vec3(forward_from_camera.forward);
+    *forward = yaw.mul_vec3(*forward);
 
     let pitch = 0.005 * total_delta.y.adjust_precision();
-    forward_from_camera.pitch_angle = (forward_from_camera.pitch_angle + pitch)
-        .clamp(-float_consts::FRAC_PI_2, float_consts::FRAC_PI_2);
+    *pitch_angle = (*pitch_angle + pitch).clamp(-float_consts::FRAC_PI_2, float_consts::FRAC_PI_2);
 
     for mut camera in camera_query.iter_mut() {
-        camera.translation = player_transform.translation()
-            + -5.0 * forward_from_camera.forward.f32()
-            + 1.0 * Vec3::Y;
-        camera.look_to(forward_from_camera.forward.f32(), Vec3::Y);
+        camera.translation = player_transform.translation() + -5.0 * forward.f32() + 1.0 * Vec3::Y;
+        camera.look_to(forward.f32(), Vec3::Y);
         let pitch_axis = camera.left();
         camera.rotate_around(
             player_transform.translation(),
-            Quat::from_axis_angle(*pitch_axis, forward_from_camera.pitch_angle.f32()),
+            Quat::from_axis_angle(*pitch_axis, pitch_angle.f32()),
         );
     }
 }

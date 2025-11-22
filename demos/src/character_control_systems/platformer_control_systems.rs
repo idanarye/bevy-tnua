@@ -9,7 +9,7 @@ use bevy_egui::{egui, EguiContexts};
 use bevy_tnua::control_helpers::{
     TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Vector3};
+use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
 use bevy_tnua::{
     builtins::{
@@ -60,9 +60,11 @@ pub fn apply_platformer_controls(
         // air dash per jump - only a single "pool" of air action "energy" shared by all air
         // actions.
         &mut TnuaSimpleAirActionsCounter,
-        // This is used in the shooter-like demo to control the forward direction of the
-        // character.
-        Option<&ForwardFromCamera>,
+        // This is a helper for tracking where the camera is looking at
+        (
+            Option<&CameraControllerFloating>,
+            Option<&CameraControllerMounted>,
+        ),
         // This is used to detect all the colliders in a small area around the character.
         &TnuaObstacleRadar,
         // This is used to avoid re-initiating actions on the same obstacles until we return to
@@ -97,7 +99,7 @@ pub fn apply_platformer_controls(
         ghost_sensor,
         mut fall_through_helper,
         mut air_actions_counter,
-        forward_from_camera,
+        camera_contoller,
         obstacle_radar,
         mut blip_reuse_avoidance,
     ) in query.iter_mut()
@@ -125,14 +127,19 @@ pub fn apply_platformer_controls(
 
         let screen_space_direction = direction.clamp_length_max(1.0);
 
-        let transform_for_controls = calculate_transform_for_controls(
-            forward_from_camera
-                .and_then(|ffc| Dir3::new(ffc.forward.f32()).ok())
-                .unwrap_or(Dir3::NEG_Z),
-            Dir3::Y, // TOOD: does this change in shooter?
-            controller.up_direction().unwrap_or(Dir3::Y),
-        );
-
+        let transform_for_controls = match camera_contoller {
+            (None, None) => None,
+            (None, Some(camera)) => Some(camera as &dyn CameraController),
+            (Some(camera), None) => Some(camera as &dyn CameraController),
+            (Some(_), Some(_)) => panic!("both floating and mounted cameras at the same time"),
+        }
+        .map(|c| {
+            c.calculate_transform_for_controls(
+                Dir3::NEG_Z,
+                controller.up_direction().unwrap_or(Dir3::Y),
+            )
+        })
+        .unwrap_or_default();
         let direction = transform_for_controls
             .transform_point(screen_space_direction.f32())
             .adjust_precision();
@@ -146,8 +153,12 @@ pub fn apply_platformer_controls(
         };
         let dash = keyboard.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
 
-        let turn_in_place = forward_from_camera.is_none()
-            && keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
+        let has_mounted_camera = {
+            let mounted_camera_controller: &Option<&CameraControllerMounted> = &camera_contoller.1;
+            mounted_camera_controller.is_some()
+        };
+        let turn_in_place =
+            !has_mounted_camera && keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
         let crouch_buttons = match (config.dimensionality, is_climbing) {
             (Dimensionality::Dim2, true) => CROUCH_BUTTONS_3D.iter().copied(),
@@ -330,9 +341,11 @@ pub fn apply_platformer_controls(
             } else {
                 direction * speed_factor * config.speed
             },
-            desired_forward: if let Some(forward_from_camera) = forward_from_camera {
+            desired_forward: if let Some(CameraControllerMounted { forward, .. }) =
+                camera_contoller.1
+            {
                 // With shooters, we want the character model to follow the camera.
-                Dir3::new(forward_from_camera.forward.f32()).ok()
+                Dir3::new(forward.f32()).ok()
             } else {
                 // For platformers, we only want ot change direction when the character tries to
                 // moves (or when the player explicitly wants to set the direction)
@@ -574,12 +587,12 @@ pub fn apply_platformer_controls(
                 // When set, the `desired_forward` of the dash action "overrides" the
                 // `desired_forward` of the walk basis. Like the displacement, it gets "frozen" -
                 // allowing to easily maintain a forward direction during the dash.
-                desired_forward: if forward_from_camera.is_none() {
-                    Dir3::new(direction.f32()).ok()
-                } else {
+                desired_forward: if has_mounted_camera {
                     // For shooters, we want to allow rotating mid-dash if the player moves the
                     // mouse.
                     None
+                } else {
+                    Dir3::new(direction.f32()).ok()
                 },
                 allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
                     <= config.actions_in_air,
@@ -677,13 +690,34 @@ impl UiTunable for FallingThroughControlScheme {
     }
 }
 
+pub trait CameraController {
+    fn camera_forward(&self) -> Vector3;
+
+    /// A handy function to create a transformation from screen space direction into the forward
+    /// direction of the camera. The screen space direction is typically just `Vec3::NEG_Z`;
+    fn calculate_transform_for_controls(
+        &self,
+        screen_space_forward: Dir3,
+        player_up: Dir3,
+    ) -> Transform {
+        let forward = self
+            .camera_forward()
+            .reject_from(player_up.adjust_precision())
+            .normalize();
+        Transform::default().with_rotation(
+            Quaternion::from_rotation_arc(screen_space_forward.adjust_precision(), forward).f32(),
+        )
+    }
+}
+
+/// A camera controller that follows the player.
 #[derive(Component)]
-pub struct ForwardFromCamera {
+pub struct CameraControllerMounted {
     pub forward: Vector3,
     pub pitch_angle: Float,
 }
 
-impl Default for ForwardFromCamera {
+impl Default for CameraControllerMounted {
     fn default() -> Self {
         Self {
             forward: Vector3::NEG_Z,
@@ -692,18 +726,24 @@ impl Default for ForwardFromCamera {
     }
 }
 
-pub fn calculate_transform_for_controls(
-    camera_forward: Dir3,
-    camera_up: Dir3,
-    controller_up: Dir3,
-) -> Transform {
-    let dot = camera_forward.dot(controller_up.into());
-    let quat = if dot <= 0.0 {
-        Quat::from_rotation_arc(*camera_up, *controller_up)
-    } else {
-        Quat::from_rotation_arc(-*camera_up, *controller_up)
-    };
-    Transform::default().with_rotation(quat)
+impl CameraController for CameraControllerMounted {
+    fn camera_forward(&self) -> Vector3 {
+        self.forward.adjust_precision()
+    }
+}
+
+/// A fixed camera that is located at `from` and looks at `to`. The camera position is updated via
+/// the UI (requires the "egui" feature)
+#[derive(Component)]
+pub struct CameraControllerFloating {
+    pub looking_from: Vector3,
+    pub looking_to: Vector3,
+}
+
+impl CameraController for CameraControllerFloating {
+    fn camera_forward(&self) -> Vector3 {
+        self.looking_to - self.looking_from
+    }
 }
 
 /// Since the fixed timestep schedule does not cache just pressed states that happened
