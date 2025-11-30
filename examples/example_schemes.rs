@@ -138,16 +138,16 @@ fn apply_controls(
 
     let mut direction = Vec3::ZERO;
 
-    if keyboard.pressed(KeyCode::ArrowUp) {
+    if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
         direction -= Vec3::Z;
     }
-    if keyboard.pressed(KeyCode::ArrowDown) {
+    if keyboard.any_pressed([KeyCode::ArrowDown, KeyCode::KeyS]) {
         direction += Vec3::Z;
     }
-    if keyboard.pressed(KeyCode::ArrowLeft) {
+    if keyboard.any_pressed([KeyCode::ArrowLeft, KeyCode::KeyA]) {
         direction -= Vec3::X;
     }
-    if keyboard.pressed(KeyCode::ArrowRight) {
+    if keyboard.any_pressed([KeyCode::ArrowRight, KeyCode::KeyD]) {
         direction += Vec3::X;
     }
 

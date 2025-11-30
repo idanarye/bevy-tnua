@@ -1,4 +1,8 @@
+use crate::TnuaMotor;
 use bevy::prelude::*;
+
+use crate::math::*;
+use crate::TnuaBasisContext;
 
 pub trait TnuaScheme: 'static + Send + Sync {
     type Basis: Tnua2Basis;
@@ -13,5 +17,15 @@ pub trait TnuaSchemeConfig {
 
 pub trait Tnua2Basis: Default + 'static + Send + Sync {
     type Config: Clone;
-    type Memory;
+    type Memory: Send + Sync + Default;
+
+    fn apply(
+        &self,
+        config: &Self::Config,
+        memory: &mut Self::Memory,
+        ctx: TnuaBasisContext,
+        motor: &mut TnuaMotor,
+    );
+
+    fn proximity_sensor_cast_range(&self, config: &Self::Config, memory: &Self::Memory) -> Float;
 }

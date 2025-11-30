@@ -1,8 +1,12 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 #[allow(unused_imports)]
 use crate::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use crate::schemes_traits::Tnua2Basis;
+use crate::util::rotation_arc_around_axis;
+use crate::{TnuaBasisContext, TnuaMotor, TnuaVelChange};
 
 #[derive(Default)]
 pub struct Tnua2BuiltinWalk {
@@ -28,7 +32,7 @@ pub struct Tnua2BuiltinWalkConfig {
     //
     // Also note that this is the full speed - the character will gradually accelerate to this
     // speed based on the acceleration configuration.
-    pub speed: f32,
+    pub speed: Float,
 
     /// The height at which the character will float above ground at rest.
     ///
@@ -126,10 +130,364 @@ impl Default for Tnua2BuiltinWalkConfig {
     }
 }
 
-pub struct Tnua2BuiltinWalkMemory {}
+impl Tnua2BuiltinWalk {
+    /// Calculate the vertical spring force that this basis would need to apply assuming its
+    /// vertical distance from the vertical distance it needs to be at equals the `spring_offset`
+    /// argument.
+    ///
+    /// Note: this is exposed so that actions like
+    /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) may rely on it.
+    ///
+    /// TODO: In the Schemes architecture, this should be moved to a trait
+    pub fn spring_force(
+        &self,
+        config: &Tnua2BuiltinWalkConfig,
+        memory: &Tnua2BuiltinWalkMemory,
+        ctx: &TnuaBasisContext,
+        spring_offset: Float,
+    ) -> TnuaVelChange {
+        let spring_force: Float = spring_offset * config.spring_strength;
+
+        let relative_velocity = memory
+            .effective_velocity
+            .dot(ctx.up_direction.adjust_precision())
+            - memory.vertical_velocity;
+
+        let gravity_compensation = -ctx.tracker.gravity;
+
+        let dampening_boost = relative_velocity * config.spring_dampening;
+
+        TnuaVelChange {
+            acceleration: ctx.up_direction.adjust_precision() * spring_force + gravity_compensation,
+            boost: ctx.up_direction.adjust_precision() * -dampening_boost,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct StandingOnState {
+    entity: Entity,
+    entity_linvel: Vector3,
+}
+
+#[derive(Default, Debug)]
+pub struct Tnua2BuiltinWalkMemory {
+    airborne_timer: Option<Timer>,
+    /// The current distance of the character from the distance its supposed to float at.
+    pub standing_offset: Vector3,
+    standing_on: Option<StandingOnState>,
+    effective_velocity: Vector3,
+    vertical_velocity: Float,
+    /// The velocity, perpendicular to the up direction, that the character is supposed to move at.
+    ///
+    /// If the character is standing on something else
+    /// ([`standing_on_entity`](Self::standing_on_entity) returns `Some`) then the
+    /// `running_velocity` will be relative to the velocity of that entity.
+    pub running_velocity: Vector3,
+}
 
 impl Tnua2Basis for Tnua2BuiltinWalk {
     type Config = Tnua2BuiltinWalkConfig;
 
     type Memory = Tnua2BuiltinWalkMemory;
+
+    fn apply(
+        &self,
+        config: &Self::Config,
+        memory: &mut Self::Memory,
+        ctx: TnuaBasisContext,
+        motor: &mut TnuaMotor,
+    ) {
+        if let Some(stopwatch) = &mut memory.airborne_timer {
+            #[allow(clippy::unnecessary_cast)]
+            stopwatch.tick(Duration::from_secs_f64(ctx.frame_duration as f64));
+        }
+
+        let climb_vectors: Option<ClimbVectors>;
+        let considered_in_air: bool;
+        let impulse_to_offset: Vector3;
+        let slipping_vector: Option<Vector3>;
+
+        if let Some(sensor_output) = &ctx.proximity_sensor.output {
+            memory.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
+            let sideways_unnormalized = sensor_output
+                .normal
+                .cross(*ctx.up_direction)
+                .adjust_precision();
+            if sideways_unnormalized == Vector3::ZERO {
+                climb_vectors = None;
+            } else {
+                climb_vectors = Some(ClimbVectors {
+                    direction: sideways_unnormalized
+                        .cross(sensor_output.normal.adjust_precision())
+                        .normalize_or_zero()
+                        .adjust_precision(),
+                    sideways: sideways_unnormalized.normalize_or_zero().adjust_precision(),
+                });
+            }
+
+            slipping_vector = {
+                let angle_with_floor = sensor_output
+                    .normal
+                    .angle_between(*ctx.up_direction)
+                    .adjust_precision();
+                if angle_with_floor <= config.max_slope {
+                    None
+                } else {
+                    Some(
+                        sensor_output
+                            .normal
+                            .reject_from(*ctx.up_direction)
+                            .adjust_precision(),
+                    )
+                }
+            };
+
+            if memory.airborne_timer.is_some() {
+                considered_in_air = true;
+                impulse_to_offset = Vector3::ZERO;
+                memory.standing_on = None;
+            } else {
+                if let Some(standing_on_state) = &memory.standing_on {
+                    if standing_on_state.entity != sensor_output.entity {
+                        impulse_to_offset = Vector3::ZERO;
+                    } else {
+                        impulse_to_offset =
+                            sensor_output.entity_linvel - standing_on_state.entity_linvel;
+                    }
+                } else {
+                    impulse_to_offset = Vector3::ZERO;
+                }
+
+                if slipping_vector.is_none() {
+                    considered_in_air = false;
+                    memory.standing_on = Some(StandingOnState {
+                        entity: sensor_output.entity,
+                        entity_linvel: sensor_output.entity_linvel,
+                    });
+                } else {
+                    considered_in_air = true;
+                    memory.standing_on = None;
+                }
+            }
+        } else {
+            memory.effective_velocity = ctx.tracker.velocity;
+            climb_vectors = None;
+            considered_in_air = true;
+            impulse_to_offset = Vector3::ZERO;
+            slipping_vector = None;
+            memory.standing_on = None;
+        }
+        memory.effective_velocity += impulse_to_offset;
+
+        let velocity_on_plane = memory
+            .effective_velocity
+            .reject_from(ctx.up_direction.adjust_precision());
+
+        let desired_velocity = self.desired_motion * config.speed;
+
+        let desired_boost = desired_velocity - velocity_on_plane;
+
+        let safe_direction_coefficient = desired_velocity
+            .normalize_or_zero()
+            .dot(velocity_on_plane.normalize_or_zero());
+        let direction_change_factor = 1.5 - 0.5 * safe_direction_coefficient;
+
+        let relevant_acceleration_limit = if considered_in_air {
+            config.air_acceleration
+        } else {
+            config.acceleration
+        };
+        let max_acceleration = direction_change_factor * relevant_acceleration_limit;
+
+        memory.vertical_velocity = if let Some(climb_vectors) = &climb_vectors {
+            memory.effective_velocity.dot(climb_vectors.direction)
+                * climb_vectors
+                    .direction
+                    .dot(ctx.up_direction.adjust_precision())
+        } else {
+            0.0
+        };
+
+        let walk_vel_change = if desired_velocity == Vector3::ZERO && slipping_vector.is_none() {
+            // When stopping, prefer a boost to be able to reach a precise stop (see issue #39)
+            let walk_boost = desired_boost.clamp_length_max(ctx.frame_duration * max_acceleration);
+            let walk_boost = if let Some(climb_vectors) = &climb_vectors {
+                climb_vectors.project(walk_boost)
+            } else {
+                walk_boost
+            };
+            TnuaVelChange::boost(walk_boost)
+        } else {
+            // When accelerating, prefer an acceleration because the physics backends treat it
+            // better (see issue #34)
+            let walk_acceleration =
+                (desired_boost / ctx.frame_duration).clamp_length_max(max_acceleration);
+            let walk_acceleration =
+                if let (Some(climb_vectors), None) = (&climb_vectors, slipping_vector) {
+                    climb_vectors.project(walk_acceleration)
+                } else {
+                    walk_acceleration
+                };
+
+            let slipping_boost = 'slipping_boost: {
+                let Some(slipping_vector) = slipping_vector else {
+                    break 'slipping_boost Vector3::ZERO;
+                };
+                let vertical_velocity = if 0.0 <= memory.vertical_velocity {
+                    ctx.tracker.gravity.dot(ctx.up_direction.adjust_precision())
+                        * ctx.frame_duration
+                } else {
+                    memory.vertical_velocity
+                };
+
+                let Ok((slipping_direction, slipping_per_vertical_unit)) =
+                    Dir3::new_and_length(slipping_vector.f32())
+                else {
+                    break 'slipping_boost Vector3::ZERO;
+                };
+
+                let required_veloicty_in_slipping_direction =
+                    slipping_per_vertical_unit.adjust_precision() * -vertical_velocity;
+                let expected_velocity = velocity_on_plane + walk_acceleration * ctx.frame_duration;
+                let expected_velocity_in_slipping_direction =
+                    expected_velocity.dot(slipping_direction.adjust_precision());
+
+                let diff = required_veloicty_in_slipping_direction
+                    - expected_velocity_in_slipping_direction;
+
+                if diff <= 0.0 {
+                    break 'slipping_boost Vector3::ZERO;
+                }
+
+                slipping_direction.adjust_precision() * diff
+            };
+            TnuaVelChange {
+                acceleration: walk_acceleration,
+                boost: slipping_boost,
+            }
+        };
+
+        let upward_impulse: TnuaVelChange = 'upward_impulse: {
+            let should_disable_due_to_slipping =
+                slipping_vector.is_some() && memory.vertical_velocity <= 0.0;
+            for _ in 0..2 {
+                #[allow(clippy::unnecessary_cast)]
+                match &mut memory.airborne_timer {
+                    None => {
+                        if let (false, Some(sensor_output)) =
+                            (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
+                        {
+                            // not doing the jump calculation here
+                            let spring_offset =
+                                config.float_height - sensor_output.proximity.adjust_precision();
+                            memory.standing_offset =
+                                -spring_offset * ctx.up_direction.adjust_precision();
+                            break 'upward_impulse self.spring_force(
+                                config,
+                                memory,
+                                &ctx,
+                                spring_offset,
+                            );
+                        } else {
+                            memory.airborne_timer = Some(Timer::from_seconds(
+                                config.coyote_time as f32,
+                                TimerMode::Once,
+                            ));
+                            continue;
+                        }
+                    }
+                    Some(_) => {
+                        if let (false, Some(sensor_output)) =
+                            (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
+                        {
+                            if sensor_output.proximity.adjust_precision() <= config.float_height {
+                                memory.airborne_timer = None;
+                                continue;
+                            }
+                        }
+                        if memory.vertical_velocity <= 0.0 {
+                            break 'upward_impulse TnuaVelChange::acceleration(
+                                -config.free_fall_extra_gravity
+                                    * ctx.up_direction.adjust_precision(),
+                            );
+                        } else {
+                            break 'upward_impulse TnuaVelChange::ZERO;
+                        }
+                    }
+                }
+            }
+            error!("Tnua could not decide on jump state");
+            TnuaVelChange::ZERO
+        };
+
+        motor.lin = walk_vel_change + TnuaVelChange::boost(impulse_to_offset) + upward_impulse;
+        let new_velocity = memory.effective_velocity
+            + motor.lin.boost
+            + ctx.frame_duration * motor.lin.acceleration
+            - impulse_to_offset;
+        memory.running_velocity = new_velocity.reject_from(ctx.up_direction.adjust_precision());
+
+        // Tilt
+
+        let torque_to_fix_tilt = {
+            let tilted_up = ctx.tracker.rotation.mul_vec3(Vector3::Y);
+
+            let rotation_required_to_fix_tilt =
+                Quaternion::from_rotation_arc(tilted_up, ctx.up_direction.adjust_precision());
+
+            let desired_angvel = (rotation_required_to_fix_tilt.xyz() / ctx.frame_duration)
+                .clamp_length_max(config.tilt_offset_angvel);
+            let angular_velocity_diff = desired_angvel - ctx.tracker.angvel;
+            angular_velocity_diff.clamp_length_max(ctx.frame_duration * config.tilt_offset_angacl)
+        };
+
+        // Turning
+
+        let desired_angvel = if let Some(desired_forward) = self.desired_forward {
+            let current_forward = ctx.tracker.rotation.mul_vec3(Vector3::NEG_Z);
+            let rotation_along_up_axis = rotation_arc_around_axis(
+                ctx.up_direction,
+                current_forward,
+                desired_forward.adjust_precision(),
+            )
+            .unwrap_or(0.0);
+            (rotation_along_up_axis / ctx.frame_duration)
+                .clamp(-config.turning_angvel, config.turning_angvel)
+        } else {
+            0.0
+        };
+
+        // NOTE: This is the regular axis system so we used the configured up.
+        let existing_angvel = ctx.tracker.angvel.dot(ctx.up_direction.adjust_precision());
+
+        // This is the torque. Should it be clamped by an acceleration? From experimenting with
+        // this I think it's meaningless and only causes bugs.
+        let torque_to_turn = desired_angvel - existing_angvel;
+
+        let existing_turn_torque = torque_to_fix_tilt.dot(ctx.up_direction.adjust_precision());
+        let torque_to_turn = torque_to_turn - existing_turn_torque;
+
+        motor.ang = TnuaVelChange::boost(
+            torque_to_fix_tilt + torque_to_turn * ctx.up_direction.adjust_precision(),
+        );
+    }
+
+    fn proximity_sensor_cast_range(&self, config: &Self::Config, _memory: &Self::Memory) -> Float {
+        config.float_height + config.cling_distance
+    }
+}
+
+#[derive(Debug, Clone)]
+struct ClimbVectors {
+    direction: Vector3,
+    sideways: Vector3,
+}
+
+impl ClimbVectors {
+    fn project(&self, vector: Vector3) -> Vector3 {
+        let axis_direction = vector.dot(self.direction) * self.direction;
+        let axis_sideways = vector.dot(self.sideways) * self.sideways;
+        axis_direction + axis_sideways
+    }
 }

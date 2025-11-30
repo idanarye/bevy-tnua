@@ -7,6 +7,7 @@ use std::{any::Any, time::Duration};
 use crate::{TnuaMotor, TnuaProximitySensor, TnuaRigidBodyTracker};
 
 /// Various data passed to [`TnuaBasis::apply`].
+#[derive(Debug)]
 pub struct TnuaBasisContext<'a> {
     /// The duration of the current frame.
     pub frame_duration: Float,
