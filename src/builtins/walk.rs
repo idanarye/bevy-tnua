@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use crate::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, Vector3};
+use crate::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3, float_consts};
 use bevy::prelude::*;
 
-use crate::util::rotation_arc_around_axis;
 use crate::TnuaBasisContext;
+use crate::util::rotation_arc_around_axis;
 use crate::{TnuaBasis, TnuaVelChange};
 
 /// The most common [basis](TnuaBasis) - walk around as a floating capsule.

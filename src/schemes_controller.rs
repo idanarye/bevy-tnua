@@ -46,12 +46,18 @@ impl<S: TnuaScheme> Plugin for Tnua2ControllerPlugin<S> {
     }
 }
 
+struct ContenderAction<S: TnuaScheme> {
+    action: S,
+}
+
 #[derive(Component)]
 #[require(TnuaMotor, TnuaRigidBodyTracker, TnuaProximitySensor)]
 pub struct Tnua2Controller<S: TnuaScheme> {
     pub basis: S::Basis,
     basis_memory: <S::Basis as Tnua2Basis>::Memory,
     pub config: Handle<S::Config>,
+    contender_action: Option<ContenderAction<S>>,
+    action_feeding_initiated: bool,
 }
 
 impl<S: TnuaScheme> Tnua2Controller<S> {
@@ -60,6 +66,28 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             basis: Default::default(),
             basis_memory: Default::default(),
             config,
+            contender_action: None,
+            action_feeding_initiated: false,
+        }
+    }
+
+    pub fn initiate_action_feeding(&mut self) {
+        self.action_feeding_initiated = true;
+    }
+
+    pub fn action(&mut self, action: S) {
+        assert!(
+            self.action_feeding_initiated,
+            "Feeding action without invoking `initiate_action_feeding()`"
+        );
+        if let Some(ContenderAction {
+            action: existing_action,
+        }) = self.contender_action.as_mut()
+            && action.is_same_action_as(existing_action)
+        {
+            *existing_action = action;
+        } else {
+            self.contender_action = Some(ContenderAction { action });
         }
     }
 }

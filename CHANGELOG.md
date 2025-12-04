@@ -8,6 +8,7 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 ### Changed
+- Upgrade edition to 2024.
 - Rename the "state" (of basis and actions) to "memory". The term "state" will
   now be used to describe the compund input+config+memory of the basis/action
   currently in effect.

@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use avian3d::prelude::*;
 
 use bevy_tnua::{
-    builtins::TnuaBuiltinJumpMemory, prelude::*, TnuaAnimatingState, TnuaAnimatingStateDirective,
+    TnuaAnimatingState, TnuaAnimatingStateDirective, builtins::TnuaBuiltinJumpMemory, prelude::*,
 };
 use bevy_tnua_avian3d::prelude::*;
 

@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use crate::util::{
-    calc_angular_velchange_to_force_forward, SegmentedJumpDurationCalculator,
-    SegmentedJumpInitialVelocityCalculator, VelocityBoundary,
+    SegmentedJumpDurationCalculator, SegmentedJumpInitialVelocityCalculator, VelocityBoundary,
+    calc_angular_velchange_to_force_forward,
 };
 use crate::{
     TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,

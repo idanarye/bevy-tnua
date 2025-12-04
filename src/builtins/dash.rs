@@ -3,8 +3,8 @@ use bevy::prelude::*;
 
 use crate::util::MotionHelper;
 use crate::{
-    prelude::*, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
-    TnuaActionLifecycleStatus, TnuaMotor,
+    TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
+    TnuaActionLifecycleStatus, TnuaMotor, prelude::*,
 };
 
 /// The basic dash [action](TnuaAction).

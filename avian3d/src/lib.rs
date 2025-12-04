@@ -17,6 +17,8 @@ use bevy_tnua_physics_integration_layer::math::Vector3;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
 pub use spatial_ext::TnuaSpatialExtAvian3d;
 
+use bevy_tnua_physics_integration_layer::TnuaPipelineSystems;
+use bevy_tnua_physics_integration_layer::TnuaSystems;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
@@ -26,8 +28,6 @@ use bevy_tnua_physics_integration_layer::data_for_backends::{
 };
 use bevy_tnua_physics_integration_layer::obstacle_radar::TnuaObstacleRadar;
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
-use bevy_tnua_physics_integration_layer::TnuaPipelineSystems;
-use bevy_tnua_physics_integration_layer::TnuaSystems;
 
 pub mod prelude {
     pub use crate::{TnuaAvian3dPlugin, TnuaAvian3dSensorShape, TnuaSpatialExtAvian3d};

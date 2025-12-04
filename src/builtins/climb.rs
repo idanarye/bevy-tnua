@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, AsF32, Float};
 
-use crate::util::MotionHelper;
 use crate::TnuaActionContext;
+use crate::util::MotionHelper;
 use crate::{
-    math::Vector3, TnuaAction, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
-    TnuaActionLifecycleStatus, TnuaMotor,
+    TnuaAction, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
+    TnuaActionLifecycleStatus, TnuaMotor, math::Vector3,
 };
 
 /// An [action](TnuaAction) for climbing on things.

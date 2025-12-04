@@ -2,10 +2,12 @@ use bevy::{color::palettes::css, prelude::*};
 
 use avian3d::prelude::*;
 
-use bevy_tnua::builtins::{Tnua2BuiltinWalk, Tnua2BuiltinWalkConfig};
+use bevy_tnua::builtins::{
+    Tnua2BuiltinJump, Tnua2BuiltinJumpConfig, Tnua2BuiltinWalk, Tnua2BuiltinWalkConfig,
+};
 use bevy_tnua::prelude::*;
 use bevy_tnua::schemes_controller::{Tnua2Controller, Tnua2ControllerPlugin};
-use bevy_tnua::schemes_traits::{Tnua2Basis, TnuaScheme, TnuaSchemeConfig};
+use bevy_tnua::schemes_traits::{Tnua2Action, Tnua2Basis, TnuaScheme, TnuaSchemeConfig};
 use bevy_tnua_avian3d::prelude::*;
 
 fn main() {
@@ -70,17 +72,27 @@ fn setup_level(
     ));
 }
 
-enum ExampleScheme {}
+enum ExampleScheme {
+    Jump(Tnua2BuiltinJump),
+}
 
 impl TnuaScheme for ExampleScheme {
     type Basis = Tnua2BuiltinWalk;
 
     type Config = ExampleSchemeConfig;
+
+    fn is_same_action_as(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Jump(..), Self::Jump(..)) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Asset, TypePath)]
 struct ExampleSchemeConfig {
     basis: <Tnua2BuiltinWalk as Tnua2Basis>::Config,
+    jump: <Tnua2BuiltinJump as Tnua2Action<Tnua2BuiltinWalk>>::Config,
 }
 
 impl TnuaSchemeConfig for ExampleSchemeConfig {
@@ -119,6 +131,13 @@ fn setup_player(
                 // sensible defaults. Refer to the `TnuaBuiltinWalk`'s documentation to learn what they do.
                 ..Default::default()
             },
+            jump: Tnua2BuiltinJumpConfig {
+                // The height is the only configuration field of the jump action that has no
+                // sensible default.
+                height: 4.0,
+                // `TnuaBuiltinJump` also has customization fields with sensible defaults.
+                ..Default::default()
+            },
         })),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
         TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
@@ -135,6 +154,7 @@ fn apply_controls(
     let Ok(mut controller) = query.single_mut() else {
         return;
     };
+    controller.initiate_action_feeding();
 
     let mut direction = Vec3::ZERO;
 
@@ -155,16 +175,9 @@ fn apply_controls(
     // `Vec3::ZERO`.
     controller.basis.desired_motion = direction.normalize_or_zero();
 
-    /* TODO: Implement the jump
     // Feed the jump action every frame as long as the player holds the jump button. If the player
     // stops holding the jump button, simply stop feeding the action.
     if keyboard.pressed(KeyCode::Space) {
-        controller.action(TnuaBuiltinJump {
-            // The height is the only mandatory field of the jump button.
-            height: 4.0,
-            // `TnuaBuiltinJump` also has customization fields with sensible defaults.
-            ..Default::default()
-        });
+        controller.action(ExampleScheme::Jump(Default::default()));
     }
-    */
 }
