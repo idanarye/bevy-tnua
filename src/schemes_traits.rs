@@ -8,7 +8,12 @@ pub trait TnuaScheme: 'static + Send + Sync {
     type Basis: Tnua2Basis;
     type Config: TnuaSchemeConfig<Scheme = Self> + Asset;
 
-    fn is_same_action_as(&self, other: &Self) -> bool;
+    const NUM_VARIANTS: usize;
+
+    fn variant_idx(&self) -> usize;
+    fn is_same_action_as(&self, other: &Self) -> bool {
+        self.variant_idx() == other.variant_idx()
+    }
 }
 
 pub trait TnuaSchemeConfig {

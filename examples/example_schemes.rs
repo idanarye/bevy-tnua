@@ -24,7 +24,7 @@ fn main() {
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(FixedUpdate, apply_controls.in_set(TnuaUserControlsSystems))
+        .add_systems(Update, apply_controls)
         .run();
 }
 
@@ -81,10 +81,11 @@ impl TnuaScheme for ExampleScheme {
 
     type Config = ExampleSchemeConfig;
 
-    fn is_same_action_as(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Jump(..), Self::Jump(..)) => true,
-            _ => false,
+    const NUM_VARIANTS: usize = 1;
+
+    fn variant_idx(&self) -> usize {
+        match self {
+            ExampleScheme::Jump(_) => 0,
         }
     }
 }
