@@ -125,4 +125,16 @@ pub struct Tnua2BuiltinJumpMemory {}
 impl<B: Tnua2Basis> Tnua2Action<B> for Tnua2BuiltinJump {
     type Config = Tnua2BuiltinJumpConfig;
     type Memory = Tnua2BuiltinJumpMemory;
+
+    fn apply(
+        &self,
+        config: &Self::Config,
+        memory: &mut Self::Memory,
+        ctx: crate::schemes_traits::Tnua2ActionContext<B>,
+        lifecycle_status: crate::TnuaActionLifecycleStatus,
+        motor: &mut bevy_tnua_physics_integration_layer::data_for_backends::TnuaMotor,
+    ) -> crate::TnuaActionLifecycleDirective {
+        info!("Applying jump");
+        lifecycle_status.directive_simple()
+    }
 }

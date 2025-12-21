@@ -6,8 +6,11 @@ use bevy_tnua::builtins::{
     Tnua2BuiltinJump, Tnua2BuiltinJumpConfig, Tnua2BuiltinWalk, Tnua2BuiltinWalkConfig,
 };
 use bevy_tnua::prelude::*;
+use bevy_tnua::schemes_action_state::Tnua2ActionState;
 use bevy_tnua::schemes_controller::{Tnua2Controller, Tnua2ControllerPlugin};
-use bevy_tnua::schemes_traits::{Tnua2Action, Tnua2Basis, TnuaScheme, TnuaSchemeConfig};
+use bevy_tnua::schemes_traits::{
+    Tnua2Action, Tnua2ActionStateEnum, Tnua2Basis, TnuaScheme, TnuaSchemeConfig,
+};
 use bevy_tnua_avian3d::prelude::*;
 
 fn main() {
@@ -81,11 +84,21 @@ impl TnuaScheme for ExampleScheme {
 
     type Config = ExampleSchemeConfig;
 
+    type ActionStateEnum = ExampleSchemeActionStateEnum;
+
     const NUM_VARIANTS: usize = 1;
 
     fn variant_idx(&self) -> usize {
         match self {
-            ExampleScheme::Jump(_) => 0,
+            Self::Jump(_) => 0,
+        }
+    }
+
+    fn into_action_state_variant(self, config: &Self::Config) -> Self::ActionStateEnum {
+        match self {
+            ExampleScheme::Jump(action) => {
+                ExampleSchemeActionStateEnum::Jump(Tnua2ActionState::new(action, &config.jump))
+            }
         }
     }
 }
@@ -94,6 +107,36 @@ impl TnuaScheme for ExampleScheme {
 struct ExampleSchemeConfig {
     basis: <Tnua2BuiltinWalk as Tnua2Basis>::Config,
     jump: <Tnua2BuiltinJump as Tnua2Action<Tnua2BuiltinWalk>>::Config,
+}
+
+enum ExampleSchemeActionStateEnum {
+    Jump(Tnua2ActionState<Tnua2BuiltinJump, Tnua2BuiltinWalk>),
+}
+
+impl Tnua2ActionStateEnum for ExampleSchemeActionStateEnum {
+    type Basis = Tnua2BuiltinWalk;
+
+    fn variant_idx(&self) -> usize {
+        match self {
+            Self::Jump(_) => 0,
+        }
+    }
+
+    fn interface(
+        &self,
+    ) -> &dyn bevy_tnua::schemes_action_state::Tnua2ActionStateInterface<Self::Basis> {
+        match self {
+            ExampleSchemeActionStateEnum::Jump(state) => state,
+        }
+    }
+
+    fn interface_mut(
+        &mut self,
+    ) -> &mut dyn bevy_tnua::schemes_action_state::Tnua2ActionStateInterface<Self::Basis> {
+        match self {
+            ExampleSchemeActionStateEnum::Jump(state) => state,
+        }
+    }
 }
 
 impl TnuaSchemeConfig for ExampleSchemeConfig {

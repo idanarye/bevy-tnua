@@ -1,10 +1,12 @@
 use std::marker::PhantomData;
 
-use crate::math::*;
+use crate::{TnuaActionLifecycleStatus, math::*};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 
-use crate::schemes_traits::{Tnua2Basis, TnuaScheme, TnuaSchemeConfig};
+use crate::schemes_traits::{
+    Tnua2ActionContext, Tnua2ActionStateEnum, Tnua2Basis, TnuaScheme, TnuaSchemeConfig,
+};
 use crate::{
     TnuaBasisContext, TnuaMotor, TnuaPipelineSystems, TnuaProximitySensor, TnuaRigidBodyTracker,
     TnuaSystems, TnuaToggle, TnuaUserControlsSystems,
@@ -58,6 +60,16 @@ enum FedStatus {
     Fresh,
 }
 
+impl FedStatus {
+    fn considered_fed(&self) -> bool {
+        match self {
+            FedStatus::Not => false,
+            FedStatus::Lingering => true,
+            FedStatus::Fresh => true,
+        }
+    }
+}
+
 #[derive(Default)]
 struct FedEntry {
     status: FedStatus,
@@ -74,6 +86,7 @@ pub struct Tnua2Controller<S: TnuaScheme> {
     actions_being_fed: Vec<FedEntry>,
     contender_action: Option<ContenderAction<S>>,
     action_feeding_initiated: bool,
+    current_action: Option<S::ActionStateEnum>,
 }
 
 impl<S: TnuaScheme> Tnua2Controller<S> {
@@ -85,6 +98,7 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
             contender_action: None,
             action_feeding_initiated: false,
+            current_action: None,
         }
     }
 
@@ -177,15 +191,66 @@ fn apply_controller_system<S: TnuaScheme>(
             }
         }
 
-        if let Some(contender_action) = controller.contender_action.as_mut() {
-            if matches!(
-                controller.actions_being_fed[contender_action.action.variant_idx()].status,
-                FedStatus::Lingering | FedStatus::Fresh
-            ) {
-                info!("Action contender is active");
+        let has_valid_contender =
+            if let Some(contender_action) = controller.contender_action.as_mut() {
+                if controller.actions_being_fed[contender_action.action.variant_idx()]
+                    .status
+                    .considered_fed()
+                {
+                    info!("Action contender is active");
+                    // TODO: also check the contender's initiation_decision
+                    true
+                } else {
+                    controller.contender_action = None;
+                    false
+                }
             } else {
-                controller.contender_action = None;
-            }
+                false
+            };
+
+        if let Some(action_state) = controller.current_action.as_mut() {
+            let lifecycle_status = if has_valid_contender {
+                TnuaActionLifecycleStatus::CancelledInto
+            } else if controller.actions_being_fed[action_state.variant_idx()]
+                .status
+                .considered_fed()
+            {
+                TnuaActionLifecycleStatus::StillFed
+            } else {
+                TnuaActionLifecycleStatus::NoLongerFed
+            };
+
+            let directive = action_state.interface_mut().apply(
+                Tnua2ActionContext {
+                    frame_duration,
+                    tracker,
+                    proximity_sensor: sensor,
+                    basis: &controller.basis,
+                    up_direction,
+                },
+                TnuaActionLifecycleStatus::Initiated,
+                motor.as_mut(),
+            );
+            info!("{lifecycle_status:?} -> Existing action - {directive:?}");
+        } else if has_valid_contender {
+            let contender_action = controller
+                .contender_action
+                .take()
+                .expect("has_valid_contender can only be true if contender_action is Some");
+            let mut contender_action_state =
+                contender_action.action.into_action_state_variant(config);
+
+            contender_action_state.interface_mut().apply(
+                Tnua2ActionContext {
+                    frame_duration,
+                    tracker,
+                    proximity_sensor: sensor,
+                    basis: &controller.basis,
+                    up_direction,
+                },
+                TnuaActionLifecycleStatus::Initiated,
+                motor.as_mut(),
+            );
         }
 
         let sensor_cast_range_for_action = 0.0; // TODO - base this on the action if there is one
