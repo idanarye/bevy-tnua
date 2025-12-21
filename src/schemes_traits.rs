@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::TnuaActionLifecycleDirective;
 use crate::TnuaActionLifecycleStatus;
 use crate::TnuaMotor;
@@ -9,7 +11,7 @@ use bevy_tnua_physics_integration_layer::data_for_backends::TnuaRigidBodyTracker
 use crate::TnuaBasisContext;
 use crate::math::*;
 
-pub trait TnuaScheme: 'static + Send + Sync {
+pub trait TnuaScheme: 'static + Send + Sync + Sized {
     type Basis: Tnua2Basis;
     type Config: TnuaSchemeConfig<Scheme = Self> + Asset;
     type ActionStateEnum: Tnua2ActionStateEnum<Basis = Self::Basis>;
@@ -23,6 +25,16 @@ pub trait TnuaScheme: 'static + Send + Sync {
     }
 
     fn into_action_state_variant(self, config: &Self::Config) -> Self::ActionStateEnum;
+
+    fn update_in_action_state_enum(
+        self,
+        action_state_enum: &mut Self::ActionStateEnum,
+    ) -> UpdateInActionStateEnumResult<Self>;
+}
+
+pub enum UpdateInActionStateEnumResult<S: TnuaScheme> {
+    Success,
+    WrongVariant(S),
 }
 
 pub trait TnuaSchemeConfig {
@@ -68,6 +80,13 @@ pub trait Tnua2ActionStateEnum: 'static + Send + Sync {
     fn interface_mut(&mut self) -> &mut dyn Tnua2ActionStateInterface<Self::Basis>;
 }
 
+#[derive(Clone)]
+pub struct Tnua2BasisAccess<'a, B: Tnua2Basis> {
+    pub input: &'a B,
+    pub config: &'a B::Config,
+    pub memory: &'a B::Memory,
+}
+
 pub struct Tnua2ActionContext<'a, B: Tnua2Basis> {
     /// The duration of the current frame.
     pub frame_duration: Float,
@@ -82,5 +101,24 @@ pub struct Tnua2ActionContext<'a, B: Tnua2Basis> {
     pub up_direction: Dir3,
 
     /// An accessor to the basis.
-    pub basis: &'a B,
+    pub basis: &'a Tnua2BasisAccess<'a, B>,
+}
+
+impl<'a, B: Tnua2Basis> Tnua2ActionContext<'a, B> {
+    /// "Downgrade" to a basis context.
+    ///
+    /// This is useful for some helper methods of [the concrete basis and its
+    /// state](Self::concrete_basis) that require a basis context.
+    pub fn as_basis_context(&self) -> TnuaBasisContext<'a> {
+        TnuaBasisContext {
+            frame_duration: self.frame_duration,
+            tracker: self.tracker,
+            proximity_sensor: self.proximity_sensor,
+            up_direction: self.up_direction,
+        }
+    }
+
+    pub fn frame_duration_as_duration(&self) -> Duration {
+        Duration::from_secs_f64(self.frame_duration.into())
+    }
 }

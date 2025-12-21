@@ -133,6 +133,7 @@ pub mod control_helpers;
 pub mod controller;
 pub mod radar_lens;
 pub mod schemes_action_state;
+pub mod schemes_basis_capabilities;
 pub mod schemes_controller;
 pub mod schemes_traits;
 pub mod util;

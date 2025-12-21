@@ -4,9 +4,9 @@ use crate::schemes_traits::{Tnua2Action, Tnua2ActionContext, Tnua2Basis};
 use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus};
 
 pub struct Tnua2ActionState<A: Tnua2Action<B>, B: Tnua2Basis> {
-    input: A,
-    config: A::Config,
-    memory: A::Memory,
+    pub input: A,
+    pub config: A::Config,
+    pub memory: A::Memory,
 }
 
 impl<A: Tnua2Action<B>, B: Tnua2Basis> Tnua2ActionState<A, B> {
@@ -16,6 +16,10 @@ impl<A: Tnua2Action<B>, B: Tnua2Basis> Tnua2ActionState<A, B> {
             config: config.clone(),
             memory: Default::default(),
         }
+    }
+
+    pub fn update_input(&mut self, input: A) {
+        self.input = input;
     }
 }
 

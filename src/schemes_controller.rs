@@ -1,11 +1,12 @@
 use std::marker::PhantomData;
 
-use crate::{TnuaActionLifecycleStatus, math::*};
+use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 
 use crate::schemes_traits::{
-    Tnua2ActionContext, Tnua2ActionStateEnum, Tnua2Basis, TnuaScheme, TnuaSchemeConfig,
+    Tnua2ActionContext, Tnua2ActionStateEnum, Tnua2Basis, Tnua2BasisAccess, TnuaScheme,
+    TnuaSchemeConfig, UpdateInActionStateEnumResult,
 };
 use crate::{
     TnuaBasisContext, TnuaMotor, TnuaPipelineSystems, TnuaProximitySensor, TnuaRigidBodyTracker,
@@ -112,6 +113,16 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             "Feeding action without invoking `initiate_action_feeding()`"
         );
         self.actions_being_fed[action.variant_idx()].status = FedStatus::Fresh;
+        let action = if let Some(current_action) = self.current_action.as_mut() {
+            match action.update_in_action_state_enum(current_action) {
+                UpdateInActionStateEnumResult::Success => {
+                    return;
+                }
+                UpdateInActionStateEnumResult::WrongVariant(action) => action,
+            }
+        } else {
+            action
+        };
         if let Some(ContenderAction {
             action: existing_action,
         }) = self.contender_action.as_mut()
@@ -197,7 +208,7 @@ fn apply_controller_system<S: TnuaScheme>(
                     .status
                     .considered_fed()
                 {
-                    info!("Action contender is active");
+                    // info!("Action contender is active");
                     // TODO: also check the contender's initiation_decision
                     true
                 } else {
@@ -225,13 +236,34 @@ fn apply_controller_system<S: TnuaScheme>(
                     frame_duration,
                     tracker,
                     proximity_sensor: sensor,
-                    basis: &controller.basis,
+                    basis: &Tnua2BasisAccess {
+                        input: &controller.basis,
+                        config: &basis_config,
+                        memory: &controller.basis_memory,
+                    },
                     up_direction,
                 },
-                TnuaActionLifecycleStatus::Initiated,
+                lifecycle_status,
                 motor.as_mut(),
             );
-            info!("{lifecycle_status:?} -> Existing action - {directive:?}");
+            // TODO: violate coyote time?
+            // TODO: reschedule action
+            // info!("{lifecycle_status:?} -> Existing action - {directive:?}");
+            match directive {
+                TnuaActionLifecycleDirective::StillActive => {
+                    // TOOD: update flow status in case the action is ending
+                }
+                TnuaActionLifecycleDirective::Finished
+                | TnuaActionLifecycleDirective::Reschedule { .. } => {
+                    // TODO: handle rescheduling
+                    controller.current_action = if has_valid_contender {
+                        // TODO - run contender
+                        None
+                    } else {
+                        None
+                    };
+                }
+            }
         } else if has_valid_contender {
             let contender_action = controller
                 .contender_action
@@ -245,12 +277,19 @@ fn apply_controller_system<S: TnuaScheme>(
                     frame_duration,
                     tracker,
                     proximity_sensor: sensor,
-                    basis: &controller.basis,
+                    basis: &Tnua2BasisAccess {
+                        input: &controller.basis,
+                        config: &basis_config,
+                        memory: &controller.basis_memory,
+                    },
                     up_direction,
                 },
                 TnuaActionLifecycleStatus::Initiated,
                 motor.as_mut(),
             );
+            // TODO: violate coyote time?
+            // TODO: set action flow status
+            controller.current_action = Some(contender_action_state);
         }
 
         let sensor_cast_range_for_action = 0.0; // TODO - base this on the action if there is one

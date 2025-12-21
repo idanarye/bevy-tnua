@@ -1,5 +1,12 @@
-use crate::math::*;
-use crate::schemes_traits::{Tnua2Action, Tnua2Basis};
+use crate::schemes_basis_capabilities::{
+    TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithGround,
+};
+use crate::schemes_traits::{Tnua2Action, Tnua2ActionContext, Tnua2Basis};
+use crate::util::{
+    SegmentedJumpDurationCalculator, SegmentedJumpInitialVelocityCalculator, VelocityBoundary,
+    calc_angular_velchange_to_force_forward,
+};
+use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*};
 use bevy::prelude::*;
 
 #[derive(Default)]
@@ -119,10 +126,63 @@ impl Default for Tnua2BuiltinJumpConfig {
     }
 }
 
-#[derive(Default)]
-pub struct Tnua2BuiltinJumpMemory {}
+impl Tnua2BuiltinJumpConfig {
+    fn finish_or_reschedule(&self) -> TnuaActionLifecycleDirective {
+        if let Some(cooldown) = self.reschedule_cooldown {
+            TnuaActionLifecycleDirective::Reschedule {
+                after_seconds: cooldown,
+            }
+        } else {
+            TnuaActionLifecycleDirective::Finished
+        }
+    }
 
-impl<B: Tnua2Basis> Tnua2Action<B> for Tnua2BuiltinJump {
+    fn directive_simple_or_reschedule(
+        &self,
+        lifecycle_status: TnuaActionLifecycleStatus,
+    ) -> TnuaActionLifecycleDirective {
+        if let Some(cooldown) = self.reschedule_cooldown {
+            lifecycle_status.directive_simple_reschedule(cooldown)
+        } else {
+            lifecycle_status.directive_simple()
+        }
+    }
+}
+
+#[derive(Default)]
+pub enum Tnua2BuiltinJumpMemory {
+    #[default]
+    NoJump,
+    // FreeFall,
+    StartingJump {
+        origin: Vector3,
+        /// The potential energy at the top of the jump, when:
+        /// * The potential energy at the bottom of the jump is defined as 0
+        /// * The mass is 1
+        ///
+        /// Calculating the desired velocity based on energy is easier than using the ballistic
+        /// formulas.
+        desired_energy: Float,
+    },
+    SlowDownTooFastSlopeJump {
+        origin: Vector3,
+        desired_energy: Float,
+        zero_potential_energy_at: Vector3,
+    },
+    MaintainingJump {
+        wait_one_frame_before_updating_velocity_boundary: bool,
+        velocity_boundary: Option<VelocityBoundary>,
+    },
+    StoppedMaintainingJump,
+    FallSection,
+}
+
+impl<B: Tnua2Basis> Tnua2Action<B> for Tnua2BuiltinJump
+where
+    B: TnuaBasisWithEffectiveVelocity,
+    B: TnuaBasisWithDisplacement,
+    B: TnuaBasisWithGround,
+{
     type Config = Tnua2BuiltinJumpConfig;
     type Memory = Tnua2BuiltinJumpMemory;
 
@@ -130,11 +190,262 @@ impl<B: Tnua2Basis> Tnua2Action<B> for Tnua2BuiltinJump {
         &self,
         config: &Self::Config,
         memory: &mut Self::Memory,
-        ctx: crate::schemes_traits::Tnua2ActionContext<B>,
-        lifecycle_status: crate::TnuaActionLifecycleStatus,
+        ctx: Tnua2ActionContext<B>,
+        lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut bevy_tnua_physics_integration_layer::data_for_backends::TnuaMotor,
-    ) -> crate::TnuaActionLifecycleDirective {
-        info!("Applying jump");
-        lifecycle_status.directive_simple()
+    ) -> TnuaActionLifecycleDirective {
+        let up = ctx.up_direction.adjust_precision();
+
+        if lifecycle_status.just_started() {
+            let mut calculator = SegmentedJumpInitialVelocityCalculator::new(config.height);
+            let gravity = ctx.tracker.gravity.dot(-up);
+            let kinetic_energy = calculator
+                .add_segment(
+                    gravity + config.peak_prevention_extra_gravity,
+                    config.peak_prevention_at_upward_velocity,
+                )
+                .add_segment(gravity, config.takeoff_above_velocity)
+                .add_final_segment(gravity + config.takeoff_extra_gravity)
+                .kinetic_energy()
+                .expect("`add_final_segment` should have covered remaining height");
+            *memory = Tnua2BuiltinJumpMemory::StartingJump {
+                origin: ctx.tracker.translation,
+                desired_energy: kinetic_energy,
+            };
+        }
+
+        let effective_velocity = B::effective_velocity(ctx.basis);
+
+        if let Some(force_forward) = self.force_forward {
+            let disable_force_forward = config.disable_force_forward_after_peak
+                && match memory {
+                    Tnua2BuiltinJumpMemory::NoJump => true,
+                    Tnua2BuiltinJumpMemory::StartingJump { .. } => false,
+                    Tnua2BuiltinJumpMemory::SlowDownTooFastSlopeJump { .. } => false,
+                    Tnua2BuiltinJumpMemory::MaintainingJump { .. } => false,
+                    Tnua2BuiltinJumpMemory::StoppedMaintainingJump => true,
+                    Tnua2BuiltinJumpMemory::FallSection => true,
+                };
+            if !disable_force_forward {
+                motor
+                    .ang
+                    .cancel_on_axis(ctx.up_direction.adjust_precision());
+                motor.ang += calc_angular_velchange_to_force_forward(
+                    force_forward,
+                    ctx.tracker.rotation,
+                    ctx.tracker.angvel,
+                    ctx.up_direction,
+                    ctx.frame_duration,
+                );
+            }
+        }
+
+        // TODO: Once `std::mem::variant_count` gets stabilized, use that instead. The idea is to
+        // allow jumping through multiple states but failing if we get into loop.
+        for _ in 0..7 {
+            return match memory {
+                Tnua2BuiltinJumpMemory::NoJump => panic!(),
+                Tnua2BuiltinJumpMemory::StartingJump {
+                    origin,
+                    desired_energy,
+                } => {
+                    let extra_height = if let Some(displacement) = B::displacement(ctx.basis) {
+                        displacement.dot(up)
+                    } else if !self.allow_in_air && B::is_airborne(ctx.basis) {
+                        return config.directive_simple_or_reschedule(lifecycle_status);
+                    } else {
+                        // This means we are at Coyote time, so just jump from place.
+                        0.0
+                    };
+                    let gravity = ctx.tracker.gravity.dot(-up);
+                    let energy_from_extra_height = extra_height * gravity;
+                    let desired_kinetic_energy = *desired_energy - energy_from_extra_height;
+                    let desired_upward_velocity =
+                        SegmentedJumpInitialVelocityCalculator::kinetic_energy_to_velocity(
+                            desired_kinetic_energy,
+                        );
+
+                    let relative_velocity =
+                        effective_velocity.dot(up) - B::vertical_velocity(ctx.basis).max(0.0);
+
+                    motor.lin.cancel_on_axis(up);
+                    motor.lin.boost += (desired_upward_velocity - relative_velocity) * up;
+                    if 0.0 <= extra_height {
+                        *memory = Tnua2BuiltinJumpMemory::SlowDownTooFastSlopeJump {
+                            origin: *origin,
+                            desired_energy: *desired_energy,
+                            zero_potential_energy_at: ctx.tracker.translation - extra_height * up,
+                        };
+                    }
+                    config.directive_simple_or_reschedule(lifecycle_status)
+                }
+                Tnua2BuiltinJumpMemory::SlowDownTooFastSlopeJump {
+                    origin,
+                    desired_energy,
+                    zero_potential_energy_at,
+                } => {
+                    let upward_velocity = up.dot(effective_velocity);
+                    if upward_velocity <= B::vertical_velocity(ctx.basis) {
+                        *memory = Tnua2BuiltinJumpMemory::FallSection;
+                        continue;
+                    } else if !lifecycle_status.is_active() {
+                        *memory = Tnua2BuiltinJumpMemory::StoppedMaintainingJump;
+                        continue;
+                    }
+                    let relative_velocity = effective_velocity.dot(up);
+                    let extra_height =
+                        (ctx.tracker.translation - *zero_potential_energy_at).dot(up);
+                    let gravity = ctx.tracker.gravity.dot(-up);
+                    let energy_from_extra_height = extra_height * gravity;
+                    let desired_kinetic_energy = *desired_energy - energy_from_extra_height;
+                    let desired_upward_velocity =
+                        SegmentedJumpInitialVelocityCalculator::kinetic_energy_to_velocity(
+                            desired_kinetic_energy,
+                        );
+                    if relative_velocity <= desired_upward_velocity {
+                        let mut velocity_boundary = None;
+                        if let Some(vertical_displacement) = self.vertical_displacement {
+                            let vertical_displacement = vertical_displacement
+                                .reject_from(ctx.up_direction.adjust_precision());
+                            let already_moved = (ctx.tracker.translation - *origin)
+                                .project_onto(vertical_displacement.normalize_or_zero());
+                            let duration_to_top =
+                                SegmentedJumpDurationCalculator::new(relative_velocity)
+                                    .add_segment(
+                                        gravity + config.takeoff_extra_gravity,
+                                        config.takeoff_above_velocity,
+                                    )
+                                    .add_segment(gravity, config.peak_prevention_at_upward_velocity)
+                                    .add_segment(
+                                        gravity + config.peak_prevention_extra_gravity,
+                                        0.0,
+                                    )
+                                    .duration();
+                            let desired_vertical_velocity =
+                                (vertical_displacement - already_moved) / duration_to_top;
+                            let desired_boost = (desired_vertical_velocity - effective_velocity)
+                                .reject_from(ctx.up_direction.adjust_precision());
+                            motor.lin.boost += desired_boost;
+                            velocity_boundary = VelocityBoundary::new(
+                                effective_velocity.reject_from(ctx.up_direction.adjust_precision()),
+                                desired_vertical_velocity,
+                                0.0,
+                            );
+                        }
+                        *memory = Tnua2BuiltinJumpMemory::MaintainingJump {
+                            wait_one_frame_before_updating_velocity_boundary: true,
+                            velocity_boundary,
+                        };
+                        continue;
+                    } else {
+                        let mut extra_gravity = config.upslope_extra_gravity;
+                        if config.takeoff_above_velocity <= relative_velocity {
+                            extra_gravity += config.takeoff_extra_gravity;
+                        }
+                        motor.lin.cancel_on_axis(up);
+                        motor.lin.acceleration = -extra_gravity * up;
+                        config.directive_simple_or_reschedule(lifecycle_status)
+                    }
+                }
+                Tnua2BuiltinJumpMemory::MaintainingJump {
+                    wait_one_frame_before_updating_velocity_boundary,
+                    velocity_boundary,
+                } => {
+                    if let Some(velocity_boundary) = velocity_boundary {
+                        if *wait_one_frame_before_updating_velocity_boundary {
+                            *wait_one_frame_before_updating_velocity_boundary = false;
+                        } else {
+                            velocity_boundary.update(
+                                B::effective_velocity(ctx.basis),
+                                ctx.frame_duration_as_duration(),
+                            );
+                        }
+                        if let Some((component_direction, component_limit)) = velocity_boundary
+                            .calc_boost_part_on_boundary_axis_after_limit(
+                                B::effective_velocity(ctx.basis),
+                                motor.lin.calc_boost(ctx.frame_duration),
+                                // TODO: make these parameters?
+                                0.0,
+                                1.0,
+                            )
+                        {
+                            motor.lin.apply_boost_limit(
+                                ctx.frame_duration,
+                                component_direction,
+                                component_limit,
+                            );
+                        }
+                    }
+
+                    let relevant_upward_velocity = effective_velocity.dot(up);
+                    if relevant_upward_velocity <= 0.0 {
+                        *memory = Tnua2BuiltinJumpMemory::FallSection;
+                        motor.lin.cancel_on_axis(up);
+                    } else {
+                        motor.lin.cancel_on_axis(up);
+                        if relevant_upward_velocity < config.peak_prevention_at_upward_velocity {
+                            motor.lin.acceleration -= config.peak_prevention_extra_gravity * up;
+                        } else if config.takeoff_above_velocity <= relevant_upward_velocity {
+                            motor.lin.acceleration -= config.takeoff_extra_gravity * up;
+                        }
+                    }
+                    match lifecycle_status {
+                        TnuaActionLifecycleStatus::Initiated
+                        | TnuaActionLifecycleStatus::CancelledFrom
+                        | TnuaActionLifecycleStatus::StillFed => {
+                            TnuaActionLifecycleDirective::StillActive
+                        }
+                        TnuaActionLifecycleStatus::CancelledInto => config.finish_or_reschedule(),
+                        TnuaActionLifecycleStatus::NoLongerFed => {
+                            *memory = Tnua2BuiltinJumpMemory::StoppedMaintainingJump;
+                            TnuaActionLifecycleDirective::StillActive
+                        }
+                    }
+                }
+                Tnua2BuiltinJumpMemory::StoppedMaintainingJump => {
+                    if matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto) {
+                        config.finish_or_reschedule()
+                    } else {
+                        let landed = B::displacement(ctx.basis)
+                            .is_some_and(|displacement| displacement.dot(up) <= 0.0);
+                        if landed {
+                            config.finish_or_reschedule()
+                        } else {
+                            let upward_velocity = up.dot(effective_velocity);
+                            if upward_velocity <= 0.0 {
+                                *memory = Tnua2BuiltinJumpMemory::FallSection;
+                                continue;
+                            }
+
+                            let extra_gravity = if config.takeoff_above_velocity <= upward_velocity
+                            {
+                                config.shorten_extra_gravity + config.takeoff_extra_gravity
+                            } else {
+                                config.shorten_extra_gravity
+                            };
+
+                            motor.lin.cancel_on_axis(up);
+                            motor.lin.acceleration -= extra_gravity * up;
+                            TnuaActionLifecycleDirective::StillActive
+                        }
+                    }
+                }
+                Tnua2BuiltinJumpMemory::FallSection => {
+                    let landed = B::displacement(ctx.basis)
+                        .is_some_and(|displacement| displacement.dot(up) <= 0.0);
+                    if landed
+                        || matches!(lifecycle_status, TnuaActionLifecycleStatus::CancelledInto)
+                    {
+                        config.finish_or_reschedule()
+                    } else {
+                        motor.lin.cancel_on_axis(up);
+                        motor.lin.acceleration -= config.fall_extra_gravity * up;
+                        TnuaActionLifecycleDirective::StillActive
+                    }
+                }
+            };
+        }
+        error!("Tnua could not decide on jump state");
+        TnuaActionLifecycleDirective::Finished
     }
 }

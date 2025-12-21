@@ -5,11 +5,11 @@ use avian3d::prelude::*;
 use bevy_tnua::builtins::{
     Tnua2BuiltinJump, Tnua2BuiltinJumpConfig, Tnua2BuiltinWalk, Tnua2BuiltinWalkConfig,
 };
-use bevy_tnua::prelude::*;
 use bevy_tnua::schemes_action_state::Tnua2ActionState;
 use bevy_tnua::schemes_controller::{Tnua2Controller, Tnua2ControllerPlugin};
 use bevy_tnua::schemes_traits::{
     Tnua2Action, Tnua2ActionStateEnum, Tnua2Basis, TnuaScheme, TnuaSchemeConfig,
+    UpdateInActionStateEnumResult,
 };
 use bevy_tnua_avian3d::prelude::*;
 
@@ -99,6 +99,20 @@ impl TnuaScheme for ExampleScheme {
             ExampleScheme::Jump(action) => {
                 ExampleSchemeActionStateEnum::Jump(Tnua2ActionState::new(action, &config.jump))
             }
+        }
+    }
+
+    fn update_in_action_state_enum(
+        self,
+        action_state_enum: &mut Self::ActionStateEnum,
+    ) -> UpdateInActionStateEnumResult<Self> {
+        match (self, action_state_enum) {
+            (Self::Jump(action), Self::ActionStateEnum::Jump(state)) => {
+                state.update_input(action);
+                UpdateInActionStateEnumResult::Success
+            }
+            #[allow(unreachable_patterns)]
+            (this, _) => UpdateInActionStateEnumResult::WrongVariant(this),
         }
     }
 }

@@ -3,6 +3,9 @@ use std::time::Duration;
 use bevy::prelude::*;
 
 use crate::math::*;
+use crate::schemes_basis_capabilities::{
+    TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithGround,
+};
 use crate::schemes_traits::Tnua2Basis;
 use crate::util::rotation_arc_around_axis;
 use crate::{TnuaBasisContext, TnuaMotor, TnuaVelChange};
@@ -474,6 +477,33 @@ impl Tnua2Basis for Tnua2BuiltinWalk {
 
     fn proximity_sensor_cast_range(&self, config: &Self::Config, _memory: &Self::Memory) -> Float {
         config.float_height + config.cling_distance
+    }
+}
+
+impl TnuaBasisWithEffectiveVelocity for Tnua2BuiltinWalk {
+    fn effective_velocity(access: &crate::schemes_traits::Tnua2BasisAccess<Self>) -> Vector3 {
+        access.memory.effective_velocity
+    }
+
+    fn vertical_velocity(access: &crate::schemes_traits::Tnua2BasisAccess<Self>) -> Float {
+        access.memory.vertical_velocity
+    }
+}
+impl TnuaBasisWithDisplacement for Tnua2BuiltinWalk {
+    fn displacement(access: &crate::schemes_traits::Tnua2BasisAccess<Self>) -> Option<Vector3> {
+        match access.memory.airborne_timer {
+            None => Some(access.memory.standing_offset),
+            Some(_) => None,
+        }
+    }
+}
+impl TnuaBasisWithGround for Tnua2BuiltinWalk {
+    fn is_airborne(access: &crate::schemes_traits::Tnua2BasisAccess<Self>) -> bool {
+        access
+            .memory
+            .airborne_timer
+            .as_ref()
+            .is_some_and(|timer| timer.is_finished())
     }
 }
 
