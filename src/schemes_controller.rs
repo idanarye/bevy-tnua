@@ -81,13 +81,13 @@ struct FedEntry {
 #[require(TnuaMotor, TnuaRigidBodyTracker, TnuaProximitySensor)]
 pub struct Tnua2Controller<S: TnuaScheme> {
     pub basis: S::Basis,
-    basis_memory: <S::Basis as Tnua2Basis>::Memory,
+    pub basis_memory: <S::Basis as Tnua2Basis>::Memory,
     pub config: Handle<S::Config>,
     // TODO: If ever possible, make this a fixed size array:
     actions_being_fed: Vec<FedEntry>,
     contender_action: Option<ContenderAction<S>>,
     action_feeding_initiated: bool,
-    current_action: Option<S::ActionStateEnum>,
+    pub current_action: Option<S::ActionStateEnum>,
 }
 
 impl<S: TnuaScheme> Tnua2Controller<S> {
@@ -167,7 +167,7 @@ fn apply_controller_system<S: TnuaScheme>(
         let up_direction = Dir3::new(-tracker.gravity.f32()).ok();
         let up_direction = up_direction.unwrap_or(Dir3::Y);
 
-        let sensor = sensor.as_mut();
+        let proximity_sensor = sensor.as_mut();
 
         controller.basis.apply(
             basis_config,
@@ -175,7 +175,7 @@ fn apply_controller_system<S: TnuaScheme>(
             TnuaBasisContext {
                 frame_duration,
                 tracker,
-                proximity_sensor: sensor,
+                proximity_sensor,
                 up_direction,
             },
             &mut motor,
@@ -235,10 +235,10 @@ fn apply_controller_system<S: TnuaScheme>(
                 Tnua2ActionContext {
                     frame_duration,
                     tracker,
-                    proximity_sensor: sensor,
+                    proximity_sensor,
                     basis: &Tnua2BasisAccess {
                         input: &controller.basis,
-                        config: &basis_config,
+                        config: basis_config,
                         memory: &controller.basis_memory,
                     },
                     up_direction,
@@ -246,7 +246,17 @@ fn apply_controller_system<S: TnuaScheme>(
                 lifecycle_status,
                 motor.as_mut(),
             );
-            // TODO: violate coyote time?
+            action_state.interface_mut().influence_basis(
+                TnuaBasisContext {
+                    frame_duration,
+                    tracker,
+                    proximity_sensor,
+                    up_direction,
+                },
+                &controller.basis,
+                basis_config,
+                &mut controller.basis_memory,
+            );
             // TODO: reschedule action
             // info!("{lifecycle_status:?} -> Existing action - {directive:?}");
             match directive {
@@ -276,10 +286,10 @@ fn apply_controller_system<S: TnuaScheme>(
                 Tnua2ActionContext {
                     frame_duration,
                     tracker,
-                    proximity_sensor: sensor,
+                    proximity_sensor,
                     basis: &Tnua2BasisAccess {
                         input: &controller.basis,
-                        config: &basis_config,
+                        config: basis_config,
                         memory: &controller.basis_memory,
                     },
                     up_direction,
@@ -287,17 +297,27 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaActionLifecycleStatus::Initiated,
                 motor.as_mut(),
             );
-            // TODO: violate coyote time?
+            contender_action_state.interface_mut().influence_basis(
+                TnuaBasisContext {
+                    frame_duration,
+                    tracker,
+                    proximity_sensor,
+                    up_direction,
+                },
+                &controller.basis,
+                basis_config,
+                &mut controller.basis_memory,
+            );
             // TODO: set action flow status
             controller.current_action = Some(contender_action_state);
         }
 
         let sensor_cast_range_for_action = 0.0; // TODO - base this on the action if there is one
 
-        sensor.cast_range = sensor_cast_range_for_basis.max(sensor_cast_range_for_action);
-        sensor.cast_direction = -up_direction;
+        proximity_sensor.cast_range = sensor_cast_range_for_basis.max(sensor_cast_range_for_action);
+        proximity_sensor.cast_direction = -up_direction;
         // TODO: Maybe add the horizontal rotation as well somehow?
-        sensor.cast_shape_rotation =
+        proximity_sensor.cast_shape_rotation =
             Quaternion::from_rotation_arc(Vector3::Y, up_direction.adjust_precision());
     }
 }

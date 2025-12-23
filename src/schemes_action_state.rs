@@ -1,7 +1,7 @@
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaMotor;
 
 use crate::schemes_traits::{Tnua2Action, Tnua2ActionContext, Tnua2Basis};
-use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus};
+use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasisContext};
 
 pub struct Tnua2ActionState<A: Tnua2Action<B>, B: Tnua2Basis> {
     pub input: A,
@@ -30,6 +30,14 @@ pub trait Tnua2ActionStateInterface<B: Tnua2Basis> {
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective;
+
+    fn influence_basis(
+        &self,
+        ctx: TnuaBasisContext,
+        basis_input: &B,
+        basis_config: &B::Config,
+        basis_memory: &mut B::Memory,
+    );
 }
 
 impl<A: Tnua2Action<B>, B: Tnua2Basis> Tnua2ActionStateInterface<B> for Tnua2ActionState<A, B> {
@@ -41,5 +49,22 @@ impl<A: Tnua2Action<B>, B: Tnua2Basis> Tnua2ActionStateInterface<B> for Tnua2Act
     ) -> TnuaActionLifecycleDirective {
         self.input
             .apply(&self.config, &mut self.memory, ctx, lifecycle_status, motor)
+    }
+
+    fn influence_basis(
+        &self,
+        ctx: TnuaBasisContext,
+        basis_input: &B,
+        basis_config: &<B as Tnua2Basis>::Config,
+        basis_memory: &mut <B as Tnua2Basis>::Memory,
+    ) {
+        self.input.influence_basis(
+            &self.config,
+            &self.memory,
+            ctx,
+            basis_input,
+            basis_config,
+            basis_memory,
+        );
     }
 }

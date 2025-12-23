@@ -448,4 +448,16 @@ where
         error!("Tnua could not decide on jump state");
         TnuaActionLifecycleDirective::Finished
     }
+
+    fn influence_basis(
+        &self,
+        _config: &Self::Config,
+        _memory: &Self::Memory,
+        _ctx: crate::TnuaBasisContext,
+        _basis_input: &B,
+        _basis_config: &<B as Tnua2Basis>::Config,
+        basis_memory: &mut <B as Tnua2Basis>::Memory,
+    ) {
+        B::violate_coyote_time(basis_memory);
+    }
 }

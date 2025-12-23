@@ -122,7 +122,7 @@ impl Default for Tnua2BuiltinWalkConfig {
             spring_dampening: 1.2,
             acceleration: 60.0,
             air_acceleration: 20.0,
-            coyote_time: 0.15,
+            coyote_time: 30.15,
             free_fall_extra_gravity: 60.0,
             tilt_offset_angvel: 5.0,
             tilt_offset_angacl: 500.0,
@@ -504,6 +504,12 @@ impl TnuaBasisWithGround for Tnua2BuiltinWalk {
             .airborne_timer
             .as_ref()
             .is_some_and(|timer| timer.is_finished())
+    }
+
+    fn violate_coyote_time(memory: &mut Self::Memory) {
+        if let Some(timer) = &mut memory.airborne_timer {
+            timer.set_duration(Duration::ZERO);
+        }
     }
 }
 

@@ -25,4 +25,13 @@ pub trait TnuaBasisWithGround: Tnua2Basis {
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
     fn is_airborne(access: &Tnua2BasisAccess<Self>) -> bool;
+
+    /// If the basis is at coyote time - finish the coyote time.
+    ///
+    /// This will be called automatically by Tnua, if the controller runs an action that  [violated
+    /// coyote time](TnuaAction::VIOLATES_COYOTE_TIME), so that a long coyote time will not allow,
+    /// for example, unaccounted air jumps.
+    ///
+    /// If the character is fully grounded, this method must not change that.
+    fn violate_coyote_time(memory: &mut Self::Memory);
 }

@@ -70,6 +70,18 @@ pub trait Tnua2Action<B: Tnua2Basis>: 'static + Send + Sync {
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective;
+
+    #[allow(unused_variables)]
+    fn influence_basis(
+        &self,
+        config: &Self::Config,
+        memory: &Self::Memory,
+        ctx: TnuaBasisContext,
+        basis_input: &B,
+        basis_config: &B::Config,
+        basis_memory: &mut B::Memory,
+    ) {
+    }
 }
 
 pub trait Tnua2ActionStateEnum: 'static + Send + Sync {
