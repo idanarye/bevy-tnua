@@ -8,8 +8,8 @@ use bevy_tnua::builtins::{
 use bevy_tnua::schemes_action_state::Tnua2ActionState;
 use bevy_tnua::schemes_controller::{Tnua2Controller, Tnua2ControllerPlugin};
 use bevy_tnua::schemes_traits::{
-    Tnua2Action, Tnua2ActionStateEnum, Tnua2Basis, TnuaScheme, TnuaSchemeConfig,
-    UpdateInActionStateEnumResult,
+    Tnua2Action, Tnua2ActionDiscriminant, Tnua2ActionStateEnum, Tnua2Basis, TnuaScheme,
+    TnuaSchemeConfig, UpdateInActionStateEnumResult,
 };
 use bevy_tnua_avian3d::prelude::*;
 
@@ -81,16 +81,15 @@ enum ExampleScheme {
 
 impl TnuaScheme for ExampleScheme {
     type Basis = Tnua2BuiltinWalk;
-
     type Config = ExampleSchemeConfig;
-
+    type ActionDiscriminant = ExampleSchemeActionDiscriminant;
     type ActionStateEnum = ExampleSchemeActionStateEnum;
 
     const NUM_VARIANTS: usize = 1;
 
-    fn variant_idx(&self) -> usize {
+    fn discriminant(&self) -> ExampleSchemeActionDiscriminant {
         match self {
-            Self::Jump(_) => 0,
+            Self::Jump(_) => ExampleSchemeActionDiscriminant::Jump,
         }
     }
 
@@ -123,16 +122,30 @@ struct ExampleSchemeConfig {
     jump: <Tnua2BuiltinJump as Tnua2Action<Tnua2BuiltinWalk>>::Config,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+enum ExampleSchemeActionDiscriminant {
+    Jump,
+}
+
+impl Tnua2ActionDiscriminant for ExampleSchemeActionDiscriminant {
+    fn variant_idx(&self) -> usize {
+        match self {
+            Self::Jump => 0,
+        }
+    }
+}
+
 enum ExampleSchemeActionStateEnum {
     Jump(Tnua2ActionState<Tnua2BuiltinJump, Tnua2BuiltinWalk>),
 }
 
 impl Tnua2ActionStateEnum for ExampleSchemeActionStateEnum {
     type Basis = Tnua2BuiltinWalk;
+    type Discriminant = ExampleSchemeActionDiscriminant;
 
-    fn variant_idx(&self) -> usize {
+    fn discriminant(&self) -> ExampleSchemeActionDiscriminant {
         match self {
-            Self::Jump(_) => 0,
+            Self::Jump(_) => ExampleSchemeActionDiscriminant::Jump,
         }
     }
 

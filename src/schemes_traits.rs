@@ -14,11 +14,16 @@ use crate::math::*;
 pub trait TnuaScheme: 'static + Send + Sync + Sized {
     type Basis: Tnua2Basis;
     type Config: TnuaSchemeConfig<Scheme = Self> + Asset;
-    type ActionStateEnum: Tnua2ActionStateEnum<Basis = Self::Basis>;
+    type ActionDiscriminant: Tnua2ActionDiscriminant;
+    type ActionStateEnum: Tnua2ActionStateEnum<Basis = Self::Basis, Discriminant = Self::ActionDiscriminant>;
 
     const NUM_VARIANTS: usize;
 
-    fn variant_idx(&self) -> usize;
+    fn discriminant(&self) -> Self::ActionDiscriminant;
+
+    fn variant_idx(&self) -> usize {
+        self.discriminant().variant_idx()
+    }
 
     fn is_same_action_as(&self, other: &Self) -> bool {
         self.variant_idx() == other.variant_idx()
@@ -84,10 +89,22 @@ pub trait Tnua2Action<B: Tnua2Basis>: 'static + Send + Sync {
     }
 }
 
+pub trait Tnua2ActionDiscriminant:
+    'static + Send + Sync + Copy + Clone + PartialEq + Eq + core::fmt::Debug
+{
+    fn variant_idx(&self) -> usize;
+}
+
 pub trait Tnua2ActionStateEnum: 'static + Send + Sync {
     type Basis: Tnua2Basis;
+    type Discriminant: Tnua2ActionDiscriminant;
 
-    fn variant_idx(&self) -> usize;
+    fn discriminant(&self) -> Self::Discriminant;
+
+    fn variant_idx(&self) -> usize {
+        self.discriminant().variant_idx()
+    }
+
     fn interface(&self) -> &dyn Tnua2ActionStateInterface<Self::Basis>;
     fn interface_mut(&mut self) -> &mut dyn Tnua2ActionStateInterface<Self::Basis>;
 }
