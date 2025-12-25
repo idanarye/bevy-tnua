@@ -396,21 +396,88 @@ fn apply_controller_system<S: TnuaScheme>(
                         controller.actions_being_fed[action_state.variant_idx()].rescheduled_in =
                             Some(Timer::from_seconds(after_seconds.f32(), TimerMode::Once));
                     }
-                    (controller.current_action, controller.action_flow_status) =
-                        if has_valid_contender {
-                            // TODO - run contender. Remember to:
-                            // * Handle scheduling
-                            // * Set the discriminant to Cancel
-                            (
-                                None,
-                                Tnua2ActionFlowStatus::ActionEnded(action_state.discriminant()),
-                            )
-                        } else {
-                            (
-                                None,
-                                Tnua2ActionFlowStatus::ActionEnded(action_state.discriminant()),
-                            )
-                        };
+                    controller.current_action = if has_valid_contender {
+                        // TODO - run contender. Remember to:
+                        // * Handle scheduling
+                        // * Set the discriminant to Cancel
+                        let contender_action = controller.contender_action.take().expect(
+                            "has_valid_contender can only be true if contender_action is Some",
+                        );
+                        let mut contender_action_state =
+                            contender_action.action.into_action_state_variant(config);
+
+                        controller.actions_being_fed[contender_action_state.variant_idx()]
+                            .rescheduled_in = None;
+
+                        let contender_directive = contender_action_state.interface_mut().apply(
+                            Tnua2ActionContext {
+                                frame_duration,
+                                tracker,
+                                proximity_sensor,
+                                basis: &Tnua2BasisAccess {
+                                    input: &controller.basis,
+                                    config: basis_config,
+                                    memory: &controller.basis_memory,
+                                },
+                                up_direction,
+                            },
+                            TnuaActionLifecycleStatus::CancelledFrom,
+                            motor.as_mut(),
+                        );
+                        contender_action_state.interface_mut().influence_basis(
+                            TnuaBasisContext {
+                                frame_duration,
+                                tracker,
+                                proximity_sensor,
+                                up_direction,
+                            },
+                            &controller.basis,
+                            basis_config,
+                            &mut controller.basis_memory,
+                        );
+                        match contender_directive {
+                            TnuaActionLifecycleDirective::StillActive => {
+                                controller.action_flow_status =
+                                    if let Tnua2ActionFlowStatus::ActionOngoing(discriminant) =
+                                        controller.action_flow_status
+                                    {
+                                        Tnua2ActionFlowStatus::Cancelled {
+                                            old: discriminant,
+                                            new: contender_action_state.discriminant(),
+                                        }
+                                    } else {
+                                        Tnua2ActionFlowStatus::ActionStarted(
+                                            contender_action_state.discriminant(),
+                                        )
+                                    };
+                                Some(contender_action_state)
+                            }
+                            TnuaActionLifecycleDirective::Finished
+                            | TnuaActionLifecycleDirective::Reschedule { after_seconds: _ } => {
+                                if let TnuaActionLifecycleDirective::Reschedule { after_seconds } =
+                                    contender_directive
+                                {
+                                    controller.actions_being_fed
+                                        [contender_action_state.variant_idx()]
+                                    .rescheduled_in = Some(Timer::from_seconds(
+                                        after_seconds.f32(),
+                                        TimerMode::Once,
+                                    ));
+                                }
+                                if let Tnua2ActionFlowStatus::ActionOngoing(discriminant) =
+                                    controller.action_flow_status
+                                {
+                                    controller.action_flow_status =
+                                        Tnua2ActionFlowStatus::ActionEnded(discriminant);
+                                }
+                                None
+                            }
+                        }
+                    } else {
+                        controller.action_flow_status =
+                            Tnua2ActionFlowStatus::ActionEnded(action_state.discriminant());
+                        None
+                    };
                 }
             }
         } else if has_valid_contender {
@@ -451,6 +518,7 @@ fn apply_controller_system<S: TnuaScheme>(
                 Tnua2ActionFlowStatus::ActionStarted(contender_action_state.discriminant());
             controller.current_action = Some(contender_action_state);
         }
+        info!("{:?}", controller.action_flow_status);
 
         let sensor_cast_range_for_action = 0.0; // TODO - base this on the action if there is one
 
