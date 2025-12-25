@@ -1,8 +1,11 @@
 use std::marker::PhantomData;
 
-use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*};
+use crate::{
+    TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
+};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 
 use crate::schemes_traits::{
     Tnua2ActionContext, Tnua2ActionStateEnum, Tnua2Basis, Tnua2BasisAccess, TnuaScheme,
@@ -51,9 +54,10 @@ impl<S: TnuaScheme> Plugin for Tnua2ControllerPlugin<S> {
 
 struct ContenderAction<S: TnuaScheme> {
     action: S,
+    being_fed_for: Stopwatch,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 enum FedStatus {
     #[default]
     Not,
@@ -112,8 +116,11 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             self.action_feeding_initiated,
             "Feeding action without invoking `initiate_action_feeding()`"
         );
+        let orig_status = self.actions_being_fed[action.variant_idx()].status;
         self.actions_being_fed[action.variant_idx()].status = FedStatus::Fresh;
-        let action = if let Some(current_action) = self.current_action.as_mut() {
+        let action = if orig_status != FedStatus::Not
+            && let Some(current_action) = self.current_action.as_mut()
+        {
             match action.update_in_action_state_enum(current_action) {
                 UpdateInActionStateEnumResult::Success => {
                     return;
@@ -125,12 +132,19 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
         };
         if let Some(ContenderAction {
             action: existing_action,
+            being_fed_for: _,
         }) = self.contender_action.as_mut()
             && action.is_same_action_as(existing_action)
         {
             *existing_action = action;
+        } else if orig_status != FedStatus::Not {
+            // button is still pressed, so we need to check the rescheduling
+            // TODO: handle rescheduled actions
         } else {
-            self.contender_action = Some(ContenderAction { action });
+            self.contender_action = Some(ContenderAction {
+                action,
+                being_fed_for: Stopwatch::new(),
+            });
         }
     }
 }
@@ -208,9 +222,31 @@ fn apply_controller_system<S: TnuaScheme>(
                     .status
                     .considered_fed()
                 {
-                    // info!("Action contender is active");
                     // TODO: also check the contender's initiation_decision
-                    true
+                    let initiation_decision = contender_action.action.initiation_decision(
+                        config,
+                        Tnua2ActionContext {
+                            frame_duration,
+                            tracker,
+                            proximity_sensor,
+                            up_direction,
+                            basis: &Tnua2BasisAccess {
+                                input: &controller.basis,
+                                config: basis_config,
+                                memory: &controller.basis_memory,
+                            },
+                        },
+                        &contender_action.being_fed_for,
+                    );
+                    contender_action.being_fed_for.tick(time.delta());
+                    match initiation_decision {
+                        TnuaActionInitiationDirective::Reject => {
+                            controller.contender_action = None;
+                            false
+                        }
+                        TnuaActionInitiationDirective::Delay => false,
+                        TnuaActionInitiationDirective::Allow => true,
+                    }
                 } else {
                     controller.contender_action = None;
                     false
@@ -258,7 +294,6 @@ fn apply_controller_system<S: TnuaScheme>(
                 &mut controller.basis_memory,
             );
             // TODO: reschedule action
-            // info!("{lifecycle_status:?} -> Existing action - {directive:?}");
             match directive {
                 TnuaActionLifecycleDirective::StillActive => {
                     // TOOD: update flow status in case the action is ending

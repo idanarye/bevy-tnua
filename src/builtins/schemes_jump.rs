@@ -6,8 +6,11 @@ use crate::util::{
     SegmentedJumpDurationCalculator, SegmentedJumpInitialVelocityCalculator, VelocityBoundary,
     calc_angular_velchange_to_force_forward,
 };
-use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*};
+use crate::{
+    TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
+};
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 
 #[derive(Default)]
 pub struct Tnua2BuiltinJump {
@@ -185,6 +188,22 @@ where
 {
     type Config = Tnua2BuiltinJumpConfig;
     type Memory = Tnua2BuiltinJumpMemory;
+
+    fn initiation_decision(
+        &self,
+        config: &Self::Config,
+        ctx: Tnua2ActionContext<B>,
+        being_fed_for: &Stopwatch,
+    ) -> TnuaActionInitiationDirective {
+        if self.allow_in_air || !B::is_airborne(ctx.basis) {
+            // Either not airborne, or air jumps are allowed
+            TnuaActionInitiationDirective::Allow
+        } else if (being_fed_for.elapsed().as_secs_f64() as Float) < config.input_buffer_time {
+            TnuaActionInitiationDirective::Delay
+        } else {
+            TnuaActionInitiationDirective::Reject
+        }
+    }
 
     fn apply(
         &self,

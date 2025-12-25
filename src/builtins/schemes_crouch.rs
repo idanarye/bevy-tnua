@@ -1,6 +1,10 @@
+use bevy::time::Stopwatch;
+
 use crate::schemes_basis_capabilities::{TnuaBasisWithFloating, TnuaBasisWithSpring};
 use crate::schemes_traits::{Tnua2Action, Tnua2ActionContext, Tnua2Basis};
-use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*};
+use crate::{
+    TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
+};
 use crate::{TnuaMotor, TnuaVelChange};
 
 #[derive(Debug, Default)]
@@ -65,6 +69,19 @@ where
 {
     type Config = Tnua2BuiltinCrouchConfig;
     type Memory = Tnua2BuiltinCrouchMemory;
+
+    fn initiation_decision(
+        &self,
+        _config: &Self::Config,
+        ctx: Tnua2ActionContext<B>,
+        _being_fed_for: &Stopwatch,
+    ) -> TnuaActionInitiationDirective {
+        if ctx.proximity_sensor.output.is_some() {
+            TnuaActionInitiationDirective::Allow
+        } else {
+            TnuaActionInitiationDirective::Delay
+        }
+    }
 
     fn apply(
         &self,

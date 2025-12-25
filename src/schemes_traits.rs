@@ -1,10 +1,12 @@
 use std::time::Duration;
 
+use crate::TnuaActionInitiationDirective;
 use crate::TnuaActionLifecycleDirective;
 use crate::TnuaActionLifecycleStatus;
 use crate::TnuaMotor;
 use crate::schemes_action_state::Tnua2ActionStateInterface;
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaRigidBodyTracker;
 
@@ -35,6 +37,13 @@ pub trait TnuaScheme: 'static + Send + Sync + Sized {
         self,
         action_state_enum: &mut Self::ActionStateEnum,
     ) -> UpdateInActionStateEnumResult<Self>;
+
+    fn initiation_decision(
+        &self,
+        config: &Self::Config,
+        ctx: Tnua2ActionContext<Self::Basis>,
+        being_fed_for: &Stopwatch,
+    ) -> TnuaActionInitiationDirective;
 }
 
 pub enum UpdateInActionStateEnumResult<S: TnuaScheme> {
@@ -66,6 +75,23 @@ pub trait Tnua2Basis: Default + 'static + Send + Sync {
 pub trait Tnua2Action<B: Tnua2Basis>: 'static + Send + Sync {
     type Config: Clone;
     type Memory: Send + Sync + Default;
+
+    /// Decides whether the action can start.
+    ///
+    /// The difference between rejecting the action here with
+    /// [`TnuaActionInitiationDirective::Reject`] or [`TnuaActionInitiationDirective::Delay`] and
+    /// approving it with [`TnuaActionInitiationDirective::Allow`] only to do nothing in it and
+    /// terminate with [`TnuaActionLifecycleDirective::Finished`] on the first frame, is that if
+    /// some other action is currently running, in the former that action will continue to be
+    /// active, while in the latter it'll be cancelled into this new action - which, having being
+    /// immediately finished, will leave the controller with no active action, or with some third
+    /// action if there is one.
+    fn initiation_decision(
+        &self,
+        config: &Self::Config,
+        ctx: Tnua2ActionContext<B>,
+        being_fed_for: &Stopwatch,
+    ) -> TnuaActionInitiationDirective;
 
     fn apply(
         &self,

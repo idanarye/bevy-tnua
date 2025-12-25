@@ -1,3 +1,4 @@
+use bevy::time::Stopwatch;
 use bevy::{color::palettes::css, prelude::*};
 
 use avian3d::prelude::*;
@@ -9,8 +10,8 @@ use bevy_tnua::builtins::{
 use bevy_tnua::schemes_action_state::Tnua2ActionState;
 use bevy_tnua::schemes_controller::{Tnua2Controller, Tnua2ControllerPlugin};
 use bevy_tnua::schemes_traits::{
-    Tnua2Action, Tnua2ActionDiscriminant, Tnua2ActionStateEnum, Tnua2Basis, TnuaScheme,
-    TnuaSchemeConfig, UpdateInActionStateEnumResult,
+    Tnua2Action, Tnua2ActionContext, Tnua2ActionDiscriminant, Tnua2ActionStateEnum, Tnua2Basis,
+    TnuaScheme, TnuaSchemeConfig, UpdateInActionStateEnumResult,
 };
 use bevy_tnua_avian3d::prelude::*;
 
@@ -122,6 +123,18 @@ impl TnuaScheme for ExampleScheme {
             }
             #[allow(unreachable_patterns)]
             (this, _) => UpdateInActionStateEnumResult::WrongVariant(this),
+        }
+    }
+
+    fn initiation_decision(
+        &self,
+        config: &Self::Config,
+        ctx: Tnua2ActionContext<Self::Basis>,
+        being_fed_for: &Stopwatch,
+    ) -> bevy_tnua::TnuaActionInitiationDirective {
+        match self {
+            Self::Jump(action) => action.initiation_decision(&config.jump, ctx, being_fed_for),
+            Self::Crouch(action) => action.initiation_decision(&config.crouch, ctx, being_fed_for),
         }
     }
 }
