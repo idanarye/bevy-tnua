@@ -116,8 +116,9 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             self.action_feeding_initiated,
             "Feeding action without invoking `initiate_action_feeding()`"
         );
-        let orig_status = self.actions_being_fed[action.variant_idx()].status;
-        self.actions_being_fed[action.variant_idx()].status = FedStatus::Fresh;
+        let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
+        let orig_status = fed_entry.status;
+        fed_entry.status = FedStatus::Fresh;
         let action = if orig_status != FedStatus::Not
             && let Some(current_action) = self.current_action.as_mut()
         {
@@ -137,14 +138,20 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             && action.is_same_action_as(existing_action)
         {
             *existing_action = action;
-        } else if orig_status != FedStatus::Not {
-            // button is still pressed, so we need to check the rescheduling
-            // TODO: handle rescheduled actions
-        } else {
+        } else if orig_status == FedStatus::Not
+            // no action is running - but this action is rescheduled and there is no
+            // already-existing contender that would have taken priority:
+            || fed_entry
+                .rescheduled_in
+                .as_ref()
+                .is_some_and(|timer| timer.is_finished())
+        {
             self.contender_action = Some(ContenderAction {
                 action,
                 being_fed_for: Stopwatch::new(),
             });
+            // Set the rescheduling to None so that we won't tick it anymore.
+            fed_entry.rescheduled_in = None;
         }
     }
 }
@@ -300,6 +307,10 @@ fn apply_controller_system<S: TnuaScheme>(
                 }
                 TnuaActionLifecycleDirective::Finished
                 | TnuaActionLifecycleDirective::Reschedule { .. } => {
+                    if let TnuaActionLifecycleDirective::Reschedule { after_seconds } = directive {
+                        controller.actions_being_fed[action_state.variant_idx()].rescheduled_in =
+                            Some(Timer::from_seconds(after_seconds.f32(), TimerMode::Once));
+                    }
                     // TODO: handle rescheduling
                     controller.current_action = if has_valid_contender {
                         // TODO - run contender
