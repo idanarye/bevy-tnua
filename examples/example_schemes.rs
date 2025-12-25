@@ -3,7 +3,8 @@ use bevy::{color::palettes::css, prelude::*};
 use avian3d::prelude::*;
 
 use bevy_tnua::builtins::{
-    Tnua2BuiltinJump, Tnua2BuiltinJumpConfig, Tnua2BuiltinWalk, Tnua2BuiltinWalkConfig,
+    Tnua2BuiltinCrouch, Tnua2BuiltinCrouchConfig, Tnua2BuiltinJump, Tnua2BuiltinJumpConfig,
+    Tnua2BuiltinWalk, Tnua2BuiltinWalkConfig,
 };
 use bevy_tnua::schemes_action_state::Tnua2ActionState;
 use bevy_tnua::schemes_controller::{Tnua2Controller, Tnua2ControllerPlugin};
@@ -77,6 +78,7 @@ fn setup_level(
 
 enum ExampleScheme {
     Jump(Tnua2BuiltinJump),
+    Crouch(Tnua2BuiltinCrouch),
 }
 
 impl TnuaScheme for ExampleScheme {
@@ -85,11 +87,12 @@ impl TnuaScheme for ExampleScheme {
     type ActionDiscriminant = ExampleSchemeActionDiscriminant;
     type ActionStateEnum = ExampleSchemeActionStateEnum;
 
-    const NUM_VARIANTS: usize = 1;
+    const NUM_VARIANTS: usize = 2;
 
     fn discriminant(&self) -> ExampleSchemeActionDiscriminant {
         match self {
             Self::Jump(_) => ExampleSchemeActionDiscriminant::Jump,
+            Self::Crouch(_) => ExampleSchemeActionDiscriminant::Crouch,
         }
     }
 
@@ -97,6 +100,9 @@ impl TnuaScheme for ExampleScheme {
         match self {
             ExampleScheme::Jump(action) => {
                 ExampleSchemeActionStateEnum::Jump(Tnua2ActionState::new(action, &config.jump))
+            }
+            ExampleScheme::Crouch(action) => {
+                ExampleSchemeActionStateEnum::Crouch(Tnua2ActionState::new(action, &config.crouch))
             }
         }
     }
@@ -110,6 +116,10 @@ impl TnuaScheme for ExampleScheme {
                 state.update_input(action);
                 UpdateInActionStateEnumResult::Success
             }
+            (Self::Crouch(action), Self::ActionStateEnum::Crouch(state)) => {
+                state.update_input(action);
+                UpdateInActionStateEnumResult::Success
+            }
             #[allow(unreachable_patterns)]
             (this, _) => UpdateInActionStateEnumResult::WrongVariant(this),
         }
@@ -120,23 +130,27 @@ impl TnuaScheme for ExampleScheme {
 struct ExampleSchemeConfig {
     basis: <Tnua2BuiltinWalk as Tnua2Basis>::Config,
     jump: <Tnua2BuiltinJump as Tnua2Action<Tnua2BuiltinWalk>>::Config,
+    crouch: <Tnua2BuiltinCrouch as Tnua2Action<Tnua2BuiltinWalk>>::Config,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum ExampleSchemeActionDiscriminant {
     Jump,
+    Crouch,
 }
 
 impl Tnua2ActionDiscriminant for ExampleSchemeActionDiscriminant {
     fn variant_idx(&self) -> usize {
         match self {
             Self::Jump => 0,
+            Self::Crouch => 1,
         }
     }
 }
 
 enum ExampleSchemeActionStateEnum {
     Jump(Tnua2ActionState<Tnua2BuiltinJump, Tnua2BuiltinWalk>),
+    Crouch(Tnua2ActionState<Tnua2BuiltinCrouch, Tnua2BuiltinWalk>),
 }
 
 impl Tnua2ActionStateEnum for ExampleSchemeActionStateEnum {
@@ -146,6 +160,7 @@ impl Tnua2ActionStateEnum for ExampleSchemeActionStateEnum {
     fn discriminant(&self) -> ExampleSchemeActionDiscriminant {
         match self {
             Self::Jump(_) => ExampleSchemeActionDiscriminant::Jump,
+            Self::Crouch(_) => ExampleSchemeActionDiscriminant::Crouch,
         }
     }
 
@@ -153,7 +168,8 @@ impl Tnua2ActionStateEnum for ExampleSchemeActionStateEnum {
         &self,
     ) -> &dyn bevy_tnua::schemes_action_state::Tnua2ActionStateInterface<Self::Basis> {
         match self {
-            ExampleSchemeActionStateEnum::Jump(state) => state,
+            Self::Jump(state) => state,
+            Self::Crouch(state) => state,
         }
     }
 
@@ -161,7 +177,8 @@ impl Tnua2ActionStateEnum for ExampleSchemeActionStateEnum {
         &mut self,
     ) -> &mut dyn bevy_tnua::schemes_action_state::Tnua2ActionStateInterface<Self::Basis> {
         match self {
-            ExampleSchemeActionStateEnum::Jump(state) => state,
+            Self::Jump(state) => state,
+            Self::Crouch(state) => state,
         }
     }
 }
@@ -209,6 +226,10 @@ fn setup_player(
                 // `TnuaBuiltinJump` also has customization fields with sensible defaults.
                 ..Default::default()
             },
+            crouch: Tnua2BuiltinCrouchConfig {
+                float_offset: -0.9,
+                ..Default::default()
+            },
         })),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
         TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
@@ -250,5 +271,9 @@ fn apply_controls(
     // stops holding the jump button, simply stop feeding the action.
     if keyboard.pressed(KeyCode::Space) {
         controller.action(ExampleScheme::Jump(Default::default()));
+    }
+
+    if keyboard.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]) {
+        controller.action(ExampleScheme::Crouch(Default::default()));
     }
 }

@@ -4,9 +4,10 @@ use bevy::prelude::*;
 
 use crate::math::*;
 use crate::schemes_basis_capabilities::{
-    TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithGround,
+    TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithFloating,
+    TnuaBasisWithGround, TnuaBasisWithSpring,
 };
-use crate::schemes_traits::Tnua2Basis;
+use crate::schemes_traits::{Tnua2Basis, Tnua2BasisAccess};
 use crate::util::rotation_arc_around_axis;
 use crate::{TnuaBasisContext, TnuaMotor, TnuaVelChange};
 
@@ -128,40 +129,6 @@ impl Default for Tnua2BuiltinWalkConfig {
             tilt_offset_angacl: 500.0,
             turning_angvel: 10.0,
             max_slope: float_consts::FRAC_PI_2,
-        }
-    }
-}
-
-impl Tnua2BuiltinWalk {
-    /// Calculate the vertical spring force that this basis would need to apply assuming its
-    /// vertical distance from the vertical distance it needs to be at equals the `spring_offset`
-    /// argument.
-    ///
-    /// Note: this is exposed so that actions like
-    /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) may rely on it.
-    ///
-    /// TODO: In the Schemes architecture, this should be moved to a trait
-    pub fn spring_force(
-        &self,
-        config: &Tnua2BuiltinWalkConfig,
-        memory: &Tnua2BuiltinWalkMemory,
-        ctx: &TnuaBasisContext,
-        spring_offset: Float,
-    ) -> TnuaVelChange {
-        let spring_force: Float = spring_offset * config.spring_strength;
-
-        let relative_velocity = memory
-            .effective_velocity
-            .dot(ctx.up_direction.adjust_precision())
-            - memory.vertical_velocity;
-
-        let gravity_compensation = -ctx.tracker.gravity;
-
-        let dampening_boost = relative_velocity * config.spring_dampening;
-
-        TnuaVelChange {
-            acceleration: ctx.up_direction.adjust_precision() * spring_force + gravity_compensation,
-            boost: ctx.up_direction.adjust_precision() * -dampening_boost,
         }
     }
 }
@@ -385,9 +352,12 @@ impl Tnua2Basis for Tnua2BuiltinWalk {
                                 config.float_height - sensor_output.proximity.adjust_precision();
                             memory.standing_offset =
                                 -spring_offset * ctx.up_direction.adjust_precision();
-                            break 'upward_impulse self.spring_force(
-                                config,
-                                memory,
+                            break 'upward_impulse Self::spring_force(
+                                &Tnua2BasisAccess {
+                                    input: self,
+                                    config,
+                                    memory,
+                                },
                                 &ctx,
                                 spring_offset,
                             );
@@ -402,11 +372,10 @@ impl Tnua2Basis for Tnua2BuiltinWalk {
                     Some(_) => {
                         if let (false, Some(sensor_output)) =
                             (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
+                            && sensor_output.proximity.adjust_precision() <= config.float_height
                         {
-                            if sensor_output.proximity.adjust_precision() <= config.float_height {
-                                memory.airborne_timer = None;
-                                continue;
-                            }
+                            memory.airborne_timer = None;
+                            continue;
                         }
                         if memory.vertical_velocity <= 0.0 {
                             break 'upward_impulse TnuaVelChange::acceleration(
@@ -481,16 +450,16 @@ impl Tnua2Basis for Tnua2BuiltinWalk {
 }
 
 impl TnuaBasisWithEffectiveVelocity for Tnua2BuiltinWalk {
-    fn effective_velocity(access: &crate::schemes_traits::Tnua2BasisAccess<Self>) -> Vector3 {
+    fn effective_velocity(access: &Tnua2BasisAccess<Self>) -> Vector3 {
         access.memory.effective_velocity
     }
 
-    fn vertical_velocity(access: &crate::schemes_traits::Tnua2BasisAccess<Self>) -> Float {
+    fn vertical_velocity(access: &Tnua2BasisAccess<Self>) -> Float {
         access.memory.vertical_velocity
     }
 }
 impl TnuaBasisWithDisplacement for Tnua2BuiltinWalk {
-    fn displacement(access: &crate::schemes_traits::Tnua2BasisAccess<Self>) -> Option<Vector3> {
+    fn displacement(access: &Tnua2BasisAccess<Self>) -> Option<Vector3> {
         match access.memory.airborne_timer {
             None => Some(access.memory.standing_offset),
             Some(_) => None,
@@ -498,7 +467,7 @@ impl TnuaBasisWithDisplacement for Tnua2BuiltinWalk {
     }
 }
 impl TnuaBasisWithGround for Tnua2BuiltinWalk {
-    fn is_airborne(access: &crate::schemes_traits::Tnua2BasisAccess<Self>) -> bool {
+    fn is_airborne(access: &Tnua2BasisAccess<Self>) -> bool {
         access
             .memory
             .airborne_timer
@@ -509,6 +478,35 @@ impl TnuaBasisWithGround for Tnua2BuiltinWalk {
     fn violate_coyote_time(memory: &mut Self::Memory) {
         if let Some(timer) = &mut memory.airborne_timer {
             timer.set_duration(Duration::ZERO);
+        }
+    }
+}
+impl TnuaBasisWithFloating for Tnua2BuiltinWalk {
+    fn float_height(access: &Tnua2BasisAccess<Self>) -> Float {
+        access.config.float_height
+    }
+}
+impl TnuaBasisWithSpring for Tnua2BuiltinWalk {
+    fn spring_force(
+        access: &Tnua2BasisAccess<Self>,
+        ctx: &TnuaBasisContext,
+        spring_offset: Float,
+    ) -> TnuaVelChange {
+        let spring_force: Float = spring_offset * access.config.spring_strength;
+
+        let relative_velocity = access
+            .memory
+            .effective_velocity
+            .dot(ctx.up_direction.adjust_precision())
+            - access.memory.vertical_velocity;
+
+        let gravity_compensation = -ctx.tracker.gravity;
+
+        let dampening_boost = relative_velocity * access.config.spring_dampening;
+
+        TnuaVelChange {
+            acceleration: ctx.up_direction.adjust_precision() * spring_force + gravity_compensation,
+            boost: ctx.up_direction.adjust_precision() * -dampening_boost,
         }
     }
 }

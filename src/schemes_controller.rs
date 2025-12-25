@@ -53,7 +53,7 @@ struct ContenderAction<S: TnuaScheme> {
     action: S,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 enum FedStatus {
     #[default]
     Not,
@@ -71,7 +71,7 @@ impl FedStatus {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct FedEntry {
     status: FedStatus,
     rescheduled_in: Option<Timer>,
