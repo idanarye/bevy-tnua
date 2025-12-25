@@ -8,8 +8,8 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use crate::schemes_traits::{
-    Tnua2ActionContext, Tnua2ActionStateEnum, Tnua2Basis, Tnua2BasisAccess, TnuaScheme,
-    TnuaSchemeConfig, UpdateInActionStateEnumResult,
+    Tnua2ActionContext, Tnua2ActionDiscriminant, Tnua2ActionStateEnum, Tnua2Basis,
+    Tnua2BasisAccess, TnuaScheme, TnuaSchemeConfig, UpdateInActionStateEnumResult,
 };
 use crate::{
     TnuaBasisContext, TnuaMotor, TnuaPipelineSystems, TnuaProximitySensor, TnuaRigidBodyTracker,
@@ -90,8 +90,64 @@ pub struct Tnua2Controller<S: TnuaScheme> {
     // TODO: If ever possible, make this a fixed size array:
     actions_being_fed: Vec<FedEntry>,
     contender_action: Option<ContenderAction<S>>,
+    action_flow_status: Tnua2ActionFlowStatus<S::ActionDiscriminant>,
     action_feeding_initiated: bool,
     pub current_action: Option<S::ActionStateEnum>,
+}
+
+/// The result of [`TnuaController::action_flow_status()`].
+#[derive(Debug, Clone)]
+pub enum Tnua2ActionFlowStatus<D: Tnua2ActionDiscriminant> {
+    /// No action is going on.
+    NoAction,
+
+    /// An action just started.
+    ActionStarted(D),
+
+    /// An action was fed in a past frame and is still ongoing.
+    ActionOngoing(D),
+
+    /// An action has stopped being fed.
+    ///
+    /// Note that the action may still have a termination sequence after this happens.
+    ActionEnded(D),
+
+    /// An action has just been canceled into another action.
+    Cancelled { old: D, new: D },
+}
+
+impl<D: Tnua2ActionDiscriminant> Tnua2ActionFlowStatus<D> {
+    /// The discriminant of the ongoing action, if there is an ongoing action.
+    ///
+    /// Will also return a value if the action has just started.
+    pub fn ongoing(&self) -> Option<D> {
+        match self {
+            Tnua2ActionFlowStatus::NoAction | Tnua2ActionFlowStatus::ActionEnded(_) => None,
+            Tnua2ActionFlowStatus::ActionStarted(discriminant)
+            | Tnua2ActionFlowStatus::ActionOngoing(discriminant)
+            | Tnua2ActionFlowStatus::Cancelled {
+                old: _,
+                new: discriminant,
+            } => Some(*discriminant),
+        }
+    }
+
+    /// The discriminant of the action that has just started this frame.
+    ///
+    /// Will return `None` if there is no action, or if the ongoing action has started in a past
+    /// frame.
+    pub fn just_starting(&self) -> Option<D> {
+        match self {
+            Tnua2ActionFlowStatus::NoAction
+            | Tnua2ActionFlowStatus::ActionOngoing(_)
+            | Tnua2ActionFlowStatus::ActionEnded(_) => None,
+            Tnua2ActionFlowStatus::ActionStarted(discriminant)
+            | Tnua2ActionFlowStatus::Cancelled {
+                old: _,
+                new: discriminant,
+            } => Some(*discriminant),
+        }
+    }
 }
 
 impl<S: TnuaScheme> Tnua2Controller<S> {
@@ -102,6 +158,7 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             config,
             actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
             contender_action: None,
+            action_flow_status: Tnua2ActionFlowStatus::NoAction,
             action_feeding_initiated: false,
             current_action: None,
         }
@@ -154,6 +211,22 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             fed_entry.rescheduled_in = None;
         }
     }
+
+    /// Indicator for the state and flow of movement actions.
+    ///
+    /// Query this every frame to keep track of the actions. For air actions,
+    /// [`TnuaAirActionsTracker`](crate::control_helpers::TnuaAirActionsTracker) is easier to use
+    /// (and uses this behind the scenes)
+    ///
+    /// The benefits of this over querying [`action_name`](Self::action_name) every frame are:
+    ///
+    /// * `action_flow_status` can indicate when the same action has been fed again immediately
+    ///   after stopping or cancelled into itself.
+    /// * `action_flow_status` shows an [`ActionEnded`](TnuaActionFlowStatus::ActionEnded) when the
+    ///   action is no longer fed, even if the action is still active (termination sequence)
+    pub fn action_flow_status(&self) -> &Tnua2ActionFlowStatus<S::ActionDiscriminant> {
+        &self.action_flow_status
+    }
 }
 
 #[allow(clippy::type_complexity)]
@@ -189,6 +262,20 @@ fn apply_controller_system<S: TnuaScheme>(
         let up_direction = up_direction.unwrap_or(Dir3::Y);
 
         let proximity_sensor = sensor.as_mut();
+
+        match controller.action_flow_status {
+            Tnua2ActionFlowStatus::NoAction | Tnua2ActionFlowStatus::ActionOngoing(_) => {}
+            Tnua2ActionFlowStatus::ActionEnded(_) => {
+                controller.action_flow_status = Tnua2ActionFlowStatus::NoAction;
+            }
+            Tnua2ActionFlowStatus::ActionStarted(discriminant)
+            | Tnua2ActionFlowStatus::Cancelled {
+                old: _,
+                new: discriminant,
+            } => {
+                controller.action_flow_status = Tnua2ActionFlowStatus::ActionOngoing(discriminant);
+            }
+        }
 
         controller.basis.apply(
             basis_config,
@@ -229,7 +316,6 @@ fn apply_controller_system<S: TnuaScheme>(
                     .status
                     .considered_fed()
                 {
-                    // TODO: also check the contender's initiation_decision
                     let initiation_decision = contender_action.action.initiation_decision(
                         config,
                         Tnua2ActionContext {
@@ -300,7 +386,6 @@ fn apply_controller_system<S: TnuaScheme>(
                 basis_config,
                 &mut controller.basis_memory,
             );
-            // TODO: reschedule action
             match directive {
                 TnuaActionLifecycleDirective::StillActive => {
                     // TOOD: update flow status in case the action is ending
@@ -311,13 +396,21 @@ fn apply_controller_system<S: TnuaScheme>(
                         controller.actions_being_fed[action_state.variant_idx()].rescheduled_in =
                             Some(Timer::from_seconds(after_seconds.f32(), TimerMode::Once));
                     }
-                    // TODO: handle rescheduling
-                    controller.current_action = if has_valid_contender {
-                        // TODO - run contender
-                        None
-                    } else {
-                        None
-                    };
+                    (controller.current_action, controller.action_flow_status) =
+                        if has_valid_contender {
+                            // TODO - run contender. Remember to:
+                            // * Handle scheduling
+                            // * Set the discriminant to Cancel
+                            (
+                                None,
+                                Tnua2ActionFlowStatus::ActionEnded(action_state.discriminant()),
+                            )
+                        } else {
+                            (
+                                None,
+                                Tnua2ActionFlowStatus::ActionEnded(action_state.discriminant()),
+                            )
+                        };
                 }
             }
         } else if has_valid_contender {
@@ -354,7 +447,8 @@ fn apply_controller_system<S: TnuaScheme>(
                 basis_config,
                 &mut controller.basis_memory,
             );
-            // TODO: set action flow status
+            controller.action_flow_status =
+                Tnua2ActionFlowStatus::ActionStarted(contender_action_state.discriminant());
             controller.current_action = Some(contender_action_state);
         }
 
