@@ -142,8 +142,10 @@ pub use basis_action_traits::{
     DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext, TnuaActionInitiationDirective,
     TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasis, TnuaBasisContext,
 };
+pub use bevy_tnua_macros::TnuaScheme;
 
 pub mod prelude {
+    pub use crate::TnuaScheme;
     pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
     pub use crate::controller::{TnuaController, TnuaControllerPlugin};
     pub use crate::{TnuaAction, TnuaPipelineSystems, TnuaUserControlsSystems};

@@ -3,7 +3,7 @@ members = [
     "physics-integration-layer",
     # "rapier2d", "rapier3d",
     "avian2d", "avian3d",
-    "demos",
+    "demos", "macros",
 ]
 default-members = [".", "demos"]
 
@@ -38,6 +38,7 @@ bevy = { version = "^0.17", default-features = false, features = [
     "bevy_log",
 ]}
 bevy-tnua-physics-integration-layer = { version = "^0.10", path = "physics-integration-layer" }
+bevy-tnua-macros = { version = "^0.1", path = "macros" }
 thiserror = "2.0.12"
 
 [dev-dependencies]
