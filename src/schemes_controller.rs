@@ -179,16 +179,14 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             FedStatus::Lingering | FedStatus::Fresh => {
                 fed_entry.status = FedStatus::Fresh;
                 if let Some(current_action) = self.current_action.as_mut() {
-                    if action.discriminant() == current_action.discriminant() {
-                        let UpdateInActionStateEnumResult::Success =
-                            action.update_in_action_state_enum(current_action)
-                        else {
-                            // TODO - just make this part of the if
-                            panic!("Cannot be");
-                        };
-                    } else {
-                        // different action is running - will not override because button was
-                        // already pressed.
+                    match action.update_in_action_state_enum(current_action) {
+                        UpdateInActionStateEnumResult::Success => {
+                            // Do nothing farther
+                        }
+                        UpdateInActionStateEnumResult::WrongVariant(_) => {
+                            // different action is running - will not override because button was
+                            // already pressed.
+                        }
                     }
                 } else if self.contender_action.is_none()
                     && fed_entry
