@@ -174,41 +174,54 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             "Feeding action without invoking `initiate_action_feeding()`"
         );
         let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
-        let orig_status = fed_entry.status;
-        fed_entry.status = FedStatus::Fresh;
-        let action = if orig_status != FedStatus::Not
-            && let Some(current_action) = self.current_action.as_mut()
-        {
-            match action.update_in_action_state_enum(current_action) {
-                UpdateInActionStateEnumResult::Success => {
-                    return;
+
+        match fed_entry.status {
+            FedStatus::Lingering | FedStatus::Fresh => {
+                fed_entry.status = FedStatus::Fresh;
+                if let Some(current_action) = self.current_action.as_mut() {
+                    if action.discriminant() == current_action.discriminant() {
+                        let UpdateInActionStateEnumResult::Success =
+                            action.update_in_action_state_enum(current_action)
+                        else {
+                            // TODO - just make this part of the if
+                            panic!("Cannot be");
+                        };
+                    } else {
+                        // different action is running - will not override because button was
+                        // already pressed.
+                    }
+                } else if self.contender_action.is_none()
+                    && fed_entry
+                        .rescheduled_in
+                        .as_ref()
+                        .is_some_and(|timer| timer.is_finished())
+                {
+                    // no action is running - but this action is rescheduled and there is no
+                    // already-existing contender that would have taken priority
+                    self.contender_action = Some(ContenderAction {
+                        action,
+                        being_fed_for: Stopwatch::new(),
+                    });
+                } else {
+                    // no action is running - will not set because button was already pressed.
                 }
-                UpdateInActionStateEnumResult::WrongVariant(action) => action,
             }
-        } else {
-            action
-        };
-        if let Some(ContenderAction {
-            action: existing_action,
-            being_fed_for: _,
-        }) = self.contender_action.as_mut()
-            && action.is_same_action_as(existing_action)
-        {
-            *existing_action = action;
-        } else if orig_status == FedStatus::Not
-            // no action is running - but this action is rescheduled and there is no
-            // already-existing contender that would have taken priority:
-            || fed_entry
-                .rescheduled_in
-                .as_ref()
-                .is_some_and(|timer| timer.is_finished())
-        {
-            self.contender_action = Some(ContenderAction {
-                action,
-                being_fed_for: Stopwatch::new(),
-            });
-            // Set the rescheduling to None so that we won't tick it anymore.
-            fed_entry.rescheduled_in = None;
+            FedStatus::Not => {
+                *fed_entry = FedEntry {
+                    status: FedStatus::Fresh,
+                    rescheduled_in: None,
+                };
+                if let Some(contender_action) = self.contender_action.as_mut()
+                    && action.discriminant() == contender_action.action.discriminant()
+                {
+                    contender_action.action = action;
+                } else {
+                    self.contender_action = Some(ContenderAction {
+                        action,
+                        being_fed_for: Stopwatch::new(),
+                    });
+                }
+            }
         }
     }
 
@@ -397,9 +410,6 @@ fn apply_controller_system<S: TnuaScheme>(
                             Some(Timer::from_seconds(after_seconds.f32(), TimerMode::Once));
                     }
                     controller.current_action = if has_valid_contender {
-                        // TODO - run contender. Remember to:
-                        // * Handle scheduling
-                        // * Set the discriminant to Cancel
                         let contender_action = controller.contender_action.take().expect(
                             "has_valid_contender can only be true if contender_action is Some",
                         );
@@ -518,7 +528,6 @@ fn apply_controller_system<S: TnuaScheme>(
                 Tnua2ActionFlowStatus::ActionStarted(contender_action_state.discriminant());
             controller.current_action = Some(contender_action_state);
         }
-        info!("{:?}", controller.action_flow_status);
 
         let sensor_cast_range_for_action = 0.0; // TODO - base this on the action if there is one
 
