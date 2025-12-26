@@ -78,6 +78,7 @@ fn setup_level(
 }
 
 #[derive(bevy_tnua::TnuaScheme)]
+#[scheme(basis = Tnua2BuiltinWalk)]
 enum ExampleScheme {
     Jump(Tnua2BuiltinJump),
     Crouch(Tnua2BuiltinCrouch),

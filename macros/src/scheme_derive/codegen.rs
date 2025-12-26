@@ -25,10 +25,11 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
         config_struct_name,
         action_discriminant_name,
         action_state_enum_name,
+        basis,
     } = parsed;
     Ok(quote! {
         impl TnuaScheme for #scheme_name {
-            type Basis = Tnua2BuiltinWalk;
+            type Basis = #basis;
             type Config = #config_struct_name;
             type ActionDiscriminant = #action_discriminant_name;
             type ActionStateEnum = #action_state_enum_name;

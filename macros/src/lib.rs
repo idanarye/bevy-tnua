@@ -8,7 +8,7 @@ mod scheme_derive;
 #[allow(unused)]
 mod util;
 
-#[proc_macro_derive(TnuaScheme, attributes(builder))]
+#[proc_macro_derive(TnuaScheme, attributes(scheme))]
 pub fn derive_tnua_scheme(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match impl_derive_tnua_scheme(&input) {

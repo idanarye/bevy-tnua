@@ -10,6 +10,18 @@ use syn::{
     token,
 };
 
+pub enum StaticError {
+    CallSite(&'static str),
+}
+
+impl From<StaticError> for syn::Error {
+    fn from(value: StaticError) -> Self {
+        match value {
+            StaticError::CallSite(error) => syn::Error::new(proc_macro2::Span::call_site(), error),
+        }
+    }
+}
+
 pub fn ident_with_suffix(ident: &syn::Ident, suffix: &str) -> syn::Ident {
     syn::Ident::new(&format!("{ident}{suffix}"), ident.span())
 }
@@ -127,6 +139,25 @@ pub enum AttrArg {
 }
 
 impl AttrArg {
+    pub fn iter_in_list_attributes(
+        attrs: &[syn::Attribute],
+        name: &str,
+    ) -> syn::Result<impl Iterator<Item = Self>> {
+        let parsed_punctuated = attrs
+            .iter()
+            .filter_map(|attr| match &attr.meta {
+                syn::Meta::Path(_) | syn::Meta::NameValue(_) => None,
+                syn::Meta::List(meta_list) => Some(meta_list),
+            })
+            .map(|meta_list| {
+                let parser =
+                    syn::punctuated::Punctuated::<Self, syn::token::Comma>::parse_terminated;
+                parser.parse2(meta_list.tokens.clone())
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(parsed_punctuated.into_iter().flatten())
+    }
+
     pub fn name(&self) -> &Ident {
         match self {
             AttrArg::Flag(name) => name,
@@ -154,6 +185,24 @@ impl AttrArg {
             ),
         };
         syn::Error::new_spanned(self, message)
+    }
+
+    pub fn unknown_parameter(&self) -> syn::Error {
+        Error::new_spanned(
+            self.name(),
+            format!("Unknown parameter {:?}", self.name().to_string()),
+        )
+    }
+
+    pub fn already_set_if(&self, is_already_set: bool) -> syn::Result<()> {
+        if is_already_set {
+            Err(Error::new_spanned(
+                self.name(),
+                format!("Parameter {:?} is already set", self.name().to_string()),
+            ))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn flag(self) -> syn::Result<Ident> {

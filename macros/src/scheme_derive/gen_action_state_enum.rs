@@ -8,16 +8,17 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
         vis,
         action_discriminant_name,
         action_state_enum_name,
+        basis,
         ..
     } = parsed;
     Ok(quote! {
         #vis enum #action_state_enum_name {
-            Jump(Tnua2ActionState<Tnua2BuiltinJump, Tnua2BuiltinWalk>),
-            Crouch(Tnua2ActionState<Tnua2BuiltinCrouch, Tnua2BuiltinWalk>),
+            Jump(Tnua2ActionState<Tnua2BuiltinJump, #basis>),
+            Crouch(Tnua2ActionState<Tnua2BuiltinCrouch, #basis>),
         }
 
         impl Tnua2ActionStateEnum for #action_state_enum_name {
-            type Basis = Tnua2BuiltinWalk;
+            type Basis = #basis;
             type Discriminant = #action_discriminant_name;
 
             fn discriminant(&self) -> #action_discriminant_name {
