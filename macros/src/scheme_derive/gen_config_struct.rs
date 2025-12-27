@@ -9,14 +9,21 @@ pub fn generate_config_struct(parsed: &ParsedScheme) -> syn::Result<TokenStream>
         scheme_name,
         config_struct_name,
         basis,
+        commands,
         ..
     } = parsed;
+    let command_names_snake = commands
+        .iter()
+        .map(|c| &c.command_name_snake)
+        .collect::<Vec<_>>();
+    let action_types = commands.iter().map(|c| c.action_type).collect::<Vec<_>>();
     Ok(quote! {
         #[derive(Asset, TypePath)]
         #vis struct #config_struct_name {
             basis: <#basis as Tnua2Basis>::Config,
-            jump: <Tnua2BuiltinJump as Tnua2Action<#basis>>::Config,
-            crouch: <Tnua2BuiltinCrouch as Tnua2Action<#basis>>::Config,
+            #(
+                #command_names_snake: <#action_types as Tnua2Action<#basis>>::Config,
+            )*
         }
 
         impl TnuaSchemeConfig for #config_struct_name {

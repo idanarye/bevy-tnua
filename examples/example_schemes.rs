@@ -120,7 +120,7 @@ fn setup_player(
                 ..Default::default()
             },
             crouch: Tnua2BuiltinCrouchConfig {
-                float_offset: -0.9,
+                float_offset: -0.4,
                 ..Default::default()
             },
         })),

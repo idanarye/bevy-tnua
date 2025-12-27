@@ -10,14 +10,16 @@ use syn::{
     token,
 };
 
-pub enum StaticError {
-    CallSite(&'static str),
+pub enum StaticError<'a> {
+    CallSite(&'a str),
+    Spanned(&'a dyn Spanned, &'a str),
 }
 
-impl From<StaticError> for syn::Error {
+impl From<StaticError<'_>> for syn::Error {
     fn from(value: StaticError) -> Self {
         match value {
             StaticError::CallSite(error) => syn::Error::new(proc_macro2::Span::call_site(), error),
+            StaticError::Spanned(spanned, error) => syn::Error::new(spanned.span(), error),
         }
     }
 }

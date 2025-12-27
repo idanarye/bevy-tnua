@@ -7,20 +7,28 @@ pub fn generate_action_discriminant(parsed: &ParsedScheme) -> syn::Result<TokenS
     let ParsedScheme {
         vis,
         action_discriminant_name,
+        commands,
         ..
     } = parsed;
+    let command_names = commands.iter().map(|c| c.command_name).collect::<Vec<_>>();
+    let variant_indices = commands
+        .iter()
+        .enumerate()
+        .map(|(i, _)| syn::Index::from(i));
     Ok(quote! {
         #[derive(Debug, Copy, Clone, PartialEq, Eq)]
         #vis enum #action_discriminant_name {
-            Jump,
-            Crouch,
+            #(
+                #command_names,
+            )*
         }
 
         impl Tnua2ActionDiscriminant for #action_discriminant_name {
             fn variant_idx(&self) -> usize {
                 match self {
-                    Self::Jump => 0,
-                    Self::Crouch => 1,
+                    #(
+                        Self::#command_names => #variant_indices,
+                    )*
                 }
             }
         }

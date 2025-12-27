@@ -26,7 +26,16 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
         action_discriminant_name,
         action_state_enum_name,
         basis,
+        commands,
     } = parsed;
+
+    let num_variants: syn::Index = commands.len().into();
+    let command_names = commands.iter().map(|c| c.command_name).collect::<Vec<_>>();
+    let command_names_snake = commands
+        .iter()
+        .map(|c| &c.command_name_snake)
+        .collect::<Vec<_>>();
+
     Ok(quote! {
         impl TnuaScheme for #scheme_name {
             type Basis = #basis;
@@ -34,23 +43,23 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             type ActionDiscriminant = #action_discriminant_name;
             type ActionStateEnum = #action_state_enum_name;
 
-            const NUM_VARIANTS: usize = 2;
+            const NUM_VARIANTS: usize = #num_variants;
 
             fn discriminant(&self) -> #action_discriminant_name {
                 match self {
-                    Self::Jump(_) => #action_discriminant_name::Jump,
-                    Self::Crouch(_) => #action_discriminant_name::Crouch,
+                    #(
+                        Self::#command_names(_) => #action_discriminant_name::#command_names,
+                    )*
                 }
             }
 
             fn into_action_state_variant(self, config: &#config_struct_name) -> #action_state_enum_name {
                 match self {
-                    Self::Jump(action) => {
-                        #action_state_enum_name::Jump(Tnua2ActionState::new(action, &config.jump))
-                    }
-                    Self::Crouch(action) => {
-                        #action_state_enum_name::Crouch(Tnua2ActionState::new(action, &config.crouch))
-                    }
+                    #(
+                        Self::#command_names(action) => {
+                            #action_state_enum_name::#command_names(Tnua2ActionState::new(action, &config.#command_names_snake))
+                        }
+                    )*
                 }
             }
 
@@ -59,14 +68,12 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                 action_state_enum: &mut #action_state_enum_name,
             ) -> UpdateInActionStateEnumResult<Self> {
                 match (self, action_state_enum) {
-                    (Self::Jump(action), #action_state_enum_name::Jump(state)) => {
-                        state.update_input(action);
-                        UpdateInActionStateEnumResult::Success
-                    }
-                    (Self::Crouch(action), #action_state_enum_name::Crouch(state)) => {
-                        state.update_input(action);
-                        UpdateInActionStateEnumResult::Success
-                    }
+                    #(
+                        (Self::#command_names(action), #action_state_enum_name::#command_names(state)) => {
+                            state.update_input(action);
+                            UpdateInActionStateEnumResult::Success
+                        }
+                    )*
                     #[allow(unreachable_patterns)]
                     (this, _) => UpdateInActionStateEnumResult::WrongVariant(this),
                 }
@@ -79,8 +86,9 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                 being_fed_for: &Stopwatch,
             ) -> bevy_tnua::TnuaActionInitiationDirective {
                 match self {
-                    Self::Jump(action) => action.initiation_decision(&config.jump, ctx, being_fed_for),
-                    Self::Crouch(action) => action.initiation_decision(&config.crouch, ctx, being_fed_for),
+                    #(
+                        Self::#command_names(action) => action.initiation_decision(&config.#command_names_snake, ctx, being_fed_for),
+                    )*
                 }
             }
         }
