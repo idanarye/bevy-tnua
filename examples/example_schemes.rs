@@ -81,8 +81,10 @@ fn setup_level(
 #[scheme(basis = Tnua2BuiltinWalk)]
 enum ExampleScheme {
     Jump(Tnua2BuiltinJump),
-    Crouch(Tnua2BuiltinCrouch),
+    Crouch(Tnua2BuiltinCrouch, HalfSpeed),
 }
+
+struct HalfSpeed;
 
 fn setup_player(
     mut commands: Commands,
@@ -167,6 +169,6 @@ fn apply_controls(
     }
 
     if keyboard.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]) {
-        controller.action(ExampleScheme::Crouch(Default::default()));
+        controller.action(ExampleScheme::Crouch(Default::default(), HalfSpeed));
     }
 }

@@ -67,6 +67,7 @@ pub struct ParsedCommand<'a> {
     pub command_name: &'a syn::Ident,
     pub action_type: &'a syn::Type,
     pub command_name_snake: syn::Ident,
+    pub payloads: Vec<ParsedPayload<'a>>,
 }
 
 impl<'a> ParsedCommand<'a> {
@@ -86,9 +87,7 @@ impl<'a> ParsedCommand<'a> {
         let action_type = it
             .next()
             .ok_or(StaticError::Spanned(variant, "Missing action type"))?;
-        if it.next().is_some() {
-            Err(StaticError::Spanned(variant, "TODO: support payload"))?;
-        }
+        let payloads = it.map(ParsedPayload::new).collect::<Result<_, _>>()?;
         Ok(Self {
             command_name: &variant.ident,
             action_type: &action_type.ty,
@@ -96,6 +95,20 @@ impl<'a> ParsedCommand<'a> {
                 &variant.ident.to_string().to_case(Case::Snake),
                 variant.ident.span(),
             ),
+            payloads,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct ParsedPayload<'a> {
+    pub payload_type: &'a syn::Type,
+}
+
+impl<'a> ParsedPayload<'a> {
+    pub fn new(field: &'a syn::Field) -> syn::Result<Self> {
+        Ok(Self {
+            payload_type: &field.ty,
         })
     }
 }

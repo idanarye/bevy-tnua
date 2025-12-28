@@ -14,10 +14,14 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
     } = parsed;
     let command_names = commands.iter().map(|c| c.command_name).collect::<Vec<_>>();
     let action_types = commands.iter().map(|c| c.action_type).collect::<Vec<_>>();
+    let payload_types = commands
+        .iter()
+        .map(|c| c.payloads.iter().map(|p| p.payload_type).collect())
+        .collect::<Vec<Vec<_>>>();
     Ok(quote! {
         #vis enum #action_state_enum_name {
             #(
-                #command_names(Tnua2ActionState<#action_types, #basis>),
+                #command_names(Tnua2ActionState<#action_types, #basis>, #(#payload_types,)*),
             )*
         }
 
@@ -28,7 +32,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
             fn discriminant(&self) -> #action_discriminant_name {
                 match self {
                     #(
-                        Self::#command_names(_) => #action_discriminant_name::#command_names,
+                        Self::#command_names(_, ..) => #action_discriminant_name::#command_names,
                     )*
                 }
             }
@@ -38,7 +42,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
             ) -> &dyn bevy_tnua::schemes_action_state::Tnua2ActionStateInterface<Self::Basis> {
                 match self {
                     #(
-                        Self::#command_names(state) => state,
+                        Self::#command_names(state, ..) => state,
                     )*
                 }
             }
@@ -48,7 +52,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
             ) -> &mut dyn bevy_tnua::schemes_action_state::Tnua2ActionStateInterface<Self::Basis> {
                 match self {
                     #(
-                        Self::#command_names(state) => state,
+                        Self::#command_names(state, ..) => state,
                     )*
                 }
             }

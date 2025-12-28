@@ -1,5 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::spanned::Spanned;
 
 use crate::ParsedScheme;
 use crate::scheme_derive::gen_action_discriminant::generate_action_discriminant;
@@ -35,6 +36,25 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
         .iter()
         .map(|c| &c.command_name_snake)
         .collect::<Vec<_>>();
+    // let payload_types = commands
+    // .iter()
+    // .map(|c| c.payloads.iter().map(|p| p.payload_type).collect())
+    // .collect::<Vec<Vec<_>>>();
+    let [payload_bindings, payload_to_update_bindings] =
+        ["payload", "payload_to_update"].map(|prefix| {
+            commands
+                .iter()
+                .map(|c| {
+                    c.payloads
+                        .iter()
+                        .enumerate()
+                        .map(|(i, p)| {
+                            syn::Ident::new(&format!("{prefix}_{i}"), p.payload_type.span())
+                        })
+                        .collect()
+                })
+                .collect::<Vec<Vec<_>>>()
+        });
 
     Ok(quote! {
         impl TnuaScheme for #scheme_name {
@@ -48,7 +68,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             fn discriminant(&self) -> #action_discriminant_name {
                 match self {
                     #(
-                        Self::#command_names(_) => #action_discriminant_name::#command_names,
+                        Self::#command_names(..) => #action_discriminant_name::#command_names,
                     )*
                 }
             }
@@ -56,8 +76,11 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             fn into_action_state_variant(self, config: &#config_struct_name) -> #action_state_enum_name {
                 match self {
                     #(
-                        Self::#command_names(action) => {
-                            #action_state_enum_name::#command_names(Tnua2ActionState::new(action, &config.#command_names_snake))
+                        Self::#command_names(action, #(#payload_bindings,)*) => {
+                            #action_state_enum_name::#command_names(
+                                Tnua2ActionState::new(action, &config.#command_names_snake),
+                                #(#payload_bindings,)*
+                            )
                         }
                     )*
                 }
@@ -69,8 +92,15 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             ) -> UpdateInActionStateEnumResult<Self> {
                 match (self, action_state_enum) {
                     #(
-                        (Self::#command_names(action), #action_state_enum_name::#command_names(state)) => {
+                        (
+                            Self::#command_names(action, #(#payload_bindings,)*),
+                            #action_state_enum_name::#command_names(state, #(#payload_to_update_bindings,)*),
+                        ) => {
                             state.update_input(action);
+                            #(
+                                // TODO: make this controllable?
+                                *#payload_to_update_bindings = #payload_bindings;
+                            )*
                             UpdateInActionStateEnumResult::Success
                         }
                     )*
@@ -87,7 +117,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             ) -> bevy_tnua::TnuaActionInitiationDirective {
                 match self {
                     #(
-                        Self::#command_names(action) => action.initiation_decision(&config.#command_names_snake, ctx, being_fed_for),
+                        Self::#command_names(action, ..) => action.initiation_decision(&config.#command_names_snake, ctx, being_fed_for),
                     )*
                 }
             }
