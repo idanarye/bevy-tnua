@@ -11,7 +11,7 @@ use bevy_tnua::schemes_action_state::Tnua2ActionState;
 use bevy_tnua::schemes_controller::{Tnua2Controller, Tnua2ControllerPlugin};
 use bevy_tnua::schemes_traits::{
     Tnua2Action, Tnua2ActionContext, Tnua2ActionDiscriminant, Tnua2ActionStateEnum, Tnua2Basis,
-    TnuaScheme, TnuaSchemeConfig, UpdateInActionStateEnumResult,
+    TnuaConfigModifier, TnuaScheme, TnuaSchemeConfig, UpdateInActionStateEnumResult,
 };
 use bevy_tnua_avian3d::prelude::*;
 
@@ -81,10 +81,16 @@ fn setup_level(
 #[scheme(basis = Tnua2BuiltinWalk)]
 enum ExampleScheme {
     Jump(Tnua2BuiltinJump),
-    Crouch(Tnua2BuiltinCrouch, HalfSpeed),
+    Crouch(Tnua2BuiltinCrouch, #[scheme(modify_basis_config)] HalfSpeed),
 }
 
 struct HalfSpeed;
+
+impl TnuaConfigModifier<Tnua2BuiltinWalkConfig> for HalfSpeed {
+    fn modify_config(&self, config: &mut Tnua2BuiltinWalkConfig) {
+        config.speed *= 0.5;
+    }
+}
 
 fn setup_player(
     mut commands: Commands,

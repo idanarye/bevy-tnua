@@ -248,7 +248,7 @@ impl AttrArg {
                 } else {
                     Err(Error::new(
                         flag.span(),
-                        format!("Illegal setting - field is already {caption}"),
+                        format!("Illegal setting - is already {caption}"),
                     ))
                 }
             }

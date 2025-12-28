@@ -58,7 +58,7 @@ pub trait TnuaSchemeConfig {
 }
 
 pub trait Tnua2Basis: Default + 'static + Send + Sync {
-    type Config: Clone;
+    type Config: Send + Sync + Clone;
     type Memory: Send + Sync + Default;
 
     fn apply(
@@ -133,6 +133,8 @@ pub trait Tnua2ActionStateEnum: 'static + Send + Sync {
 
     fn interface(&self) -> &dyn Tnua2ActionStateInterface<Self::Basis>;
     fn interface_mut(&mut self) -> &mut dyn Tnua2ActionStateInterface<Self::Basis>;
+
+    fn modify_basis_config(&self, basis_config: &mut <Self::Basis as Tnua2Basis>::Config);
 }
 
 #[derive(Clone)]
@@ -176,4 +178,8 @@ impl<'a, B: Tnua2Basis> Tnua2ActionContext<'a, B> {
     pub fn frame_duration_as_duration(&self) -> Duration {
         Duration::from_secs_f64(self.frame_duration.into())
     }
+}
+
+pub trait TnuaConfigModifier<C> {
+    fn modify_config(&self, config: &mut C);
 }

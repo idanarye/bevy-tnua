@@ -1,7 +1,9 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{ToTokens, quote, quote_spanned};
 
 use crate::ParsedScheme;
+
+use super::parsed::ParsedCommand;
 
 pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
     let ParsedScheme {
@@ -18,6 +20,9 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
         .iter()
         .map(|c| c.payloads.iter().map(|p| p.payload_type).collect())
         .collect::<Vec<Vec<_>>>();
+
+    let modify_basis_config_branches = commands.iter().map(gen_modify_basis_config_branch);
+
     Ok(quote! {
         #vis enum #action_state_enum_name {
             #(
@@ -56,6 +61,50 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
                     )*
                 }
             }
+
+            fn modify_basis_config(&self, basis_config: &mut <Self::Basis as Tnua2Basis>::Config) {
+                match self {
+                    #(#modify_basis_config_branches)*
+                }
+            }
         }
     })
+}
+
+fn gen_modify_basis_config_branch(command: &ParsedCommand) -> TokenStream {
+    let command_name = &command.command_name;
+    let relevant_payload_binds_or_none = command
+        .payloads
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            p.modify_basis_config
+                .map(|span| syn::Ident::new(&format!("payload_{i}"), span))
+        })
+        .collect::<Vec<_>>();
+    let payload_binds_or_black_holes = relevant_payload_binds_or_none.iter().map(|payload_bind| {
+        if let Some(payload_bind) = payload_bind {
+            payload_bind.to_token_stream()
+        } else {
+            syn::PatWild {
+                attrs: Default::default(),
+                underscore_token: Default::default(),
+            }
+            .to_token_stream()
+        }
+    });
+    let basis_config_modification_statements =
+        relevant_payload_binds_or_none
+            .iter()
+            .flatten()
+            .map(|payload_bind| {
+                quote_spanned! {payload_bind.span()=>
+                    #payload_bind.modify_config(basis_config);
+                }
+            });
+    quote! {
+        Self::#command_name(_, #(#payload_binds_or_black_holes,)*) => {
+            #(#basis_config_modification_statements)*
+        }
+    }
 }

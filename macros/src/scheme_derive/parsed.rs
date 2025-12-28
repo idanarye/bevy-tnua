@@ -103,12 +103,28 @@ impl<'a> ParsedCommand<'a> {
 #[derive(Debug)]
 pub struct ParsedPayload<'a> {
     pub payload_type: &'a syn::Type,
+    pub modify_basis_config: Option<proc_macro2::Span>,
+    // pub modify_action_config: Option<proc_macro2::Span>,
 }
 
 impl<'a> ParsedPayload<'a> {
     pub fn new(field: &'a syn::Field) -> syn::Result<Self> {
+        let mut modify_basis_config = None;
+        // let mut modify_action_config = None;
+
+        for arg in AttrArg::iter_in_list_attributes(&field.attrs, "scheme")? {
+            match arg.name().to_string().as_str() {
+                "modify_basis_config" => {
+                    arg.apply_flag_to_field(&mut modify_basis_config, "modifying basis config")?
+                }
+                // "modify_action_config" => arg.apply_flag_to_field(&mut modify_action_config, "modifying action config")?,
+                _ => Err(arg.unknown_parameter())?,
+            }
+        }
         Ok(Self {
             payload_type: &field.ty,
+            modify_basis_config,
+            // modify_action_config,
         })
     }
 }

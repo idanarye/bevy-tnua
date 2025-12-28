@@ -86,6 +86,7 @@ struct FedEntry {
 pub struct Tnua2Controller<S: TnuaScheme> {
     pub basis: S::Basis,
     pub basis_memory: <S::Basis as Tnua2Basis>::Memory,
+    pub basis_config: Option<<S::Basis as Tnua2Basis>::Config>,
     pub config: Handle<S::Config>,
     // TODO: If ever possible, make this a fixed size array:
     actions_being_fed: Vec<FedEntry>,
@@ -155,6 +156,7 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
         Self {
             basis: Default::default(),
             basis_memory: Default::default(),
+            basis_config: None,
             config,
             actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
             contender_action: None,
@@ -267,7 +269,17 @@ fn apply_controller_system<S: TnuaScheme>(
         let Some(config) = config_assets.get(&controller.config) else {
             continue;
         };
-        let basis_config = config.basis_config();
+        controller.basis_config = Some({
+            let mut basis_config = config.basis_config().clone();
+            if let Some(current_action) = controller.current_action.as_ref() {
+                current_action.modify_basis_config(&mut basis_config);
+            }
+            basis_config
+        });
+        let basis_config = controller
+            .basis_config
+            .as_ref()
+            .expect("We just set it to Some");
 
         let up_direction = Dir3::new(-tracker.gravity.f32()).ok();
         let up_direction = up_direction.unwrap_or(Dir3::Y);
