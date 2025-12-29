@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::TnuaMotor;
-use crate::schemes_action_state::TnuaActionStateInterface;
+use crate::action_state::TnuaActionStateInterface;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensor;

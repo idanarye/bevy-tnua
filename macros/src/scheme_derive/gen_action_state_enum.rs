@@ -26,7 +26,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
     Ok(quote! {
         #vis enum #action_state_enum_name {
             #(
-                #command_names(bevy_tnua::schemes_action_state::TnuaActionState<#action_types, #basis>, #(#payload_types,)*),
+                #command_names(bevy_tnua::action_state::TnuaActionState<#action_types, #basis>, #(#payload_types,)*),
             )*
         }
 
@@ -44,7 +44,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
 
             fn interface(
                 &self,
-            ) -> &dyn bevy_tnua::schemes_action_state::TnuaActionStateInterface<Self::Basis> {
+            ) -> &dyn bevy_tnua::action_state::TnuaActionStateInterface<Self::Basis> {
                 match self {
                     #(
                         Self::#command_names(state, ..) => state,
@@ -54,7 +54,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
 
             fn interface_mut(
                 &mut self,
-            ) -> &mut dyn bevy_tnua::schemes_action_state::TnuaActionStateInterface<Self::Basis> {
+            ) -> &mut dyn bevy_tnua::action_state::TnuaActionStateInterface<Self::Basis> {
                 match self {
                     #(
                         Self::#command_names(state, ..) => state,

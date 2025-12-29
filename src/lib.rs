@@ -131,9 +131,9 @@ pub mod builtins;
 // pub mod control_helpers;
 mod basis_action_traits;
 pub mod radar_lens;
-pub mod schemes_action_state;
-pub mod schemes_basis_capabilities;
-pub mod schemes_controller;
+pub mod action_state;
+pub mod basis_capabilities;
+pub mod controller;
 pub mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
@@ -148,7 +148,7 @@ pub use bevy_tnua_macros::TnuaScheme;
 
 pub mod prelude {
     pub use crate::TnuaScheme;
-    pub use crate::schemes_controller::{TnuaController, TnuaControllerPlugin};
+    pub use crate::controller::{TnuaController, TnuaControllerPlugin};
     pub use crate::{TnuaPipelineSystems, TnuaUserControlsSystems};
 }
 

@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
 use crate::math::*;
-use crate::schemes_basis_capabilities::{
+use crate::basis_capabilities::{
     TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithFloating,
     TnuaBasisWithGround, TnuaBasisWithSpring,
 };

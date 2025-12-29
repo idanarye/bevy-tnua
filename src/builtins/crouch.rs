@@ -1,6 +1,6 @@
 use bevy::time::Stopwatch;
 
-use crate::schemes_basis_capabilities::{TnuaBasisWithFloating, TnuaBasisWithSpring};
+use crate::basis_capabilities::{TnuaBasisWithFloating, TnuaBasisWithSpring};
 use crate::{TnuaAction, TnuaActionContext, TnuaBasis};
 use crate::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,

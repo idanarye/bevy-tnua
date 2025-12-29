@@ -1,4 +1,4 @@
-use crate::schemes_basis_capabilities::{
+use crate::basis_capabilities::{
     TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithGround,
 };
 use crate::util::{

@@ -78,7 +78,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                     #(
                         Self::#command_names(action, #(#payload_bindings,)*) => {
                             #action_state_enum_name::#command_names(
-                                bevy_tnua::schemes_action_state::TnuaActionState::new(action, &config.#command_names_snake),
+                                bevy_tnua::action_state::TnuaActionState::new(action, &config.#command_names_snake),
                                 #(#payload_bindings,)*
                             )
                         }
