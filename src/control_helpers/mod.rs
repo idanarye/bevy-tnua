@@ -9,9 +9,9 @@
 mod air_actions_tracking;
 mod blip_reuse_avoidance;
 // mod crouch_enforcer;
-// mod simple_fall_through_platforms;
+mod simple_fall_through_platforms;
 
 pub use air_actions_tracking::*;
 pub use blip_reuse_avoidance::*;
 // pub use crouch_enforcer::*;
-// pub use simple_fall_through_platforms::*;
+pub use simple_fall_through_platforms::*;
