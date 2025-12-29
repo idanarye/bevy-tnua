@@ -23,7 +23,7 @@ pub fn generate_action_discriminant(parsed: &ParsedScheme) -> syn::Result<TokenS
             )*
         }
 
-        impl TnuaActionDiscriminant for #action_discriminant_name {
+        impl bevy_tnua::TnuaActionDiscriminant for #action_discriminant_name {
             fn variant_idx(&self) -> usize {
                 match self {
                     #(

@@ -1,19 +1,9 @@
-use bevy::time::Stopwatch;
 use bevy::{color::palettes::css, prelude::*};
 
 use avian3d::prelude::*;
 
-use bevy_tnua::builtins::{
-    TnuaBuiltinCrouch, TnuaBuiltinCrouchConfig, TnuaBuiltinJump, TnuaBuiltinJumpConfig,
-    TnuaBuiltinWalk, TnuaBuiltinWalkConfig,
-};
-use bevy_tnua::prelude::*;
-use bevy_tnua::schemes_action_state::TnuaActionState;
+use bevy_tnua::builtins::{TnuaBuiltinCrouchConfig, TnuaBuiltinJumpConfig, TnuaBuiltinWalkConfig};
 use bevy_tnua::schemes_controller::{TnuaController, TnuaControllerPlugin};
-use bevy_tnua::{
-    TnuaAction, TnuaActionContext, TnuaActionDiscriminant, TnuaActionStateEnum, TnuaBasis,
-    TnuaConfigModifier, TnuaSchemeConfig, TnuaUpdateInActionStateEnumResult,
-};
 use bevy_tnua_avian3d::prelude::*;
 
 fn main() {
@@ -78,16 +68,23 @@ fn setup_level(
     ));
 }
 
-#[derive(bevy_tnua::TnuaScheme)]
-#[scheme(basis = TnuaBuiltinWalk)]
-enum ExampleScheme {
-    Jump(TnuaBuiltinJump),
-    Crouch(TnuaBuiltinCrouch, #[scheme(modify_basis_config)] HalfSpeed),
+// This is in a mod to ensure it does not depend on any imports
+mod scheme_mod {
+    #[derive(bevy_tnua::TnuaScheme)]
+    #[scheme(basis = bevy_tnua::builtins::TnuaBuiltinWalk)]
+    pub enum ExampleScheme {
+        Jump(bevy_tnua::builtins::TnuaBuiltinJump),
+        Crouch(
+            bevy_tnua::builtins::TnuaBuiltinCrouch,
+            #[scheme(modify_basis_config)] super::HalfSpeed,
+        ),
+    }
 }
+use scheme_mod::{ExampleScheme, ExampleSchemeConfig};
 
-struct HalfSpeed;
+pub struct HalfSpeed;
 
-impl TnuaConfigModifier<TnuaBuiltinWalkConfig> for HalfSpeed {
+impl bevy_tnua::TnuaConfigModifier<TnuaBuiltinWalkConfig> for HalfSpeed {
     fn modify_config(&self, config: &mut TnuaBuiltinWalkConfig) {
         config.speed *= 0.5;
     }

@@ -57,7 +57,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
         });
 
     Ok(quote! {
-        impl TnuaScheme for #scheme_name {
+        impl bevy_tnua::TnuaScheme for #scheme_name {
             type Basis = #basis;
             type Config = #config_struct_name;
             type ActionDiscriminant = #action_discriminant_name;
@@ -78,7 +78,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                     #(
                         Self::#command_names(action, #(#payload_bindings,)*) => {
                             #action_state_enum_name::#command_names(
-                                TnuaActionState::new(action, &config.#command_names_snake),
+                                bevy_tnua::schemes_action_state::TnuaActionState::new(action, &config.#command_names_snake),
                                 #(#payload_bindings,)*
                             )
                         }
@@ -89,7 +89,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             fn update_in_action_state_enum(
                 self,
                 action_state_enum: &mut #action_state_enum_name,
-            ) -> TnuaUpdateInActionStateEnumResult<Self> {
+            ) -> bevy_tnua::TnuaUpdateInActionStateEnumResult<Self> {
                 match (self, action_state_enum) {
                     #(
                         (
@@ -101,23 +101,23 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                                 // TODO: make this controllable?
                                 *#payload_to_update_bindings = #payload_bindings;
                             )*
-                            TnuaUpdateInActionStateEnumResult::Success
+                            bevy_tnua::TnuaUpdateInActionStateEnumResult::Success
                         }
                     )*
                     #[allow(unreachable_patterns)]
-                    (this, _) => TnuaUpdateInActionStateEnumResult::WrongVariant(this),
+                    (this, _) => bevy_tnua::TnuaUpdateInActionStateEnumResult::WrongVariant(this),
                 }
             }
 
             fn initiation_decision(
                 &self,
                 config: &#config_struct_name,
-                ctx: TnuaActionContext<Self::Basis>,
-                being_fed_for: &Stopwatch,
+                ctx: bevy_tnua::TnuaActionContext<Self::Basis>,
+                being_fed_for: &bevy::time::Stopwatch,
             ) -> bevy_tnua::TnuaActionInitiationDirective {
                 match self {
                     #(
-                        Self::#command_names(action, ..) => action.initiation_decision(&config.#command_names_snake, ctx, being_fed_for),
+                        Self::#command_names(action, ..) => bevy_tnua::TnuaAction::initiation_decision(action, &config.#command_names_snake, ctx, being_fed_for),
                     )*
                 }
             }

@@ -10,7 +10,7 @@ pub struct ParsedScheme<'a> {
     pub config_struct_name: syn::Ident,
     pub action_discriminant_name: syn::Ident,
     pub action_state_enum_name: syn::Ident,
-    pub basis: syn::Ident,
+    pub basis: syn::Type,
     pub commands: Vec<ParsedCommand<'a>>,
 }
 
@@ -35,12 +35,12 @@ impl<'a> ParsedScheme<'a> {
 
 #[derive(Debug)]
 struct AttrOnEnum {
-    basis: syn::Ident,
+    basis: syn::Type,
 }
 
 impl AttrOnEnum {
     fn new(ast: &syn::DeriveInput) -> syn::Result<Self> {
-        let mut basis: Option<syn::Ident> = None;
+        let mut basis: Option<syn::Type> = None;
         for arg in AttrArg::iter_in_list_attributes(&ast.attrs, "scheme")? {
             match arg.name().to_string().as_str() {
                 "basis" => {

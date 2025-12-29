@@ -26,11 +26,11 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
     Ok(quote! {
         #vis enum #action_state_enum_name {
             #(
-                #command_names(TnuaActionState<#action_types, #basis>, #(#payload_types,)*),
+                #command_names(bevy_tnua::schemes_action_state::TnuaActionState<#action_types, #basis>, #(#payload_types,)*),
             )*
         }
 
-        impl TnuaActionStateEnum for #action_state_enum_name {
+        impl bevy_tnua::TnuaActionStateEnum for #action_state_enum_name {
             type Basis = #basis;
             type Discriminant = #action_discriminant_name;
 
@@ -62,7 +62,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
                 }
             }
 
-            fn modify_basis_config(&self, basis_config: &mut <Self::Basis as TnuaBasis>::Config) {
+            fn modify_basis_config(&self, basis_config: &mut <Self::Basis as bevy_tnua::TnuaBasis>::Config) {
                 match self {
                     #(#modify_basis_config_branches)*
                 }
@@ -99,7 +99,7 @@ fn gen_modify_basis_config_branch(command: &ParsedCommand) -> TokenStream {
             .flatten()
             .map(|payload_bind| {
                 quote_spanned! {payload_bind.span()=>
-                    #payload_bind.modify_config(basis_config);
+                    bevy_tnua::TnuaConfigModifier::modify_config(#payload_bind, basis_config);
                 }
             });
     quote! {

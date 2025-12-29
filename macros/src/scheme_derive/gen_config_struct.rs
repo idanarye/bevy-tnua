@@ -18,18 +18,18 @@ pub fn generate_config_struct(parsed: &ParsedScheme) -> syn::Result<TokenStream>
         .collect::<Vec<_>>();
     let action_types = commands.iter().map(|c| c.action_type).collect::<Vec<_>>();
     Ok(quote! {
-        #[derive(Asset, TypePath)]
+        #[derive(bevy::prelude::Asset, bevy::prelude::TypePath)]
         #vis struct #config_struct_name {
-            basis: <#basis as TnuaBasis>::Config,
+            #vis basis: <#basis as bevy_tnua::TnuaBasis>::Config,
             #(
-                #command_names_snake: <#action_types as TnuaAction<#basis>>::Config,
+                #vis #command_names_snake: <#action_types as bevy_tnua::TnuaAction<#basis>>::Config,
             )*
         }
 
-        impl TnuaSchemeConfig for #config_struct_name {
+        impl bevy_tnua::TnuaSchemeConfig for #config_struct_name {
             type Scheme = #scheme_name;
 
-            fn basis_config(&self) -> &<#basis as TnuaBasis>::Config {
+            fn basis_config(&self) -> &<#basis as bevy_tnua::TnuaBasis>::Config {
                 &self.basis
             }
         }
