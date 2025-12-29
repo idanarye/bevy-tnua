@@ -148,7 +148,6 @@ pub use bevy_tnua_macros::TnuaScheme;
 
 pub mod prelude {
     pub use crate::TnuaScheme;
-    // pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
     pub use crate::schemes_controller::{TnuaController, TnuaControllerPlugin};
     pub use crate::{TnuaPipelineSystems, TnuaUserControlsSystems};
 }

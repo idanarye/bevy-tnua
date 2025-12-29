@@ -131,7 +131,7 @@ fn setup_player(
                 ..Default::default()
             },
             jump: TnuaBuiltinJumpConfig {
-                // The height is the only mandatory field of the jump button.
+                // The height is the only mandatory field of the jump action.
                 height: 4.0,
                 // `TnuaBuiltinJump` also has customization fields with sensible defaults.
                 ..Default::default()
@@ -203,10 +203,10 @@ fn apply_controls(
         direction += Vec3::X;
     }
 
-    // Feed the basis every frame. Even if the player doesn't move - just use `desired_velocity:
+    // Set the basis every frame. Even if the player doesn't move - just use `desired_velocity:
     // Vec3::ZERO` to reset the previous frame's input.
     controller.basis = TnuaBuiltinWalk {
-        // The `desired_velocity` determines how the character will move.
+        // The `desired_motion` determines how the character will move.
         desired_motion: direction.normalize_or_zero(),
         desired_forward: Dir3::new(direction).ok(),
     };
