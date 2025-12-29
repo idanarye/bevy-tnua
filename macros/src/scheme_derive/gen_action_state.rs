@@ -5,7 +5,7 @@ use crate::ParsedScheme;
 
 use super::parsed::ParsedCommand;
 
-pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
+pub fn generate_action_state(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
     let ParsedScheme {
         vis,
         action_discriminant_name,
@@ -30,7 +30,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
             )*
         }
 
-        impl bevy_tnua::TnuaActionStateEnum for #action_state_enum_name {
+        impl bevy_tnua::TnuaActionState for #action_state_enum_name {
             type Basis = #basis;
             type Discriminant = #action_discriminant_name;
 

@@ -13,7 +13,7 @@ pub trait TnuaScheme: 'static + Send + Sync + Sized {
     type Basis: TnuaBasis;
     type Config: TnuaSchemeConfig<Scheme = Self> + Asset;
     type ActionDiscriminant: TnuaActionDiscriminant;
-    type ActionStateEnum: TnuaActionStateEnum<Basis = Self::Basis, Discriminant = Self::ActionDiscriminant>;
+    type ActionState: TnuaActionState<Basis = Self::Basis, Discriminant = Self::ActionDiscriminant>;
 
     const NUM_VARIANTS: usize;
 
@@ -27,12 +27,12 @@ pub trait TnuaScheme: 'static + Send + Sync + Sized {
         self.variant_idx() == other.variant_idx()
     }
 
-    fn into_action_state_variant(self, config: &Self::Config) -> Self::ActionStateEnum;
+    fn into_action_state_variant(self, config: &Self::Config) -> Self::ActionState;
 
-    fn update_in_action_state_enum(
+    fn update_in_action_state(
         self,
-        action_state_enum: &mut Self::ActionStateEnum,
-    ) -> TnuaUpdateInActionStateEnumResult<Self>;
+        action_state_enum: &mut Self::ActionState,
+    ) -> TnuaUpdateInActionStateResult<Self>;
 
     fn initiation_decision(
         &self,
@@ -42,7 +42,7 @@ pub trait TnuaScheme: 'static + Send + Sync + Sized {
     ) -> TnuaActionInitiationDirective;
 }
 
-pub enum TnuaUpdateInActionStateEnumResult<S: TnuaScheme> {
+pub enum TnuaUpdateInActionStateResult<S: TnuaScheme> {
     Success,
     WrongVariant(S),
 }
@@ -326,7 +326,7 @@ pub trait TnuaActionDiscriminant:
     fn variant_idx(&self) -> usize;
 }
 
-pub trait TnuaActionStateEnum: 'static + Send + Sync {
+pub trait TnuaActionState: 'static + Send + Sync {
     type Basis: TnuaBasis;
     type Discriminant: TnuaActionDiscriminant;
 

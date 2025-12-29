@@ -22,7 +22,7 @@ impl<'a> ParsedScheme<'a> {
             scheme_name: &ast.ident,
             config_struct_name: ident_with_suffix(&ast.ident, "Config"),
             action_discriminant_name: ident_with_suffix(&ast.ident, "ActionDiscriminant"),
-            action_state_enum_name: ident_with_suffix(&ast.ident, "ActionStateEnum"),
+            action_state_enum_name: ident_with_suffix(&ast.ident, "ActionState"),
             basis: attr_on_enum.basis,
             commands: data_enum
                 .variants

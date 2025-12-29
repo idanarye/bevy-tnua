@@ -138,11 +138,11 @@ pub mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
     TnuaAction, TnuaActionContext, TnuaActionDiscriminant, TnuaBasis, TnuaScheme, TnuaSchemeConfig,
-    TnuaUpdateInActionStateEnumResult,
+    TnuaUpdateInActionStateResult,
 };
 pub use basis_action_traits::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus,
-    TnuaActionStateEnum, TnuaBasisContext, TnuaConfigModifier,
+    TnuaActionState, TnuaBasisContext, TnuaConfigModifier,
 };
 pub use bevy_tnua_macros::TnuaScheme;
 

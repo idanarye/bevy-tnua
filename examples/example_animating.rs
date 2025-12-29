@@ -245,7 +245,7 @@ fn handle_animating(
     // First we look at the `action_name` to determine which action (if at all) the character is
     // currently performing:
     let current_status_for_animating = match controller.current_action.as_ref() {
-        Some(ControlSchemeActionStateEnum::Jump(state)) => {
+        Some(ControlSchemeActionState::Jump(state)) => {
             // Depending on the state of the jump, we need to decide if we want to play the jump
             // animation or the fall animation.
             match state.memory {

@@ -8,8 +8,8 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use crate::basis_action_traits::{
-    TnuaActionContext, TnuaActionDiscriminant, TnuaActionStateEnum, TnuaBasis, TnuaBasisAccess,
-    TnuaScheme, TnuaSchemeConfig, TnuaUpdateInActionStateEnumResult,
+    TnuaActionContext, TnuaActionDiscriminant, TnuaActionState, TnuaBasis, TnuaBasisAccess,
+    TnuaScheme, TnuaSchemeConfig, TnuaUpdateInActionStateResult,
 };
 use crate::{
     TnuaBasisContext, TnuaMotor, TnuaPipelineSystems, TnuaProximitySensor, TnuaRigidBodyTracker,
@@ -129,7 +129,7 @@ pub struct TnuaController<S: TnuaScheme> {
     contender_action: Option<ContenderAction<S>>,
     action_flow_status: TnuaActionFlowStatus<S::ActionDiscriminant>,
     action_feeding_initiated: bool,
-    pub current_action: Option<S::ActionStateEnum>,
+    pub current_action: Option<S::ActionState>,
 }
 
 /// The result of [`TnuaController::action_flow_status()`].
@@ -218,11 +218,11 @@ impl<S: TnuaScheme> TnuaController<S> {
             FedStatus::Lingering | FedStatus::Fresh => {
                 fed_entry.status = FedStatus::Fresh;
                 if let Some(current_action) = self.current_action.as_mut() {
-                    match action.update_in_action_state_enum(current_action) {
-                        TnuaUpdateInActionStateEnumResult::Success => {
+                    match action.update_in_action_state(current_action) {
+                        TnuaUpdateInActionStateResult::Success => {
                             // Do nothing farther
                         }
-                        TnuaUpdateInActionStateEnumResult::WrongVariant(_) => {
+                        TnuaUpdateInActionStateResult::WrongVariant(_) => {
                             // different action is running - will not override because button was
                             // already pressed.
                         }

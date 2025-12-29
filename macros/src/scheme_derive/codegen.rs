@@ -4,7 +4,7 @@ use syn::spanned::Spanned;
 
 use crate::ParsedScheme;
 use crate::scheme_derive::gen_action_discriminant::generate_action_discriminant;
-use crate::scheme_derive::gen_action_state_enum::generate_action_state_enum;
+use crate::scheme_derive::gen_action_state::generate_action_state;
 use crate::scheme_derive::gen_config_struct::generate_config_struct;
 
 pub fn generate_scheme_derive(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
@@ -12,7 +12,7 @@ pub fn generate_scheme_derive(parsed: &ParsedScheme) -> syn::Result<TokenStream>
         generate_main_trait(parsed)?,
         generate_config_struct(parsed)?,
         generate_action_discriminant(parsed)?,
-        generate_action_state_enum(parsed)?,
+        generate_action_state(parsed)?,
     ];
     Ok(quote! {
         #(#all_generated_items)*
@@ -61,7 +61,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             type Basis = #basis;
             type Config = #config_struct_name;
             type ActionDiscriminant = #action_discriminant_name;
-            type ActionStateEnum = #action_state_enum_name;
+            type ActionState = #action_state_enum_name;
 
             const NUM_VARIANTS: usize = #num_variants;
 
@@ -86,11 +86,11 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                 }
             }
 
-            fn update_in_action_state_enum(
+            fn update_in_action_state(
                 self,
-                action_state_enum: &mut #action_state_enum_name,
-            ) -> bevy_tnua::TnuaUpdateInActionStateEnumResult<Self> {
-                match (self, action_state_enum) {
+                action_state: &mut #action_state_enum_name,
+            ) -> bevy_tnua::TnuaUpdateInActionStateResult<Self> {
+                match (self, action_state) {
                     #(
                         (
                             Self::#command_names(action, #(#payload_bindings,)*),
@@ -101,11 +101,11 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                                 // TODO: make this controllable?
                                 *#payload_to_update_bindings = #payload_bindings;
                             )*
-                            bevy_tnua::TnuaUpdateInActionStateEnumResult::Success
+                            bevy_tnua::TnuaUpdateInActionStateResult::Success
                         }
                     )*
                     #[allow(unreachable_patterns)]
-                    (this, _) => bevy_tnua::TnuaUpdateInActionStateEnumResult::WrongVariant(this),
+                    (this, _) => bevy_tnua::TnuaUpdateInActionStateResult::WrongVariant(this),
                 }
             }
 
