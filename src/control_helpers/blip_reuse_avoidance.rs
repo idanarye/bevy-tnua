@@ -2,32 +2,40 @@ use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::obstacle_radar::TnuaObstacleRadar;
 
+use crate::TnuaScheme;
 use crate::controller::TnuaActionFlowStatus;
 use crate::prelude::TnuaController;
 
 #[derive(Default, Component)]
-pub struct TnuaBlipReuseAvoidance {
+pub struct TnuaBlipReuseAvoidance<S: TnuaScheme> {
     current_entity: Option<Entity>,
-    entities_to_avoid: HashMap<Entity, &'static str>,
+    entities_to_avoid: HashMap<Entity, S::ActionDiscriminant>,
 }
 
-impl TnuaBlipReuseAvoidance {
-    pub fn update(&mut self, controller: &TnuaController, radar: &TnuaObstacleRadar) {
-        let current_entity = controller
-            .dynamic_action()
-            .and_then(|action| action.target_entity());
+pub trait TnuaHasTargetEntity: TnuaScheme {
+    fn target_entity(action_state: &Self::ActionState) -> Option<Entity>;
+}
 
-        if current_entity != self.current_entity {
-            if let Some(old_entity) = self.current_entity.as_ref() {
-                if let TnuaActionFlowStatus::ActionEnded(action_name)
-                | TnuaActionFlowStatus::Cancelled {
-                    old: action_name,
-                    new: _,
-                } = controller.action_flow_status()
-                {
-                    self.entities_to_avoid.insert(*old_entity, action_name);
-                }
-            }
+impl<S> TnuaBlipReuseAvoidance<S>
+where
+    S: TnuaScheme + TnuaHasTargetEntity,
+{
+    pub fn update(&mut self, controller: &TnuaController<S>, radar: &TnuaObstacleRadar) {
+        let current_entity = controller
+            .current_action
+            .as_ref()
+            .and_then(S::target_entity);
+
+        if current_entity != self.current_entity
+            && let Some(old_entity) = self.current_entity.as_ref()
+            && let TnuaActionFlowStatus::ActionEnded(action_discriminant)
+            | TnuaActionFlowStatus::Cancelled {
+                old: action_discriminant,
+                new: _,
+            } = controller.action_flow_status()
+        {
+            self.entities_to_avoid
+                .insert(*old_entity, *action_discriminant);
         }
 
         self.entities_to_avoid

@@ -14,7 +14,7 @@ pub struct TnuaAirActionsTracker {
     considered_in_air: bool,
 }
 
-pub trait AirActionDefinition: TnuaScheme {
+pub trait TnuaAirActionDefinition: TnuaScheme {
     fn is_air_action(action: Self::ActionDiscriminant) -> bool;
 }
 
@@ -25,7 +25,7 @@ impl TnuaAirActionsTracker {
         controller: &TnuaController<S>,
     ) -> TnuaAirActionsUpdate<S::ActionDiscriminant>
     where
-        S: TnuaScheme + AirActionDefinition,
+        S: TnuaScheme + TnuaAirActionDefinition,
         S::Basis: TnuaBasisWithGround,
     {
         match controller.action_flow_status() {
@@ -130,13 +130,13 @@ pub struct TnuaSimpleAirActionsCounter<S: TnuaScheme> {
 
 impl<S> TnuaSimpleAirActionsCounter<S>
 where
-    S: TnuaScheme + AirActionDefinition,
+    S: TnuaScheme + TnuaAirActionDefinition,
     S::Basis: TnuaBasisWithGround,
 {
     /// Call this every frame to track the air actions.
     pub fn update(&mut self, controller: &TnuaController<S>)
     where
-        S: TnuaScheme + AirActionDefinition,
+        S: TnuaScheme + TnuaAirActionDefinition,
         S::Basis: TnuaBasisWithGround,
     {
         let update = self.tracker.update(controller);
