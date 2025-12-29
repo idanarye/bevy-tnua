@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 
+use crate::basis_capabilities::TnuaBasisWithGround;
 use crate::controller::TnuaActionFlowStatus;
-use crate::prelude::*;
+use crate::{TnuaActionDiscriminant, prelude::*};
 
 /// An helper for tracking air actions.
 ///
@@ -13,37 +14,48 @@ pub struct TnuaAirActionsTracker {
     considered_in_air: bool,
 }
 
+pub trait AirActionDefinition: TnuaScheme {
+    fn is_air_action(action: Self::ActionDiscriminant) -> bool;
+}
+
 impl TnuaAirActionsTracker {
     /// Call this every frame to track the air actions.
-    pub fn update(&mut self, controller: &TnuaController) -> TnuaAirActionsUpdate {
+    pub fn update<S>(
+        &mut self,
+        controller: &TnuaController<S>,
+    ) -> TnuaAirActionsUpdate<S::ActionDiscriminant>
+    where
+        S: TnuaScheme + AirActionDefinition,
+        S::Basis: TnuaBasisWithGround,
+    {
         match controller.action_flow_status() {
             TnuaActionFlowStatus::NoAction => self.update_regardless_of_action(controller),
-            TnuaActionFlowStatus::ActionOngoing(action_name) => {
+            TnuaActionFlowStatus::ActionOngoing(action_discriminant) => {
                 if controller
-                    .dynamic_action()
-                    .is_some_and(|action| action.violates_coyote_time())
+                    .action_discriminant()
+                    .is_some_and(S::is_air_action)
                 {
                     if self.considered_in_air {
                         TnuaAirActionsUpdate::NoChange
                     } else {
                         self.considered_in_air = true;
-                        TnuaAirActionsUpdate::AirActionStarted(action_name)
+                        TnuaAirActionsUpdate::AirActionStarted(*action_discriminant)
                     }
                 } else {
                     self.update_regardless_of_action(controller)
                 }
             }
-            TnuaActionFlowStatus::ActionStarted(action_name)
+            TnuaActionFlowStatus::ActionStarted(action_discriminant)
             | TnuaActionFlowStatus::Cancelled {
                 old: _,
-                new: action_name,
+                new: action_discriminant,
             } => {
                 if controller
-                    .dynamic_action()
-                    .is_some_and(|action| action.violates_coyote_time())
+                    .action_discriminant()
+                    .is_some_and(S::is_air_action)
                 {
                     self.considered_in_air = true;
-                    TnuaAirActionsUpdate::AirActionStarted(action_name)
+                    TnuaAirActionsUpdate::AirActionStarted(*action_discriminant)
                 } else {
                     self.update_regardless_of_action(controller)
                 }
@@ -59,9 +71,16 @@ impl TnuaAirActionsTracker {
         }
     }
 
-    fn update_regardless_of_action(&mut self, controller: &TnuaController) -> TnuaAirActionsUpdate {
-        if let Some(basis) = controller.dynamic_basis() {
-            if basis.is_airborne() {
+    fn update_regardless_of_action<S>(
+        &mut self,
+        controller: &TnuaController<S>,
+    ) -> TnuaAirActionsUpdate<S::ActionDiscriminant>
+    where
+        S: TnuaScheme,
+        S::Basis: TnuaBasisWithGround,
+    {
+        if let Ok(basis_access) = controller.basis_access() {
+            if S::Basis::is_airborne(&basis_access) {
                 if self.considered_in_air {
                     TnuaAirActionsUpdate::NoChange
                 } else {
@@ -82,7 +101,7 @@ impl TnuaAirActionsTracker {
 
 /// The result of [`TnuaAirActionsTracker::update()`].
 #[derive(Debug, Clone, Copy)]
-pub enum TnuaAirActionsUpdate {
+pub enum TnuaAirActionsUpdate<D: TnuaActionDiscriminant> {
     /// Nothing of interest happened this frame.
     NoChange,
 
@@ -90,7 +109,7 @@ pub enum TnuaAirActionsUpdate {
     FreeFallStarted,
 
     /// The character has just started an air action this frame.
-    AirActionStarted(&'static str),
+    AirActionStarted(D),
 
     /// The character has just finished an air action this frame, and is still in the air.
     ActionFinishedInAir,
@@ -103,15 +122,23 @@ pub enum TnuaAirActionsUpdate {
 ///
 /// It's [`update`](Self::update) must be called every frame.
 #[derive(Component, Default)]
-pub struct TnuaSimpleAirActionsCounter {
+pub struct TnuaSimpleAirActionsCounter<S: TnuaScheme> {
     tracker: TnuaAirActionsTracker,
-    current_action: Option<(&'static str, usize)>,
+    current_action: Option<(S::ActionDiscriminant, usize)>,
     air_actions_count: usize,
 }
 
-impl TnuaSimpleAirActionsCounter {
+impl<S> TnuaSimpleAirActionsCounter<S>
+where
+    S: TnuaScheme + AirActionDefinition,
+    S::Basis: TnuaBasisWithGround,
+{
     /// Call this every frame to track the air actions.
-    pub fn update(&mut self, controller: &TnuaController) {
+    pub fn update(&mut self, controller: &TnuaController<S>)
+    where
+        S: TnuaScheme + AirActionDefinition,
+        S::Basis: TnuaBasisWithGround,
+    {
         let update = self.tracker.update(controller);
         match update {
             TnuaAirActionsUpdate::NoChange => {}
@@ -120,8 +147,8 @@ impl TnuaSimpleAirActionsCounter {
                 self.current_action = None;
                 self.air_actions_count += 1;
             }
-            TnuaAirActionsUpdate::AirActionStarted(action_name) => {
-                self.current_action = Some((action_name, self.air_actions_count));
+            TnuaAirActionsUpdate::AirActionStarted(action_discriminant) => {
+                self.current_action = Some((action_discriminant, self.air_actions_count));
                 self.air_actions_count += 1;
             }
             TnuaAirActionsUpdate::ActionFinishedInAir => {
@@ -221,11 +248,11 @@ impl TnuaSimpleAirActionsCounter {
     /// continues to be fed. The correct name is [`TnuaAction::NAME`] when using
     /// [`TnuaController::action`] or the first argument when using
     /// [`TnuaController::named_action`].
-    pub fn air_count_for(&self, action_name: &str) -> usize {
-        if let Some((current_action, actions)) = self.current_action {
-            if current_action == action_name {
-                return actions;
-            }
+    pub fn air_count_for(&self, action: S::ActionDiscriminant) -> usize {
+        if let Some((current_action, actions)) = self.current_action
+            && current_action == action
+        {
+            return actions;
         }
         self.air_actions_count
     }

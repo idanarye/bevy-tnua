@@ -202,6 +202,19 @@ impl<S: TnuaScheme> TnuaController<S> {
         }
     }
 
+    pub fn basis_access(
+        &'_ self,
+    ) -> Result<TnuaBasisAccess<'_, S::Basis>, TnuaControllerHasNotPulledConfiguration> {
+        Ok(TnuaBasisAccess {
+            input: &self.basis,
+            config: self
+                .basis_config
+                .as_ref()
+                .ok_or(TnuaControllerHasNotPulledConfiguration)?,
+            memory: &self.basis_memory,
+        })
+    }
+
     pub fn initiate_action_feeding(&mut self) {
         self.action_feeding_initiated = true;
     }
@@ -270,6 +283,11 @@ impl<S: TnuaScheme> TnuaController<S> {
         todo!("Is this even needed?")
     }
 
+    /// The discriminant of the currently running action.
+    pub fn action_discriminant(&self) -> Option<S::ActionDiscriminant> {
+        Some(self.current_action.as_ref()?.discriminant())
+    }
+
     /// Indicator for the state and flow of movement actions.
     ///
     /// Query this every frame to keep track of the actions. For air actions,
@@ -307,6 +325,10 @@ impl<S: TnuaScheme> TnuaController<S> {
         //self.up_direction
     }
 }
+
+#[derive(thiserror::Error, Debug)]
+#[error("The Tnua controller did not pull the configuration asset yet")]
+pub struct TnuaControllerHasNotPulledConfiguration;
 
 #[allow(clippy::type_complexity)]
 fn apply_controller_system<S: TnuaScheme>(

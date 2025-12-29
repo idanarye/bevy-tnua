@@ -126,14 +126,14 @@
 //!
 //! [`TnuaController`](crate::prelude::TnuaController) can also be used to retreive data that can
 //! be used to decide which animation to play. A useful helper for that is [`TnuaAnimatingState`].
-mod animating_helper;
-pub mod builtins;
-// pub mod control_helpers;
-mod basis_action_traits;
-pub mod radar_lens;
 pub mod action_state;
+mod animating_helper;
+mod basis_action_traits;
 pub mod basis_capabilities;
+pub mod builtins;
+pub mod control_helpers;
 pub mod controller;
+pub mod radar_lens;
 pub mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{

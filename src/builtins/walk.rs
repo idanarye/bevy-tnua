@@ -4,11 +4,11 @@ use bevy::prelude::*;
 
 use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
-use crate::math::*;
 use crate::basis_capabilities::{
     TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithFloating,
     TnuaBasisWithGround, TnuaBasisWithSpring,
 };
+use crate::math::*;
 use crate::util::rotation_arc_around_axis;
 use crate::{TnuaBasisContext, TnuaMotor, TnuaVelChange};
 
