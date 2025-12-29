@@ -1,15 +1,15 @@
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaMotor;
 
-use crate::schemes_traits::{Tnua2Action, Tnua2ActionContext, Tnua2Basis};
+use crate::{TnuaAction, TnuaActionContext, TnuaBasis};
 use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasisContext};
 
-pub struct Tnua2ActionState<A: Tnua2Action<B>, B: Tnua2Basis> {
+pub struct TnuaActionState<A: TnuaAction<B>, B: TnuaBasis> {
     pub input: A,
     pub config: A::Config,
     pub memory: A::Memory,
 }
 
-impl<A: Tnua2Action<B>, B: Tnua2Basis> Tnua2ActionState<A, B> {
+impl<A: TnuaAction<B>, B: TnuaBasis> TnuaActionState<A, B> {
     pub fn new(input: A, config: &A::Config) -> Self {
         Self {
             input,
@@ -23,10 +23,10 @@ impl<A: Tnua2Action<B>, B: Tnua2Basis> Tnua2ActionState<A, B> {
     }
 }
 
-pub trait Tnua2ActionStateInterface<B: Tnua2Basis> {
+pub trait TnuaActionStateInterface<B: TnuaBasis> {
     fn apply(
         &mut self,
-        ctx: Tnua2ActionContext<B>,
+        ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective;
@@ -40,10 +40,10 @@ pub trait Tnua2ActionStateInterface<B: Tnua2Basis> {
     );
 }
 
-impl<A: Tnua2Action<B>, B: Tnua2Basis> Tnua2ActionStateInterface<B> for Tnua2ActionState<A, B> {
+impl<A: TnuaAction<B>, B: TnuaBasis> TnuaActionStateInterface<B> for TnuaActionState<A, B> {
     fn apply(
         &mut self,
-        ctx: Tnua2ActionContext<B>,
+        ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
@@ -55,8 +55,8 @@ impl<A: Tnua2Action<B>, B: Tnua2Basis> Tnua2ActionStateInterface<B> for Tnua2Act
         &self,
         ctx: TnuaBasisContext,
         basis_input: &B,
-        basis_config: &<B as Tnua2Basis>::Config,
-        basis_memory: &mut <B as Tnua2Basis>::Memory,
+        basis_config: &<B as TnuaBasis>::Config,
+        basis_memory: &mut <B as TnuaBasis>::Memory,
     ) {
         self.input.influence_basis(
             &self.config,

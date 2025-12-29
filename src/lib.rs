@@ -127,28 +127,30 @@
 //! [`TnuaController`](crate::prelude::TnuaController) can also be used to retreive data that can
 //! be used to decide which animation to play. A useful helper for that is [`TnuaAnimatingState`].
 mod animating_helper;
-mod basis_action_traits;
 pub mod builtins;
-pub mod control_helpers;
-pub mod controller;
+// pub mod control_helpers;
+mod basis_action_traits;
 pub mod radar_lens;
 pub mod schemes_action_state;
 pub mod schemes_basis_capabilities;
 pub mod schemes_controller;
-pub mod schemes_traits;
 pub mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
-    DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext, TnuaActionInitiationDirective,
-    TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasis, TnuaBasisContext,
+    TnuaAction, TnuaActionContext, TnuaActionDiscriminant, TnuaBasis, TnuaScheme, TnuaSchemeConfig,
+    TnuaUpdateInActionStateEnumResult,
+};
+pub use basis_action_traits::{
+    TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus,
+    TnuaActionStateEnum, TnuaBasisContext, TnuaConfigModifier,
 };
 pub use bevy_tnua_macros::TnuaScheme;
 
 pub mod prelude {
     pub use crate::TnuaScheme;
-    pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
-    pub use crate::controller::{TnuaController, TnuaControllerPlugin};
-    pub use crate::{TnuaAction, TnuaPipelineSystems, TnuaUserControlsSystems};
+    // pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
+    pub use crate::schemes_controller::{TnuaController, TnuaControllerPlugin};
+    pub use crate::{TnuaPipelineSystems, TnuaUserControlsSystems};
 }
 
 pub use bevy_tnua_physics_integration_layer::data_for_backends::*;

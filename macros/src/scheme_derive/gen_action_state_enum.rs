@@ -26,11 +26,11 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
     Ok(quote! {
         #vis enum #action_state_enum_name {
             #(
-                #command_names(Tnua2ActionState<#action_types, #basis>, #(#payload_types,)*),
+                #command_names(TnuaActionState<#action_types, #basis>, #(#payload_types,)*),
             )*
         }
 
-        impl Tnua2ActionStateEnum for #action_state_enum_name {
+        impl TnuaActionStateEnum for #action_state_enum_name {
             type Basis = #basis;
             type Discriminant = #action_discriminant_name;
 
@@ -44,7 +44,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
 
             fn interface(
                 &self,
-            ) -> &dyn bevy_tnua::schemes_action_state::Tnua2ActionStateInterface<Self::Basis> {
+            ) -> &dyn bevy_tnua::schemes_action_state::TnuaActionStateInterface<Self::Basis> {
                 match self {
                     #(
                         Self::#command_names(state, ..) => state,
@@ -54,7 +54,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
 
             fn interface_mut(
                 &mut self,
-            ) -> &mut dyn bevy_tnua::schemes_action_state::Tnua2ActionStateInterface<Self::Basis> {
+            ) -> &mut dyn bevy_tnua::schemes_action_state::TnuaActionStateInterface<Self::Basis> {
                 match self {
                     #(
                         Self::#command_names(state, ..) => state,
@@ -62,7 +62,7 @@ pub fn generate_action_state_enum(parsed: &ParsedScheme) -> syn::Result<TokenStr
                 }
             }
 
-            fn modify_basis_config(&self, basis_config: &mut <Self::Basis as Tnua2Basis>::Config) {
+            fn modify_basis_config(&self, basis_config: &mut <Self::Basis as TnuaBasis>::Config) {
                 match self {
                     #(#modify_basis_config_branches)*
                 }

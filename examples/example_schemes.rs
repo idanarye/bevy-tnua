@@ -4,14 +4,15 @@ use bevy::{color::palettes::css, prelude::*};
 use avian3d::prelude::*;
 
 use bevy_tnua::builtins::{
-    Tnua2BuiltinCrouch, Tnua2BuiltinCrouchConfig, Tnua2BuiltinJump, Tnua2BuiltinJumpConfig,
-    Tnua2BuiltinWalk, Tnua2BuiltinWalkConfig,
+    TnuaBuiltinCrouch, TnuaBuiltinCrouchConfig, TnuaBuiltinJump, TnuaBuiltinJumpConfig,
+    TnuaBuiltinWalk, TnuaBuiltinWalkConfig,
 };
-use bevy_tnua::schemes_action_state::Tnua2ActionState;
-use bevy_tnua::schemes_controller::{Tnua2Controller, Tnua2ControllerPlugin};
-use bevy_tnua::schemes_traits::{
-    Tnua2Action, Tnua2ActionContext, Tnua2ActionDiscriminant, Tnua2ActionStateEnum, Tnua2Basis,
-    TnuaConfigModifier, TnuaScheme, TnuaSchemeConfig, UpdateInActionStateEnumResult,
+use bevy_tnua::prelude::*;
+use bevy_tnua::schemes_action_state::TnuaActionState;
+use bevy_tnua::schemes_controller::{TnuaController, TnuaControllerPlugin};
+use bevy_tnua::{
+    TnuaAction, TnuaActionContext, TnuaActionDiscriminant, TnuaActionStateEnum, TnuaBasis,
+    TnuaConfigModifier, TnuaSchemeConfig, TnuaUpdateInActionStateEnumResult,
 };
 use bevy_tnua_avian3d::prelude::*;
 
@@ -22,7 +23,7 @@ fn main() {
             PhysicsPlugins::default(),
             // We need both Tnua's main controller plugin, and the plugin to connect to the physics
             // backend (in this case Avian 3D)
-            Tnua2ControllerPlugin::<ExampleScheme>::new(FixedUpdate),
+            TnuaControllerPlugin::<ExampleScheme>::new(FixedUpdate),
             TnuaAvian3dPlugin::new(FixedUpdate),
         ))
         .add_systems(
@@ -78,16 +79,16 @@ fn setup_level(
 }
 
 #[derive(bevy_tnua::TnuaScheme)]
-#[scheme(basis = Tnua2BuiltinWalk)]
+#[scheme(basis = TnuaBuiltinWalk)]
 enum ExampleScheme {
-    Jump(Tnua2BuiltinJump),
-    Crouch(Tnua2BuiltinCrouch, #[scheme(modify_basis_config)] HalfSpeed),
+    Jump(TnuaBuiltinJump),
+    Crouch(TnuaBuiltinCrouch, #[scheme(modify_basis_config)] HalfSpeed),
 }
 
 struct HalfSpeed;
 
-impl TnuaConfigModifier<Tnua2BuiltinWalkConfig> for HalfSpeed {
-    fn modify_config(&self, config: &mut Tnua2BuiltinWalkConfig) {
+impl TnuaConfigModifier<TnuaBuiltinWalkConfig> for HalfSpeed {
+    fn modify_config(&self, config: &mut TnuaBuiltinWalkConfig) {
         config.speed *= 0.5;
     }
 }
@@ -110,8 +111,8 @@ fn setup_player(
         RigidBody::Dynamic,
         Collider::capsule(0.5, 1.0),
         // This is Tnua's interface component.
-        Tnua2Controller::<ExampleScheme>::new(control_scheme_configs.add(ExampleSchemeConfig {
-            basis: Tnua2BuiltinWalkConfig {
+        TnuaController::<ExampleScheme>::new(control_scheme_configs.add(ExampleSchemeConfig {
+            basis: TnuaBuiltinWalkConfig {
                 // The `desired_velocity` determines how the character will move.
                 // The `float_height` must be greater (even if by little) from the distance between the
                 // character's center and the lowest point of its collider.
@@ -120,14 +121,14 @@ fn setup_player(
                 // sensible defaults. Refer to the `TnuaBuiltinWalk`'s documentation to learn what they do.
                 ..Default::default()
             },
-            jump: Tnua2BuiltinJumpConfig {
+            jump: TnuaBuiltinJumpConfig {
                 // The height is the only configuration field of the jump action that has no
                 // sensible default.
                 height: 4.0,
                 // `TnuaBuiltinJump` also has customization fields with sensible defaults.
                 ..Default::default()
             },
-            crouch: Tnua2BuiltinCrouchConfig {
+            crouch: TnuaBuiltinCrouchConfig {
                 float_offset: -0.4,
                 ..Default::default()
             },
@@ -142,7 +143,7 @@ fn setup_player(
 
 fn apply_controls(
     keyboard: Res<ButtonInput<KeyCode>>,
-    mut query: Query<&mut Tnua2Controller<ExampleScheme>>,
+    mut query: Query<&mut TnuaController<ExampleScheme>>,
 ) {
     let Ok(mut controller) = query.single_mut() else {
         return;

@@ -1,32 +1,33 @@
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaVelChange;
 
-use crate::schemes_traits::{Tnua2Basis, Tnua2BasisAccess};
+use crate::TnuaBasis;
+use crate::basis_action_traits::TnuaBasisAccess;
 use crate::{TnuaBasisContext, math::*};
 
-pub trait TnuaBasisWithEffectiveVelocity: Tnua2Basis {
+pub trait TnuaBasisWithEffectiveVelocity: TnuaBasis {
     /// The velocity of the character, relative the what the basis considers its frame of
     /// reference.
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn effective_velocity(access: &Tnua2BasisAccess<Self>) -> Vector3;
+    fn effective_velocity(access: &TnuaBasisAccess<Self>) -> Vector3;
 
     /// The vertical velocity the character requires to stay the same height if it wants to move in
     /// [`effective_velocity`](Self::effective_velocity).
-    fn vertical_velocity(access: &Tnua2BasisAccess<Self>) -> Float;
+    fn vertical_velocity(access: &TnuaBasisAccess<Self>) -> Float;
 }
 
-pub trait TnuaBasisWithDisplacement: Tnua2Basis {
+pub trait TnuaBasisWithDisplacement: TnuaBasis {
     /// The displacement of the character from where the basis wants it to be.
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn displacement(access: &Tnua2BasisAccess<Self>) -> Option<Vector3>;
+    fn displacement(access: &TnuaBasisAccess<Self>) -> Option<Vector3>;
 }
 
-pub trait TnuaBasisWithGround: Tnua2Basis {
+pub trait TnuaBasisWithGround: TnuaBasis {
     /// Can be queried by an action to determine if the character should be considered "in the air".
     ///
     /// This is a query method, used by the action to determine what the basis thinks.
-    fn is_airborne(access: &Tnua2BasisAccess<Self>) -> bool;
+    fn is_airborne(access: &TnuaBasisAccess<Self>) -> bool;
 
     /// If the basis is at coyote time - finish the coyote time.
     ///
@@ -38,16 +39,16 @@ pub trait TnuaBasisWithGround: Tnua2Basis {
     fn violate_coyote_time(memory: &mut Self::Memory);
 }
 
-pub trait TnuaBasisWithFloating: Tnua2Basis {
-    fn float_height(access: &Tnua2BasisAccess<Self>) -> Float;
+pub trait TnuaBasisWithFloating: TnuaBasis {
+    fn float_height(access: &TnuaBasisAccess<Self>) -> Float;
 }
 
-pub trait TnuaBasisWithSpring: Tnua2Basis {
+pub trait TnuaBasisWithSpring: TnuaBasis {
     /// Calculate the vertical spring force that this basis would need to apply assuming its
     /// vertical distance from the vertical distance it needs to be at equals the `spring_offset`
     /// argument.
     fn spring_force(
-        access: &Tnua2BasisAccess<Self>,
+        access: &TnuaBasisAccess<Self>,
         ctx: &TnuaBasisContext,
         spring_offset: Float,
     ) -> TnuaVelChange;

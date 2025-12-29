@@ -7,21 +7,32 @@ use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
-use crate::schemes_traits::{
-    Tnua2ActionContext, Tnua2ActionDiscriminant, Tnua2ActionStateEnum, Tnua2Basis,
-    Tnua2BasisAccess, TnuaScheme, TnuaSchemeConfig, UpdateInActionStateEnumResult,
+use crate::basis_action_traits::{
+    TnuaActionContext, TnuaActionDiscriminant, TnuaActionStateEnum, TnuaBasis, TnuaBasisAccess,
+    TnuaScheme, TnuaSchemeConfig, TnuaUpdateInActionStateEnumResult,
 };
 use crate::{
     TnuaBasisContext, TnuaMotor, TnuaPipelineSystems, TnuaProximitySensor, TnuaRigidBodyTracker,
     TnuaSystems, TnuaToggle, TnuaUserControlsSystems,
 };
 
-pub struct Tnua2ControllerPlugin<S: TnuaScheme> {
+pub struct TnuaControllerPlugin<S: TnuaScheme> {
     schedule: InternedScheduleLabel,
     _phantom: PhantomData<S>,
 }
 
-impl<S: TnuaScheme> Tnua2ControllerPlugin<S> {
+/// The main for supporting Tnua character controller.
+///
+/// Will not work without a physics backend plugin (like `TnuaRapier2dPlugin` or
+/// `TnuaRapier3dPlugin`)
+///
+/// Make sure the schedule for this plugin, the physics backend plugin, and the physics backend
+/// itself are all using the same timestep. This usually means that the physics backend is in e.g.
+/// `FixedPostUpdate` and the Tnua plugins are at `PostUpdate`.
+///
+/// **DO NOT mix `Update` with `FixedUpdate`!** This will mess up Tnua's calculations, resulting in
+/// very unstable character motion.
+impl<S: TnuaScheme> TnuaControllerPlugin<S> {
     pub fn new(schedule: impl ScheduleLabel) -> Self {
         Self {
             schedule: schedule.intern(),
@@ -30,7 +41,7 @@ impl<S: TnuaScheme> Tnua2ControllerPlugin<S> {
     }
 }
 
-impl<S: TnuaScheme> Plugin for Tnua2ControllerPlugin<S> {
+impl<S: TnuaScheme> Plugin for TnuaControllerPlugin<S> {
     fn build(&self, app: &mut App) {
         app.init_asset::<S::Config>();
         app.configure_sets(
@@ -81,24 +92,48 @@ struct FedEntry {
     rescheduled_in: Option<Timer>,
 }
 
+/// The main component used for interaction with the controls and animation code.
+///
+/// Every frame, the game code should feed input this component on every controlled entity. What
+/// should be fed is:
+///
+/// * A basis - this is the main movement command - usually
+///   [`TnuaBuiltinWalk`](crate::builtins::TnuaBuiltinWalk), but there can be others. The
+///   controller's basis is takens from the scheme (the generic argument). Controlling it is done
+///   by modifying the [`basis`](Self::basis) field of the controller.
+///
+///   Refer to the documentation of [the implementors of
+///   `TnuaBasis`](crate::TnuaBasis#implementors) for more information.
+///
+/// * Zero or more actions - these are movements like jumping, dashing, crouching, etc. Multiple
+///   actions can be fed, but only one can be active at any given moment. Unlike basis, there is a
+///   smart mechanism for deciding which action to use and which to discard, so it is safe to feed
+///   many actions at the same frame. Actions are also defined in the scheme, and can be fed using
+///   the [`action`](Self::action) method.
+///
+///   Refer to the documentation of [the implementors of
+///   `TnuaAction`](crate::TnuaAction#implementors) for more information.
+///
+/// Without [`TnuaControllerPlugin`] of the same scheme this component will not do anything.
 #[derive(Component)]
 #[require(TnuaMotor, TnuaRigidBodyTracker, TnuaProximitySensor)]
-pub struct Tnua2Controller<S: TnuaScheme> {
+pub struct TnuaController<S: TnuaScheme> {
+    /// Input for the basis - the main movement command.
     pub basis: S::Basis,
-    pub basis_memory: <S::Basis as Tnua2Basis>::Memory,
-    pub basis_config: Option<<S::Basis as Tnua2Basis>::Config>,
+    pub basis_memory: <S::Basis as TnuaBasis>::Memory,
+    pub basis_config: Option<<S::Basis as TnuaBasis>::Config>,
     pub config: Handle<S::Config>,
     // TODO: If ever possible, make this a fixed size array:
     actions_being_fed: Vec<FedEntry>,
     contender_action: Option<ContenderAction<S>>,
-    action_flow_status: Tnua2ActionFlowStatus<S::ActionDiscriminant>,
+    action_flow_status: TnuaActionFlowStatus<S::ActionDiscriminant>,
     action_feeding_initiated: bool,
     pub current_action: Option<S::ActionStateEnum>,
 }
 
 /// The result of [`TnuaController::action_flow_status()`].
 #[derive(Debug, Clone)]
-pub enum Tnua2ActionFlowStatus<D: Tnua2ActionDiscriminant> {
+pub enum TnuaActionFlowStatus<D: TnuaActionDiscriminant> {
     /// No action is going on.
     NoAction,
 
@@ -117,16 +152,16 @@ pub enum Tnua2ActionFlowStatus<D: Tnua2ActionDiscriminant> {
     Cancelled { old: D, new: D },
 }
 
-impl<D: Tnua2ActionDiscriminant> Tnua2ActionFlowStatus<D> {
+impl<D: TnuaActionDiscriminant> TnuaActionFlowStatus<D> {
     /// The discriminant of the ongoing action, if there is an ongoing action.
     ///
     /// Will also return a value if the action has just started.
     pub fn ongoing(&self) -> Option<D> {
         match self {
-            Tnua2ActionFlowStatus::NoAction | Tnua2ActionFlowStatus::ActionEnded(_) => None,
-            Tnua2ActionFlowStatus::ActionStarted(discriminant)
-            | Tnua2ActionFlowStatus::ActionOngoing(discriminant)
-            | Tnua2ActionFlowStatus::Cancelled {
+            TnuaActionFlowStatus::NoAction | TnuaActionFlowStatus::ActionEnded(_) => None,
+            TnuaActionFlowStatus::ActionStarted(discriminant)
+            | TnuaActionFlowStatus::ActionOngoing(discriminant)
+            | TnuaActionFlowStatus::Cancelled {
                 old: _,
                 new: discriminant,
             } => Some(*discriminant),
@@ -139,11 +174,11 @@ impl<D: Tnua2ActionDiscriminant> Tnua2ActionFlowStatus<D> {
     /// frame.
     pub fn just_starting(&self) -> Option<D> {
         match self {
-            Tnua2ActionFlowStatus::NoAction
-            | Tnua2ActionFlowStatus::ActionOngoing(_)
-            | Tnua2ActionFlowStatus::ActionEnded(_) => None,
-            Tnua2ActionFlowStatus::ActionStarted(discriminant)
-            | Tnua2ActionFlowStatus::Cancelled {
+            TnuaActionFlowStatus::NoAction
+            | TnuaActionFlowStatus::ActionOngoing(_)
+            | TnuaActionFlowStatus::ActionEnded(_) => None,
+            TnuaActionFlowStatus::ActionStarted(discriminant)
+            | TnuaActionFlowStatus::Cancelled {
                 old: _,
                 new: discriminant,
             } => Some(*discriminant),
@@ -151,7 +186,7 @@ impl<D: Tnua2ActionDiscriminant> Tnua2ActionFlowStatus<D> {
     }
 }
 
-impl<S: TnuaScheme> Tnua2Controller<S> {
+impl<S: TnuaScheme> TnuaController<S> {
     pub fn new(config: Handle<S::Config>) -> Self {
         Self {
             basis: Default::default(),
@@ -160,7 +195,7 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
             config,
             actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
             contender_action: None,
-            action_flow_status: Tnua2ActionFlowStatus::NoAction,
+            action_flow_status: TnuaActionFlowStatus::NoAction,
             action_feeding_initiated: false,
             current_action: None,
         }
@@ -170,6 +205,7 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
         self.action_feeding_initiated = true;
     }
 
+    /// Feed an action.
     pub fn action(&mut self, action: S) {
         assert!(
             self.action_feeding_initiated,
@@ -182,10 +218,10 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
                 fed_entry.status = FedStatus::Fresh;
                 if let Some(current_action) = self.current_action.as_mut() {
                     match action.update_in_action_state_enum(current_action) {
-                        UpdateInActionStateEnumResult::Success => {
+                        TnuaUpdateInActionStateEnumResult::Success => {
                             // Do nothing farther
                         }
-                        UpdateInActionStateEnumResult::WrongVariant(_) => {
+                        TnuaUpdateInActionStateEnumResult::WrongVariant(_) => {
                             // different action is running - will not override because button was
                             // already pressed.
                         }
@@ -225,6 +261,14 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
         }
     }
 
+    /// Re-feed the same action that is currently active.
+    ///
+    /// This is useful when matching on [`current_action`](Self::current_action) and wanting to
+    /// continue feeding the **exact same** action with the **exact same** input without having to
+    pub fn prolong_action(&mut self) {
+        todo!("Is this even needed?")
+    }
+
     /// Indicator for the state and flow of movement actions.
     ///
     /// Query this every frame to keep track of the actions. For air actions,
@@ -237,8 +281,29 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
     ///   after stopping or cancelled into itself.
     /// * `action_flow_status` shows an [`ActionEnded`](TnuaActionFlowStatus::ActionEnded) when the
     ///   action is no longer fed, even if the action is still active (termination sequence)
-    pub fn action_flow_status(&self) -> &Tnua2ActionFlowStatus<S::ActionDiscriminant> {
+    pub fn action_flow_status(&self) -> &TnuaActionFlowStatus<S::ActionDiscriminant> {
         &self.action_flow_status
+    }
+
+    /// Checks if the character is currently airborne.
+    ///
+    /// The check is done based on the basis, and is equivalent to getting the controller's
+    /// [`dynamic_basis`](Self::dynamic_basis) and checking its
+    /// [`is_airborne`](TnuaBasis::is_airborne) method.
+    pub fn is_airborne(&self) -> bool {
+        todo!("maybe this should be separate?")
+    }
+
+    /// Returns the direction considered as up.
+    ///
+    /// Note that the up direction is based on gravity, as reported by
+    /// [`TnuaRigidBodyTracker::gravity`], and that it'd typically be one frame behind since it
+    /// gets updated in the same system that applies the controller logic. If this is unacceptable,
+    /// consider using [`TnuaRigidBodyTracker::gravity`] directly or deducing the up direction via
+    /// different means.
+    pub fn up_direction(&self) -> Option<Dir3> {
+        todo!("need to save the up direction from the gravity")
+        //self.up_direction
     }
 }
 
@@ -246,7 +311,7 @@ impl<S: TnuaScheme> Tnua2Controller<S> {
 fn apply_controller_system<S: TnuaScheme>(
     time: Res<Time>,
     mut query: Query<(
-        &mut Tnua2Controller<S>,
+        &mut TnuaController<S>,
         &TnuaRigidBodyTracker,
         &mut TnuaProximitySensor,
         &mut TnuaMotor,
@@ -287,16 +352,16 @@ fn apply_controller_system<S: TnuaScheme>(
         let proximity_sensor = sensor.as_mut();
 
         match controller.action_flow_status {
-            Tnua2ActionFlowStatus::NoAction | Tnua2ActionFlowStatus::ActionOngoing(_) => {}
-            Tnua2ActionFlowStatus::ActionEnded(_) => {
-                controller.action_flow_status = Tnua2ActionFlowStatus::NoAction;
+            TnuaActionFlowStatus::NoAction | TnuaActionFlowStatus::ActionOngoing(_) => {}
+            TnuaActionFlowStatus::ActionEnded(_) => {
+                controller.action_flow_status = TnuaActionFlowStatus::NoAction;
             }
-            Tnua2ActionFlowStatus::ActionStarted(discriminant)
-            | Tnua2ActionFlowStatus::Cancelled {
+            TnuaActionFlowStatus::ActionStarted(discriminant)
+            | TnuaActionFlowStatus::Cancelled {
                 old: _,
                 new: discriminant,
             } => {
-                controller.action_flow_status = Tnua2ActionFlowStatus::ActionOngoing(discriminant);
+                controller.action_flow_status = TnuaActionFlowStatus::ActionOngoing(discriminant);
             }
         }
 
@@ -341,12 +406,12 @@ fn apply_controller_system<S: TnuaScheme>(
                 {
                     let initiation_decision = contender_action.action.initiation_decision(
                         config,
-                        Tnua2ActionContext {
+                        TnuaActionContext {
                             frame_duration,
                             tracker,
                             proximity_sensor,
                             up_direction,
-                            basis: &Tnua2BasisAccess {
+                            basis: &TnuaBasisAccess {
                                 input: &controller.basis,
                                 config: basis_config,
                                 memory: &controller.basis_memory,
@@ -384,11 +449,11 @@ fn apply_controller_system<S: TnuaScheme>(
             };
 
             let directive = action_state.interface_mut().apply(
-                Tnua2ActionContext {
+                TnuaActionContext {
                     frame_duration,
                     tracker,
                     proximity_sensor,
-                    basis: &Tnua2BasisAccess {
+                    basis: &TnuaBasisAccess {
                         input: &controller.basis,
                         config: basis_config,
                         memory: &controller.basis_memory,
@@ -430,11 +495,11 @@ fn apply_controller_system<S: TnuaScheme>(
                             .rescheduled_in = None;
 
                         let contender_directive = contender_action_state.interface_mut().apply(
-                            Tnua2ActionContext {
+                            TnuaActionContext {
                                 frame_duration,
                                 tracker,
                                 proximity_sensor,
-                                basis: &Tnua2BasisAccess {
+                                basis: &TnuaBasisAccess {
                                     input: &controller.basis,
                                     config: basis_config,
                                     memory: &controller.basis_memory,
@@ -458,15 +523,15 @@ fn apply_controller_system<S: TnuaScheme>(
                         match contender_directive {
                             TnuaActionLifecycleDirective::StillActive => {
                                 controller.action_flow_status =
-                                    if let Tnua2ActionFlowStatus::ActionOngoing(discriminant) =
+                                    if let TnuaActionFlowStatus::ActionOngoing(discriminant) =
                                         controller.action_flow_status
                                     {
-                                        Tnua2ActionFlowStatus::Cancelled {
+                                        TnuaActionFlowStatus::Cancelled {
                                             old: discriminant,
                                             new: contender_action_state.discriminant(),
                                         }
                                     } else {
-                                        Tnua2ActionFlowStatus::ActionStarted(
+                                        TnuaActionFlowStatus::ActionStarted(
                                             contender_action_state.discriminant(),
                                         )
                                     };
@@ -484,18 +549,18 @@ fn apply_controller_system<S: TnuaScheme>(
                                         TimerMode::Once,
                                     ));
                                 }
-                                if let Tnua2ActionFlowStatus::ActionOngoing(discriminant) =
+                                if let TnuaActionFlowStatus::ActionOngoing(discriminant) =
                                     controller.action_flow_status
                                 {
                                     controller.action_flow_status =
-                                        Tnua2ActionFlowStatus::ActionEnded(discriminant);
+                                        TnuaActionFlowStatus::ActionEnded(discriminant);
                                 }
                                 None
                             }
                         }
                     } else {
                         controller.action_flow_status =
-                            Tnua2ActionFlowStatus::ActionEnded(action_state.discriminant());
+                            TnuaActionFlowStatus::ActionEnded(action_state.discriminant());
                         None
                     };
                 }
@@ -509,11 +574,11 @@ fn apply_controller_system<S: TnuaScheme>(
                 contender_action.action.into_action_state_variant(config);
 
             contender_action_state.interface_mut().apply(
-                Tnua2ActionContext {
+                TnuaActionContext {
                     frame_duration,
                     tracker,
                     proximity_sensor,
-                    basis: &Tnua2BasisAccess {
+                    basis: &TnuaBasisAccess {
                         input: &controller.basis,
                         config: basis_config,
                         memory: &controller.basis_memory,
@@ -535,7 +600,7 @@ fn apply_controller_system<S: TnuaScheme>(
                 &mut controller.basis_memory,
             );
             controller.action_flow_status =
-                Tnua2ActionFlowStatus::ActionStarted(contender_action_state.discriminant());
+                TnuaActionFlowStatus::ActionStarted(contender_action_state.discriminant());
             controller.current_action = Some(contender_action_state);
         }
 

@@ -20,16 +20,16 @@ pub fn generate_config_struct(parsed: &ParsedScheme) -> syn::Result<TokenStream>
     Ok(quote! {
         #[derive(Asset, TypePath)]
         #vis struct #config_struct_name {
-            basis: <#basis as Tnua2Basis>::Config,
+            basis: <#basis as TnuaBasis>::Config,
             #(
-                #command_names_snake: <#action_types as Tnua2Action<#basis>>::Config,
+                #command_names_snake: <#action_types as TnuaAction<#basis>>::Config,
             )*
         }
 
         impl TnuaSchemeConfig for #config_struct_name {
             type Scheme = #scheme_name;
 
-            fn basis_config(&self) -> &<#basis as Tnua2Basis>::Config {
+            fn basis_config(&self) -> &<#basis as TnuaBasis>::Config {
                 &self.basis
             }
         }

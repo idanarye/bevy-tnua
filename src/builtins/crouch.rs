@@ -1,29 +1,25 @@
-use crate::math::{AdjustPrecision, Float};
-use bevy::prelude::*;
+use bevy::time::Stopwatch;
 
-use crate::control_helpers::TnuaCrouchEnforcedAction;
-use crate::{TnuaAction, TnuaMotor, TnuaVelChange};
+use crate::schemes_basis_capabilities::{TnuaBasisWithFloating, TnuaBasisWithSpring};
+use crate::{TnuaAction, TnuaActionContext, TnuaBasis};
 use crate::{
-    TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
-    TnuaActionLifecycleStatus,
+    TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
 };
+use crate::{TnuaMotor, TnuaVelChange};
 
-use super::TnuaBuiltinWalk;
-
-/// An [action](TnuaAction) for crouching. Only works when [`TnuaBuiltinWalk`] is the
-/// [basis](crate::TnuaBasis).
-///
-/// Most of the fields have sane defaults - the only field that must be set is
-/// [`float_offset`](Self::float_offset), which controls how low the character will crouch
-/// (compared to its regular float offset while standing). That field should typically have a
-/// negative value.
-///
-/// If the player stops crouching while crawling under an obstacle, Tnua will push the character
-/// upward toward the obstacle - which will bring about undesired physics behavior (especially if
-/// the player tries to move). To prevent that, use this action together with
-/// [`TnuaCrouchEnforcer`](crate::control_helpers::TnuaCrouchEnforcer).
-#[derive(Clone, Debug)]
+#[derive(Debug, Default)]
 pub struct TnuaBuiltinCrouch {
+    /// If set to `true`, this action will not yield to other action who try to take control.
+    ///
+    /// For example - if the player holds the crouch button, and then hits the jump button while
+    /// the crouch button is still pressed, the character will jump if `uncancellable` is `false`.
+    /// But if `uncancellable` is `true`, the character will stay crouched, ignoring the jump
+    /// action.
+    pub uncancellable: bool,
+}
+
+#[derive(Clone)]
+pub struct TnuaBuiltinCrouchConfig {
     /// Controls how low the character will crouch, compared to its regular float offset while
     /// standing.
     ///
@@ -43,36 +39,42 @@ pub struct TnuaBuiltinCrouch {
 
     /// The maximum impulse to apply when starting or stopping the crouch.
     pub height_change_impulse_limit: Float,
-
-    /// If set to `true`, this action will not yield to other action who try to take control.
-    ///
-    /// For example - if the player holds the crouch button, and then hits the jump button while
-    /// the crouch button is still pressed, the character will jump if `uncancellable` is `false`.
-    /// But if `uncancellable` is `true`, the character will stay crouched, ignoring the jump
-    /// action.
-    pub uncancellable: bool,
 }
 
-impl Default for TnuaBuiltinCrouch {
+impl Default for TnuaBuiltinCrouchConfig {
     fn default() -> Self {
         Self {
             float_offset: 0.0,
             height_change_impulse_for_duration: 0.02,
             height_change_impulse_limit: 40.0,
-            uncancellable: false,
         }
     }
 }
 
-impl TnuaAction for TnuaBuiltinCrouch {
-    const NAME: &'static str = "TnuaBuiltinCrouch";
+#[derive(Default, Debug)]
+pub enum TnuaBuiltinCrouchMemory {
+    /// The character is transitioning from standing to crouching.
+    #[default]
+    Sinking,
+    /// The character is currently crouched.
+    Maintaining,
+    /// The character is transitioning from crouching to standing.
+    Rising,
+}
+
+impl<B: TnuaBasis> TnuaAction<B> for TnuaBuiltinCrouch
+where
+    B: TnuaBasisWithFloating,
+    B: TnuaBasisWithSpring,
+{
+    type Config = TnuaBuiltinCrouchConfig;
     type Memory = TnuaBuiltinCrouchMemory;
-    const VIOLATES_COYOTE_TIME: bool = false;
 
     fn initiation_decision(
         &self,
-        ctx: TnuaActionContext,
-        _being_fed_for: &bevy::time::Stopwatch,
+        _config: &Self::Config,
+        ctx: TnuaActionContext<B>,
+        _being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective {
         if ctx.proximity_sensor.output.is_some() {
             TnuaActionInitiationDirective::Allow
@@ -83,28 +85,26 @@ impl TnuaAction for TnuaBuiltinCrouch {
 
     fn apply(
         &self,
+        config: &Self::Config,
         memory: &mut Self::Memory,
-        ctx: TnuaActionContext,
+        ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
-    ) -> TnuaActionLifecycleDirective {
-        let Some((walk_basis, walk_memory)) = ctx.concrete_basis::<TnuaBuiltinWalk>() else {
-            error!("Cannot crouch - basis is not TnuaBuiltinWalk");
-            return TnuaActionLifecycleDirective::Finished;
-        };
+    ) -> crate::TnuaActionLifecycleDirective {
         let Some(sensor_output) = &ctx.proximity_sensor.output else {
             return TnuaActionLifecycleDirective::Reschedule { after_seconds: 0.0 };
         };
-        let spring_offset_up = walk_basis.float_height - sensor_output.proximity.adjust_precision();
+        let spring_offset_up =
+            B::float_height(ctx.basis) - sensor_output.proximity.adjust_precision();
         let spring_offset_down =
-            spring_offset_up.adjust_precision() + self.float_offset.adjust_precision();
+            spring_offset_up.adjust_precision() + config.float_offset.adjust_precision();
 
         match lifecycle_status {
             TnuaActionLifecycleStatus::Initiated => {}
             TnuaActionLifecycleStatus::CancelledFrom => {}
             TnuaActionLifecycleStatus::StillFed => {}
             TnuaActionLifecycleStatus::NoLongerFed => {
-                *memory = TnuaBuiltinCrouchMemory::Rising;
+                *memory = Self::Memory::Rising;
             }
             TnuaActionLifecycleStatus::CancelledInto => {
                 if !self.uncancellable {
@@ -114,13 +114,13 @@ impl TnuaAction for TnuaBuiltinCrouch {
         }
 
         let spring_force = |spring_offset: Float| -> TnuaVelChange {
-            walk_basis.spring_force(walk_memory, &ctx.as_basis_context(), spring_offset)
+            B::spring_force(ctx.basis, &ctx.as_basis_context(), spring_offset)
         };
 
         let impulse_or_spring_force = |spring_offset: Float| -> TnuaVelChange {
             let spring_force = spring_force(spring_offset);
             let spring_force_boost = crate::util::calc_boost(&spring_force, ctx.frame_duration);
-            let impulse_boost = self.impulse_boost(spring_offset);
+            let impulse_boost = config.impulse_boost(spring_offset);
             if spring_force_boost.length_squared() < impulse_boost.powi(2) {
                 TnuaVelChange::boost(impulse_boost * ctx.up_direction.adjust_precision())
             } else {
@@ -169,7 +169,7 @@ impl TnuaAction for TnuaBuiltinCrouch {
     }
 }
 
-impl TnuaBuiltinCrouch {
+impl TnuaBuiltinCrouchConfig {
     fn impulse_boost(&self, spring_offset: Float) -> Float {
         let velocity_to_get_to_new_float_height =
             spring_offset / self.height_change_impulse_for_duration;
@@ -180,23 +180,13 @@ impl TnuaBuiltinCrouch {
     }
 }
 
-#[derive(Default, Debug, Clone)]
-pub enum TnuaBuiltinCrouchMemory {
-    /// The character is transitioning from standing to crouching.
-    #[default]
-    Sinking,
-    /// The character is currently crouched.
-    Maintaining,
-    /// The character is transitioning from crouching to standing.
-    Rising,
-}
+// TOOD: this
+// impl TnuaCrouchEnforcedAction for TnuaBuiltinCrouch {
+// fn range_to_cast_up(&self, _memory: &Self::Memory) -> Float {
+// -self.float_offset
+// }
 
-impl TnuaCrouchEnforcedAction for TnuaBuiltinCrouch {
-    fn range_to_cast_up(&self, _memory: &Self::Memory) -> Float {
-        -self.float_offset
-    }
-
-    fn prevent_cancellation(&mut self) {
-        self.uncancellable = true;
-    }
-}
+// fn prevent_cancellation(&mut self) {
+// self.uncancellable = true;
+// }
+// }

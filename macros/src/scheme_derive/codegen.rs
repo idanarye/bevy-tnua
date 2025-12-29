@@ -78,7 +78,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                     #(
                         Self::#command_names(action, #(#payload_bindings,)*) => {
                             #action_state_enum_name::#command_names(
-                                Tnua2ActionState::new(action, &config.#command_names_snake),
+                                TnuaActionState::new(action, &config.#command_names_snake),
                                 #(#payload_bindings,)*
                             )
                         }
@@ -89,7 +89,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             fn update_in_action_state_enum(
                 self,
                 action_state_enum: &mut #action_state_enum_name,
-            ) -> UpdateInActionStateEnumResult<Self> {
+            ) -> TnuaUpdateInActionStateEnumResult<Self> {
                 match (self, action_state_enum) {
                     #(
                         (
@@ -101,18 +101,18 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                                 // TODO: make this controllable?
                                 *#payload_to_update_bindings = #payload_bindings;
                             )*
-                            UpdateInActionStateEnumResult::Success
+                            TnuaUpdateInActionStateEnumResult::Success
                         }
                     )*
                     #[allow(unreachable_patterns)]
-                    (this, _) => UpdateInActionStateEnumResult::WrongVariant(this),
+                    (this, _) => TnuaUpdateInActionStateEnumResult::WrongVariant(this),
                 }
             }
 
             fn initiation_decision(
                 &self,
                 config: &#config_struct_name,
-                ctx: Tnua2ActionContext<Self::Basis>,
+                ctx: TnuaActionContext<Self::Basis>,
                 being_fed_for: &Stopwatch,
             ) -> bevy_tnua::TnuaActionInitiationDirective {
                 match self {

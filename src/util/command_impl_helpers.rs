@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaVelChange;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Float, Quaternion, Vector3};
 
-use crate::{TnuaActionContext, TnuaBasisContext};
+use crate::TnuaBasisContext;
+use crate::basis_action_traits::{TnuaActionContext, TnuaBasis};
 
 /// Helper trait for implementing basis and actions.
 ///
@@ -140,7 +141,7 @@ impl MotionHelper for TnuaBasisContext<'_> {
     }
 }
 
-impl MotionHelper for TnuaActionContext<'_> {
+impl<B: TnuaBasis> MotionHelper for TnuaActionContext<'_, B> {
     fn frame_duration(&self) -> Float {
         self.frame_duration
     }
