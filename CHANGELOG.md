@@ -8,10 +8,28 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 ### Changed
+- [**BREAKING**] _Schemes_ - a big refactor which completely breaks the API.
+  See the [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-026). Most of
+  the other changes are part of this.
+- Basis and actions are no longer passed dynamically to the controller -
+  instead the user code must define an enum that derives `TnuaScheme`.
+  - The actions are the enum's variants.
+  - The basis is specified via an attribute.
+- Separate both basis and actions into "input" and "config".
+  - Put the configuration
+  - Rename the "state" (of basis and actions) to "memory". The term "state"
+    will now be used to describe the compund input+config+memory of the
+    basis/action currently in effect.
+- Methods like `is_airborne` have been moved from the `TnuaBasis` itself to
+  traits the basis can implement. Actions that needs that data from the basis
+  will need to make it part of their signature's bounds.
+- The control helpers `TnuaSimpleAirActionsCounter` and
+  `TnuaBlipReuseAvoidance` now require traits implemented on the scheme.
 - Upgrade edition to 2024.
-- Rename the "state" (of basis and actions) to "memory". The term "state" will
-  now be used to describe the compund input+config+memory of the basis/action
-  currently in effect.
+
+### Added
+- Ability to add payload to actions. The payload is also able to modfiy the
+  configuration of the basis and/or the action while the action is running.
 
 ## 0.26.0 - 2025-10-14
 ### Changed
