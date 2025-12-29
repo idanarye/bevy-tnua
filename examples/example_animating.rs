@@ -6,6 +6,9 @@ use bevy::prelude::*;
 
 use avian3d::prelude::*;
 
+use bevy_tnua::builtins::{
+    TnuaBuiltinJump, TnuaBuiltinJumpConfig, TnuaBuiltinWalk, TnuaBuiltinWalkConfig,
+};
 use bevy_tnua::{
     TnuaAnimatingState, TnuaAnimatingStateDirective, builtins::TnuaBuiltinJumpMemory, prelude::*,
 };
@@ -16,22 +19,22 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             PhysicsPlugins::default(),
-            TnuaControllerPlugin::new(FixedUpdate),
+            TnuaControllerPlugin::<ControlScheme>::new(FixedUpdate),
             TnuaAvian3dPlugin::new(FixedUpdate),
         ))
         .add_systems(
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(
-            FixedUpdate,
-            (
-                apply_controls.in_set(TnuaUserControlsSystems),
-                prepare_animations,
-                handle_animating,
-            ),
-        )
+        .add_systems(Update, apply_controls.in_set(TnuaUserControlsSystems))
+        .add_systems(FixedUpdate, (prepare_animations, handle_animating))
         .run();
+}
+
+#[derive(TnuaScheme)]
+#[scheme(basis = TnuaBuiltinWalk)]
+enum ControlScheme {
+    Jump(TnuaBuiltinJump),
 }
 
 // This enum projects the player's state into something we can use to decide which animation to
@@ -97,7 +100,11 @@ fn setup_level(
 #[derive(Resource)]
 struct PlayerGltfHandle(Handle<Gltf>);
 
-fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_player(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut control_scheme_configs: ResMut<Assets<ControlSchemeConfig>>,
+) {
     // We'll need this in `prepare_animations` to build the animation graph.
     commands.insert_resource(PlayerGltfHandle(asset_server.load("player.glb")));
 
@@ -112,7 +119,24 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         RigidBody::Dynamic,
         Collider::capsule(0.5, 1.0),
         // This is Tnua's interface component.
-        TnuaController::default(),
+        TnuaController::<ControlScheme>::new(control_scheme_configs.add(ControlSchemeConfig {
+            basis: TnuaBuiltinWalkConfig {
+                speed: 10.0,
+                // The `float_height` must be greater (even if by little) from the distance between
+                // the character's center and the lowest point of its collider.
+                float_height: 2.0,
+                // `TnuaBuiltinWalkConfig` has many other fields for customizing the movement - but
+                // they have sensible defaults. Refer to the `TnuaBuiltinWalkConfig`'s
+                // documentation to learn what they do.
+                ..Default::default()
+            },
+            jump: TnuaBuiltinJumpConfig {
+                // The height is the only mandatory field of the jump button.
+                height: 4.0,
+                // `TnuaBuiltinJump` also has customization fields with sensible defaults.
+                ..Default::default()
+            },
+        })),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
         TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
         // Tnua can fix the rotation, but the character will still get rotated before it can do so.
@@ -155,10 +179,14 @@ fn prepare_animations(
     commands.remove_resource::<PlayerGltfHandle>();
 }
 
-fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut TnuaController>) {
+fn apply_controls(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut query: Query<&mut TnuaController<ControlScheme>>,
+) {
     let Ok(mut controller) = query.single_mut() else {
         return;
     };
+    controller.initiate_action_feeding();
 
     let mut direction = Vec3::ZERO;
 
@@ -176,35 +204,26 @@ fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Tnu
     }
 
     // Feed the basis every frame. Even if the player doesn't move - just use `desired_velocity:
-    // Vec3::ZERO`. `TnuaController` starts without a basis, which will make the character collider
-    // just fall.
-    controller.basis(TnuaBuiltinWalk {
+    // Vec3::ZERO` to reset the previous frame's input.
+    controller.basis = TnuaBuiltinWalk {
         // The `desired_velocity` determines how the character will move.
-        desired_velocity: direction.normalize_or_zero() * 10.0,
+        desired_motion: direction.normalize_or_zero(),
         desired_forward: Dir3::new(direction).ok(),
-        // The `float_height` must be greater (even if by little) from the distance between the
-        // character's center and the lowest point of its collider.
-        float_height: 2.0,
-        // `TnuaBuiltinWalk` has many other fields for customizing the movement - but they have
-        // sensible defaults. Refer to the `TnuaBuiltinWalk`'s documentation to learn what they do.
-        ..Default::default()
-    });
+    };
 
     // Feed the jump action every frame as long as the player holds the jump button. If the player
     // stops holding the jump button, simply stop feeding the action.
     if keyboard.pressed(KeyCode::Space) {
-        controller.action(TnuaBuiltinJump {
-            // The height is the only mandatory field of the jump button.
-            height: 4.0,
-            // `TnuaBuiltinJump` also has customization fields with sensible defaults.
-            ..Default::default()
-        });
+        controller.action(ControlScheme::Jump(Default::default()));
     }
 }
 
 // This is the important system for this example
 fn handle_animating(
-    mut player_query: Query<(&TnuaController, &mut TnuaAnimatingState<AnimationState>)>,
+    mut player_query: Query<(
+        &TnuaController<ControlScheme>,
+        &mut TnuaAnimatingState<AnimationState>,
+    )>,
     mut animation_player_query: Query<&mut AnimationPlayer>,
     animation_nodes: Option<Res<AnimationNodes>>,
 ) {
@@ -225,18 +244,11 @@ fn handle_animating(
 
     // First we look at the `action_name` to determine which action (if at all) the character is
     // currently performing:
-    let current_status_for_animating = match controller.action_name() {
-        // Unless you provide the action names yourself, prefer matching against the `NAME` const
-        // of the `TnuaAction` trait. Once `type_name` is stabilized as `const` Tnua will use it to
-        // generate these names automatically, which may result in a change to the name.
-        Some(TnuaBuiltinJump::NAME) => {
-            // In case of jump, we want to cast it so that we can get the concrete jump state.
-            let (_, jump_memory) = controller
-                .concrete_action::<TnuaBuiltinJump>()
-                .expect("action name mismatch");
+    let current_status_for_animating = match controller.current_action.as_ref() {
+        Some(ControlSchemeActionStateEnum::Jump(state)) => {
             // Depending on the state of the jump, we need to decide if we want to play the jump
             // animation or the fall animation.
-            match jump_memory {
+            match state.memory {
                 TnuaBuiltinJumpMemory::NoJump => return,
                 TnuaBuiltinJumpMemory::StartingJump { .. } => AnimationState::Jumping,
                 TnuaBuiltinJumpMemory::SlowDownTooFastSlopeJump { .. } => AnimationState::Jumping,
@@ -245,27 +257,18 @@ fn handle_animating(
                 TnuaBuiltinJumpMemory::FallSection => AnimationState::Falling,
             }
         }
-        // Tnua should only have the `action_name` of the actions you feed to it. If it has
-        // anything else - consider it a bug.
-        Some(other) => panic!("Unknown action {other}"),
-        // No action name means that no action is currently being performed - which means the
-        // animation should be decided by the basis.
+        // None means that no action is currently being performed - which means the animation
+        // should be decided by the basis.
         None => {
             // If there is no action going on, we'll base the animation on the state of the
             // basis.
-            let Some((_, basis_memory)) = controller.concrete_basis::<TnuaBuiltinWalk>() else {
-                // Since we only use the walk basis in this example, if we can't get get this
-                // basis' state it probably means the system ran before any basis was set, so we
-                // just stkip this frame.
-                return;
-            };
-            if basis_memory.standing_on_entity().is_none() {
+            if controller.basis_memory.standing_on_entity().is_none() {
                 // The walk basis keeps track of what the character is standing on. If it doesn't
                 // stand on anything, `standing_on_entity` will be empty - which means the
                 // character has walked off a cliff and needs to fall.
                 AnimationState::Falling
             } else {
-                let speed = basis_memory.running_velocity.length();
+                let speed = controller.basis_memory.running_velocity.length();
                 if 0.01 < speed {
                     AnimationState::Running(0.1 * speed)
                 } else {

@@ -94,8 +94,9 @@ struct FedEntry {
 
 /// The main component used for interaction with the controls and animation code.
 ///
-/// Every frame, the game code should feed input this component on every controlled entity. What
-/// should be fed is:
+/// Every frame, the game code should invoke
+/// [`initiate_action_feeding`](Self::initiate_action_feeding) and then feed input this component
+/// on every controlled entity. What should be fed is:
 ///
 /// * A basis - this is the main movement command - usually
 ///   [`TnuaBuiltinWalk`](crate::builtins::TnuaBuiltinWalk), but there can be others. The

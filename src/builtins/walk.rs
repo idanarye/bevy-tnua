@@ -156,6 +156,14 @@ pub struct TnuaBuiltinWalkMemory {
     pub running_velocity: Vector3,
 }
 
+// TODO: move these to a trait?
+impl TnuaBuiltinWalkMemory {
+    /// Returns the entity that the character currently stands on.
+    pub fn standing_on_entity(&self) -> Option<Entity> {
+        Some(self.standing_on.as_ref()?.entity)
+    }
+}
+
 impl TnuaBasis for TnuaBuiltinWalk {
     type Config = TnuaBuiltinWalkConfig;
 
