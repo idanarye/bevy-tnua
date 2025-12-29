@@ -1,15 +1,16 @@
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, AsF32, Float};
 
-use crate::TnuaActionContext;
+use crate::basis_capabilities::TnuaBasisWithGround;
 use crate::util::MotionHelper;
 use crate::{
     TnuaAction, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
     TnuaActionLifecycleStatus, TnuaMotor, math::Vector3,
 };
+use crate::{TnuaActionContext, TnuaBasis};
 
 /// An [action](TnuaAction) for climbing on things.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TnuaBuiltinClimb {
     /// The entity being climbed on.
     pub climbable_entity: Option<Entity>,
@@ -25,20 +26,8 @@ pub struct TnuaBuiltinClimb {
     /// The action will try to maintain this horizontal relative position.
     pub desired_vec_to_anchor: Vector3,
 
-    /// Speed for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
-    pub anchor_speed: Float,
-
-    /// Acceleration for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
-    pub anchor_acceleration: Float,
-
-    /// The velocity to climb at (move up/down the entity)
-    pub desired_climb_velocity: Vector3,
-
-    /// The acceleration to climb at.
-    pub climb_acceleration: Float,
-
-    /// The time, in seconds, the character can still jump after letting go.
-    pub coyote_time: Float,
+    /// The direction (in the world space) and speed to climb at (move up/down the entity)
+    pub desired_climb_motion: Vector3,
 
     /// Force the character to face in a particular direction.
     pub desired_forward: Option<Dir3>,
@@ -65,36 +54,63 @@ pub struct TnuaBuiltinClimb {
     pub initiation_direction: Vector3,
 }
 
-impl Default for TnuaBuiltinClimb {
+#[derive(Clone)]
+pub struct TnuaBuiltinClimbConfig {
+    /// Speed for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
+    pub anchor_speed: Float,
+
+    /// Acceleration for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
+    pub anchor_acceleration: Float,
+
+    // How fast the character will climb.
+    //
+    // Note that this will be the speed when
+    // [`desired_climb_motion`](TnuaBuiltinClimb::desired_climb_motion) is a unit vector - meaning
+    // that its length is 1.0. If its not 1.0, the speed will be a multiply of that length.
+    pub climb_speed: Float,
+
+    /// The acceleration to climb at.
+    pub climb_acceleration: Float,
+
+    /// The time, in seconds, the character can still jump after letting go.
+    pub coyote_time: Float,
+}
+
+impl Default for TnuaBuiltinClimbConfig {
     fn default() -> Self {
         Self {
-            climbable_entity: None,
-            anchor: Vector3::NAN,
-            desired_vec_to_anchor: Vector3::ZERO,
             anchor_speed: 150.0,
             anchor_acceleration: 500.0,
-            desired_climb_velocity: Vector3::ZERO,
+            climb_speed: 10.0,
             climb_acceleration: 30.0,
             coyote_time: 0.15,
-            desired_forward: None,
-            hard_stop_up: None,
-            hard_stop_down: None,
-            initiation_direction: Vector3::ZERO,
         }
     }
 }
 
-impl TnuaAction for TnuaBuiltinClimb {
-    const NAME: &'static str = "TnuaBuiltinClimb";
-
+impl<B: TnuaBasis> TnuaAction<B> for TnuaBuiltinClimb
+where
+    B: TnuaBasisWithGround,
+{
+    type Config = TnuaBuiltinClimbConfig;
     type Memory = TnuaBuiltinClimbMemory;
 
-    const VIOLATES_COYOTE_TIME: bool = true;
+    // const VIOLATES_COYOTE_TIME: bool = true;
+
+    fn initiation_decision(
+        &self,
+        _config: &Self::Config,
+        _ctx: TnuaActionContext<B>,
+        _being_fed_for: &bevy::time::Stopwatch,
+    ) -> TnuaActionInitiationDirective {
+        TnuaActionInitiationDirective::Allow
+    }
 
     fn apply(
         &self,
+        config: &Self::Config,
         memory: &mut Self::Memory,
-        ctx: TnuaActionContext,
+        ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
@@ -105,7 +121,7 @@ impl TnuaAction for TnuaBuiltinClimb {
                 TnuaBuiltinClimbMemory::Climbing { climbing_velocity } => {
                     if matches!(lifecycle_status, TnuaActionLifecycleStatus::NoLongerFed) {
                         *memory = TnuaBuiltinClimbMemory::Coyote(Timer::from_seconds(
-                            self.coyote_time.f32(),
+                            config.coyote_time.f32(),
                             TimerMode::Once,
                         ));
                         continue;
@@ -123,9 +139,11 @@ impl TnuaAction for TnuaBuiltinClimb {
                         .cancel_on_axis(ctx.up_direction.adjust_precision());
                     motor.lin += ctx.negate_gravity();
                     motor.lin += ctx.adjust_vertical_velocity(
-                        self.desired_climb_velocity
-                            .dot(ctx.up_direction.adjust_precision()),
-                        self.climb_acceleration,
+                        config.climb_speed
+                            * self
+                                .desired_climb_motion
+                                .dot(ctx.up_direction.adjust_precision()),
+                        config.climb_acceleration,
                     );
 
                     if let Some(stop_at) = self.hard_stop_up {
@@ -142,8 +160,8 @@ impl TnuaAction for TnuaBuiltinClimb {
                     let desired_horizontal_velocity = -horizontal_displacement / ctx.frame_duration;
 
                     motor.lin += ctx.adjust_horizontal_velocity(
-                        desired_horizontal_velocity.clamp_length_max(self.anchor_speed),
-                        self.anchor_acceleration,
+                        desired_horizontal_velocity.clamp_length_max(config.anchor_speed),
+                        config.anchor_acceleration,
                     );
 
                     if let Some(desired_forward) = self.desired_forward {
@@ -168,16 +186,16 @@ impl TnuaAction for TnuaBuiltinClimb {
         TnuaActionLifecycleDirective::Finished
     }
 
-    fn initiation_decision(
+    fn influence_basis(
         &self,
-        _ctx: TnuaActionContext,
-        _being_fed_for: &bevy::time::Stopwatch,
-    ) -> TnuaActionInitiationDirective {
-        TnuaActionInitiationDirective::Allow
-    }
-
-    fn target_entity(&self, _memory: &Self::Memory) -> Option<Entity> {
-        self.climbable_entity
+        _config: &Self::Config,
+        _memory: &Self::Memory,
+        _ctx: crate::TnuaBasisContext,
+        _basis_input: &B,
+        _basis_config: &<B as TnuaBasis>::Config,
+        basis_memory: &mut <B as TnuaBasis>::Memory,
+    ) {
+        B::violate_coyote_time(basis_memory);
     }
 }
 
