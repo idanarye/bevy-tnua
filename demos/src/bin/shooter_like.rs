@@ -126,6 +126,7 @@ fn main() {
     app.add_systems(Startup, setup_player);
     app.add_systems(Update, grab_ungrab_mouse);
     app.add_systems(
+        // TODO: can this also be made update-only?
         match app_setup_configuration.schedule_to_use {
             ScheduleToUse::Update => PostUpdate.intern(),
             ScheduleToUse::FixedUpdate => FixedPostUpdate.intern(),
@@ -138,10 +139,7 @@ fn main() {
         },
     );
     app.add_systems(
-        match app_setup_configuration.schedule_to_use {
-            ScheduleToUse::Update => Update.intern(),
-            ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
-        },
+        Update,
         apply_platformer_controls.in_set(TnuaUserControlsSystems),
     );
     app.add_systems(Update, animation_patcher_system);

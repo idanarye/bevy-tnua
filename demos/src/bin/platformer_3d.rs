@@ -1,6 +1,5 @@
 #[cfg(feature = "avian3d")]
 use avian3d::{prelude as avian, prelude::*};
-use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
@@ -122,10 +121,7 @@ fn main() {
     );
     app.add_systems(Startup, setup_player);
     app.add_systems(
-        match app_setup_configuration.schedule_to_use {
-            ScheduleToUse::Update => Update.intern(),
-            ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
-        },
+        Update,
         apply_platformer_controls.in_set(TnuaUserControlsSystems),
     );
     app.add_systems(Update, animation_patcher_system);
