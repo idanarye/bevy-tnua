@@ -10,6 +10,9 @@ use bevy::prelude::*;
 /// Apply this [action](TnuaAction) to shove the character in a way the [basis](crate::TnuaBasis)
 /// cannot easily nullify.
 ///
+/// This action is typically applied outside the regular user input system - which means it should
+/// be applied with [`action_interrupt`](crate::TnuaController::action_interrupt).
+///
 /// Note that this action cannot be cancelled or stopped. Once it starts, it'll resume until the
 /// Pushover boundary is cleared (which means the character overcame the knockback). Unless the
 /// parameters are seriously skewed. The main parameters that can mess it up and unreasonably

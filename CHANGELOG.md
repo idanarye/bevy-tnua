@@ -25,11 +25,20 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   will need to make it part of their signature's bounds.
 - The control helpers `TnuaSimpleAirActionsCounter` and
   `TnuaBlipReuseAvoidance` now require traits implemented on the scheme.
+- [**BREAKING**] `TnuaController::initiate_action_feeding` must be invoked each
+  frame before feeding actions.
 - Upgrade edition to 2024.
 
 ### Added
 - Ability to add payload to actions. The payload is also able to modfiy the
   configuration of the basis and/or the action while the action is running.
+- `TnuaController::action_interrupt` for running actions in other systems
+  (which means it cannot rely on `initiate_action_feeding` being called before)
+
+### Removed
+- `TnuaController::named_action` - different actions that use the same base
+  `TnuaAction` type should now be done as different variants of the same scheme
+  that use the same action type.
 
 ## 0.26.0 - 2025-10-14
 ### Changed

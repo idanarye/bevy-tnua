@@ -75,6 +75,7 @@ enum FedStatus {
     Not,
     Lingering,
     Fresh,
+    Interrupt,
 }
 
 impl FedStatus {
@@ -83,6 +84,7 @@ impl FedStatus {
             FedStatus::Not => false,
             FedStatus::Lingering => true,
             FedStatus::Fresh => true,
+            FedStatus::Interrupt => true,
         }
     }
 }
@@ -231,7 +233,7 @@ impl<S: TnuaScheme> TnuaController<S> {
         let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
 
         match fed_entry.status {
-            FedStatus::Lingering | FedStatus::Fresh => {
+            FedStatus::Lingering | FedStatus::Fresh | FedStatus::Interrupt => {
                 fed_entry.status = FedStatus::Fresh;
                 if let Some(current_action) = self.current_action.as_mut() {
                     match action.update_in_action_state(current_action) {
@@ -268,6 +270,12 @@ impl<S: TnuaScheme> TnuaController<S> {
                     && action.discriminant() == contender_action.action.discriminant()
                 {
                     contender_action.action = action;
+                } else if let Some(contender_action) = self.contender_action.as_ref()
+                    && self.actions_being_fed[contender_action.action.discriminant().variant_idx()]
+                        .status
+                        == FedStatus::Interrupt
+                {
+                    // If the existing condender is an interrupt, we will not overwrite it.
                 } else {
                     self.contender_action = Some(ContenderAction {
                         action,
@@ -276,6 +284,35 @@ impl<S: TnuaScheme> TnuaController<S> {
                 }
             }
         }
+    }
+
+    /// TODO: documentation
+    pub fn action_interrupt(&mut self, action: S) {
+        // Because this is an interrupt, we ignore the old fed status - but we still care not to
+        // set the contender if we are the current action.
+        self.actions_being_fed[action.variant_idx()] = FedEntry {
+            status: FedStatus::Interrupt,
+            rescheduled_in: None,
+        };
+
+        let action = if let Some(current_action) = self.current_action.as_mut() {
+            match action.update_in_action_state(current_action) {
+                TnuaUpdateInActionStateResult::Success => {
+                    return;
+                }
+                TnuaUpdateInActionStateResult::WrongVariant(action) => {
+                    // different action is running - we'll have to
+                    action
+                }
+            }
+        } else {
+            action
+        };
+        // Overwrite the condender action even if there already was a contender action.
+        self.contender_action = Some(ContenderAction {
+            action,
+            being_fed_for: Stopwatch::new(),
+        });
     }
 
     /// Re-feed the same action that is currently active.
@@ -421,7 +458,7 @@ fn apply_controller_system<S: TnuaScheme>(
                     FedStatus::Lingering => {
                         *fed_entry = Default::default();
                     }
-                    FedStatus::Fresh => {
+                    FedStatus::Fresh | FedStatus::Interrupt => {
                         fed_entry.status = FedStatus::Lingering;
                         if let Some(rescheduled_in) = &mut fed_entry.rescheduled_in {
                             rescheduled_in.tick(time.delta());

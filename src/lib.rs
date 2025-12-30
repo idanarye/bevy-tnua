@@ -145,11 +145,13 @@ pub use basis_action_traits::{
     TnuaActionState, TnuaBasisContext, TnuaConfigModifier,
 };
 pub use bevy_tnua_macros::TnuaScheme;
+pub use controller::{TnuaController, TnuaControllerPlugin};
 
 pub mod prelude {
     pub use crate::TnuaScheme;
-    pub use crate::controller::{TnuaController, TnuaControllerPlugin};
-    pub use crate::{TnuaPipelineSystems, TnuaUserControlsSystems};
+    pub use crate::{
+        TnuaController, TnuaControllerPlugin, TnuaPipelineSystems, TnuaUserControlsSystems,
+    };
 }
 
 pub use bevy_tnua_physics_integration_layer::data_for_backends::*;

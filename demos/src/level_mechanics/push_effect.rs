@@ -27,7 +27,7 @@ fn apply_push_effect(
     for (entity, push_effect, mut controller) in query.iter_mut() {
         match push_effect {
             PushEffect::Impulse(impulse) => {
-                controller.action(DemoControlScheme::Knockback(TnuaBuiltinKnockback {
+                controller.action_interrupt(DemoControlScheme::Knockback(TnuaBuiltinKnockback {
                     shove: *impulse,
                     force_forward: Dir3::new(-impulse.reject_from(Vector3::Y).f32()).ok(),
                 }));
