@@ -6,8 +6,8 @@ use bevy::{
 use bevy_egui::egui;
 #[cfg(feature = "framepace")]
 use bevy_framepace::{
-    debug::DiagnosticsPlugin as FramepaceDiagnosticsPlugin, FramepacePlugin, FramepaceSettings,
-    Limiter,
+    FramepacePlugin, FramepaceSettings, Limiter,
+    debug::DiagnosticsPlugin as FramepaceDiagnosticsPlugin,
 };
 
 pub struct DemoFrameratePlugin;

@@ -2,8 +2,8 @@ use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_tnua::TnuaNotPlatform;
 
-use super::helper::LevelSetupHelper3d;
 use super::PositionPlayer;
+use super::helper::LevelSetupHelper3d;
 
 pub fn setup_level(mut helper: LevelSetupHelper3d) {
     helper.spawn(PositionPlayer::from(Vec3::new(0.0, 10.0, 0.0)));

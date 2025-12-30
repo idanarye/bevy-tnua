@@ -1,8 +1,8 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_tnua::math::{Quaternion, Vector3};
 
-use super::helper::LevelSetupHelper3d;
 use super::PositionPlayer;
+use super::helper::LevelSetupHelper3d;
 
 pub fn setup_level(mut helper: LevelSetupHelper3d) {
     helper.spawn(PositionPlayer::from(Vec3::new(0.0, 2.0, 0.0)));

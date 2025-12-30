@@ -4,7 +4,7 @@ use bevy_tnua::math::Vector3;
 use crate::level_mechanics::Climbable;
 
 use super::helper::LevelSetupHelper3dEntityCommandsExtension;
-use super::{helper::LevelSetupHelper3d, PositionPlayer};
+use super::{PositionPlayer, helper::LevelSetupHelper3d};
 
 pub fn setup_level(mut helper: LevelSetupHelper3d) {
     helper.spawn(PositionPlayer::from(Vec3::new(0.0, 10.0, 0.0)));

@@ -11,9 +11,9 @@ use bevy_tnua::control_helpers::{
     TnuaBlipReuseAvoidance, TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin,
     TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
-use bevy_tnua::math::{float_consts, AdjustPrecision, AsF32, Float, Quaternion, Vector3};
-use bevy_tnua::{prelude::*, TnuaObstacleRadar};
+use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3, float_consts};
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
+use bevy_tnua::{TnuaObstacleRadar, prelude::*};
 #[cfg(feature = "avian3d")]
 use bevy_tnua_avian3d::prelude::*;
 #[cfg(feature = "rapier3d")]
@@ -21,13 +21,13 @@ use bevy_tnua_rapier3d::prelude::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
 use tnua_demos_crate::character_animating_systems::platformer_animating_systems::{
-    animate_platformer_character, AnimationState,
-};
-use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CameraControllerMounted, CharacterMotionConfigForPlatformerDemo,
-    FallingThroughControlScheme,
+    AnimationState, animate_platformer_character,
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
+use tnua_demos_crate::character_control_systems::platformer_control_systems::{
+    CameraControllerMounted, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
+    apply_platformer_controls,
+};
 use tnua_demos_crate::character_control_systems::{
     info_dumpeing_systems::{
         character_control_info_dumping_system, character_control_radar_visualization_system,
@@ -38,13 +38,13 @@ use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian3d")]
 use tnua_demos_crate::levels_setup::for_3d_platformer::LayerNames;
 use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
-use tnua_demos_crate::levels_setup::{levels_for_3d, IsPlayer};
+use tnua_demos_crate::levels_setup::{IsPlayer, levels_for_3d};
+use tnua_demos_crate::ui::DemoInfoUpdateSystems;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
-use tnua_demos_crate::ui::DemoInfoUpdateSystems;
-use tnua_demos_crate::util::animating::{animation_patcher_system, GltfSceneHandler};
+use tnua_demos_crate::util::animating::{GltfSceneHandler, animation_patcher_system};
 
 fn main() {
     tnua_demos_crate::verify_physics_backends_features!("rapier3d", "avian3d");

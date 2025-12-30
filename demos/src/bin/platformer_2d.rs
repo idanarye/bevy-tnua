@@ -10,33 +10,33 @@ use bevy_tnua::control_helpers::{
     TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
 #[allow(unused_imports)]
-use bevy_tnua::math::{float_consts, AsF32, Vector3};
-use bevy_tnua::{prelude::*, TnuaObstacleRadar};
+use bevy_tnua::math::{AsF32, Vector3, float_consts};
 use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
+use bevy_tnua::{TnuaObstacleRadar, prelude::*};
 #[cfg(feature = "avian2d")]
 use bevy_tnua_avian2d::prelude::*;
 #[cfg(feature = "rapier2d")]
 use bevy_tnua_rapier2d::prelude::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
+use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::{
     character_control_info_dumping_system, character_control_radar_visualization_system,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
-    JustPressedCachePlugin,
+    CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme, JustPressedCachePlugin,
+    apply_platformer_controls,
 };
-use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian2d")]
 use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
 use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
-use tnua_demos_crate::levels_setup::{levels_for_2d, IsPlayer};
+use tnua_demos_crate::levels_setup::{IsPlayer, levels_for_2d};
+use tnua_demos_crate::ui::DemoInfoUpdateSystems;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
-use tnua_demos_crate::ui::DemoInfoUpdateSystems;
 
 fn main() {
     tnua_demos_crate::verify_physics_backends_features!("rapier2d", "avian2d");

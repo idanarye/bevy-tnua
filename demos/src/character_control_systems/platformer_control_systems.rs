@@ -5,27 +5,32 @@ use bevy::{
     prelude::*,
 };
 #[cfg(feature = "egui")]
-use bevy_egui::{egui, EguiContexts};
-use bevy_tnua::control_helpers::{
-    TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
-};
+use bevy_egui::{EguiContexts, egui};
 use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
+use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
+use bevy_tnua::{TnuaObstacleRadar, prelude::*};
 use bevy_tnua::{
-    builtins::{
-        TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinCrouchMemory, TnuaBuiltinDash,
-        TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
-    },
+    builtins::{TnuaBuiltinClimb, TnuaBuiltinDash, TnuaBuiltinWallSlide},
     control_helpers::TnuaBlipReuseAvoidance,
 };
-use bevy_tnua::{prelude::*, TnuaObstacleRadar};
-use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
+use bevy_tnua::{
+    builtins::{TnuaBuiltinJump, TnuaBuiltinWalk},
+    control_helpers::{TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper},
+};
 
-use crate::ui::tuning::UiTunable;
+use crate::{
+    character_control_systems::platformer_control_scheme::{
+        DemoControlSchemeActionDiscriminant, DemoControlSchemeActionState,
+    },
+    ui::tuning::UiTunable,
+};
 
-use super::querying_helpers::ObstacleQueryHelper;
-use super::spatial_ext_facade::SpatialExtFacade;
 use super::Dimensionality;
+use super::{platformer_control_scheme::DemoControlScheme, querying_helpers::ObstacleQueryHelper};
+use super::{
+    platformer_control_scheme::DemoControlSchemeConfig, spatial_ext_facade::SpatialExtFacade,
+};
 
 #[allow(clippy::type_complexity)]
 #[allow(clippy::useless_conversion)]
@@ -37,13 +42,13 @@ pub fn apply_platformer_controls(
         &CharacterMotionConfigForPlatformerDemo,
         // This is the main component used for interacting with Tnua. It is used for both issuing
         // commands and querying the character's state.
-        &mut TnuaController,
+        &mut TnuaController<DemoControlScheme>,
         // This is an helper for preventing the character from standing up while under an
         // obstacle, since this will make it slam into the obstacle, causing weird physics
         // behavior.
         // Most of the job is done by TnuaCrouchEnforcerPlugin - the control system only
         // needs to "let it know" about the crouch action.
-        &mut TnuaCrouchEnforcer,
+        //&mut TnuaCrouchEnforcer,
         // The proximity sensor usually works behind the scenes, but we need it here because
         // manipulating the proximity sensor using data from the ghost sensor is how one-way
         // platforms work in Tnua.
@@ -59,7 +64,7 @@ pub fn apply_platformer_controls(
         // single counter, so it cannot be used to implement, for example, one double jump and one
         // air dash per jump - only a single "pool" of air action "energy" shared by all air
         // actions.
-        &mut TnuaSimpleAirActionsCounter,
+        &mut TnuaSimpleAirActionsCounter<DemoControlScheme>,
         // This is a helper for tracking where the camera is looking at
         (
             Option<&CameraControllerFloating>,
@@ -69,7 +74,7 @@ pub fn apply_platformer_controls(
         &TnuaObstacleRadar,
         // This is used to avoid re-initiating actions on the same obstacles until we return to
         // them.
-        &mut TnuaBlipReuseAvoidance,
+        &mut TnuaBlipReuseAvoidance<DemoControlScheme>,
     )>,
     // This is used to run spatial queries on the physics backend. Note that `SpatialExtFacade` is
     // defined in the demos crates, and actual games that use Tnua should instead use the
@@ -86,7 +91,7 @@ pub fn apply_platformer_controls(
             // The basis remembers its last frame status, so if we cannot feed it proper input this
             // frame (for example - because the GUI takes the input focus) we need to neutralize
             // it.
-            controller.neutralize_basis();
+            controller.basis = Default::default();
         }
         return;
     }
@@ -94,7 +99,7 @@ pub fn apply_platformer_controls(
     for (
         config,
         mut controller,
-        mut crouch_enforcer,
+        //mut crouch_enforcer,
         mut sensor,
         ghost_sensor,
         mut fall_through_helper,
@@ -104,11 +109,14 @@ pub fn apply_platformer_controls(
         mut blip_reuse_avoidance,
     ) in query.iter_mut()
     {
+        controller.initiate_action_feeding();
+
         // This part is just keyboard input processing. In a real game this would probably be done
         // with a third party plugin.
         let mut direction = Vector3::ZERO;
 
-        let is_climbing = controller.action_name() == Some(TnuaBuiltinClimb::NAME);
+        let is_climbing =
+            controller.action_discriminant() == Some(DemoControlSchemeActionDiscriminant::Climb);
 
         if config.dimensionality == Dimensionality::Dim3 || is_climbing {
             if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
@@ -314,32 +322,33 @@ pub fn apply_platformer_controls(
             }
         };
 
-        let speed_factor =
-            // `TnuaController::concrete_action` can be used to determine if an action is currently
-            // running, and query its status. Here, we use it to check if the character is
-            // currently crouching, so that we can limit its speed.
-            if let Some((_, memory)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
-                // If the crouch is finished (last stages of standing up) we don't need to slow the
-                // character down.
-                if matches!(memory, TnuaBuiltinCrouchMemory::Rising) {
-                    1.0
-                } else {
-                    0.2
-                }
-            } else {
-                1.0
-            };
+        // TODO: use a payload for this
+        //let speed_factor =
+        //// `TnuaController::concrete_action` can be used to determine if an action is currently
+        //// running, and query its status. Here, we use it to check if the character is
+        //// currently crouching, so that we can limit its speed.
+        //if let Some((_, memory)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
+        //// If the crouch is finished (last stages of standing up) we don't need to slow the
+        //// character down.
+        //if matches!(memory, TnuaBuiltinCrouchMemory::Rising) {
+        //1.0
+        //} else {
+        //0.2
+        //}
+        //} else {
+        //1.0
+        //};
 
         // The basis is Tnua's most fundamental control command, governing over the character's
         // regular movement. The basis (and, to some extent, the actions as well) contains both
         // configuration - which in this case we copy over from `config.walk` - and controls like
         // `desired_velocity` or `desired_forward` which we compute here based on the current
         // frame's input.
-        controller.basis(TnuaBuiltinWalk {
-            desired_velocity: if turn_in_place {
+        controller.basis = TnuaBuiltinWalk {
+            desired_motion: if turn_in_place {
                 Vector3::ZERO
             } else {
-                direction * speed_factor * config.speed
+                direction
             },
             desired_forward: if let Some(CameraControllerMounted { forward, .. }) =
                 camera_contoller.1
@@ -351,28 +360,30 @@ pub fn apply_platformer_controls(
                 // moves (or when the player explicitly wants to set the direction)
                 Dir3::new(direction.f32()).ok()
             },
-            ..config.walk.clone()
-        });
+        };
 
         let radar_lens = TnuaRadarLens::new(obstacle_radar, &spatial_ext);
 
-        let already_sliding_on = controller
-            .concrete_action::<TnuaBuiltinWallSlide>()
-            .and_then(|(action, _)| {
-                action
-                    .wall_entity
-                    .filter(|entity| obstacle_radar.has_blip(*entity))
-            });
+        let already_sliding_on = if let Some(DemoControlSchemeActionState::WallSlide(state)) =
+            controller.current_action.as_ref()
+        {
+            state
+                .input
+                .wall_entity
+                .filter(|entity| obstacle_radar.has_blip(*entity))
+        } else {
+            None
+        };
 
-        let already_climbing_on =
-            controller
-                .concrete_action::<TnuaBuiltinClimb>()
-                .and_then(|(action, _)| {
-                    let entity = action
-                        .climbable_entity
-                        .filter(|entity| obstacle_radar.has_blip(*entity))?;
-                    Some((entity, action.clone()))
-                });
+        let already_climbing_on = if let Some(DemoControlSchemeActionState::Climb(state)) =
+            controller.current_action.as_ref()
+            && let Some(entity) = state.input.climbable_entity
+            && obstacle_radar.has_blip(entity)
+        {
+            Some((entity, state.input.clone()))
+        } else {
+            None
+        };
 
         let mut walljump_candidate = None;
 
@@ -403,18 +414,17 @@ pub fn apply_platformer_controls(
                     let mut action = TnuaBuiltinClimb {
                         climbable_entity: Some(blip.entity()),
                         anchor: blip.closest_point().get(),
-                        desired_climb_velocity: config.climb_speed
-                            * screen_space_direction.dot(Vector3::NEG_Z)
+                        desired_climb_motion: screen_space_direction.dot(Vector3::NEG_Z)
                             * Vector3::Y,
                         initiation_direction,
                         desired_vec_to_anchor: action.desired_vec_to_anchor,
                         desired_forward: action.desired_forward,
-                        ..config.climb.clone()
+                        ..Default::default()
                     };
 
                     const LOOK_ABOVE_OR_BELOW: Float = 5.0;
                     match action
-                        .desired_climb_velocity
+                        .desired_climb_motion
                         .dot(Vector3::Y)
                         .partial_cmp(&0.0)
                         .unwrap()
@@ -430,7 +440,7 @@ pub fn apply_platformer_controls(
                             } else if initiation_direction == Vector3::ZERO {
                                 continue 'blips_loop;
                             } else {
-                                action.desired_climb_velocity = Vector3::ZERO;
+                                action.desired_climb_motion = Vector3::ZERO;
                             }
                         }
                         Ordering::Equal => {}
@@ -445,7 +455,7 @@ pub fn apply_platformer_controls(
                         }
                     }
 
-                    controller.action(action);
+                    controller.action(DemoControlScheme::Climb(action));
                 } else if let TnuaBlipSpatialRelation::Aeside(blip_direction) =
                     blip.spatial_relation(0.5)
                 {
@@ -456,14 +466,14 @@ pub fn apply_platformer_controls(
                                 .normal_from_closest_point()
                                 .reject_from_normalized(Vector3::Y),
                         };
-                        controller.action(TnuaBuiltinClimb {
+                        controller.action(DemoControlScheme::Climb(TnuaBuiltinClimb {
                             climbable_entity: Some(blip.entity()),
                             anchor: blip.closest_point().get(),
                             desired_vec_to_anchor: 0.5 * direction_to_anchor,
                             desired_forward: Dir3::new(direction_to_anchor.f32()).ok(),
                             initiation_direction: direction.normalize_or_zero(),
-                            ..config.climb.clone()
-                        });
+                            ..Default::default()
+                        }));
                     }
                 }
             }
@@ -503,14 +513,12 @@ pub fn apply_platformer_controls(
                             else {
                                 continue;
                             };
-                            controller.action(TnuaBuiltinWallSlide {
+                            controller.action(DemoControlScheme::WallSlide(TnuaBuiltinWallSlide {
                                 wall_entity: Some(blip.entity()),
                                 contact_point_with_wall: blip.closest_point().get(),
                                 normal,
                                 force_forward: Some(blip_direction),
-                                maintain_distance: Some(0.7),
-                                ..config.wall_slide.clone()
-                            });
+                            }));
                         }
                     }
                 }
@@ -524,31 +532,31 @@ pub fn apply_platformer_controls(
             // nothing to set from the current frame's input. We do pass it through the crouch
             // enforcer though, which makes sure the character does not stand up if below an
             // obstacle.
-            controller.action(crouch_enforcer.enforcing(config.crouch.clone()));
+            controller.action(
+                //crouch_enforcer.enforcing(
+                DemoControlScheme::Crouch(Default::default()), //)
+            );
         }
 
         if jump {
             let action_flow_status = controller.action_flow_status().clone();
             if matches!(
                 action_flow_status.ongoing(),
-                Some(TnuaBuiltinJump::NAME | "walljump")
+                Some(
+                    DemoControlSchemeActionDiscriminant::Jump
+                        | DemoControlSchemeActionDiscriminant::WallJump
+                )
             ) {
                 controller.prolong_action();
             } else if let Some((_, walljump_direction)) = walljump_candidate {
-                controller.named_action(
-                    "walljump",
-                    TnuaBuiltinJump {
-                        vertical_displacement: Some(2.0 * walljump_direction.adjust_precision()),
-                        allow_in_air: true,
-                        takeoff_extra_gravity: 3.0 * config.jump.takeoff_extra_gravity,
-                        takeoff_above_velocity: 0.0,
-                        force_forward: Some(-walljump_direction),
-                        ..config.jump.clone()
-                    },
-                );
+                controller.action(DemoControlScheme::WallJump(TnuaBuiltinJump {
+                    vertical_displacement: Some(2.0 * walljump_direction.adjust_precision()),
+                    allow_in_air: true,
+                    force_forward: Some(-walljump_direction),
+                }));
             } else {
-                let current_action_name = controller.action_name();
-                controller.action(TnuaBuiltinJump {
+                let current_action_discriminant = controller.action_discriminant();
+                controller.action(DemoControlScheme::Jump(TnuaBuiltinJump {
                     // Jumping, like crouching, is an action that we either feed or don't. However,
                     // because it can be used in midair, we want to set its `allow_in_air`. The air
                     // counter helps us with that.
@@ -565,17 +573,17 @@ pub fn apply_platformer_controls(
                     // action, but after it it'll return 1 only for `TnuaBuiltinJump::NAME`
                     // (maintaining the jump) and 2 for any other action. Of course, if the player
                     // releases the button and presses it again it'll return 2.
-                    allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME)
+                    allow_in_air: air_actions_counter.air_count_for(DemoControlSchemeActionDiscriminant::Jump)
                         <= config.actions_in_air
                         // We also want to be able to jump from a climb.
-                        || current_action_name == Some(TnuaBuiltinClimb::NAME),
-                    ..config.jump.clone()
-                });
+                        || current_action_discriminant == Some(DemoControlSchemeActionDiscriminant::Climb),
+                    ..Default::default()
+                }));
             }
         }
 
         if dash {
-            controller.action(TnuaBuiltinDash {
+            controller.action(DemoControlScheme::Dash(TnuaBuiltinDash {
                 // Dashing is also an action, but because it has directions we need to provide said
                 // directions. `displacement` is a vector that determines where the jump will bring
                 // us. Note that even after reaching the displacement, the character may still have
@@ -594,10 +602,10 @@ pub fn apply_platformer_controls(
                 } else {
                     Dir3::new(direction.f32()).ok()
                 },
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
+                allow_in_air: air_actions_counter
+                    .air_count_for(DemoControlSchemeActionDiscriminant::Dash)
                     <= config.actions_in_air,
-                ..config.dash.clone()
-            });
+            }));
         }
     }
 }
@@ -605,39 +613,18 @@ pub fn apply_platformer_controls(
 #[derive(Component)]
 pub struct CharacterMotionConfigForPlatformerDemo {
     pub dimensionality: Dimensionality,
-    pub speed: Float,
-    pub walk: TnuaBuiltinWalk,
     pub actions_in_air: usize,
-    pub jump: TnuaBuiltinJump,
-    pub crouch: TnuaBuiltinCrouch,
-    pub dash_distance: Float,
-    pub dash: TnuaBuiltinDash,
+    pub dash_distance: Float, // todo: move to TnuaBuiltinDashConfig
     pub one_way_platforms_min_proximity: Float,
     pub falling_through: FallingThroughControlScheme,
-    pub knockback: TnuaBuiltinKnockback,
-    pub wall_slide: TnuaBuiltinWallSlide,
-    pub climb_speed: Float,
-    pub climb: TnuaBuiltinClimb,
 }
 
 impl UiTunable for CharacterMotionConfigForPlatformerDemo {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
-        ui.collapsing("Walking:", |ui| {
-            ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));
-            self.walk.tune(ui);
-        });
         ui.add(egui::Slider::new(&mut self.actions_in_air, 0..=8).text("Max Actions in Air"));
-        ui.collapsing("Jumping:", |ui| {
-            self.jump.tune(ui);
-        });
-        ui.collapsing("Dashing:", |ui| {
-            ui.add(egui::Slider::new(&mut self.dash_distance, 0.0..=40.0).text("Dash Distance"));
-            self.dash.tune(ui);
-        });
-        ui.collapsing("Crouching:", |ui| {
-            self.crouch.tune(ui);
-        });
+        // TODO: dash distance should be moved to TnuaBuiltinDashConfig
+        ui.add(egui::Slider::new(&mut self.dash_distance, 0.0..=40.0).text("Dash Distance"));
         ui.collapsing("One-way Platforms", |ui| {
             ui.add(
                 egui::Slider::new(&mut self.one_way_platforms_min_proximity, 0.0..=2.0)
@@ -645,14 +632,33 @@ impl UiTunable for CharacterMotionConfigForPlatformerDemo {
             );
             self.falling_through.tune(ui);
         });
+    }
+}
+
+impl UiTunable for DemoControlSchemeConfig {
+    fn tune(&mut self, ui: &mut egui::Ui) {
+        ui.collapsing("Walking:", |ui| {
+            self.basis.tune(ui);
+        });
+        ui.collapsing("Jumping:", |ui| {
+            self.jump.tune(ui);
+        });
+        ui.collapsing("Dashing:", |ui| {
+            self.dash.tune(ui);
+        });
+        ui.collapsing("Crouching:", |ui| {
+            self.crouch.tune(ui);
+        });
         ui.collapsing("Knockback:", |ui| {
             self.knockback.tune(ui);
         });
         ui.collapsing("Wall Slide:", |ui| {
             self.wall_slide.tune(ui);
         });
+        ui.collapsing("Wall Jump:", |ui| {
+            self.wall_jump.tune(ui);
+        });
         ui.collapsing("Climb", |ui| {
-            ui.add(egui::Slider::new(&mut self.climb_speed, 0.0..=30.0).text("Climb Speed"));
             self.climb.tune(ui);
         });
     }

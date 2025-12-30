@@ -121,11 +121,21 @@ pub enum TnuaAirActionsUpdate<D: TnuaActionDiscriminant> {
 /// A simple counter that counts together all the air actions a character is able to perform.
 ///
 /// It's [`update`](Self::update) must be called every frame.
-#[derive(Component, Default)]
+#[derive(Component)]
 pub struct TnuaSimpleAirActionsCounter<S: TnuaScheme> {
     tracker: TnuaAirActionsTracker,
     current_action: Option<(S::ActionDiscriminant, usize)>,
     air_actions_count: usize,
+}
+
+impl<S: TnuaScheme> Default for TnuaSimpleAirActionsCounter<S> {
+    fn default() -> Self {
+        Self {
+            tracker: Default::default(),
+            current_action: None,
+            air_actions_count: 0,
+        }
+    }
 }
 
 impl<S> TnuaSimpleAirActionsCounter<S>

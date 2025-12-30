@@ -15,12 +15,15 @@ use bevy::prelude::*;
 use bevy::window::{CursorOptions, PresentMode, PrimaryWindow};
 use bevy_egui::EguiPrimaryContextPass;
 #[cfg(feature = "egui")]
-use bevy_egui::{egui, EguiContexts, EguiPlugin};
-#[allow(unused_imports)]
-use bevy_tnua::math::AsF32;
-use bevy_tnua::math::{float_consts, Float, Vector2, Vector3};
+use bevy_egui::{EguiContexts, EguiPlugin, egui};
+use bevy_tnua::TnuaScheme;
 #[cfg(feature = "egui")]
 use bevy_tnua::TnuaToggle;
+#[allow(unused_imports)]
+use bevy_tnua::math::AsF32;
+use bevy_tnua::math::{Float, Vector2, Vector3, float_consts};
+#[cfg(feature = "egui")]
+use bevy_tnua::prelude::TnuaController;
 
 #[cfg(feature = "egui")]
 use crate::character_control_systems::platformer_control_systems::CameraControllerFloating;
@@ -34,11 +37,11 @@ use tuning::UiTunable;
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
 pub struct DemoInfoUpdateSystems;
 
-pub struct DemoUi<C: Component<Mutability = Mutable> + UiTunable> {
-    _phantom: PhantomData<C>,
+pub struct DemoUi<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable> {
+    _phantom: PhantomData<(S, C)>,
 }
 
-impl<C: Component<Mutability = Mutable> + UiTunable> Default for DemoUi<C> {
+impl<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable> Default for DemoUi<S, C> {
     fn default() -> Self {
         Self {
             _phantom: Default::default(),
@@ -48,7 +51,10 @@ impl<C: Component<Mutability = Mutable> + UiTunable> Default for DemoUi<C> {
 
 const GRAVITY_MAGNITUDE: Float = 9.81;
 
-impl<C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<C> {
+impl<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<S, C>
+where
+    S::Config: UiTunable,
+{
     fn build(&self, app: &mut App) {
         #[cfg(feature = "egui")]
         app.add_plugins(EguiPlugin::default());
@@ -64,7 +70,7 @@ impl<C: Component<Mutability = Mutable> + UiTunable> Plugin for DemoUi<C> {
         #[cfg(feature = "egui")]
         app.add_systems(
             EguiPrimaryContextPass,
-            ui_system::<C>.after(DemoInfoUpdateSystems),
+            ui_system::<S, C>.after(DemoInfoUpdateSystems),
         );
         #[cfg(feature = "egui")]
         app.add_systems(EguiPrimaryContextPass, plot_source_rolling_update);
@@ -131,7 +137,7 @@ fn apply_selectors(
 
 #[cfg(feature = "egui")]
 #[allow(clippy::type_complexity)]
-fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
+fn ui_system<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable>(
     mut egui_context: EguiContexts,
     mut physics_backend_settings: ResMut<DemoUiPhysicsBackendSettings>,
     mut query: Query<(
@@ -140,6 +146,7 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
         Option<&plotting::PlotSource>,
         Option<&mut info::InfoSource>,
         &mut TnuaToggle,
+        &TnuaController<S>,
         Option<&mut C>,
         Option<&mut CommandAlteringSelectors>,
         Option<&mut CameraControllerFloating>,
@@ -148,10 +155,13 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
     mut primary_window_query: Query<(&mut Window, &CursorOptions), With<PrimaryWindow>>,
     mut level_selection: level_selection::LevelSelectionParam,
     mut framerate: framerate::DemoFramerateParam,
+    mut control_scheme_config_assets: ResMut<Assets<S::Config>>,
     #[cfg(target_arch = "wasm32")] app_setup_configuration: Res<
         crate::app_setup_options::AppSetupConfiguration,
     >,
-) {
+) where
+    S::Config: UiTunable,
+{
     use std::any::TypeId;
 
     let Ok((mut primary_window, primary_window_cursor_options)) = primary_window_query.single_mut()
@@ -214,6 +224,7 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
             plot_source,
             mut info_source,
             mut tnua_toggle,
+            controller,
             mut tunable,
             command_altering_selectors,
             camera_controller
@@ -279,6 +290,9 @@ fn ui_system<C: Component<Mutability = Mutable> + UiTunable>(
                                 }
                             });
 
+                        if let Some(control_scheme_config) = control_scheme_config_assets.get_mut(&controller.config) {
+                            control_scheme_config.tune(ui);
+                        }
                         if let Some(tunable) = tunable.as_mut() {
                             tunable.tune(ui);
                         }

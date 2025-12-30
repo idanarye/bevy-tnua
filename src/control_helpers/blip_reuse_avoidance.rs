@@ -6,10 +6,19 @@ use crate::TnuaScheme;
 use crate::controller::TnuaActionFlowStatus;
 use crate::prelude::TnuaController;
 
-#[derive(Default, Component)]
+#[derive(Component)]
 pub struct TnuaBlipReuseAvoidance<S: TnuaScheme> {
     current_entity: Option<Entity>,
     entities_to_avoid: HashMap<Entity, S::ActionDiscriminant>,
+}
+
+impl<S: TnuaScheme> Default for TnuaBlipReuseAvoidance<S> {
+    fn default() -> Self {
+        Self {
+            current_entity: None,
+            entities_to_avoid: Default::default(),
+        }
+    }
 }
 
 pub trait TnuaHasTargetEntity: TnuaScheme {

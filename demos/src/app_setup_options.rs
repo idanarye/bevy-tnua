@@ -43,7 +43,9 @@ impl AppSetupConfiguration {
                 }
                 #[cfg(all(not(feature = "avian"), not(feature = "rapier")))]
                 {
-                    panic!("No schedule was specified, but also no physics engine is avaible. Therefore, there is no fallback.")
+                    panic!(
+                        "No schedule was specified, but also no physics engine is avaible. Therefore, there is no fallback."
+                    )
                 }
             },
             level_to_load: url_params.get("level"),

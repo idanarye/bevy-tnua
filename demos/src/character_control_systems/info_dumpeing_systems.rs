@@ -1,18 +1,19 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_tnua::prelude::TnuaController;
 use bevy_tnua::{
-    math::AsF32, radar_lens::TnuaRadarLens, TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor,
+    TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor, math::AsF32, radar_lens::TnuaRadarLens,
 };
 
 use crate::ui::info::InfoSource;
 
+use super::platformer_control_scheme::DemoControlScheme;
 use super::spatial_ext_facade::SpatialExtFacade;
 
 #[allow(clippy::type_complexity)]
 pub fn character_control_info_dumping_system(
     mut query: Query<(
         &mut InfoSource,
-        &TnuaController,
+        &TnuaController<DemoControlScheme>,
         &TnuaProximitySensor,
         Option<&TnuaGhostSensor>,
         Option<&TnuaObstacleRadar>,
@@ -23,7 +24,13 @@ pub fn character_control_info_dumping_system(
         if !info_source.is_active() {
             continue;
         }
-        info_source.label("Action", controller.action_name().unwrap_or_default());
+        info_source.label(
+            "Action",
+            controller
+                .action_discriminant()
+                .map(|action| format!("{action:?}"))
+                .unwrap_or_default(),
+        );
         if let Some(sensor_output) = sensor.output.as_ref() {
             if let Ok(name) = names_query.get(sensor_output.entity) {
                 info_source.label("Standing on", name.as_str());

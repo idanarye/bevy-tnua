@@ -6,15 +6,15 @@ use bevy::{color::palettes::css, prelude::*};
 use avian3d::{prelude as avian, prelude::*};
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
+use bevy_tnua::TnuaGhostPlatform;
 #[allow(unused_imports)]
 use bevy_tnua::math::{AdjustPrecision, Vector3};
-use bevy_tnua::TnuaGhostPlatform;
 
 use crate::level_mechanics::MovingPlatform;
 
 use super::{
-    helper::{LevelSetupHelper3d, LevelSetupHelper3dEntityCommandsExtension},
     PositionPlayer,
+    helper::{LevelSetupHelper3d, LevelSetupHelper3dEntityCommandsExtension},
 };
 
 #[cfg(feature = "avian3d")]

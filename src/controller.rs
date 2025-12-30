@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use crate::basis_capabilities::TnuaBasisWithGround;
 use crate::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
 };
@@ -128,6 +129,7 @@ pub struct TnuaController<S: TnuaScheme> {
     actions_being_fed: Vec<FedEntry>,
     contender_action: Option<ContenderAction<S>>,
     action_flow_status: TnuaActionFlowStatus<S::ActionDiscriminant>,
+    up_direction: Option<Dir3>,
     action_feeding_initiated: bool,
     pub current_action: Option<S::ActionState>,
 }
@@ -197,6 +199,7 @@ impl<S: TnuaScheme> TnuaController<S> {
             actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
             contender_action: None,
             action_flow_status: TnuaActionFlowStatus::NoAction,
+            up_direction: None,
             action_feeding_initiated: false,
             current_action: None,
         }
@@ -280,7 +283,9 @@ impl<S: TnuaScheme> TnuaController<S> {
     /// This is useful when matching on [`current_action`](Self::current_action) and wanting to
     /// continue feeding the **exact same** action with the **exact same** input without having to
     pub fn prolong_action(&mut self) {
-        todo!("Is this even needed?")
+        if let Some(current_action) = self.action_discriminant() {
+            self.actions_being_fed[current_action.variant_idx()].status = FedStatus::Fresh;
+        }
     }
 
     /// The discriminant of the currently running action.
@@ -304,15 +309,6 @@ impl<S: TnuaScheme> TnuaController<S> {
         &self.action_flow_status
     }
 
-    /// Checks if the character is currently airborne.
-    ///
-    /// The check is done based on the basis, and is equivalent to getting the controller's
-    /// [`dynamic_basis`](Self::dynamic_basis) and checking its
-    /// [`is_airborne`](TnuaBasis::is_airborne) method.
-    pub fn is_airborne(&self) -> bool {
-        todo!("maybe this should be separate?")
-    }
-
     /// Returns the direction considered as up.
     ///
     /// Note that the up direction is based on gravity, as reported by
@@ -321,8 +317,20 @@ impl<S: TnuaScheme> TnuaController<S> {
     /// consider using [`TnuaRigidBodyTracker::gravity`] directly or deducing the up direction via
     /// different means.
     pub fn up_direction(&self) -> Option<Dir3> {
-        todo!("need to save the up direction from the gravity")
-        //self.up_direction
+        self.up_direction
+    }
+}
+
+impl<S: TnuaScheme> TnuaController<S>
+where
+    S::Basis: TnuaBasisWithGround,
+{
+    /// Checks if the character is currently airborne.
+    ///
+    /// The check is done based on the basis, and is equivalent to getting the controller's
+    /// [`basis_access`](Self::basis_access) and using [`TnuaBasisWithGround::is_airborne`] on it.
+    pub fn is_airborne(&self) -> Result<bool, TnuaControllerHasNotPulledConfiguration> {
+        Ok(S::Basis::is_airborne(&self.basis_access()?))
     }
 }
 
@@ -370,6 +378,8 @@ fn apply_controller_system<S: TnuaScheme>(
             .expect("We just set it to Some");
 
         let up_direction = Dir3::new(-tracker.gravity.f32()).ok();
+        controller.up_direction = up_direction;
+        // TODO: support the case where there is no up direction at all?
         let up_direction = up_direction.unwrap_or(Dir3::Y);
 
         let proximity_sensor = sensor.as_mut();
