@@ -509,7 +509,13 @@ fn apply_controller_system<S: TnuaScheme>(
             );
             match directive {
                 TnuaActionLifecycleDirective::StillActive => {
-                    // TOOD: update flow status in case the action is ending
+                    if !lifecycle_status.is_active()
+                        && let TnuaActionFlowStatus::ActionOngoing(action_discriminant) =
+                            controller.action_flow_status
+                    {
+                        controller.action_flow_status =
+                            TnuaActionFlowStatus::ActionEnded(action_discriminant);
+                    }
                 }
                 TnuaActionLifecycleDirective::Finished
                 | TnuaActionLifecycleDirective::Reschedule { .. } => {
