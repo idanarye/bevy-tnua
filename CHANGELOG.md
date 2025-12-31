@@ -27,6 +27,8 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   `TnuaBlipReuseAvoidance` now require traits implemented on the scheme.
 - [**BREAKING**] `TnuaController::initiate_action_feeding` must be invoked each
   frame before feeding actions.
+- The proximity sensor is now an entity of its own. The basis defines which
+  sensors it'll have, and is in charge of creating them.
 - Upgrade edition to 2024.
 
 ### Added

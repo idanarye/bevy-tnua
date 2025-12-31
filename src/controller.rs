@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::basis_capabilities::TnuaBasisWithGround;
+use crate::sensor_sets::TnuaSensors;
 use crate::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
 };
@@ -120,12 +121,14 @@ struct FedEntry {
 ///
 /// Without [`TnuaControllerPlugin`] of the same scheme this component will not do anything.
 #[derive(Component)]
-#[require(TnuaMotor, TnuaRigidBodyTracker, TnuaProximitySensor)]
+#[require(TnuaMotor, TnuaRigidBodyTracker)]
 pub struct TnuaController<S: TnuaScheme> {
     /// Input for the basis - the main movement command.
     pub basis: S::Basis,
     pub basis_memory: <S::Basis as TnuaBasis>::Memory,
     pub basis_config: Option<<S::Basis as TnuaBasis>::Config>,
+    pub sensors_entities:
+        <<S::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::Entities,
     pub config: Handle<S::Config>,
     // TODO: If ever possible, make this a fixed size array:
     actions_being_fed: Vec<FedEntry>,
@@ -197,6 +200,7 @@ impl<S: TnuaScheme> TnuaController<S> {
             basis: Default::default(),
             basis_memory: Default::default(),
             basis_config: None,
+            sensors_entities: Default::default(),
             config,
             actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
             contender_action: None,
@@ -379,19 +383,21 @@ pub struct TnuaControllerHasNotPulledConfiguration;
 fn apply_controller_system<S: TnuaScheme>(
     time: Res<Time>,
     mut query: Query<(
+        Entity,
         &mut TnuaController<S>,
         &TnuaRigidBodyTracker,
-        &mut TnuaProximitySensor,
         &mut TnuaMotor,
         Option<&TnuaToggle>,
     )>,
+    proximity_sensors_query: Query<&TnuaProximitySensor>,
     config_assets: Res<Assets<S::Config>>,
+    mut commands: Commands,
 ) {
     let frame_duration = time.delta().as_secs_f64() as Float;
     if frame_duration == 0.0 {
         return;
     }
-    for (mut controller, tracker, mut sensor, mut motor, tnua_toggle) in query.iter_mut() {
+    for (controller_entity, mut controller, tracker, mut motor, tnua_toggle) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
@@ -419,7 +425,17 @@ fn apply_controller_system<S: TnuaScheme>(
         // TODO: support the case where there is no up direction at all?
         let up_direction = up_direction.unwrap_or(Dir3::Y);
 
-        let proximity_sensor = sensor.as_mut();
+        let basis_clone = basis_config.clone();
+        let Some((proximity_sensor, _sensors)) = S::Basis::get_or_create_sensors(
+            up_direction,
+            &basis_clone,
+            &mut controller.sensors_entities,
+            &proximity_sensors_query,
+            controller_entity,
+            &mut commands,
+        ) else {
+            continue;
+        };
 
         match controller.action_flow_status {
             TnuaActionFlowStatus::NoAction | TnuaActionFlowStatus::ActionOngoing(_) => {}
@@ -441,14 +457,12 @@ fn apply_controller_system<S: TnuaScheme>(
             TnuaBasisContext {
                 frame_duration,
                 tracker,
+                // sensors,
                 proximity_sensor,
                 up_direction,
             },
             &mut motor,
         );
-        let sensor_cast_range_for_basis = controller
-            .basis
-            .proximity_sensor_cast_range(basis_config, &controller.basis_memory);
 
         if controller.action_feeding_initiated {
             controller.action_feeding_initiated = false;
@@ -479,6 +493,7 @@ fn apply_controller_system<S: TnuaScheme>(
                         TnuaActionContext {
                             frame_duration,
                             tracker,
+                            // sensors,
                             proximity_sensor,
                             up_direction,
                             basis: &TnuaBasisAccess {
@@ -522,6 +537,7 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaActionContext {
                     frame_duration,
                     tracker,
+                    // sensors,
                     proximity_sensor,
                     basis: &TnuaBasisAccess {
                         input: &controller.basis,
@@ -537,6 +553,7 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaBasisContext {
                     frame_duration,
                     tracker,
+                    // sensors,
                     proximity_sensor,
                     up_direction,
                 },
@@ -589,6 +606,7 @@ fn apply_controller_system<S: TnuaScheme>(
                             TnuaBasisContext {
                                 frame_duration,
                                 tracker,
+                                // sensors,
                                 proximity_sensor,
                                 up_direction,
                             },
@@ -653,6 +671,7 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaActionContext {
                     frame_duration,
                     tracker,
+                    // sensors,
                     proximity_sensor,
                     basis: &TnuaBasisAccess {
                         input: &controller.basis,
@@ -668,6 +687,7 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaBasisContext {
                     frame_duration,
                     tracker,
+                    // sensors,
                     proximity_sensor,
                     up_direction,
                 },
@@ -679,13 +699,5 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaActionFlowStatus::ActionStarted(contender_action_state.discriminant());
             controller.current_action = Some(contender_action_state);
         }
-
-        let sensor_cast_range_for_action = 0.0; // TODO - base this on the action if there is one
-
-        proximity_sensor.cast_range = sensor_cast_range_for_basis.max(sensor_cast_range_for_action);
-        proximity_sensor.cast_direction = -up_direction;
-        // TODO: Maybe add the horizontal rotation as well somehow?
-        proximity_sensor.cast_shape_rotation =
-            Quaternion::from_rotation_arc(Vector3::Y, up_direction.adjust_precision());
     }
 }

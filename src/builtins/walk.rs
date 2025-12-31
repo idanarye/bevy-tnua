@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensor;
 
 use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
@@ -9,8 +10,11 @@ use crate::basis_capabilities::{
     TnuaBasisWithGround, TnuaBasisWithSpring,
 };
 use crate::math::*;
+use crate::sensor_sets::{ProximitySensorPreparationHelper, TnuaSensors};
 use crate::util::rotation_arc_around_axis;
 use crate::{TnuaBasisContext, TnuaMotor, TnuaVelChange};
+
+use super::walk_sensors::TnuaBuiltinWalkSensors;
 
 #[derive(Default)]
 pub struct TnuaBuiltinWalk {
@@ -168,6 +172,8 @@ impl TnuaBasis for TnuaBuiltinWalk {
     type Config = TnuaBuiltinWalkConfig;
 
     type Memory = TnuaBuiltinWalkMemory;
+
+    type Sensors<'a> = TnuaBuiltinWalkSensors<'a>;
 
     fn apply(
         &self,
@@ -455,6 +461,28 @@ impl TnuaBasis for TnuaBuiltinWalk {
 
     fn proximity_sensor_cast_range(&self, config: &Self::Config, _memory: &Self::Memory) -> Float {
         config.float_height + config.cling_distance
+    }
+
+    fn get_or_create_sensors<'a: 'b, 'b>(
+        up_direction: Dir3,
+        config: &'a Self::Config,
+        entities: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
+        proximity_sensors_query: &'b Query<&TnuaProximitySensor>,
+        controller_entity: Entity,
+        commands: &mut Commands,
+    ) -> Option<(&'b TnuaProximitySensor, Self::Sensors<'b>)> {
+        let ground = ProximitySensorPreparationHelper {
+            cast_direction: -up_direction,
+            cast_range: config.float_height + config.cling_distance,
+            ..Default::default()
+        }
+        .prepare_for(
+            &mut entities.ground,
+            proximity_sensors_query,
+            controller_entity,
+            commands,
+        );
+        Some((ground?, Self::Sensors { ground: ground? }))
     }
 }
 

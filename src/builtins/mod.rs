@@ -4,6 +4,7 @@ mod dash;
 mod jump;
 mod knockback;
 mod walk;
+mod walk_sensors;
 mod wall_slide;
 
 pub use climb::{TnuaBuiltinClimb, TnuaBuiltinClimbConfig, TnuaBuiltinClimbMemory};

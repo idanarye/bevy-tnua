@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use crate::TnuaMotor;
 use crate::action_state::TnuaActionStateInterface;
+use crate::sensor_sets::TnuaSensors;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensor;
@@ -62,6 +63,8 @@ pub struct TnuaBasisContext<'a> {
     /// A sensor that collects data about the rigid body from the physics backend.
     pub tracker: &'a TnuaRigidBodyTracker,
 
+    // pub sensors: S,
+
     /// A sensor that tracks the distance of the character's center from the ground.
     pub proximity_sensor: &'a TnuaProximitySensor,
 
@@ -84,6 +87,7 @@ pub struct TnuaBasisContext<'a> {
 pub trait TnuaBasis: Default + 'static + Send + Sync {
     type Config: Send + Sync + Clone;
     type Memory: Send + Sync + Default;
+    type Sensors<'a>: TnuaSensors<'a>;
 
     /// This is where the basis affects the character's motion.
     ///
@@ -106,6 +110,15 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
     /// A value to configure the range of the ground proximity sensor according to the basis'
     /// needs.
     fn proximity_sensor_cast_range(&self, config: &Self::Config, memory: &Self::Memory) -> Float;
+
+    fn get_or_create_sensors<'a: 'b, 'b>(
+        up_direction: Dir3,
+        config: &'a Self::Config,
+        entities: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
+        proximity_sensors_query: &'b Query<&TnuaProximitySensor>,
+        controller_entity: Entity,
+        commands: &mut Commands,
+    ) -> Option<(&'b TnuaProximitySensor, Self::Sensors<'b>)>;
 }
 
 /// Input for [`TnuaAction::apply`] that informs it about the long-term feeding of the input.
@@ -357,6 +370,7 @@ pub struct TnuaActionContext<'a, B: TnuaBasis> {
     /// A sensor that collects data about the rigid body from the physics backend.
     pub tracker: &'a TnuaRigidBodyTracker,
 
+    // pub sensors: B::Sensors<'a>,
     /// A sensor that tracks the distance of the character's center from the ground.
     pub proximity_sensor: &'a TnuaProximitySensor,
 
@@ -376,6 +390,7 @@ impl<'a, B: TnuaBasis> TnuaActionContext<'a, B> {
         TnuaBasisContext {
             frame_duration: self.frame_duration,
             tracker: self.tracker,
+            // sensors: self.sensors,
             proximity_sensor: self.proximity_sensor,
             up_direction: self.up_direction,
         }

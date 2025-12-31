@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Relationship for proximity sensors: `TnuaSensorsSet` and `TnuaSensorOf`.
+
 ## 0.10.0 - 2025-10-14
 ### Changed
 - Upgrade to Bevy 0.17.

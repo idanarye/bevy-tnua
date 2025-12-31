@@ -19,10 +19,10 @@ pub use spatial_ext::TnuaSpatialExtAvian3d;
 
 use bevy_tnua_physics_integration_layer::TnuaPipelineSystems;
 use bevy_tnua_physics_integration_layer::TnuaSystems;
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
 use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostPlatform, TnuaNotPlatform};
+use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostSensor, TnuaSensorOf};
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
 };
@@ -155,14 +155,17 @@ fn update_rigid_body_trackers_system(
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
-    mut query: Query<(
-        Entity,
+    mut sensor_query: Query<(
+        &mut TnuaProximitySensor,
+        &TnuaSensorOf,
+        Option<&TnuaAvian3dSensorShape>,
+        Option<&mut TnuaGhostSensor>,
+    )>,
+    owner_query: Query<(
         &Position,
         &Rotation,
         Option<&Collider>,
-        &mut TnuaProximitySensor,
         Option<&TnuaAvian3dSensorShape>,
-        Option<&mut TnuaGhostSensor>,
         Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
@@ -181,18 +184,14 @@ fn update_proximity_sensors_system(
         Has<TnuaNotPlatform>,
     )>,
 ) {
-    query.par_iter_mut().for_each(
-        |(
-            owner_entity,
-            position,
-            rotation,
-            collider,
-            mut sensor,
-            shape,
-            mut ghost_sensor,
-            subservient,
-            tnua_toggle,
-        )| {
+    sensor_query.par_iter_mut().for_each(
+        |(mut sensor, &TnuaSensorOf(owner_entity), shape, mut ghost_sensor)| {
+            let Ok((position, rotation, collider, owner_shape, subservient, tnua_toggle)) =
+                owner_query.get(owner_entity)
+            else {
+                return;
+            };
+            let shape = shape.or(owner_shape);
             match tnua_toggle.copied().unwrap_or_default() {
                 TnuaToggle::Disabled => return,
                 TnuaToggle::SenseOnly => {}
