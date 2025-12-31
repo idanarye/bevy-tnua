@@ -136,7 +136,7 @@ fn apply_selectors(
 }
 
 #[cfg(feature = "egui")]
-#[allow(clippy::type_complexity)]
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn ui_system<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable>(
     mut egui_context: EguiContexts,
     mut physics_backend_settings: ResMut<DemoUiPhysicsBackendSettings>,

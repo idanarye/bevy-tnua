@@ -458,23 +458,22 @@ pub fn apply_platformer_controls(
                     controller.action(DemoControlScheme::Climb(action));
                 } else if let TnuaBlipSpatialRelation::Aeside(blip_direction) =
                     blip.spatial_relation(0.5)
+                    && 0.5 < direction.dot(blip_direction.adjust_precision())
                 {
-                    if 0.5 < direction.dot(blip_direction.adjust_precision()) {
-                        let direction_to_anchor = match config.dimensionality {
-                            Dimensionality::Dim2 => Vector3::ZERO,
-                            Dimensionality::Dim3 => -blip
-                                .normal_from_closest_point()
-                                .reject_from_normalized(Vector3::Y),
-                        };
-                        controller.action(DemoControlScheme::Climb(TnuaBuiltinClimb {
-                            climbable_entity: Some(blip.entity()),
-                            anchor: blip.closest_point().get(),
-                            desired_vec_to_anchor: 0.5 * direction_to_anchor,
-                            desired_forward: Dir3::new(direction_to_anchor.f32()).ok(),
-                            initiation_direction: direction.normalize_or_zero(),
-                            ..Default::default()
-                        }));
-                    }
+                    let direction_to_anchor = match config.dimensionality {
+                        Dimensionality::Dim2 => Vector3::ZERO,
+                        Dimensionality::Dim3 => -blip
+                            .normal_from_closest_point()
+                            .reject_from_normalized(Vector3::Y),
+                    };
+                    controller.action(DemoControlScheme::Climb(TnuaBuiltinClimb {
+                        climbable_entity: Some(blip.entity()),
+                        anchor: blip.closest_point().get(),
+                        desired_vec_to_anchor: 0.5 * direction_to_anchor,
+                        desired_forward: Dir3::new(direction_to_anchor.f32()).ok(),
+                        initiation_direction: direction.normalize_or_zero(),
+                        ..Default::default()
+                    }));
                 }
             }
             if !blip.is_interactable() {

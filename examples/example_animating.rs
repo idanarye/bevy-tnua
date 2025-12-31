@@ -288,10 +288,10 @@ fn handle_animating(
             // Specifically for the running animation, even when the state remains the speed can
             // still change. When it does, we simply need to update the speed in the animation
             // player.
-            if let AnimationState::Running(speed) = state {
-                if let Some(animation) = animation_player.animation_mut(animation_nodes.running) {
-                    animation.set_speed(*speed);
-                }
+            if let AnimationState::Running(speed) = state
+                && let Some(animation) = animation_player.animation_mut(animation_nodes.running)
+            {
+                animation.set_speed(*speed);
             }
         }
         TnuaAnimatingStateDirective::Alter {
