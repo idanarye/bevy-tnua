@@ -26,6 +26,7 @@ impl<A: TnuaAction<B>, B: TnuaBasis> TnuaActionState<A, B> {
 pub trait TnuaActionStateInterface<B: TnuaBasis> {
     fn apply(
         &mut self,
+        sensors: &B::Sensors<'_>,
         ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
@@ -43,12 +44,19 @@ pub trait TnuaActionStateInterface<B: TnuaBasis> {
 impl<A: TnuaAction<B>, B: TnuaBasis> TnuaActionStateInterface<B> for TnuaActionState<A, B> {
     fn apply(
         &mut self,
+        sensors: &B::Sensors<'_>,
         ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
-        self.input
-            .apply(&self.config, &mut self.memory, ctx, lifecycle_status, motor)
+        self.input.apply(
+            &self.config,
+            &mut self.memory,
+            sensors,
+            ctx,
+            lifecycle_status,
+            motor,
+        )
     }
 
     fn influence_basis(

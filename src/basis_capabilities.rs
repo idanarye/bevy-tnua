@@ -1,4 +1,4 @@
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaVelChange;
+use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaProximitySensor, TnuaVelChange};
 
 use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
@@ -37,6 +37,8 @@ pub trait TnuaBasisWithGround: TnuaBasis {
     ///
     /// If the character is fully grounded, this method must not change that.
     fn violate_coyote_time(memory: &mut Self::Memory);
+
+    fn ground_sensor<'a>(sensors: &Self::Sensors<'a>) -> &'a TnuaProximitySensor;
 }
 
 pub trait TnuaBasisWithFloating: TnuaBasis {

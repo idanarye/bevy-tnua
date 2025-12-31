@@ -179,6 +179,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         &self,
         config: &Self::Config,
         memory: &mut Self::Memory,
+        sensors: &Self::Sensors<'_>,
         ctx: TnuaBasisContext,
         motor: &mut TnuaMotor,
     ) {
@@ -192,7 +193,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         let impulse_to_offset: Vector3;
         let slipping_vector: Option<Vector3>;
 
-        if let Some(sensor_output) = &ctx.proximity_sensor.output {
+        if let Some(sensor_output) = &sensors.ground.output {
             memory.effective_velocity = ctx.tracker.velocity - sensor_output.entity_linvel;
             let sideways_unnormalized = sensor_output
                 .normal
@@ -360,7 +361,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                 match &mut memory.airborne_timer {
                     None => {
                         if let (false, Some(sensor_output)) =
-                            (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
+                            (should_disable_due_to_slipping, &sensors.ground.output)
                         {
                             // not doing the jump calculation here
                             let spring_offset =
@@ -386,7 +387,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
                     }
                     Some(_) => {
                         if let (false, Some(sensor_output)) =
-                            (should_disable_due_to_slipping, &ctx.proximity_sensor.output)
+                            (should_disable_due_to_slipping, &sensors.ground.output)
                             && sensor_output.proximity.adjust_precision() <= config.float_height
                         {
                             memory.airborne_timer = None;
@@ -470,7 +471,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
         proximity_sensors_query: &'b Query<&TnuaProximitySensor>,
         controller_entity: Entity,
         commands: &mut Commands,
-    ) -> Option<(&'b TnuaProximitySensor, Self::Sensors<'b>)> {
+    ) -> Option<Self::Sensors<'b>> {
         let ground = ProximitySensorPreparationHelper {
             cast_direction: -up_direction,
             cast_range: config.float_height + config.cling_distance,
@@ -482,7 +483,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
             controller_entity,
             commands,
         );
-        Some((ground?, Self::Sensors { ground: ground? }))
+        Some(Self::Sensors { ground: ground? })
     }
 }
 
@@ -516,6 +517,10 @@ impl TnuaBasisWithGround for TnuaBuiltinWalk {
         if let Some(timer) = &mut memory.airborne_timer {
             timer.set_duration(Duration::ZERO);
         }
+    }
+
+    fn ground_sensor<'a>(sensors: &Self::Sensors<'a>) -> &'a TnuaProximitySensor {
+        sensors.ground
     }
 }
 impl TnuaBasisWithFloating for TnuaBuiltinWalk {

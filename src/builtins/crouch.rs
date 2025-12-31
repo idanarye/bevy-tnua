@@ -1,6 +1,6 @@
 use bevy::time::Stopwatch;
 
-use crate::basis_capabilities::{TnuaBasisWithFloating, TnuaBasisWithSpring};
+use crate::basis_capabilities::{TnuaBasisWithFloating, TnuaBasisWithGround, TnuaBasisWithSpring};
 use crate::{TnuaAction, TnuaActionContext, TnuaBasis};
 use crate::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
@@ -66,6 +66,7 @@ impl<B: TnuaBasis> TnuaAction<B> for TnuaBuiltinCrouch
 where
     B: TnuaBasisWithFloating,
     B: TnuaBasisWithSpring,
+    B: TnuaBasisWithGround,
 {
     type Config = TnuaBuiltinCrouchConfig;
     type Memory = TnuaBuiltinCrouchMemory;
@@ -73,10 +74,11 @@ where
     fn initiation_decision(
         &self,
         _config: &Self::Config,
-        ctx: TnuaActionContext<B>,
+        sensors: &B::Sensors<'_>,
+        _ctx: TnuaActionContext<B>,
         _being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective {
-        if ctx.proximity_sensor.output.is_some() {
+        if B::ground_sensor(sensors).output.is_some() {
             TnuaActionInitiationDirective::Allow
         } else {
             TnuaActionInitiationDirective::Delay
@@ -87,11 +89,12 @@ where
         &self,
         config: &Self::Config,
         memory: &mut Self::Memory,
+        sensors: &B::Sensors<'_>,
         ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> crate::TnuaActionLifecycleDirective {
-        let Some(sensor_output) = &ctx.proximity_sensor.output else {
+        let Some(sensor_output) = &B::ground_sensor(sensors).output else {
             return TnuaActionLifecycleDirective::Reschedule { after_seconds: 0.0 };
         };
         let spring_offset_up =

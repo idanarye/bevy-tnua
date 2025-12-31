@@ -38,6 +38,7 @@ pub trait TnuaScheme: 'static + Send + Sync + Sized {
     fn initiation_decision(
         &self,
         config: &Self::Config,
+        sensors: &<Self::Basis as TnuaBasis>::Sensors<'_>,
         ctx: TnuaActionContext<Self::Basis>,
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective;
@@ -62,11 +63,6 @@ pub struct TnuaBasisContext<'a> {
 
     /// A sensor that collects data about the rigid body from the physics backend.
     pub tracker: &'a TnuaRigidBodyTracker,
-
-    // pub sensors: S,
-
-    /// A sensor that tracks the distance of the character's center from the ground.
-    pub proximity_sensor: &'a TnuaProximitySensor,
 
     /// The direction considered as "up".
     pub up_direction: Dir3,
@@ -103,6 +99,7 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
         &self,
         config: &Self::Config,
         memory: &mut Self::Memory,
+        sensors: &Self::Sensors<'_>,
         ctx: TnuaBasisContext,
         motor: &mut TnuaMotor,
     );
@@ -118,7 +115,7 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
         proximity_sensors_query: &'b Query<&TnuaProximitySensor>,
         controller_entity: Entity,
         commands: &mut Commands,
-    ) -> Option<(&'b TnuaProximitySensor, Self::Sensors<'b>)>;
+    ) -> Option<Self::Sensors<'b>>;
 }
 
 /// Input for [`TnuaAction::apply`] that informs it about the long-term feeding of the input.
@@ -293,6 +290,7 @@ pub trait TnuaAction<B: TnuaBasis>: 'static + Send + Sync {
     fn initiation_decision(
         &self,
         config: &Self::Config,
+        sensors: &B::Sensors<'_>,
         ctx: TnuaActionContext<B>,
         being_fed_for: &Stopwatch,
     ) -> TnuaActionInitiationDirective;
@@ -312,6 +310,7 @@ pub trait TnuaAction<B: TnuaBasis>: 'static + Send + Sync {
         &self,
         config: &Self::Config,
         memory: &mut Self::Memory,
+        sensors: &B::Sensors<'_>,
         ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
@@ -370,10 +369,6 @@ pub struct TnuaActionContext<'a, B: TnuaBasis> {
     /// A sensor that collects data about the rigid body from the physics backend.
     pub tracker: &'a TnuaRigidBodyTracker,
 
-    // pub sensors: B::Sensors<'a>,
-    /// A sensor that tracks the distance of the character's center from the ground.
-    pub proximity_sensor: &'a TnuaProximitySensor,
-
     /// The direction considered as "up".
     pub up_direction: Dir3,
 
@@ -390,8 +385,6 @@ impl<'a, B: TnuaBasis> TnuaActionContext<'a, B> {
         TnuaBasisContext {
             frame_duration: self.frame_duration,
             tracker: self.tracker,
-            // sensors: self.sensors,
-            proximity_sensor: self.proximity_sensor,
             up_direction: self.up_direction,
         }
     }

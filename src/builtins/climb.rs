@@ -100,6 +100,7 @@ where
     fn initiation_decision(
         &self,
         _config: &Self::Config,
+        _sensors: &B::Sensors<'_>,
         _ctx: TnuaActionContext<B>,
         _being_fed_for: &bevy::time::Stopwatch,
     ) -> TnuaActionInitiationDirective {
@@ -110,6 +111,7 @@ where
         &self,
         config: &Self::Config,
         memory: &mut Self::Memory,
+        _sensors: &B::Sensors<'_>,
         ctx: TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,

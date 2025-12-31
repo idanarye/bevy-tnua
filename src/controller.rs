@@ -426,7 +426,7 @@ fn apply_controller_system<S: TnuaScheme>(
         let up_direction = up_direction.unwrap_or(Dir3::Y);
 
         let basis_clone = basis_config.clone();
-        let Some((proximity_sensor, _sensors)) = S::Basis::get_or_create_sensors(
+        let Some(sensors) = S::Basis::get_or_create_sensors(
             up_direction,
             &basis_clone,
             &mut controller.sensors_entities,
@@ -454,11 +454,10 @@ fn apply_controller_system<S: TnuaScheme>(
         controller.basis.apply(
             basis_config,
             &mut controller.basis_memory,
+            &sensors,
             TnuaBasisContext {
                 frame_duration,
                 tracker,
-                // sensors,
-                proximity_sensor,
                 up_direction,
             },
             &mut motor,
@@ -490,11 +489,10 @@ fn apply_controller_system<S: TnuaScheme>(
                 {
                     let initiation_decision = contender_action.action.initiation_decision(
                         config,
+                        &sensors,
                         TnuaActionContext {
                             frame_duration,
                             tracker,
-                            // sensors,
-                            proximity_sensor,
                             up_direction,
                             basis: &TnuaBasisAccess {
                                 input: &controller.basis,
@@ -534,11 +532,10 @@ fn apply_controller_system<S: TnuaScheme>(
             };
 
             let directive = action_state.interface_mut().apply(
+                &sensors,
                 TnuaActionContext {
                     frame_duration,
                     tracker,
-                    // sensors,
-                    proximity_sensor,
                     basis: &TnuaBasisAccess {
                         input: &controller.basis,
                         config: basis_config,
@@ -553,8 +550,6 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaBasisContext {
                     frame_duration,
                     tracker,
-                    // sensors,
-                    proximity_sensor,
                     up_direction,
                 },
                 &controller.basis,
@@ -588,10 +583,10 @@ fn apply_controller_system<S: TnuaScheme>(
                             .rescheduled_in = None;
 
                         let contender_directive = contender_action_state.interface_mut().apply(
+                            &sensors,
                             TnuaActionContext {
                                 frame_duration,
                                 tracker,
-                                proximity_sensor,
                                 basis: &TnuaBasisAccess {
                                     input: &controller.basis,
                                     config: basis_config,
@@ -606,8 +601,6 @@ fn apply_controller_system<S: TnuaScheme>(
                             TnuaBasisContext {
                                 frame_duration,
                                 tracker,
-                                // sensors,
-                                proximity_sensor,
                                 up_direction,
                             },
                             &controller.basis,
@@ -668,11 +661,10 @@ fn apply_controller_system<S: TnuaScheme>(
                 contender_action.action.into_action_state_variant(config);
 
             contender_action_state.interface_mut().apply(
+                &sensors,
                 TnuaActionContext {
                     frame_duration,
                     tracker,
-                    // sensors,
-                    proximity_sensor,
                     basis: &TnuaBasisAccess {
                         input: &controller.basis,
                         config: basis_config,
@@ -687,8 +679,6 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaBasisContext {
                     frame_duration,
                     tracker,
-                    // sensors,
-                    proximity_sensor,
                     up_direction,
                 },
                 &controller.basis,

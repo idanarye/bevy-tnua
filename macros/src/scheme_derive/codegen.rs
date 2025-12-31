@@ -112,12 +112,13 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             fn initiation_decision(
                 &self,
                 config: &#config_struct_name,
+                sensors: &<Self::Basis as bevy_tnua::TnuaBasis>::Sensors<'_>,
                 ctx: bevy_tnua::TnuaActionContext<Self::Basis>,
                 being_fed_for: &bevy::time::Stopwatch,
             ) -> bevy_tnua::TnuaActionInitiationDirective {
                 match self {
                     #(
-                        Self::#command_names(action, ..) => bevy_tnua::TnuaAction::initiation_decision(action, &config.#command_names_snake, ctx, being_fed_for),
+                        Self::#command_names(action, ..) => bevy_tnua::TnuaAction::initiation_decision(action, &config.#command_names_snake, sensors, ctx, being_fed_for),
                     )*
                 }
             }

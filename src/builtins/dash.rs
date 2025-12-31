@@ -73,6 +73,7 @@ where
     fn initiation_decision(
         &self,
         config: &Self::Config,
+        _sensors: &B::Sensors<'_>,
         ctx: crate::TnuaActionContext<B>,
         being_fed_for: &bevy::time::Stopwatch,
     ) -> crate::TnuaActionInitiationDirective {
@@ -92,6 +93,7 @@ where
         &self,
         config: &Self::Config,
         memory: &mut Self::Memory,
+        _sensors: &B::Sensors<'_>,
         ctx: TnuaActionContext<B>,
         _lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
