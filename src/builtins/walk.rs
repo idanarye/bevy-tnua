@@ -7,7 +7,7 @@ use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
 use crate::basis_capabilities::{
     TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithFloating,
-    TnuaBasisWithGround, TnuaBasisWithSpring,
+    TnuaBasisWithGround, TnuaBasisWithHeadroom, TnuaBasisWithSpring,
 };
 use crate::math::*;
 use crate::sensor_sets::{ProximitySensorPreparationHelper, TnuaSensors};
@@ -50,6 +50,8 @@ pub struct TnuaBuiltinWalkConfig {
     /// To make a character crouch, instead of altering this field, prefer to use the
     /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) action.
     pub float_height: Float,
+
+    pub headroom: Option<TnuaBuiltinWalkHeadroom>,
 
     /// Extra distance above the `float_height` where the spring is still in effect.
     ///
@@ -118,11 +120,27 @@ pub struct TnuaBuiltinWalkConfig {
     pub max_slope: Float,
 }
 
+#[derive(Clone)]
+pub struct TnuaBuiltinWalkHeadroom {
+    pub distance_to_collider_top: Float,
+    pub sensor_extra_distance: Float,
+}
+
+impl Default for TnuaBuiltinWalkHeadroom {
+    fn default() -> Self {
+        Self {
+            distance_to_collider_top: 0.0,
+            sensor_extra_distance: 0.1,
+        }
+    }
+}
+
 impl Default for TnuaBuiltinWalkConfig {
     fn default() -> Self {
         Self {
             speed: 10.0,
             float_height: 0.0,
+            headroom: None,
             cling_distance: 1.0,
             spring_strength: 400.0,
             spring_dampening: 1.2,
@@ -158,6 +176,7 @@ pub struct TnuaBuiltinWalkMemory {
     /// ([`standing_on_entity`](Self::standing_on_entity) returns `Some`) then the
     /// `running_velocity` will be relative to the velocity of that entity.
     pub running_velocity: Vector3,
+    extra_headroom: Float,
 }
 
 // TODO: move these to a trait?
@@ -187,6 +206,10 @@ impl TnuaBasis for TnuaBuiltinWalk {
             #[allow(clippy::unnecessary_cast)]
             stopwatch.tick(Duration::from_secs_f64(ctx.frame_duration as f64));
         }
+
+        // Reset this every frame - if there is an action that changes it, it will use
+        // `influence_basis` to set it back immediately after.
+        memory.extra_headroom = 0.0;
 
         let climb_vectors: Option<ClimbVectors>;
         let considered_in_air: bool;
@@ -467,6 +490,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
     fn get_or_create_sensors<'a: 'b, 'b>(
         up_direction: Dir3,
         config: &'a Self::Config,
+        memory: &Self::Memory,
         entities: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
         proximity_sensors_query: &'b Query<&TnuaProximitySensor>,
         controller_entity: Entity,
@@ -483,7 +507,34 @@ impl TnuaBasis for TnuaBuiltinWalk {
             controller_entity,
             commands,
         );
-        Some(Self::Sensors { ground: ground? })
+
+        let headroom = if let Some(headroom) = config.headroom.as_ref() {
+            ProximitySensorPreparationHelper {
+                cast_direction: up_direction,
+                cast_range: headroom.distance_to_collider_top
+                    + headroom.sensor_extra_distance
+                    + memory.extra_headroom,
+                ..Default::default()
+            }
+            .prepare_for(
+                &mut entities.headroom,
+                proximity_sensors_query,
+                controller_entity,
+                commands,
+            )
+        } else {
+            ProximitySensorPreparationHelper::ensure_not_existing(
+                &mut entities.headroom,
+                proximity_sensors_query,
+                commands,
+            )
+        };
+        // .prepare_for(
+
+        Some(Self::Sensors {
+            ground: ground?,
+            headroom,
+        })
     }
 }
 
@@ -521,6 +572,20 @@ impl TnuaBasisWithGround for TnuaBuiltinWalk {
 
     fn ground_sensor<'a>(sensors: &Self::Sensors<'a>) -> &'a TnuaProximitySensor {
         sensors.ground
+    }
+}
+impl TnuaBasisWithHeadroom for TnuaBuiltinWalk {
+    fn headroom_intrusion<'a>(
+        access: &TnuaBasisAccess<Self>,
+        sensors: &Self::Sensors<'a>,
+    ) -> Option<std::ops::Range<Float>> {
+        let headroom_config = access.config.headroom.as_ref()?;
+        let headroom_sensor_output = sensors.headroom?.output.as_ref()?;
+        Some(headroom_config.distance_to_collider_top..headroom_sensor_output.proximity)
+    }
+
+    fn set_extra_headroom(memory: &mut Self::Memory, extra_headroom: Float) {
+        memory.extra_headroom = extra_headroom.max(0.0);
     }
 }
 impl TnuaBasisWithFloating for TnuaBuiltinWalk {

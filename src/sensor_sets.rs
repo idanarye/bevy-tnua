@@ -72,4 +72,19 @@ impl ProximitySensorPreparationHelper {
             None
         }
     }
+
+    pub fn ensure_not_existing<'a>(
+        put_in_entity: &mut Option<Entity>,
+        proximity_sensors_query: &'a Query<&TnuaProximitySensor>,
+        commands: &mut Commands,
+    ) -> Option<&'a TnuaProximitySensor> {
+        if let Some(sensor_entity) = put_in_entity {
+            if proximity_sensors_query.contains(*sensor_entity) {
+                commands.entity(*sensor_entity).despawn();
+            } else {
+                *put_in_entity = None;
+            }
+        }
+        None
+    }
 }

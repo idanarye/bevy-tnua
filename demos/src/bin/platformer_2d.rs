@@ -4,9 +4,7 @@ use bevy::prelude::*;
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
 use bevy_tnua::control_helpers::{
-    TnuaBlipReuseAvoidance, // TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin,
-    TnuaSimpleAirActionsCounter,
-    TnuaSimpleFallThroughPlatformsHelper,
+    TnuaBlipReuseAvoidance, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{AsF32, Vector3, float_consts};
@@ -88,14 +86,9 @@ fn main() {
         ScheduleToUse::Update => {
             // This is Tnua's main plugin.
             app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(Update));
-
-            // This plugin supports `TnuaCrouchEnforcer`, which prevents the character from standing up
-            // while obstructed by an obstacle.
-            //app.add_plugins(TnuaCrouchEnforcerPlugin::new(Update));
         }
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(FixedUpdate));
-            //app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
         }
     }
 
@@ -325,18 +318,6 @@ fn setup_player(
         );
         command_altering_selectors
     });
-
-    // `TnuaCrouchEnforcer` can be used to prevent the character from standing up when obstructed.
-    // cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vector3::Y, |cmd| {
-    // // It needs a sensor shape because it needs to do a shapecast upwards. Without a sensor shape
-    // // it'd do a raycast.
-    // #[cfg(feature = "rapier2d")]
-    // cmd.insert(TnuaRapier2dSensorShape(
-    // bevy_rapier2d::parry::shape::SharedShape::cuboid(0.5, 0.0),
-    // ));
-    // #[cfg(feature = "avian2d")]
-    // cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.0, 0.0)));
-    // }));
 
     // The ghost sensor is used for detecting ghost platforms - platforms configured in the physics
     // backend to not contact with the character (or detect the contact but not apply physical

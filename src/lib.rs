@@ -27,11 +27,8 @@
 //!
 //! Some physics backends support running in different schedules (e.g. `FixedUpdate` to make the
 //! simulation deterministic). When using this feature, the physics integration plugin,
-//! `TnuaControllerPlugin`, and any other Tnua plugin that supports it (such as
-//! [`TnuaCrouchEnforcer`](crate::control_helpers::TnuaCrouchEnforcer)) must also be registered in
-//! that schedule, using their `::new()` method instead of `::default()`. The player controls
-//! systems must also be registered under that same schedule (instead of under `Update`, which is
-//! where it should usually be registered)
+//! `TnuaControllerPlugin`, and any other Tnua plugin that supports it  must also be registered in
+//! that schedule, using their `::new()` method instead of `::default()`.
 //!
 //! A Tnua controlled character must have a dynamic rigid body, everything from
 //! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle`), and a

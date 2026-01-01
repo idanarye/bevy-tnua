@@ -2,8 +2,8 @@ use bevy_tnua::TnuaScheme;
 use bevy_tnua::builtins::{
     TnuaBuiltinClimb, TnuaBuiltinClimbConfig, TnuaBuiltinCrouch, TnuaBuiltinCrouchConfig,
     TnuaBuiltinDash, TnuaBuiltinDashConfig, TnuaBuiltinJump, TnuaBuiltinJumpConfig,
-    TnuaBuiltinKnockback, TnuaBuiltinWalk, TnuaBuiltinWalkConfig, TnuaBuiltinWallSlide,
-    TnuaBuiltinWallSlideConfig,
+    TnuaBuiltinKnockback, TnuaBuiltinWalk, TnuaBuiltinWalkConfig, TnuaBuiltinWalkHeadroom,
+    TnuaBuiltinWallSlide, TnuaBuiltinWallSlideConfig,
 };
 use bevy_tnua::control_helpers::{TnuaAirActionDefinition, TnuaHasTargetEntity};
 use bevy_tnua::math::*;
@@ -54,6 +54,10 @@ impl DemoControlSchemeConfig {
             basis: TnuaBuiltinWalkConfig {
                 speed: walk_speed,
                 float_height: 2.0,
+                headroom: Some(TnuaBuiltinWalkHeadroom {
+                    distance_to_collider_top: 1.0,
+                    ..Default::default()
+                }),
                 max_slope: float_consts::FRAC_PI_4,
                 ..Default::default()
             },

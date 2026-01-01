@@ -12,7 +12,9 @@ pub use crouch::{TnuaBuiltinCrouch, TnuaBuiltinCrouchConfig, TnuaBuiltinCrouchMe
 pub use dash::{TnuaBuiltinDash, TnuaBuiltinDashConfig, TnuaBuiltinDashMemory};
 pub use jump::{TnuaBuiltinJump, TnuaBuiltinJumpConfig, TnuaBuiltinJumpMemory};
 pub use knockback::{TnuaBuiltinKnockback, TnuaBuiltinKnockbackConfig, TnuaBuiltinKnockbackMemory};
-pub use walk::{TnuaBuiltinWalk, TnuaBuiltinWalkConfig, TnuaBuiltinWalkMemory};
+pub use walk::{
+    TnuaBuiltinWalk, TnuaBuiltinWalkConfig, TnuaBuiltinWalkHeadroom, TnuaBuiltinWalkMemory,
+};
 pub use wall_slide::{
     TnuaBuiltinWallSlide, TnuaBuiltinWallSlideConfig, TnuaBuiltinWallSlideMemory,
 };

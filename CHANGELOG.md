@@ -41,6 +41,8 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 - `TnuaController::named_action` - different actions that use the same base
   `TnuaAction` type should now be done as different variants of the same scheme
   that use the same action type.
+- `TnuaCrouchEnforcer` - its behavior is now part of `TnuaBuiltinCrouch` (via
+  the new `headroom` configuration for `TnuaBuiltinWalk`)
 
 ## 0.26.0 - 2025-10-14
 ### Changed

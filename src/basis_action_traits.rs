@@ -111,6 +111,7 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
     fn get_or_create_sensors<'a: 'b, 'b>(
         up_direction: Dir3,
         config: &'a Self::Config,
+        memory: &Self::Memory,
         entities: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
         proximity_sensors_query: &'b Query<&TnuaProximitySensor>,
         controller_entity: Entity,

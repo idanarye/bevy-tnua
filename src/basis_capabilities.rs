@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaProximitySensor, TnuaVelChange};
 
 use crate::TnuaBasis;
@@ -39,6 +41,15 @@ pub trait TnuaBasisWithGround: TnuaBasis {
     fn violate_coyote_time(memory: &mut Self::Memory);
 
     fn ground_sensor<'a>(sensors: &Self::Sensors<'a>) -> &'a TnuaProximitySensor;
+}
+
+pub trait TnuaBasisWithHeadroom: TnuaBasis {
+    fn headroom_intrusion<'a>(
+        access: &TnuaBasisAccess<Self>,
+        sensors: &Self::Sensors<'a>,
+    ) -> Option<Range<Float>>;
+
+    fn set_extra_headroom(memory: &mut Self::Memory, extra_headroom: Float);
 }
 
 pub trait TnuaBasisWithFloating: TnuaBasis {

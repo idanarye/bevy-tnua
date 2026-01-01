@@ -42,12 +42,6 @@ pub fn apply_platformer_controls(
         // This is the main component used for interacting with Tnua. It is used for both issuing
         // commands and querying the character's state.
         &mut TnuaController<DemoControlScheme>,
-        // This is an helper for preventing the character from standing up while under an
-        // obstacle, since this will make it slam into the obstacle, causing weird physics
-        // behavior.
-        // Most of the job is done by TnuaCrouchEnforcerPlugin - the control system only
-        // needs to "let it know" about the crouch action.
-        //&mut TnuaCrouchEnforcer,
         // The proximity sensor usually works behind the scenes, but we need it here because
         // manipulating the proximity sensor using data from the ghost sensor is how one-way
         // platforms work in Tnua.
@@ -98,7 +92,6 @@ pub fn apply_platformer_controls(
     for (
         config,
         mut controller,
-        //mut crouch_enforcer,
         //mut sensor,
         // ghost_sensor,
         mut _fall_through_helper,
@@ -534,10 +527,7 @@ pub fn apply_platformer_controls(
             // nothing to set from the current frame's input. We do pass it through the crouch
             // enforcer though, which makes sure the character does not stand up if below an
             // obstacle.
-            controller.action(
-                //crouch_enforcer.enforcing(
-                DemoControlScheme::Crouch(Default::default()), //)
-            );
+            controller.action(DemoControlScheme::Crouch(Default::default()));
         }
 
         if jump {

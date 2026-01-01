@@ -425,10 +425,10 @@ fn apply_controller_system<S: TnuaScheme>(
         // TODO: support the case where there is no up direction at all?
         let up_direction = up_direction.unwrap_or(Dir3::Y);
 
-        let basis_clone = basis_config.clone();
         let Some(sensors) = S::Basis::get_or_create_sensors(
             up_direction,
-            &basis_clone,
+            basis_config,
+            &controller.basis_memory,
             &mut controller.sensors_entities,
             &proximity_sensors_query,
             controller_entity,

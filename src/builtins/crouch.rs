@@ -1,6 +1,8 @@
 use bevy::time::Stopwatch;
 
-use crate::basis_capabilities::{TnuaBasisWithFloating, TnuaBasisWithGround, TnuaBasisWithSpring};
+use crate::basis_capabilities::{
+    TnuaBasisWithFloating, TnuaBasisWithGround, TnuaBasisWithHeadroom, TnuaBasisWithSpring,
+};
 use crate::{TnuaAction, TnuaActionContext, TnuaBasis};
 use crate::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
@@ -8,15 +10,7 @@ use crate::{
 use crate::{TnuaMotor, TnuaVelChange};
 
 #[derive(Debug, Default)]
-pub struct TnuaBuiltinCrouch {
-    /// If set to `true`, this action will not yield to other action who try to take control.
-    ///
-    /// For example - if the player holds the crouch button, and then hits the jump button while
-    /// the crouch button is still pressed, the character will jump if `uncancellable` is `false`.
-    /// But if `uncancellable` is `true`, the character will stay crouched, ignoring the jump
-    /// action.
-    pub uncancellable: bool,
-}
+pub struct TnuaBuiltinCrouch;
 
 #[derive(Clone)]
 pub struct TnuaBuiltinCrouchConfig {
@@ -67,6 +61,7 @@ where
     B: TnuaBasisWithFloating,
     B: TnuaBasisWithSpring,
     B: TnuaBasisWithGround,
+    B: TnuaBasisWithHeadroom,
 {
     type Config = TnuaBuiltinCrouchConfig;
     type Memory = TnuaBuiltinCrouchMemory;
@@ -110,10 +105,18 @@ where
                 *memory = Self::Memory::Rising;
             }
             TnuaActionLifecycleStatus::CancelledInto => {
-                if !self.uncancellable {
-                    *memory = TnuaBuiltinCrouchMemory::Rising;
-                }
+                *memory = TnuaBuiltinCrouchMemory::Rising;
             }
+        }
+
+        let can_stand = B::headroom_intrusion(ctx.basis, sensors)
+            .map(|headroom_intrusion| {
+                spring_offset_up < headroom_intrusion.end - headroom_intrusion.start
+            })
+            .unwrap_or(true);
+
+        if !can_stand && matches!(memory, TnuaBuiltinCrouchMemory::Rising) {
+            *memory = TnuaBuiltinCrouchMemory::Maintaining;
         }
 
         let spring_force = |spring_offset: Float| -> TnuaVelChange {
@@ -169,6 +172,18 @@ where
                 }
             }
         }
+    }
+
+    fn influence_basis(
+        &self,
+        config: &Self::Config,
+        _memory: &Self::Memory,
+        _ctx: crate::TnuaBasisContext,
+        _basis_input: &B,
+        _basis_config: &<B as TnuaBasis>::Config,
+        basis_memory: &mut <B as TnuaBasis>::Memory,
+    ) {
+        B::set_extra_headroom(basis_memory, -config.float_offset);
     }
 }
 
