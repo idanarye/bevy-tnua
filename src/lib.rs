@@ -130,6 +130,7 @@ pub mod basis_capabilities;
 pub mod builtins;
 pub mod control_helpers;
 pub mod controller;
+pub mod ghost_overrides;
 pub mod radar_lens;
 pub mod sensor_sets;
 pub mod util;
@@ -144,6 +145,7 @@ pub use basis_action_traits::{
 };
 pub use bevy_tnua_macros::TnuaScheme;
 pub use controller::{TnuaController, TnuaControllerPlugin};
+pub use ghost_overrides::TnuaGhostOverwrites;
 
 pub mod prelude {
     pub use crate::TnuaScheme;

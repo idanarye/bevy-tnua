@@ -2,9 +2,11 @@ use std::time::Duration;
 
 use crate::TnuaMotor;
 use crate::action_state::TnuaActionStateInterface;
+use crate::ghost_overrides::TnuaGhostOverwrite;
 use crate::sensor_sets::TnuaSensors;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaRigidBodyTracker;
 
@@ -113,10 +115,16 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
         config: &'a Self::Config,
         memory: &Self::Memory,
         entities: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
-        proximity_sensors_query: &'b Query<&TnuaProximitySensor>,
+        proximity_sensors_query: &'b Query<(&TnuaProximitySensor, Has<TnuaGhostSensor>)>,
         controller_entity: Entity,
         commands: &mut Commands,
+        has_ghost_overwrites: bool,
     ) -> Option<Self::Sensors<'b>>;
+
+    fn ghost_sensor_overwrites<'a>(
+        ghost_overwrites: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::GhostOverwrites,
+        entities: &<Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
+    ) -> impl Iterator<Item = (&'a mut TnuaGhostOverwrite, Entity)>;
 }
 
 /// Input for [`TnuaAction::apply`] that informs it about the long-term feeding of the input.

@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::basis_capabilities::TnuaBasisWithGround;
+use crate::ghost_overrides::TnuaGhostOverwrites;
 use crate::sensor_sets::TnuaSensors;
 use crate::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
@@ -8,6 +9,7 @@ use crate::{
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
+use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
 
 use crate::basis_action_traits::{
     TnuaActionContext, TnuaActionDiscriminant, TnuaActionState, TnuaBasis, TnuaBasisAccess,
@@ -59,7 +61,9 @@ impl<S: TnuaScheme> Plugin for TnuaControllerPlugin<S> {
         );
         app.add_systems(
             self.schedule,
-            apply_controller_system::<S>.in_set(TnuaPipelineSystems::Logic),
+            (apply_ghost_overwrites::<S>, apply_controller_system::<S>)
+                .chain()
+                .in_set(TnuaPipelineSystems::Logic),
         );
     }
 }
@@ -378,6 +382,29 @@ where
 #[error("The Tnua controller did not pull the configuration asset yet")]
 pub struct TnuaControllerHasNotPulledConfiguration;
 
+fn apply_ghost_overwrites<S: TnuaScheme>(
+    mut query: Query<(&TnuaController<S>, &mut TnuaGhostOverwrites<S>)>,
+    mut proximity_sensors_query: Query<(&mut TnuaProximitySensor, &TnuaGhostSensor)>,
+) {
+    for (controller, mut ghost_overwrites) in query.iter_mut() {
+        for (ghost_overwrite, sensor_entity) in S::Basis::ghost_sensor_overwrites(
+            ghost_overwrites.as_mut().as_mut(),
+            &controller.sensors_entities,
+        ) {
+            let Ok((mut proximity_sensor, ghost_sensor)) =
+                proximity_sensors_query.get_mut(sensor_entity)
+            else {
+                continue;
+            };
+            if let Some(ghost_output) = ghost_overwrite.find_in(&ghost_sensor.0) {
+                proximity_sensor.output = Some(ghost_output.clone());
+            } else {
+                ghost_overwrite.clear();
+            }
+        }
+    }
+}
+
 #[allow(clippy::type_complexity)]
 fn apply_controller_system<S: TnuaScheme>(
     time: Res<Time>,
@@ -387,8 +414,9 @@ fn apply_controller_system<S: TnuaScheme>(
         &TnuaRigidBodyTracker,
         &mut TnuaMotor,
         Option<&TnuaToggle>,
+        Has<TnuaGhostOverwrites<S>>,
     )>,
-    proximity_sensors_query: Query<&TnuaProximitySensor>,
+    proximity_sensors_query: Query<(&TnuaProximitySensor, Has<TnuaGhostSensor>)>,
     config_assets: Res<Assets<S::Config>>,
     mut commands: Commands,
 ) {
@@ -396,7 +424,15 @@ fn apply_controller_system<S: TnuaScheme>(
     if frame_duration == 0.0 {
         return;
     }
-    for (controller_entity, mut controller, tracker, mut motor, tnua_toggle) in query.iter_mut() {
+    for (
+        controller_entity,
+        mut controller,
+        tracker,
+        mut motor,
+        tnua_toggle,
+        has_ghost_overwrites,
+    ) in query.iter_mut()
+    {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled => continue,
             TnuaToggle::SenseOnly => {}
@@ -432,6 +468,7 @@ fn apply_controller_system<S: TnuaScheme>(
             &proximity_sensors_query,
             controller_entity,
             &mut commands,
+            has_ghost_overwrites,
         ) else {
             continue;
         };

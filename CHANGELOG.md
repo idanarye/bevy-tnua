@@ -29,6 +29,11 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   frame before feeding actions.
 - The proximity sensor is now an entity of its own. The basis defines which
   sensors it'll have, and is in charge of creating them.
+- Instead of adding `TnuaGhostSensor` manually to the sensor, one needs to use
+  `TnuaGhostOverwrites`. That component is added on the character entity
+  itself, which automatically adds `TnuaGhostSensor` to the relevant sensor
+  entities. The `TnuaGhostSensor` still need to be read in order to operate the
+  `TnuaGhostOverwrites`.
 - Upgrade edition to 2024.
 
 ### Added
@@ -36,6 +41,9 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   configuration of the basis and/or the action while the action is running.
 - `TnuaController::action_interrupt` for running actions in other systems
   (which means it cannot rely on `initiate_action_feeding` being called before)
+- `TnuaGhostOverwrites`, for being able to use ghost sensors outside the
+  schedule (overwriting the sensors' `output` does not work outside schedule
+  because they'll just be written again before the controller can read them)
 
 ### Removed
 - `TnuaController::named_action` - different actions that use the same base

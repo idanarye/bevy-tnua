@@ -1,7 +1,9 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensor;
+use bevy_tnua_physics_integration_layer::data_for_backends::{
+    TnuaGhostSensor, TnuaProximitySensor,
+};
 
 use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
@@ -9,6 +11,7 @@ use crate::basis_capabilities::{
     TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithFloating,
     TnuaBasisWithGround, TnuaBasisWithHeadroom, TnuaBasisWithSpring,
 };
+use crate::ghost_overrides::TnuaGhostOverwrite;
 use crate::math::*;
 use crate::sensor_sets::{ProximitySensorPreparationHelper, TnuaSensors};
 use crate::util::rotation_arc_around_axis;
@@ -492,13 +495,15 @@ impl TnuaBasis for TnuaBuiltinWalk {
         config: &'a Self::Config,
         memory: &Self::Memory,
         entities: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
-        proximity_sensors_query: &'b Query<&TnuaProximitySensor>,
+        proximity_sensors_query: &'b Query<(&TnuaProximitySensor, Has<TnuaGhostSensor>)>,
         controller_entity: Entity,
         commands: &mut Commands,
+        has_ghost_overwrites: bool,
     ) -> Option<Self::Sensors<'b>> {
         let ground = ProximitySensorPreparationHelper {
             cast_direction: -up_direction,
             cast_range: config.float_height + config.cling_distance,
+            ghost_sensor: has_ghost_overwrites,
             ..Default::default()
         }
         .prepare_for(
@@ -535,6 +540,15 @@ impl TnuaBasis for TnuaBuiltinWalk {
             ground: ground?,
             headroom,
         })
+    }
+
+    fn ghost_sensor_overwrites<'a>(
+        ghost_overwrites: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::GhostOverwrites,
+        entities: &<Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
+    ) -> impl Iterator<Item = (&'a mut TnuaGhostOverwrite, Entity)> {
+        [(&mut ghost_overwrites.ground, entities.ground)]
+            .into_iter()
+            .flat_map(|(o, e)| Some((o, e?)))
     }
 }
 

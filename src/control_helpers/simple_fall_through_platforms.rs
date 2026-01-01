@@ -2,7 +2,8 @@ use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::Float;
 
-use crate::{TnuaGhostSensor, TnuaProximitySensor};
+use crate::TnuaGhostSensor;
+use crate::ghost_overrides::TnuaGhostOverwrite;
 
 /// Helper component for implementing fall-through platforms.
 ///
@@ -28,13 +29,13 @@ impl TnuaSimpleFallThroughPlatformsHelper {
     /// high enough to stand on it.
     pub fn with<'a>(
         &'a mut self,
-        proximity_sensor: &'a mut TnuaProximitySensor,
+        ghost_overwrite: &'a mut TnuaGhostOverwrite,
         ghost_sensor: &'a TnuaGhostSensor,
         min_proximity: Float,
     ) -> TnuaHandleForSimpleFallThroughPlatformsHelper<'a> {
         TnuaHandleForSimpleFallThroughPlatformsHelper {
             parent: self,
-            proximity_sensor,
+            ghost_overwrite,
             ghost_sensor,
             min_proximity,
         }
@@ -47,7 +48,7 @@ impl TnuaSimpleFallThroughPlatformsHelper {
 /// whether the character wants to keep standing on the platform or fall through it.
 pub struct TnuaHandleForSimpleFallThroughPlatformsHelper<'a> {
     parent: &'a mut TnuaSimpleFallThroughPlatformsHelper,
-    proximity_sensor: &'a mut TnuaProximitySensor,
+    ghost_overwrite: &'a mut TnuaGhostOverwrite,
     ghost_sensor: &'a TnuaGhostSensor,
     min_proximity: Float,
 }
@@ -57,11 +58,12 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
     pub fn dont_fall(&mut self) {
         let mut already_falling_through_not_yet_seen =
             self.parent.currently_falling_through.clone();
+        self.ghost_overwrite.clear();
         for ghost_platform in self.ghost_sensor.iter() {
             if self.min_proximity <= ghost_platform.proximity
                 && !already_falling_through_not_yet_seen.remove(&ghost_platform.entity)
             {
-                self.proximity_sensor.output = Some(ghost_platform.clone());
+                self.ghost_overwrite.set(ghost_platform);
                 break;
             }
         }
@@ -84,6 +86,7 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
     /// Returns `true` if actually dropping through a platform, to help determining if the
     /// character should be crouching (since these buttons are usually the same)
     pub fn try_falling(&mut self, just_pressed: bool) -> bool {
+        self.ghost_overwrite.clear();
         if !just_pressed && !self.parent.currently_falling_through.is_empty() {
             for ghost_platform in self.ghost_sensor.iter() {
                 if self.min_proximity <= ghost_platform.proximity
@@ -92,7 +95,7 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
                         .currently_falling_through
                         .contains(&ghost_platform.entity)
                 {
-                    self.proximity_sensor.output = Some(ghost_platform.clone());
+                    self.ghost_overwrite.set(ghost_platform);
                     return true;
                 }
             }
