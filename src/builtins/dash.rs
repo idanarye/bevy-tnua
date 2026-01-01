@@ -1,6 +1,7 @@
 use crate::basis_capabilities::TnuaBasisWithGround;
 use crate::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::util::MotionHelper;
 use crate::{
@@ -29,7 +30,7 @@ pub struct TnuaBuiltinDash {
     pub allow_in_air: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinDashConfig {
     /// The speed the character will move in during the dash.
     pub speed: Float,

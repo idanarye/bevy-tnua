@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, AsF32, Float};
+use serde::{Deserialize, Serialize};
 
 use crate::basis_capabilities::TnuaBasisWithGround;
 use crate::util::MotionHelper;
@@ -44,7 +45,7 @@ pub struct TnuaBuiltinClimb {
     pub hard_stop_down: Option<Vector3>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinClimbConfig {
     /// Speed for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
     pub anchor_speed: Float,

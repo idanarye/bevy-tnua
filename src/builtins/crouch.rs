@@ -1,4 +1,5 @@
 use bevy::time::Stopwatch;
+use serde::{Deserialize, Serialize};
 
 use crate::basis_capabilities::{
     TnuaBasisWithFloating, TnuaBasisWithGround, TnuaBasisWithHeadroom, TnuaBasisWithSpring,
@@ -12,7 +13,7 @@ use crate::{TnuaMotor, TnuaVelChange};
 #[derive(Debug, Default)]
 pub struct TnuaBuiltinCrouch;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinCrouchConfig {
     /// Controls how low the character will crouch, compared to its regular float offset while
     /// standing.

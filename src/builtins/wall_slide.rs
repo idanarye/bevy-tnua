@@ -6,6 +6,7 @@ use crate::{
     util::calc_angular_velchange_to_force_forward,
 };
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// An [action](TnuaAction) for sliding on walls.
 #[derive(Clone)]
@@ -24,7 +25,7 @@ pub struct TnuaBuiltinWallSlide {
     pub force_forward: Option<Dir3>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinWallSlideConfig {
     /// When the character slides faster than that speed, slow it down.
     pub max_fall_speed: Float,

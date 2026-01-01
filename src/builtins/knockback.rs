@@ -6,6 +6,7 @@ use crate::{
     util::{MotionHelper, VelocityBoundary},
 };
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Apply this [action](TnuaAction) to shove the character in a way the [basis](crate::TnuaBasis)
 /// cannot easily nullify.
@@ -43,7 +44,7 @@ pub struct TnuaBuiltinKnockback {
     pub force_forward: Option<Dir3>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinKnockbackConfig {
     /// Timeout (in seconds) for abandoning a Pushover boundary that no longer gets pushed.
     pub no_push_timeout: f32,

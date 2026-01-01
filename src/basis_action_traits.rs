@@ -104,7 +104,7 @@ pub struct TnuaBasisContext<'a> {
 /// [`TnuaSchemeConfig`] which also holds the configuration for all the actions. If the basis needs
 /// to persist data between frames it must keep it in its [memory](TnuaBasis::Memory).
 pub trait TnuaBasis: Default + 'static + Send + Sync {
-    type Config: Send + Sync + Clone;
+    type Config: Send + Sync + Clone + Serialize + for<'a> Deserialize<'a>;
     type Memory: Send + Sync + Default;
     type Sensors<'a>: TnuaSensors<'a>;
 
@@ -292,7 +292,7 @@ pub enum TnuaActionInitiationDirective {
 /// actions. If the action needs to persist data between frames it must keep it in its
 /// [memory](TnuaAction::Memory).
 pub trait TnuaAction<B: TnuaBasis>: 'static + Send + Sync {
-    type Config: Clone;
+    type Config: Send + Sync + Clone + Serialize + for<'a> Deserialize<'a>;
 
     /// Data that the action can persist between frames.
     ///

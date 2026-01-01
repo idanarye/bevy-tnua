@@ -19,6 +19,7 @@ pub fn generate_config_struct(parsed: &ParsedScheme) -> syn::Result<TokenStream>
     let action_types = commands.iter().map(|c| c.action_type).collect::<Vec<_>>();
     Ok(quote! {
         #[derive(bevy::prelude::Asset, bevy::prelude::TypePath, bevy_tnua::serde::Serialize, bevy_tnua::serde::Deserialize)]
+        #[serde(crate = "bevy_tnua::serde")]
         #vis struct #config_struct_name {
             #vis basis: <#basis as bevy_tnua::TnuaBasis>::Config,
             #(
