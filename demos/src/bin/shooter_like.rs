@@ -6,12 +6,11 @@ use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
-// use bevy_tnua::builtins::TnuaBuiltinCrouch;
 use bevy_tnua::control_helpers::{
     TnuaBlipReuseAvoidance, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::math::{AdjustPrecision, AsF32, Quaternion, float_consts};
-use bevy_tnua::{TnuaAnimatingState, TnuaGhostSensor, TnuaToggle};
+use bevy_tnua::{TnuaAnimatingState, TnuaGhostOverwrites, TnuaToggle};
 use bevy_tnua::{TnuaObstacleRadar, prelude::*};
 #[cfg(feature = "avian3d")]
 use bevy_tnua_avian3d::prelude::*;
@@ -356,7 +355,7 @@ fn setup_player(
     // backend to not contact with the character (or detect the contact but not apply physical
     // forces based on it) and marked with the `TnuaGhostPlatform` component. These can then be
     // used as one-way platforms.
-    cmd.insert(TnuaGhostSensor::default());
+    cmd.insert(TnuaGhostOverwrites::<DemoControlScheme>::default());
 
     // This helper is used to operate the ghost sensor and ghost platforms and implement
     // fall-through behavior where the player can intentionally fall through a one-way platform.
