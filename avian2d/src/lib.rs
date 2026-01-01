@@ -14,7 +14,7 @@ use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaNotPlatform,
-    TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaToggle,
+    TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaSensorOf, TnuaToggle,
 };
 use bevy_tnua_physics_integration_layer::math::*;
 use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
@@ -149,14 +149,17 @@ fn update_rigid_body_trackers_system(
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
     spatial_query_pipeline: Res<SpatialQueryPipeline>,
-    mut query: Query<(
-        Entity,
+    mut sensor_query: Query<(
+        &mut TnuaProximitySensor,
+        &TnuaSensorOf,
+        Option<&TnuaAvian2dSensorShape>,
+        Option<&mut TnuaGhostSensor>,
+    )>,
+    owner_query: Query<(
         &Position,
         &Rotation,
         Option<&Collider>,
-        &mut TnuaProximitySensor,
         Option<&TnuaAvian2dSensorShape>,
-        Option<&mut TnuaGhostSensor>,
         Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
@@ -175,18 +178,14 @@ fn update_proximity_sensors_system(
         Has<TnuaNotPlatform>,
     )>,
 ) {
-    query.par_iter_mut().for_each(
-        |(
-            owner_entity,
-            position,
-            rotation,
-            collider,
-            mut sensor,
-            shape,
-            mut ghost_sensor,
-            subservient,
-            tnua_toggle,
-        )| {
+    sensor_query.par_iter_mut().for_each(
+        |(mut sensor, &TnuaSensorOf(owner_entity), shape, mut ghost_sensor)| {
+            let Ok((position, rotation, collider, owner_shape, subservient, tnua_toggle)) =
+                owner_query.get(owner_entity)
+            else {
+                return;
+            };
+            let shape = shape.or(owner_shape);
             match tnua_toggle.copied().unwrap_or_default() {
                 TnuaToggle::Disabled => return,
                 TnuaToggle::SenseOnly => {}

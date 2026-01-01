@@ -8,7 +8,6 @@ use bevy::{
 use bevy_egui::{EguiContexts, egui};
 use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
 use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
-use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
 use bevy_tnua::{TnuaObstacleRadar, prelude::*};
 use bevy_tnua::{
     builtins::{TnuaBuiltinClimb, TnuaBuiltinDash, TnuaBuiltinWallSlide},
@@ -52,12 +51,12 @@ pub fn apply_platformer_controls(
         // The proximity sensor usually works behind the scenes, but we need it here because
         // manipulating the proximity sensor using data from the ghost sensor is how one-way
         // platforms work in Tnua.
-        &mut TnuaProximitySensor,
+        //&mut TnuaProximitySensor,
         // The ghost sensor detects ghost platforms - which are pass-through platforms marked with
         // the `TnuaGhostPlatform` component. Left alone it does not actually affect anything - a
         // user control system (like this very demo here) has to use the data from it and
         // manipulate the proximity sensor.
-        &TnuaGhostSensor,
+        // &TnuaGhostSensor,
         // This is an helper for implementing one-way platforms.
         &mut TnuaSimpleFallThroughPlatformsHelper,
         // This is an helper for implementing air actions. It counts all the air actions using a
@@ -100,9 +99,9 @@ pub fn apply_platformer_controls(
         config,
         mut controller,
         //mut crouch_enforcer,
-        mut sensor,
-        ghost_sensor,
-        mut fall_through_helper,
+        //mut sensor,
+        // ghost_sensor,
+        mut _fall_through_helper,
         mut air_actions_counter,
         camera_contoller,
         obstacle_radar,
@@ -174,7 +173,7 @@ pub fn apply_platformer_controls(
             (Dimensionality::Dim3, _) => CROUCH_BUTTONS_3D.iter().copied(),
         };
         let crouch_pressed = keyboard.any_pressed(crouch_buttons);
-        let crouch_just_pressed = just_pressed.crouch;
+        // let crouch_just_pressed = just_pressed.crouch;
         just_pressed.was_read = true;
 
         // This needs to be called once per frame. It lets the air actions counter know about the
@@ -194,6 +193,9 @@ pub fn apply_platformer_controls(
         // several schemes with observable changes in behavior, and each implementation is rather
         // short and simple.
         let crouch;
+        // TODO: restore falling through via a new ghost sensors approach
+        crouch = crouch_pressed;
+        /*
         match config.falling_through {
             // With this scheme, the player cannot make their character fall through by pressing
             // the crouch button - the platforms are jump-through only.
@@ -321,6 +323,7 @@ pub fn apply_platformer_controls(
                 }
             }
         };
+        */
 
         // TODO: use a payload for this
         //let speed_factor =
