@@ -12,9 +12,6 @@ use crate::{TnuaActionContext, TnuaBasis};
 /// An [action](TnuaAction) for climbing on things.
 #[derive(Clone, Default)]
 pub struct TnuaBuiltinClimb {
-    /// The entity being climbed on.
-    pub climbable_entity: Option<Entity>,
-
     /// A point on the climbed entity where the character touches it.
     ///
     /// Note that this does not actually have to be on any actual collider. It can be a point
@@ -45,13 +42,6 @@ pub struct TnuaBuiltinClimb {
     /// [`probe_extent_from_closest_point`](crate::radar_lens::TnuaRadarBlipLens::probe_extent_from_closest_point)
     /// to find this point.
     pub hard_stop_down: Option<Vector3>,
-
-    /// The direction used to initiate the climb.
-    ///
-    /// This field is not used by the action itself. It's purpose is to help user controller
-    /// systems determine if the player input is a continuation of the motion used to initiate the
-    /// climb, or if it's a motion for breaking from the climb.
-    pub initiation_direction: Vector3,
 }
 
 #[derive(Clone)]

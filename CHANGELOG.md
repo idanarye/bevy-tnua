@@ -51,6 +51,11 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   that use the same action type.
 - `TnuaCrouchEnforcer` - its behavior is now part of `TnuaBuiltinCrouch` (via
   the new `headroom` configuration for `TnuaBuiltinWalk`)
+- "Unused" fields from some actions - specifically `climbable_entity` and
+  `initiation_direction` from `TnuaBuiltinClimb` and `wall_entity` from
+  `TnuaBuiltinWallSlide`. These fields were there for the user control systems
+  to use, but now they should just be payload in the action variant in the
+  scheme.
 
 ## 0.26.0 - 2025-10-14
 ### Changed

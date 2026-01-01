@@ -371,26 +371,24 @@ pub fn apply_platformer_controls(
 
         let radar_lens = TnuaRadarLens::new(obstacle_radar, &spatial_ext);
 
-        let already_sliding_on = if let Some(DemoControlSchemeActionState::WallSlide(state)) =
+        let already_sliding_on = if let Some(DemoControlSchemeActionState::WallSlide(_, entity)) =
             controller.current_action.as_ref()
+            && obstacle_radar.has_blip(*entity)
         {
-            state
-                .input
-                .wall_entity
-                .filter(|entity| obstacle_radar.has_blip(*entity))
+            Some(*entity)
         } else {
             None
         };
 
-        let already_climbing_on = if let Some(DemoControlSchemeActionState::Climb(state)) =
-            controller.current_action.as_ref()
-            && let Some(entity) = state.input.climbable_entity
-            && obstacle_radar.has_blip(entity)
-        {
-            Some((entity, state.input.clone()))
-        } else {
-            None
-        };
+        let already_climbing_on =
+            if let Some(DemoControlSchemeActionState::Climb(state, entity, initiation_direction)) =
+                controller.current_action.as_ref()
+                && obstacle_radar.has_blip(*entity)
+            {
+                Some((*entity, state.input.clone(), *initiation_direction))
+            } else {
+                None
+            };
 
         let mut walljump_candidate = None;
 
@@ -401,13 +399,15 @@ pub fn apply_platformer_controls(
                     .expect("ObstacleQueryHelper has nothing that could fail when missing")
                     .climbable
             {
-                if let Some((climbable_entity, action)) = already_climbing_on.as_ref() {
+                if let Some((climbable_entity, action, initiation_direction)) =
+                    already_climbing_on.as_ref()
+                {
                     if *climbable_entity != blip.entity() {
                         continue 'blips_loop;
                     }
-                    let dot_initiation = direction.dot(action.initiation_direction);
+                    let dot_initiation = direction.dot(*initiation_direction);
                     let initiation_direction = if 0.5 < dot_initiation {
-                        action.initiation_direction
+                        *initiation_direction
                     } else {
                         Vector3::ZERO
                     };
@@ -419,11 +419,9 @@ pub fn apply_platformer_controls(
                     }
 
                     let mut action = TnuaBuiltinClimb {
-                        climbable_entity: Some(blip.entity()),
                         anchor: blip.closest_point().get(),
                         desired_climb_motion: screen_space_direction.dot(Vector3::NEG_Z)
                             * Vector3::Y,
-                        initiation_direction,
                         desired_vec_to_anchor: action.desired_vec_to_anchor,
                         desired_forward: action.desired_forward,
                         ..Default::default()
@@ -462,7 +460,11 @@ pub fn apply_platformer_controls(
                         }
                     }
 
-                    controller.action(DemoControlScheme::Climb(action));
+                    controller.action(DemoControlScheme::Climb(
+                        action,
+                        blip.entity(),
+                        initiation_direction,
+                    ));
                 } else if let TnuaBlipSpatialRelation::Aeside(blip_direction) =
                     blip.spatial_relation(0.5)
                     && 0.5 < direction.dot(blip_direction.adjust_precision())
@@ -473,14 +475,16 @@ pub fn apply_platformer_controls(
                             .normal_from_closest_point()
                             .reject_from_normalized(Vector3::Y),
                     };
-                    controller.action(DemoControlScheme::Climb(TnuaBuiltinClimb {
-                        climbable_entity: Some(blip.entity()),
-                        anchor: blip.closest_point().get(),
-                        desired_vec_to_anchor: 0.5 * direction_to_anchor,
-                        desired_forward: Dir3::new(direction_to_anchor.f32()).ok(),
-                        initiation_direction: direction.normalize_or_zero(),
-                        ..Default::default()
-                    }));
+                    controller.action(DemoControlScheme::Climb(
+                        TnuaBuiltinClimb {
+                            anchor: blip.closest_point().get(),
+                            desired_vec_to_anchor: 0.5 * direction_to_anchor,
+                            desired_forward: Dir3::new(direction_to_anchor.f32()).ok(),
+                            ..Default::default()
+                        },
+                        blip.entity(),
+                        direction.normalize_or_zero(),
+                    ));
                 }
             }
             if !blip.is_interactable() {
@@ -519,12 +523,14 @@ pub fn apply_platformer_controls(
                             else {
                                 continue;
                             };
-                            controller.action(DemoControlScheme::WallSlide(TnuaBuiltinWallSlide {
-                                wall_entity: Some(blip.entity()),
-                                contact_point_with_wall: blip.closest_point().get(),
-                                normal,
-                                force_forward: Some(blip_direction),
-                            }));
+                            controller.action(DemoControlScheme::WallSlide(
+                                TnuaBuiltinWallSlide {
+                                    contact_point_with_wall: blip.closest_point().get(),
+                                    normal,
+                                    force_forward: Some(blip_direction),
+                                },
+                                blip.entity(),
+                            ));
                         }
                     }
                 }

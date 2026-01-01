@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 use bevy_tnua::builtins::{
     TnuaBuiltinClimb, TnuaBuiltinClimbConfig, TnuaBuiltinCrouch, TnuaBuiltinCrouchConfig,
     TnuaBuiltinDash, TnuaBuiltinDashConfig, TnuaBuiltinJump, TnuaBuiltinJumpConfig,
@@ -18,9 +20,14 @@ pub enum DemoControlScheme {
     ),
     Dash(TnuaBuiltinDash),
     Knockback(TnuaBuiltinKnockback),
-    WallSlide(TnuaBuiltinWallSlide),
+    WallSlide(TnuaBuiltinWallSlide, Entity),
     WallJump(TnuaBuiltinJump),
-    Climb(TnuaBuiltinClimb),
+    Climb(
+        TnuaBuiltinClimb,
+        Entity,
+        // Initiation direction:
+        Vector3,
+    ),
 }
 
 pub struct SlowDownWhileCrouching(pub bool);
@@ -54,9 +61,9 @@ impl TnuaHasTargetEntity for DemoControlScheme {
             DemoControlSchemeActionState::Crouch(_, _) => None,
             DemoControlSchemeActionState::Dash(_) => None,
             DemoControlSchemeActionState::Knockback(_) => None,
-            DemoControlSchemeActionState::WallSlide(_) => None, // maybe it should have?
-            DemoControlSchemeActionState::WallJump(_) => None,  // maybe it should have?
-            DemoControlSchemeActionState::Climb(state) => state.input.climbable_entity,
+            DemoControlSchemeActionState::WallSlide(_, entity) => Some(*entity),
+            DemoControlSchemeActionState::WallJump(_) => None,
+            DemoControlSchemeActionState::Climb(_, entity, _) => Some(*entity),
         }
     }
 }

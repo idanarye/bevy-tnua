@@ -10,9 +10,6 @@ use bevy::prelude::*;
 /// An [action](TnuaAction) for sliding on walls.
 #[derive(Clone)]
 pub struct TnuaBuiltinWallSlide {
-    /// The entity of the wall to slide on.
-    pub wall_entity: Option<Entity>,
-
     /// The on the wall where the character touches it.
     ///
     /// Note that this does not actually have to be on an actual wall. It can be a point in the

@@ -90,9 +90,9 @@ pub fn animate_platformer_character(
                 // the action - so there is no need to downcast.
                 Some(DemoControlSchemeActionState::Dash(_)) => AnimationState::Dashing,
                 Some(DemoControlSchemeActionState::Knockback(_)) => AnimationState::KnockedBack,
-                Some(DemoControlSchemeActionState::WallSlide(_)) => AnimationState::WallSliding,
+                Some(DemoControlSchemeActionState::WallSlide(..)) => AnimationState::WallSliding,
                 Some(DemoControlSchemeActionState::WallJump(_)) => AnimationState::WallJumping,
-                Some(DemoControlSchemeActionState::Climb(state)) => {
+                Some(DemoControlSchemeActionState::Climb(state, ..)) => {
                     let TnuaBuiltinClimbMemory::Climbing { climbing_velocity } = state.memory
                     else {
                         continue;
