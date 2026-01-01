@@ -27,7 +27,6 @@ use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
 };
 use bevy_tnua_physics_integration_layer::obstacle_radar::TnuaObstacleRadar;
-use bevy_tnua_physics_integration_layer::subservient_sensors::TnuaSubservientSensor;
 
 pub mod prelude {
     pub use crate::{TnuaAvian3dPlugin, TnuaAvian3dSensorShape, TnuaSpatialExtAvian3d};
@@ -85,28 +84,7 @@ impl Plugin for TnuaAvian3dPlugin {
             self.schedule,
             apply_motors_system.in_set(TnuaPipelineSystems::Motors),
         );
-        app.add_systems(
-            Update,
-            ensure_subservient_sensors_are_colliders_of_their_bevy_parents,
-        );
-        app.register_required_components::<TnuaSubservientSensor, Position>();
-        app.register_required_components::<TnuaSubservientSensor, Rotation>();
         app.register_required_components_with::<TnuaGravity, GravityScale>(|| GravityScale(0.0));
-    }
-}
-
-#[allow(clippy::type_complexity)]
-fn ensure_subservient_sensors_are_colliders_of_their_bevy_parents(
-    query: Query<(Entity, &ChildOf), (With<TnuaSubservientSensor>, Without<ColliderOf>)>,
-    mut commands: Commands,
-) {
-    for (entity, child_of) in query.iter() {
-        commands
-            .entity(entity)
-            // NOTE: Use the parent from child_of instead of `TnuaSubservientSensor::owner_entity`
-            // because Bevy parenting is how it works in Rapier and the sensor's owner is allowed
-            // to be different than the Bevy parent.
-            .insert_if_new(ColliderOf { body: child_of.0 });
     }
 }
 
@@ -166,7 +144,6 @@ fn update_proximity_sensors_system(
         &Rotation,
         Option<&Collider>,
         Option<&TnuaAvian3dSensorShape>,
-        Option<&TnuaSubservientSensor>,
         Option<&TnuaToggle>,
     )>,
     collision_layers_query: Query<&CollisionLayers>,
@@ -186,7 +163,7 @@ fn update_proximity_sensors_system(
 ) {
     sensor_query.par_iter_mut().for_each(
         |(mut sensor, &TnuaSensorOf(owner_entity), shape, mut ghost_sensor)| {
-            let Ok((position, rotation, collider, owner_shape, subservient, tnua_toggle)) =
+            let Ok((position, rotation, collider, owner_shape, tnua_toggle)) =
                 owner_query.get(owner_entity)
             else {
                 return;
@@ -218,12 +195,6 @@ fn update_proximity_sensors_system(
                 intersection_point: Vector3,
                 normal: Dir3,
             }
-
-            let owner_entity = if let Some(subservient) = subservient {
-                subservient.owner_entity
-            } else {
-                owner_entity
-            };
 
             let collision_layers = collision_layers_query.get(owner_entity).ok();
 

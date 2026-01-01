@@ -16,6 +16,8 @@
 //!   * [`TnuaProximitySensor`](data_for_backends::TnuaProximitySensor) with the _first_ tangible
 //!     collider within range, and [`TnuaGhostSensor`](data_for_backends::TnuaGhostSensor) with
 //!     _all_ the ghost colliders found before that tangible collider.
+//!     * The positions inside the sensors are relative to the transform of its owner entity, via
+//!       the [`TnuaSensorOf`](data_for_backends::TnuaSensorOf) relationship.
 //!     * A tangible collider is a **non-ghost** collider that physically interacts with the
 //!       character's collider.
 //!     * A ghost collider is a collider marked with the
@@ -23,10 +25,6 @@
 //!       physically interact with the character's collider - as long as it has the component it is
 //!       considered a ghost collider.
 //!     * The sensor should ignore the owner entity's collider.
-//!     * If the sensor has the
-//!       [`TnuaSubservientSensor`](subservient_sensors::TnuaSubservientSensor) component, the
-//!       "owner entity" is defined as the `owner_entity` field from that component and not the
-//!       entity the sensor component is attached to.
 //!     * The detection should be done with a ray cast, unless the sensor is configured to cast a
 //!       shape instead. Such configuration is done with component, defined by the integration
 //!       crate, that specifies the shape to cast in a way the integration crate can pass on to the
@@ -93,7 +91,6 @@ pub mod data_for_backends;
 pub mod math;
 pub mod obstacle_radar;
 pub mod spatial_ext;
-pub mod subservient_sensors;
 
 /// Umbrella system set for [`TnuaPipelineSystems`].
 ///
@@ -107,8 +104,6 @@ pub struct TnuaSystems;
 pub enum TnuaPipelineSystems {
     /// Data is read from the physics backend.
     Sensors,
-    /// Data is propagated through the subservient sensors.
-    SubservientSensors,
     /// Tnua decieds how the entity should be manipulated.
     Logic,
     /// Forces are applied in the physics backend.

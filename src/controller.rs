@@ -50,7 +50,6 @@ impl<S: TnuaScheme> Plugin for TnuaControllerPlugin<S> {
             self.schedule,
             (
                 TnuaPipelineSystems::Sensors,
-                TnuaPipelineSystems::SubservientSensors,
                 TnuaUserControlsSystems,
                 TnuaPipelineSystems::Logic,
                 TnuaPipelineSystems::Motors,
