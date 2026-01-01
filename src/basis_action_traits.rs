@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::ErrorKind;
+use std::path::Path;
 use std::time::Duration;
 
 use crate::TnuaMotor;
@@ -9,6 +12,8 @@ use bevy::time::Stopwatch;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensor;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaRigidBodyTracker;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::math::*;
 
@@ -51,10 +56,26 @@ pub enum TnuaUpdateInActionStateResult<S: TnuaScheme> {
     WrongVariant(S),
 }
 
-pub trait TnuaSchemeConfig {
+pub trait TnuaSchemeConfig: Serialize + for<'a> Deserialize<'a> {
     type Scheme: TnuaScheme<Config = Self>;
 
     fn basis_config(&self) -> &<<Self::Scheme as TnuaScheme>::Basis as TnuaBasis>::Config;
+
+    fn write_if_not_exist(&self, path: impl AsRef<Path>) -> std::io::Result<()> {
+        let serialized = bevy::asset::ron::ser::to_string_pretty(
+            self,
+            bevy::asset::ron::ser::PrettyConfig::new(),
+        )
+        .expect("Should be able to serialize all configs to RON");
+        let file = File::options().write(true).create_new(true).open(path);
+        if let Err(err) = &file
+            && err.kind() == ErrorKind::AlreadyExists
+        {
+            return Ok(());
+        }
+        use std::io::Write;
+        write!(file?, "{}", serialized)
+    }
 }
 
 /// Various data passed to [`TnuaBasis::apply`].

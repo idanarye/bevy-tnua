@@ -11,6 +11,7 @@ use crate::{
 };
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
+use serde::{Deserialize, Serialize};
 
 /// The basic jump [action](TnuaAction).
 ///
@@ -39,7 +40,7 @@ pub struct TnuaBuiltinJump {
     pub force_forward: Option<Dir3>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinJumpConfig {
     /// The height the character will jump to.
     ///

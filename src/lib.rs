@@ -126,6 +126,8 @@
 pub mod action_state;
 mod animating_helper;
 mod basis_action_traits;
+#[doc(hidden)]
+pub use serde;
 pub mod basis_capabilities;
 pub mod builtins;
 pub mod control_helpers;

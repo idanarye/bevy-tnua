@@ -40,6 +40,7 @@ bevy = { version = "^0.17", default-features = false, features = [
 bevy-tnua-physics-integration-layer = { version = "^0.10", path = "physics-integration-layer" }
 bevy-tnua-macros = { version = "^0.1", path = "macros" }
 thiserror = "2.0.12"
+serde = { version = "^1", features = ["derive"] }
 
 [dev-dependencies]
 bevy = { version = "^0.17", default-features = false, features = [

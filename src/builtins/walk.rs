@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaGhostSensor, TnuaProximitySensor,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
@@ -33,7 +34,7 @@ pub struct TnuaBuiltinWalk {
     pub desired_forward: Option<Dir3>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinWalkConfig {
     // How fast the character will go.
     //
@@ -123,7 +124,7 @@ pub struct TnuaBuiltinWalkConfig {
     pub max_slope: Float,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinWalkHeadroom {
     pub distance_to_collider_top: Float,
     pub sensor_extra_distance: Float,
