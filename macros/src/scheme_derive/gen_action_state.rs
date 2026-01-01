@@ -24,6 +24,8 @@ pub fn generate_action_state(parsed: &ParsedScheme) -> syn::Result<TokenStream> 
     let modify_basis_config_branches = commands.iter().map(gen_modify_basis_config_branch);
 
     Ok(quote! {
+        #[derive(bevy_tnua::serde::Serialize, bevy_tnua::serde::Deserialize)]
+        #[serde(crate = "bevy_tnua::serde")]
         #vis enum #action_state_enum_name {
             #(
                 #command_names(bevy_tnua::action_state::TnuaActionState<#action_types, #basis>, #(#payload_types,)*),

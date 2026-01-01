@@ -16,7 +16,8 @@ pub fn generate_action_discriminant(parsed: &ParsedScheme) -> syn::Result<TokenS
         .enumerate()
         .map(|(i, _)| syn::Index::from(i));
     Ok(quote! {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, bevy_tnua::serde::Serialize, bevy_tnua::serde::Deserialize)]
+        #[serde(crate = "bevy_tnua::serde")]
         #vis enum #action_discriminant_name {
             #(
                 #command_names,

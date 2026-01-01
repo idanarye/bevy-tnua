@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 /// being fed, it'll apply extra gravity to shorten the jump. If the game desires fixed height
 /// jumps instead (where the player cannot make lower jumps by tapping the jump button)
 /// [`shorten_extra_gravity`](TnuaBuiltinJumpConfig::shorten_extra_gravity) should be set to `0.0`.
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct TnuaBuiltinJump {
     pub vertical_displacement: Option<Vector3>,
 
@@ -164,7 +164,7 @@ impl TnuaBuiltinJumpConfig {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub enum TnuaBuiltinJumpMemory {
     #[default]
     NoJump,

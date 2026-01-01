@@ -10,6 +10,7 @@ use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGhostSensor;
+use serde::{Deserialize, Serialize};
 
 use crate::basis_action_traits::{
     TnuaActionContext, TnuaActionDiscriminant, TnuaActionState, TnuaBasis, TnuaBasisAccess,
@@ -68,12 +69,13 @@ impl<S: TnuaScheme> Plugin for TnuaControllerPlugin<S> {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 struct ContenderAction<S: TnuaScheme> {
     action: S,
     being_fed_for: Stopwatch,
 }
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 enum FedStatus {
     #[default]
     Not,
@@ -93,7 +95,7 @@ impl FedStatus {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 struct FedEntry {
     status: FedStatus,
     rescheduled_in: Option<Timer>,
@@ -123,29 +125,35 @@ struct FedEntry {
 ///   `TnuaAction`](crate::TnuaAction#implementors) for more information.
 ///
 /// Without [`TnuaControllerPlugin`] of the same scheme this component will not do anything.
-#[derive(Component)]
+#[derive(Component, Serialize, Deserialize)]
 #[require(TnuaMotor, TnuaRigidBodyTracker)]
 pub struct TnuaController<S: TnuaScheme> {
     /// Input for the basis - the main movement command.
     pub basis: S::Basis,
     pub basis_memory: <S::Basis as TnuaBasis>::Memory,
     pub basis_config: Option<<S::Basis as TnuaBasis>::Config>,
+    #[serde(skip)]
     pub sensors_entities:
         <<S::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::Entities,
+    #[serde(skip)]
     pub config: Handle<S::Config>,
     // TODO: If ever possible, make this a fixed size array:
     actions_being_fed: Vec<FedEntry>,
     contender_action: Option<ContenderAction<S>>,
+    #[serde(skip)]
     action_flow_status: TnuaActionFlowStatus<S::ActionDiscriminant>,
+    #[serde(skip)]
     up_direction: Option<Dir3>,
     action_feeding_initiated: bool,
+    #[serde(skip)]
     pub current_action: Option<S::ActionState>,
 }
 
 /// The result of [`TnuaController::action_flow_status()`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum TnuaActionFlowStatus<D: TnuaActionDiscriminant> {
     /// No action is going on.
+    #[default]
     NoAction,
 
     /// An action just started.

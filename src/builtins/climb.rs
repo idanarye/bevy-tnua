@@ -11,7 +11,7 @@ use crate::{
 use crate::{TnuaActionContext, TnuaBasis};
 
 /// An [action](TnuaAction) for climbing on things.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct TnuaBuiltinClimb {
     /// A point on the climbed entity where the character touches it.
     ///
@@ -192,7 +192,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum TnuaBuiltinClimbMemory {
     Climbing { climbing_velocity: Vector3 },
     Coyote(Timer),

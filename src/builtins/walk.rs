@@ -20,7 +20,7 @@ use crate::{TnuaBasisContext, TnuaMotor, TnuaVelChange};
 
 use super::walk_sensors::TnuaBuiltinWalkSensors;
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct TnuaBuiltinWalk {
     /// The direction (in the world space) and speed to accelerate to.
     ///
@@ -160,13 +160,13 @@ impl Default for TnuaBuiltinWalkConfig {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct StandingOnState {
     entity: Entity,
     entity_linvel: Vector3,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct TnuaBuiltinWalkMemory {
     airborne_timer: Option<Timer>,
     /// The current distance of the character from the distance its supposed to float at.

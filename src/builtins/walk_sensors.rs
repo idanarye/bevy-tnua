@@ -2,6 +2,7 @@ use crate::ghost_overrides::{TnuaGhostOverwrite, TnuaGhostOverwritesForBasis};
 use crate::sensor_sets::TnuaSensors;
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensor;
+use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone)]
 pub struct TnuaBuiltinWalkSensors<'a> {
@@ -20,7 +21,7 @@ pub struct TnuaBuiltinWalkSensorsEntities {
     pub headroom: Option<Entity>,
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Serialize, Deserialize)]
 pub struct TnuaBuiltinWalkSensorsGhostOverwrites {
     pub ground: TnuaGhostOverwrite,
 }

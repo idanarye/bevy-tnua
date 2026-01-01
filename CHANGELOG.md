@@ -44,6 +44,14 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 - `TnuaGhostOverwrites`, for being able to use ghost sensors outside the
   schedule (overwriting the sensors' `output` does not work outside schedule
   because they'll just be written again before the controller can read them)
+- All the configuration assets are deserializable - which means they can be
+  loaded from files.
+  - They are also serializable - which means templates can be saved into files
+    using `TnuaSchemeConfig::write_if_not_exist`.
+- `TnuaController` and `TnuaGhostOverwrites` are fully serializable and
+  deserializable (but only if the scheme itself is
+  serializable/deserializable). This means they should be synchronizable with
+  networking plugins.
 
 ### Removed
 - `TnuaController::named_action` - different actions that use the same base

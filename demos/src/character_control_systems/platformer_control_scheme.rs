@@ -10,7 +10,12 @@ use bevy_tnua::control_helpers::{TnuaAirActionDefinition, TnuaHasTargetEntity};
 use bevy_tnua::math::*;
 use bevy_tnua::{TnuaConfigModifier, TnuaScheme};
 
-#[derive(TnuaScheme)]
+#[derive(
+    TnuaScheme,
+    // NOTE: The demos don't really use the serialization - it's just here to make sure it works.
+    serde::Serialize,
+    serde::Deserialize,
+)]
 #[scheme(basis = TnuaBuiltinWalk)]
 pub enum DemoControlScheme {
     Jump(TnuaBuiltinJump),
@@ -30,6 +35,7 @@ pub enum DemoControlScheme {
     ),
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct SlowDownWhileCrouching(pub bool);
 
 impl TnuaConfigModifier<TnuaBuiltinWalkConfig> for SlowDownWhileCrouching {

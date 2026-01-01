@@ -1,8 +1,10 @@
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaMotor;
+use serde::{Deserialize, Serialize};
 
 use crate::{TnuaAction, TnuaActionContext, TnuaBasis};
 use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasisContext};
 
+#[derive(Serialize, Deserialize)]
 pub struct TnuaActionState<A: TnuaAction<B>, B: TnuaBasis> {
     pub input: A,
     pub config: A::Config,

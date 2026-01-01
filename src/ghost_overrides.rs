@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensorOutput;
+use serde::{Deserialize, Serialize};
 
 use crate::sensor_sets::TnuaSensors;
 use crate::{TnuaBasis, TnuaScheme};
@@ -8,7 +9,7 @@ pub trait TnuaGhostOverwritesForBasis: 'static + Send + Sync + Default {
     type Entities: 'static + Send + Sync + Default;
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Serialize, Deserialize)]
 pub struct TnuaGhostOverwrites<S: TnuaScheme>(pub <<<S as TnuaScheme>::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::GhostOverwrites);
 
 impl<S: TnuaScheme> AsMut<
@@ -25,7 +26,7 @@ impl<S: TnuaScheme> Default for TnuaGhostOverwrites<S> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct TnuaGhostOverwrite(Option<Entity>);
 
 impl TnuaGhostOverwrite {

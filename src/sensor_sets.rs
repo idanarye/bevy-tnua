@@ -4,10 +4,13 @@ use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaGhostSensor, TnuaProximitySensor, TnuaSensorOf,
 };
+use serde::{Deserialize, Serialize};
 
 pub trait TnuaSensors<'a>: 'a + Copy + Clone {
     type Entities: 'static + Send + Sync + Default;
-    type GhostOverwrites: TnuaGhostOverwritesForBasis<Entities = Self::Entities>;
+    type GhostOverwrites: TnuaGhostOverwritesForBasis<Entities = Self::Entities>
+        + Serialize
+        + for<'b> Deserialize<'b>;
 }
 
 pub struct ProximitySensorPreparationHelper {

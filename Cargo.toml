@@ -36,6 +36,7 @@ exclude = [
 [dependencies]
 bevy = { version = "^0.17", default-features = false, features = [
     "bevy_log",
+    "serialize",
 ]}
 bevy-tnua-physics-integration-layer = { version = "^0.10", path = "physics-integration-layer" }
 bevy-tnua-macros = { version = "^0.1", path = "macros" }
