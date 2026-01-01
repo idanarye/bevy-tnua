@@ -6,12 +6,15 @@ use bevy::{
 };
 #[cfg(feature = "egui")]
 use bevy_egui::{EguiContexts, egui};
-use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
 use bevy_tnua::{
     TnuaGhostOverwrites, TnuaGhostSensor,
     math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3},
 };
 use bevy_tnua::{TnuaObstacleRadar, prelude::*};
+use bevy_tnua::{
+    builtins::TnuaBuiltinCrouchMemory,
+    radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens},
+};
 use bevy_tnua::{
     builtins::{TnuaBuiltinClimb, TnuaBuiltinDash, TnuaBuiltinWallSlide},
     control_helpers::TnuaBlipReuseAvoidance,
@@ -23,7 +26,7 @@ use bevy_tnua::{
 
 use crate::{
     character_control_systems::platformer_control_scheme::{
-        DemoControlSchemeActionDiscriminant, DemoControlSchemeActionState,
+        DemoControlSchemeActionDiscriminant, DemoControlSchemeActionState, SlowDownWhileCrouching,
     },
     ui::tuning::UiTunable,
 };
@@ -328,22 +331,20 @@ pub fn apply_platformer_controls(
             crouch = crouch_pressed;
         }
 
-        // TODO: use a payload for this
-        //let speed_factor =
-        //// `TnuaController::concrete_action` can be used to determine if an action is currently
-        //// running, and query its status. Here, we use it to check if the character is
-        //// currently crouching, so that we can limit its speed.
-        //if let Some((_, memory)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
-        //// If the crouch is finished (last stages of standing up) we don't need to slow the
-        //// character down.
-        //if matches!(memory, TnuaBuiltinCrouchMemory::Rising) {
-        //1.0
-        //} else {
-        //0.2
-        //}
-        //} else {
-        //1.0
-        //};
+        let slow_down_while_crouching = SlowDownWhileCrouching(
+            // `TnuaController::current_action` can be used to determine if an action is currently
+            // running, and query its status. Here, we use it to check if the character is
+            // currently crouching, so that we can limit its speed.
+            if let Some(DemoControlSchemeActionState::Crouch(state, _)) =
+                controller.current_action.as_ref()
+            {
+                // If the crouch is finished (last stages of standing up) we don't need to slow the
+                // character down.
+                !matches!(state.memory, TnuaBuiltinCrouchMemory::Rising)
+            } else {
+                false
+            },
+        );
 
         // The basis is Tnua's most fundamental control command, governing over the character's
         // regular movement. The basis (and, to some extent, the actions as well) contains both
@@ -537,7 +538,10 @@ pub fn apply_platformer_controls(
             // nothing to set from the current frame's input. We do pass it through the crouch
             // enforcer though, which makes sure the character does not stand up if below an
             // obstacle.
-            controller.action(DemoControlScheme::Crouch(Default::default()));
+            controller.action(DemoControlScheme::Crouch(
+                Default::default(),
+                slow_down_while_crouching,
+            ));
         }
 
         if jump {

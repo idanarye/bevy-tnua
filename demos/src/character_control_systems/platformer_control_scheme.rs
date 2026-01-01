@@ -1,4 +1,3 @@
-use bevy_tnua::TnuaScheme;
 use bevy_tnua::builtins::{
     TnuaBuiltinClimb, TnuaBuiltinClimbConfig, TnuaBuiltinCrouch, TnuaBuiltinCrouchConfig,
     TnuaBuiltinDash, TnuaBuiltinDashConfig, TnuaBuiltinJump, TnuaBuiltinJumpConfig,
@@ -7,17 +6,31 @@ use bevy_tnua::builtins::{
 };
 use bevy_tnua::control_helpers::{TnuaAirActionDefinition, TnuaHasTargetEntity};
 use bevy_tnua::math::*;
+use bevy_tnua::{TnuaConfigModifier, TnuaScheme};
 
 #[derive(TnuaScheme)]
 #[scheme(basis = TnuaBuiltinWalk)]
 pub enum DemoControlScheme {
     Jump(TnuaBuiltinJump),
-    Crouch(TnuaBuiltinCrouch),
+    Crouch(
+        TnuaBuiltinCrouch,
+        #[scheme(modify_basis_config)] SlowDownWhileCrouching,
+    ),
     Dash(TnuaBuiltinDash),
     Knockback(TnuaBuiltinKnockback),
     WallSlide(TnuaBuiltinWallSlide),
     WallJump(TnuaBuiltinJump),
     Climb(TnuaBuiltinClimb),
+}
+
+pub struct SlowDownWhileCrouching(pub bool);
+
+impl TnuaConfigModifier<TnuaBuiltinWalkConfig> for SlowDownWhileCrouching {
+    fn modify_config(&self, config: &mut TnuaBuiltinWalkConfig) {
+        if self.0 {
+            config.speed *= 0.2;
+        }
+    }
 }
 
 impl TnuaAirActionDefinition for DemoControlScheme {
@@ -38,7 +51,7 @@ impl TnuaHasTargetEntity for DemoControlScheme {
     fn target_entity(action_state: &Self::ActionState) -> Option<bevy::ecs::entity::Entity> {
         match action_state {
             DemoControlSchemeActionState::Jump(_) => None,
-            DemoControlSchemeActionState::Crouch(_) => None,
+            DemoControlSchemeActionState::Crouch(_, _) => None,
             DemoControlSchemeActionState::Dash(_) => None,
             DemoControlSchemeActionState::Knockback(_) => None,
             DemoControlSchemeActionState::WallSlide(_) => None, // maybe it should have?

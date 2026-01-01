@@ -68,7 +68,7 @@ pub fn animate_platformer_character(
                         TnuaBuiltinJumpMemory::FallSection => AnimationState::Falling,
                     }
                 }
-                Some(DemoControlSchemeActionState::Crouch(_)) => {
+                Some(DemoControlSchemeActionState::Crouch(..)) => {
                     // In case of crouch, we need the state of the basis to determine - based on
                     // the speed - if the charcter is just crouching or also crawling.
                     let speed = Some(controller.basis_memory.running_velocity.length())
