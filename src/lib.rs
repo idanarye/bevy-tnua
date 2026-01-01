@@ -22,8 +22,8 @@
 //! defined by the physics backend - Bevy itself will still use single precision, and this is the
 //! precision the position and rotation will use.
 //!
-//! In addition to the physics integration plugin, the
-//! [`TnuaControllerPlugin`](prelude::TnuaControllerPlugin) should also be added.
+//! In addition to the physics integration plugin, the [`TnuaControllerPlugin`] should also be
+//! added.
 //!
 //! Some physics backends support running in different schedules (e.g. `FixedUpdate` to make the
 //! simulation deterministic). When using this feature, the physics integration plugin,
@@ -32,7 +32,7 @@
 //!
 //! A Tnua controlled character must have a dynamic rigid body, everything from
 //! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle`), and a
-//! [`TnuaController`](prelude::TnuaController) (and its automatically added required component):
+//! [`TnuaController`] (and its automatically added required component):
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # // Not importing from Rapier because there are two versions and the default features does not
@@ -67,10 +67,9 @@
 //!
 //! ## Controlling the Character
 //!
-//! To control the character, update the [`TnuaController`](prelude::TnuaController) by feeding it
-//! a [basis](TnuaBasis) and zero or more [actions](TnuaAction). For some of the advanced features
-//! to work, the system that does this needs to be placed inside the [`TnuaUserControlsSystems`]
-//! system set.
+//! To control the character, update the [`TnuaController`] by feeding it a [basis](TnuaBasis) and
+//! zero or more [actions](TnuaAction). For some of the advanced features to work, the system that
+//! does this needs to be placed inside the [`TnuaUserControlsSystems`] system set.
 //!
 //! ```no_run
 //! # use bevy::prelude::*;
@@ -115,14 +114,14 @@
 //!     }
 //! }
 //! ```
-//! Refer to the documentation of [`TnuaController`](prelude::TnuaController) for more information,
-//! but essentially the _basis_ controls the general movement and the _action_ is something
-//! special (jump, dash, crouch, etc.)
+//! Refer to the documentation of [`TnuaController`] for more information, but essentially the
+//! _basis_ controls the general movement and the _action_ is something special (jump, dash,
+//! crouch, etc.)
 //!
 //! ## Motion Based Animation
 //!
-//! [`TnuaController`](crate::prelude::TnuaController) can also be used to retreive data that can
-//! be used to decide which animation to play. A useful helper for that is [`TnuaAnimatingState`].
+//! [`TnuaController`] can also be used to retreive data that can be used to decide which animation
+//! to play. A useful helper for that is [`TnuaAnimatingState`].
 pub mod action_state;
 mod animating_helper;
 mod basis_action_traits;

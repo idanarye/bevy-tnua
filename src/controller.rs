@@ -351,7 +351,8 @@ impl<S: TnuaScheme> TnuaController<S> {
     /// [`TnuaAirActionsTracker`](crate::control_helpers::TnuaAirActionsTracker) is easier to use
     /// (and uses this behind the scenes)
     ///
-    /// The benefits of this over querying [`action_name`](Self::action_name) every frame are:
+    /// The benefits of this over querying [`action_discriminant`](Self::action_discriminant) every
+    /// frame are:
     ///
     /// * `action_flow_status` can indicate when the same action has been fed again immediately
     ///   after stopping or cancelled into itself.

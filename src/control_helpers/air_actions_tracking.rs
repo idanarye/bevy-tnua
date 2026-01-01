@@ -253,11 +253,10 @@ where
     /// 1. Determine if the action is allowed.
     /// 2. Optionally change the action's parameters as the air number progresses.
     ///
-    /// Note that the action name is important, because Tnua relies on constant feed of some
-    /// actions. As long as you pass the correct name, the number will not change while the action
-    /// continues to be fed. The correct name is [`TnuaAction::NAME`] when using
-    /// [`TnuaController::action`] or the first argument when using
-    /// [`TnuaController::named_action`].
+    /// Note that the action discriminant is important, because Tnua relies on constant feed of
+    /// some actions. As long as you pass the correct discriminant, the number will not change
+    /// while the action continues to be fed. The discriminant can be obtained with
+    /// [`TnuaController::action_discriminant`].
     pub fn air_count_for(&self, action: S::ActionDiscriminant) -> usize {
         if let Some((current_action, actions)) = self.current_action
             && current_action == action

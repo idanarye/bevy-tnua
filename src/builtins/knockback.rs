@@ -18,14 +18,15 @@ use serde::{Deserialize, Serialize};
 /// Pushover boundary is cleared (which means the character overcame the knockback). Unless the
 /// parameters are seriously skewed. The main parameters that can mess it up and unreasonably
 /// prolong the knockback duration are:
-/// * [`no_push_timer`](Self::no_push_timeout). Setting it too high will allow the character to
-///   "move along" with the shove, prolonging the knockback action because the boundary does not
-///   get cleared. The action will not affect the velocity during that time, but it can still
-///   prolong the animation, apply [`force_forward`](Self::force_forward), and prevent other
-///   actions from happening.
-/// * [`barrier_strength_diminishing`](Self::barrier_strength_diminishing). Setting it too low
-///   makes it very hard for the character to push through the boundary. It starts getting slightly
-///   weird below 1.0, and really weird below 0.5. Better keep it at above - 1.0 levels.
+/// * [`no_push_timer`](TnuaBuiltinKnockbackConfig::no_push_timeout). Setting it too high will
+///   allow the character to "move along" with the shove, prolonging the knockback action because
+///   the boundary does not get cleared. The action will not affect the velocity during that time,
+///   but it can still prolong the animation, apply [`force_forward`](Self::force_forward), and
+///   prevent other actions from happening.
+/// * [`barrier_strength_diminishing`](TnuaBuiltinKnockbackConfig::barrier_strength_diminishing).
+///   Setting it too low makes it very hard for the character to push through the boundary. It
+///   starts getting slightly weird below 1.0, and really weird below 0.5. Better keep it at above
+///   - 1.0 levels.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct TnuaBuiltinKnockback {
     /// Initial impulse to apply to the character before the Pushover stage starts.
@@ -38,9 +39,9 @@ pub struct TnuaBuiltinKnockback {
     /// Force the character to face in a particular direction.
     ///
     /// Note that there are no acceleration limits because unlike
-    /// [TnuaBuiltinWalk::desired_forward] this field will attempt to force the direction during a
-    /// single frame. It is useful for when the knockback animation needs to be aligned with the
-    /// knockback direction.
+    /// [crate::builtins::TnuaBuiltinWalk::desired_forward] this field will attempt to force the
+    /// direction during a single frame. It is useful for when the knockback animation needs to be
+    /// aligned with the knockback direction.
     pub force_forward: Option<Dir3>,
 }
 

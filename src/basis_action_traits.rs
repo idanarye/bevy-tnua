@@ -409,8 +409,7 @@ pub struct TnuaActionContext<'a, B: TnuaBasis> {
 impl<'a, B: TnuaBasis> TnuaActionContext<'a, B> {
     /// "Downgrade" to a basis context.
     ///
-    /// This is useful for some helper methods of [the concrete basis and its
-    /// state](Self::concrete_basis) that require a basis context.
+    /// This is useful for some helper methods of that require a basis context.
     pub fn as_basis_context(&self) -> TnuaBasisContext<'a> {
         TnuaBasisContext {
             frame_duration: self.frame_duration,

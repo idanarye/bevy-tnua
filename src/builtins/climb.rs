@@ -47,10 +47,11 @@ pub struct TnuaBuiltinClimb {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinClimbConfig {
-    /// Speed for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
+    /// Speed for maintaining [`desired_vec_to_anchor`](TnuaBuiltinClimb::desired_vec_to_anchor).
     pub anchor_speed: Float,
 
-    /// Acceleration for maintaining [`desired_vec_to_anchor`](Self::desired_vec_to_anchor).
+    /// Acceleration for maintaining
+    /// [`desired_vec_to_anchor`](TnuaBuiltinClimb::desired_vec_to_anchor).
     pub anchor_acceleration: Float,
 
     // How fast the character will climb.

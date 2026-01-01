@@ -33,8 +33,8 @@ pub struct TnuaBuiltinWallSlideConfig {
     /// A distance to maintain from the wall.
     ///
     /// Specifically - the distance from
-    /// [`contact_point_with_wall`](Self::contact_point_with_wall) in the direction of the
-    /// [`normal`](Self::normal).
+    /// [`contact_point_with_wall`](TnuaBuiltinWallSlide::contact_point_with_wall) in the direction
+    /// of the [`normal`](TnuaBuiltinWallSlide::normal).
     pub maintain_distance: Option<Float>,
 
     /// The maximum speed the character is allowed to move sideways on the wall while sliding

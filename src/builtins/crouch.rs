@@ -28,8 +28,8 @@ pub struct TnuaBuiltinCrouchConfig {
     ///
     /// Set this to more than the expected duration of a single frame, so that the character will
     /// some distance for the
-    /// [`spring_dampening`](crate::builtins::TnuaBuiltinWalk::spring_dampening) force to reduce
-    /// its vertical velocity.
+    /// [`spring_dampening`](crate::builtins::TnuaBuiltinWalkConfig::spring_dampening) force to
+    /// reduce its vertical velocity.
     pub height_change_impulse_for_duration: Float,
 
     /// The maximum impulse to apply when starting or stopping the crouch.

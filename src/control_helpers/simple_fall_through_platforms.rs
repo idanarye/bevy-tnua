@@ -9,12 +9,10 @@ use crate::ghost_overrides::TnuaGhostOverwrite;
 ///
 /// See <https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms>
 ///
-/// Place this component on the characetr entity (the one that has the [`TnuaProximitySensor`] and
-/// the [`TnuaGhostSensor`]) and inside a system that runs in
-/// [`TnuaUserControlsSystems`](crate::TnuaUserControlsSystems) (typically the player controls
-/// system) use [`with`](Self::with) and call one of the methods of [the returned handle
-/// object](TnuaHandleForSimpleFallThroughPlatformsHelper) every frame. See the description of
-/// these methods to determine which one to call.
+/// Place this component on the character entity (the one that has the
+/// [`TnuaController`](crate::TnuaController), use [`with`](Self::with), and call one of the
+/// methods of [the returned handle object](TnuaHandleForSimpleFallThroughPlatformsHelper). See the
+/// description of these methods to determine which one to call.
 #[derive(Component, Default)]
 pub struct TnuaSimpleFallThroughPlatformsHelper {
     currently_falling_through: HashSet<Entity>,

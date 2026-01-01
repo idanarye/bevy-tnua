@@ -33,9 +33,9 @@ pub trait TnuaBasisWithGround: TnuaBasis {
 
     /// If the basis is at coyote time - finish the coyote time.
     ///
-    /// This will be called automatically by Tnua, if the controller runs an action that  [violated
-    /// coyote time](TnuaAction::VIOLATES_COYOTE_TIME), so that a long coyote time will not allow,
-    /// for example, unaccounted air jumps.
+    /// This is typically called by air actions so that a long coyote time will not allow, for
+    /// example, unaccounted air jumps. These actions should invoke this method inside their
+    /// [`influence_basis`](crate::TnuaAction::influence_basis) method.
     ///
     /// If the character is fully grounded, this method must not change that.
     fn violate_coyote_time(memory: &mut Self::Memory);

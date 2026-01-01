@@ -34,7 +34,7 @@ pub struct TnuaBuiltinJump {
     /// Force the character to face in a particular direction.
     ///
     /// Note that there are no acceleration limits because unlike
-    /// [crate::prelude::TnuaBuiltinWalk::desired_forward] this field will attempt to force the
+    /// [crate::builtins::TnuaBuiltinWalk::desired_forward] this field will attempt to force the
     /// direction during a single frame. It is useful for when the jump animation needs to be
     /// aligned with the [`vertical_displacement`](Self::vertical_displacement).
     pub force_forward: Option<Dir3>,
@@ -51,7 +51,7 @@ pub struct TnuaBuiltinJumpConfig {
     /// The jump height is calculated from the center of the character at float_height to the
     /// center of the character at the top of the jump. It _does not_ mean the height from the
     /// ground. The float height is calculated by the inspecting the character's current position
-    /// and the basis' [`displacement`](crate::TnuaBasis::displacement).
+    /// and the basis' [`displacement`](TnuaBasisWithDisplacement::displacement).
     pub height: Float,
 
     /// Extra gravity for breaking too fast jump from running up a slope.
