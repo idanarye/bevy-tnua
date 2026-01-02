@@ -41,6 +41,8 @@ pub fn generate_action_state(parsed: &ParsedScheme) -> syn::Result<TokenStream> 
                     #(
                         Self::#command_names(_, ..) => #action_discriminant_name::#command_names,
                     )*
+                    #[allow(unreachable_patterns)]
+                    _ => unreachable!(),
                 }
             }
 
@@ -51,6 +53,8 @@ pub fn generate_action_state(parsed: &ParsedScheme) -> syn::Result<TokenStream> 
                     #(
                         Self::#command_names(state, ..) => state,
                     )*
+                    #[allow(unreachable_patterns)]
+                    _ => unreachable!(),
                 }
             }
 
@@ -61,12 +65,16 @@ pub fn generate_action_state(parsed: &ParsedScheme) -> syn::Result<TokenStream> 
                     #(
                         Self::#command_names(state, ..) => state,
                     )*
+                    #[allow(unreachable_patterns)]
+                    _ => unreachable!(),
                 }
             }
 
             fn modify_basis_config(&self, basis_config: &mut <Self::Basis as bevy_tnua::TnuaBasis>::Config) {
                 match self {
                     #(#modify_basis_config_branches)*
+                    #[allow(unreachable_patterns)]
+                    _ => unreachable!(),
                 }
             }
         }

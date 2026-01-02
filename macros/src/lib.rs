@@ -27,12 +27,7 @@ fn impl_derive_tnua_scheme(ast: &syn::DeriveInput) -> Result<TokenStream, Error>
         }
         syn::Data::Enum(data_enum) => {
             let parsed = ParsedScheme::new(ast, data_enum)?;
-            //eprintln!("{parsed:?}");
             generate_scheme_derive(&parsed)?
-            //eprintln!("Generated code:");
-            //eprintln!("===============");
-            //eprintln!("{generated}");
-            //quote::quote! {}
         }
         syn::Data::Union(_) => {
             return Err(Error::new(

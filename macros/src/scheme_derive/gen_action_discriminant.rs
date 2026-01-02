@@ -30,6 +30,8 @@ pub fn generate_action_discriminant(parsed: &ParsedScheme) -> syn::Result<TokenS
                     #(
                         Self::#command_names => #variant_indices,
                     )*
+                    #[allow(unreachable_patterns)]
+                    _ => unreachable!(),
                 }
             }
         }

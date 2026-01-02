@@ -70,6 +70,8 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                     #(
                         Self::#command_names(..) => #action_discriminant_name::#command_names,
                     )*
+                    #[allow(unreachable_patterns)]
+                    _ => unreachable!(),
                 }
             }
 
@@ -83,6 +85,8 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                             )
                         }
                     )*
+                    #[allow(unreachable_patterns)]
+                    _ => unreachable!(),
                 }
             }
 
@@ -120,6 +124,8 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                     #(
                         Self::#command_names(action, ..) => bevy_tnua::TnuaAction::initiation_decision(action, &config.#command_names_snake, sensors, ctx, being_fed_for),
                     )*
+                    #[allow(unreachable_patterns)]
+                    _ => unreachable!(),
                 }
             }
         }
