@@ -105,7 +105,7 @@ pub struct TnuaBasisContext<'a> {
 /// to persist data between frames it must keep it in its [memory](TnuaBasis::Memory).
 pub trait TnuaBasis: Default + 'static + Send + Sync {
     type Config: Send + Sync + Clone + Serialize + for<'a> Deserialize<'a>;
-    type Memory: Send + Sync + Default + Serialize + for<'a> Deserialize<'a>;
+    type Memory: Send + Sync + Default;
     type Sensors<'a>: TnuaSensors<'a>;
 
     /// This is where the basis affects the character's motion.
@@ -127,6 +127,7 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
         motor: &mut TnuaMotor,
     );
 
+    #[allow(clippy::too_many_arguments)]
     fn get_or_create_sensors<'a: 'b, 'b>(
         up_direction: Dir3,
         config: &'a Self::Config,
@@ -301,7 +302,7 @@ pub trait TnuaAction<B: TnuaBasis>: 'static + Send + Sync {
     ///
     /// 3. Inspect the action from game code systems, like an animation controlling system that
     ///    needs to know which animation to play based on the action's current state.
-    type Memory: Send + Sync + Default + Serialize + for<'a> Deserialize<'a>;
+    type Memory: Send + Sync + Default;
 
     /// Decides whether the action can start.
     ///
@@ -415,6 +416,7 @@ impl<'a, B: TnuaBasis> TnuaActionContext<'a, B> {
     }
 
     pub fn frame_duration_as_duration(&self) -> Duration {
+        #[allow(clippy::useless_conversion)]
         Duration::from_secs_f64(self.frame_duration.into())
     }
 }

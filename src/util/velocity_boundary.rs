@@ -2,11 +2,11 @@ use std::time::Duration;
 
 use crate::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 
 /// An indication that a character was knocked back and "struggles" to get back to its original
 /// velocity.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct VelocityBoundary {
     base: Float,
     original_frontier: Float,

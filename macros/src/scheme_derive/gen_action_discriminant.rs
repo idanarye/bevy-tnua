@@ -15,9 +15,12 @@ pub fn generate_action_discriminant(parsed: &ParsedScheme) -> syn::Result<TokenS
         .iter()
         .enumerate()
         .map(|(i, _)| syn::Index::from(i));
+
+    let (serde_derives, serde_attr) = parsed.gen_serde_clauses_always();
+
     Ok(quote! {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, bevy_tnua::serde::Serialize, bevy_tnua::serde::Deserialize)]
-        #[serde(crate = "bevy_tnua::serde")]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, #serde_derives)]
+        #serde_attr
         #vis enum #action_discriminant_name {
             #(
                 #command_names,

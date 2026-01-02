@@ -9,7 +9,8 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// An [action](TnuaAction) for sliding on walls.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaBuiltinWallSlide {
     /// The on the wall where the character touches it.
     ///
@@ -174,5 +175,6 @@ where
     }
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaBuiltinWallSlideMemory {}

@@ -10,7 +10,8 @@ use crate::{
 };
 
 /// The basic dash [action](TnuaAction).
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaBuiltinDash {
     /// The direction and distance of the dash.
     ///
@@ -189,7 +190,8 @@ where
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum TnuaBuiltinDashMemory {
     #[default]
     PreDash,

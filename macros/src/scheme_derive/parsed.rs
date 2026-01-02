@@ -1,4 +1,5 @@
 use convert_case::{Case, Casing};
+use quote::{quote, quote_spanned};
 use syn::Ident;
 
 use crate::util::{AttrArg, StaticError, ident_with_suffix};
@@ -11,6 +12,7 @@ pub struct ParsedScheme<'a> {
     pub action_discriminant_name: syn::Ident,
     pub action_state_enum_name: syn::Ident,
     pub basis: syn::Type,
+    pub serde: Option<proc_macro2::Span>,
     pub commands: Vec<ParsedCommand<'a>>,
 }
 
@@ -24,6 +26,7 @@ impl<'a> ParsedScheme<'a> {
             action_discriminant_name: ident_with_suffix(&ast.ident, "ActionDiscriminant"),
             action_state_enum_name: ident_with_suffix(&ast.ident, "ActionState"),
             basis: attr_on_enum.basis,
+            serde: attr_on_enum.serde,
             commands: data_enum
                 .variants
                 .iter()
@@ -31,21 +34,49 @@ impl<'a> ParsedScheme<'a> {
                 .collect::<Result<Vec<_>, _>>()?,
         })
     }
+
+    pub fn gen_serde_clauses_if_set(&self) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+        if self.serde.is_some() {
+            self.gen_serde_clauses_always()
+        } else {
+            (quote! {}, quote! {})
+        }
+    }
+
+    pub fn gen_serde_clauses_always(&self) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+        let span = self.serde.unwrap_or_else(proc_macro2::Span::call_site);
+        (
+            quote_spanned! {span=>
+                bevy_tnua::serde::Serialize, bevy_tnua::serde::Deserialize,
+            },
+            quote_spanned! {span=>
+                #[serde(crate = "bevy_tnua::serde")]
+            },
+        )
+    }
 }
 
 #[derive(Debug)]
 struct AttrOnEnum {
     basis: syn::Type,
+    serde: Option<proc_macro2::Span>,
 }
 
 impl AttrOnEnum {
     fn new(ast: &syn::DeriveInput) -> syn::Result<Self> {
         let mut basis: Option<syn::Type> = None;
+        let mut serde: Option<proc_macro2::Span> = None;
         for arg in AttrArg::iter_in_list_attributes(&ast.attrs, "scheme")? {
             match arg.name().to_string().as_str() {
                 "basis" => {
                     arg.already_set_if(basis.is_some())?;
                     basis = Some(arg.key_value()?.parse_value()?);
+                }
+                "serde" => {
+                    arg.apply_flag_to_field(
+                        &mut serde,
+                        "serializing and deserializing the entire state",
+                    )?;
                 }
                 _ => Err(arg.unknown_parameter())?,
             }
@@ -54,6 +85,7 @@ impl AttrOnEnum {
             basis: basis.ok_or(StaticError::CallSite(
                 "Scheme is missing basis (`#[scheme(basis = ...)])`",
             ))?,
+            serde,
         })
     }
 }

@@ -27,7 +27,8 @@ use serde::{Deserialize, Serialize};
 ///   Setting it too low makes it very hard for the character to push through the boundary. It
 ///   starts getting slightly weird below 1.0, and really weird below 0.5. Better keep it at above
 ///   - 1.0 levels.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaBuiltinKnockback {
     /// Initial impulse to apply to the character before the Pushover stage starts.
     ///
@@ -165,7 +166,8 @@ where
     }
 }
 
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum TnuaBuiltinKnockbackMemory {
     /// Applying the [`shove`](TnuaBuiltinKnockback::shove) impulse to the character.
     #[default]

@@ -27,6 +27,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
         action_discriminant_name,
         action_state_enum_name,
         basis,
+        serde: _,
         commands,
     } = parsed;
 
@@ -36,10 +37,6 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
         .iter()
         .map(|c| &c.command_name_snake)
         .collect::<Vec<_>>();
-    // let payload_types = commands
-    // .iter()
-    // .map(|c| c.payloads.iter().map(|p| p.payload_type).collect())
-    // .collect::<Vec<Vec<_>>>();
     let [payload_bindings, payload_to_update_bindings] =
         ["payload", "payload_to_update"].map(|prefix| {
             commands

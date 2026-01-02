@@ -21,8 +21,23 @@ mod util;
 ///   memory of the action.
 ///
 /// The enum itself **must** have a `#[scheme(basis = ...)]` attribute that specifies the basis of
-/// the control scheme (typically `TnuaBuiltinWalk`). Each variant **must** be a tuple variant,
-/// where the first element of the tuple is the action, followed by zero or more payloads.
+/// the control scheme (typically `TnuaBuiltinWalk`). The following additional parameters are
+/// allowed on that `scheme` attribute on the enum:
+///
+/// * `#[scheme(serde)]` - derive Serialize and Deserialize on the generated action state enum.
+///   * This is mostly useful with (and will probably fail without) the `serialize` feature enabled
+///     on the bevy-tnua crate.
+///   * The control scheme enum itself will not get these derives automatically - that derive will
+///     need to be added manually.
+///   * With these, and with the `serialize` feature enabled, the `TnuaController` and
+///     `TnuaGhostOverwrites` of the control scheme will also be serializable and deserializable -
+///     allowing networking libraries to synchronize them between machines.
+///   * Even without this setting and without the `serialize` feature on the bevy-tnua crate, the
+///     generated configuration struct and the action discriminant enum will still get these
+///     derives.
+///
+/// Each variant **must** be a tuple variant, where the first element of the tuple is the action,
+/// followed by zero or more payloads.
 ///
 /// Payloads are ignored by Tnua itself - they are for the user systems to keep track of data
 /// related to the actions - except when they are annotated by `#[scheme(modify_basis_config)]`.
