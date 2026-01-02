@@ -38,7 +38,7 @@ impl TnuaGhostOverwrite {
         self.0 = None;
     }
 
-    pub fn find_in<'a>(
+    pub(crate) fn find_in<'a>(
         &self,
         ghost_outputs: &'a [TnuaProximitySensorOutput],
     ) -> Option<&'a TnuaProximitySensorOutput> {
