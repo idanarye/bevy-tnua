@@ -83,6 +83,7 @@ enum FedStatus {
     Fresh,
     Trigger,
     Interrupt,
+    Held,
 }
 
 impl FedStatus {
@@ -93,6 +94,7 @@ impl FedStatus {
             FedStatus::Fresh => true,
             FedStatus::Trigger => true,
             FedStatus::Interrupt => true,
+            FedStatus::Held => true,
         }
     }
 }
@@ -250,7 +252,11 @@ impl<S: TnuaScheme> TnuaController<S> {
         let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
 
         match fed_entry.status {
-            FedStatus::Lingering | FedStatus::Fresh | FedStatus::Trigger | FedStatus::Interrupt => {
+            FedStatus::Lingering
+            | FedStatus::Fresh
+            | FedStatus::Trigger
+            | FedStatus::Interrupt
+            | FedStatus::Held => {
                 fed_entry.status = FedStatus::Fresh;
                 if let Some(current_action) = self.current_action.as_mut() {
                     match action.update_in_action_state(current_action) {
@@ -304,11 +310,14 @@ impl<S: TnuaScheme> TnuaController<S> {
     }
 
     pub fn action_trigger(&mut self, action: S) {
-        // Because this is a trigger, we ignore the old fed status.
         let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
 
         match fed_entry.status {
-            FedStatus::Lingering | FedStatus::Fresh | FedStatus::Trigger | FedStatus::Interrupt => {
+            FedStatus::Lingering
+            | FedStatus::Fresh
+            | FedStatus::Trigger
+            | FedStatus::Interrupt
+            | FedStatus::Held => {
                 // Do nothing because the action was already triggered
             }
             FedStatus::Not => {
@@ -362,6 +371,63 @@ impl<S: TnuaScheme> TnuaController<S> {
             action,
             being_fed_for: Stopwatch::new(),
         });
+    }
+
+    pub fn action_start(&mut self, action: S) {
+        let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
+
+        match fed_entry.status {
+            FedStatus::Lingering | FedStatus::Fresh | FedStatus::Trigger | FedStatus::Interrupt => {
+                // Do nothing because the action was already triggered
+            }
+            FedStatus::Held => {
+                // Action was already started - but still allowed to change its parameters
+                let action = if let Some(current_action) = self.current_action.as_mut() {
+                    match action.update_in_action_state(current_action) {
+                        TnuaUpdateInActionStateResult::Success => {
+                            // Managed to update current_action - no need to check the contender_action
+                            return;
+                        }
+                        TnuaUpdateInActionStateResult::WrongVariant(action) => action,
+                    }
+                } else {
+                    action
+                };
+                if let Some(contender_action) = self.contender_action.as_mut()
+                    && action.discriminant() == contender_action.action.discriminant()
+                {
+                    // This action is still condender - we can safely update it
+                    contender_action.action = action;
+                }
+            }
+            FedStatus::Not => {
+                *fed_entry = FedEntry {
+                    status: FedStatus::Held,
+                    rescheduled_in: None,
+                };
+                if let Some(contender_action) = self.contender_action.as_mut()
+                    && action.discriminant() == contender_action.action.discriminant()
+                {
+                    contender_action.action = action;
+                } else if let Some(contender_action) = self.contender_action.as_ref()
+                    && self.actions_being_fed[contender_action.action.discriminant().variant_idx()]
+                        .status
+                        == FedStatus::Interrupt
+                {
+                    // If the existing condender is an interrupt, we will not overwrite it.
+                } else {
+                    self.contender_action = Some(ContenderAction {
+                        action,
+                        being_fed_for: Stopwatch::new(),
+                    });
+                }
+            }
+        }
+    }
+
+    pub fn action_end(&mut self, action: S::ActionDiscriminant) {
+        // Note that even if the action was an interrupt -this is a direct order to end it.
+        self.actions_being_fed[action.variant_idx()] = Default::default();
     }
 
     /// Re-feed the same action that is currently active.
@@ -546,7 +612,7 @@ fn apply_controller_system<S: TnuaScheme>(
             controller.action_feeding_initiated = false;
             for fed_entry in controller.actions_being_fed.iter_mut() {
                 match fed_entry.status {
-                    FedStatus::Not => {}
+                    FedStatus::Not | FedStatus::Held => {}
                     FedStatus::Lingering => {
                         *fed_entry = Default::default();
                     }
@@ -771,7 +837,7 @@ fn apply_controller_system<S: TnuaScheme>(
 
         for fed_entry in controller.actions_being_fed.iter_mut() {
             match fed_entry.status {
-                FedStatus::Not | FedStatus::Lingering | FedStatus::Fresh => {}
+                FedStatus::Not | FedStatus::Lingering | FedStatus::Fresh | FedStatus::Held => {}
                 FedStatus::Trigger | FedStatus::Interrupt => {
                     fed_entry.status = FedStatus::Not;
                 }

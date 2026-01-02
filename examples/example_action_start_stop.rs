@@ -3,7 +3,7 @@ use bevy::{color::palettes::css, prelude::*};
 use avian3d::prelude::*;
 
 use bevy_tnua::builtins::{
-    TnuaBuiltinDash, TnuaBuiltinDashConfig, TnuaBuiltinWalk, TnuaBuiltinWalkConfig,
+    TnuaBuiltinCrouch, TnuaBuiltinCrouchConfig, TnuaBuiltinWalk, TnuaBuiltinWalkConfig,
 };
 use bevy_tnua::prelude::*;
 use bevy_tnua_avian3d::prelude::*;
@@ -29,7 +29,7 @@ fn main() {
 #[derive(TnuaScheme)]
 #[scheme(basis = TnuaBuiltinWalk)]
 enum ControlScheme {
-    Dash(TnuaBuiltinDash),
+    Crouch(TnuaBuiltinCrouch),
 }
 
 // No Tnua-related setup here - this is just normal Bevy stuff.
@@ -95,7 +95,8 @@ fn setup_player(
                 // what they do.
                 ..Default::default()
             },
-            dash: TnuaBuiltinDashConfig {
+            crouch: TnuaBuiltinCrouchConfig {
+                float_offset: -0.4,
                 ..Default::default()
             },
         })),
@@ -143,9 +144,9 @@ fn apply_controls(
 
     // Only need to feed the action while the button is pressed
     if keyboard.just_pressed(KeyCode::Space) {
-        controller.action_trigger(ControlScheme::Dash(TnuaBuiltinDash {
-            displacement: Vec3::new(0.0, 0.0, -10.0),
-            ..Default::default()
-        }));
+        controller.action_start(ControlScheme::Crouch(Default::default()));
+    }
+    if keyboard.just_released(KeyCode::Space) {
+        controller.action_end(ControlSchemeActionDiscriminant::Crouch);
     }
 }

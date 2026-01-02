@@ -39,8 +39,11 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 ### Added
 - Ability to add payload to actions. The payload is also able to modfiy the
   configuration of the basis and/or the action while the action is running.
-- `TnuaController::action_interrupt` for running actions in other systems
-  (which means it cannot rely on `initiate_action_feeding` being called before)
+- Method for running actions outside the main action feeding schedule (when we
+  cannot rely on `initiate_action_feeding` being called before):
+  - `TnuaController::action_trigger`
+  - `TnuaController::action_interrupt`
+  - `TnuaController::action_start` and `TnuaController::action_end`
 - `TnuaGhostOverwrites`, for being able to use ghost sensors outside the
   schedule (overwriting the sensors' `output` does not work outside schedule
   because they'll just be written again before the controller can read them)
