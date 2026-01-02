@@ -8,6 +8,48 @@ mod scheme_derive;
 #[allow(unused)]
 mod util;
 
+/// Make an enum a control scheme for a Tnua character controller.
+///
+/// This implements the `TnuaScheme` trait for the enum, and also generates the following structs
+/// required for implementing it (replace `{name}` with the name of the control scheme enum):
+///
+/// * `{name}Config` - a struct with the configuration of the basis and all the actions.
+/// * `{name}ActionDiscriminant` - an enum mirroring the control scheme, except all the variants
+///   are units.
+/// * `{name}ActionState` - an enum mirroring the control scheme, except instead of just the input
+///   types each variant contains a `TnuaActionState` which holds the input, configuration and
+///   memory of the action.
+///
+/// The enum itself **must** have a `#[scheme(basis = ...)]` attribute that specifies the basis of
+/// the control scheme (typically `TnuaBuiltinWalk`). Each variant **must** be a tuple variant,
+/// where the first element of the tuple is the action, followed by zero or more payloads.
+///
+/// Payloads are ignored by Tnua itself - they are for the user systems to keep track of data
+/// related to the actions - except when they are annotated by `#[scheme(modify_basis_config)]`.
+/// Such payloads will modify the configuration when the action they are part of is in effect.
+///
+/// Example:
+///
+/// ```ignore
+/// #[derive(TnuaScheme)]
+/// #[scheme(basis = TnuaBuiltinWalk)]
+/// pub enum DemoControlScheme {
+///     Jump(TnuaBuiltinJump),
+///     Crouch(
+///         TnuaBuiltinCrouch,
+///         // While this action is in effect, `SlowDownWhileCrouching` will change the
+///         // `TnuaBuiltinWalkConfig` to reduce character speed.
+///         #[scheme(modify_basis_config)] SlowDownWhileCrouching,
+///     ),
+///     WallSlide(
+///         TnuaBuiltinWallSlide,
+///         // This payload has is ignored by Tnua, but user code can use it to tell which wall
+///         // the character is sliding on.
+///         Entity,
+///     ),
+/// }
+/// ```
+///
 #[proc_macro_derive(TnuaScheme, attributes(scheme))]
 pub fn derive_tnua_scheme(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -36,11 +78,4 @@ fn impl_derive_tnua_scheme(ast: &syn::DeriveInput) -> Result<TokenStream, Error>
             ));
         }
     })
-    //syn::Data::Struct(_) => Err
-    //syn::Fields::Named(fields) => struct_info::StructInfo::new(ast, fields.named.iter())?.derive()?,
-    //syn::Fields::Unnamed(_) => return Err(Error::new(ast.span(), "TypedBuilder is not supported for tuple structs")),
-    //syn::Fields::Unit => return Err(Error::new(ast.span(), "TypedBuilder is not supported for unit structs")),
-    //},
-    //syn::Data::Enum(_) => return Err(Error::new(ast.span(), "TypedBuilder is not supported for enums")),
-    //syn::Data::Union(_) => return Err(Error::new(ast.span(), "TypedBuilder is not supported for unions")),
 }
