@@ -487,10 +487,6 @@ impl TnuaBasis for TnuaBuiltinWalk {
         );
     }
 
-    fn proximity_sensor_cast_range(&self, config: &Self::Config, _memory: &Self::Memory) -> Float {
-        config.float_height + config.cling_distance
-    }
-
     fn get_or_create_sensors<'a: 'b, 'b>(
         up_direction: Dir3,
         config: &'a Self::Config,

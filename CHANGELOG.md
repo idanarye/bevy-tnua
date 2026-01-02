@@ -64,6 +64,9 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   `TnuaBuiltinWallSlide`. These fields were there for the user control systems
   to use, but now they should just be payload in the action variant in the
   scheme.
+- `proximity_sensor_cast_range` (from both basis and action). Basis should set
+  the cast range when defining their sensors in `get_or_create_sensors`, and
+  action should affect teh sensors through the basis via `influence_basis`.
 
 ## 0.26.0 - 2025-10-14
 ### Changed

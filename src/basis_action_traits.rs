@@ -127,10 +127,6 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
         motor: &mut TnuaMotor,
     );
 
-    /// A value to configure the range of the ground proximity sensor according to the basis'
-    /// needs.
-    fn proximity_sensor_cast_range(&self, config: &Self::Config, memory: &Self::Memory) -> Float;
-
     fn get_or_create_sensors<'a: 'b, 'b>(
         up_direction: Dir3,
         config: &'a Self::Config,
