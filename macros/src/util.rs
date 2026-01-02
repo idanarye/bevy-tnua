@@ -149,7 +149,7 @@ impl AttrArg {
             .iter()
             .filter_map(|attr| match &attr.meta {
                 syn::Meta::Path(_) | syn::Meta::NameValue(_) => None,
-                syn::Meta::List(meta_list) => Some(meta_list),
+                syn::Meta::List(meta_list) => meta_list.path.is_ident(name).then_some(meta_list),
             })
             .map(|meta_list| {
                 let parser =
