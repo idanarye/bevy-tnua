@@ -59,6 +59,14 @@ impl Default for TnuaRigidBodyTracker {
     }
 }
 
+#[derive(Component)]
+#[relationship(relationship_target = TnuaSensorsSet)]
+pub struct TnuaSensorOf(pub Entity);
+
+#[derive(Component)]
+#[relationship_target(relationship = TnuaSensorOf)]
+pub struct TnuaSensorsSet(Vec<Entity>);
+
 /// Distance from another collider in a certain direction, and information on that collider.
 ///
 /// The physics backend is responsible for updating this component from the physics engine during

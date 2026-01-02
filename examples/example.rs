@@ -2,6 +2,9 @@ use bevy::{color::palettes::css, prelude::*};
 
 use avian3d::prelude::*;
 
+use bevy_tnua::builtins::{
+    TnuaBuiltinJump, TnuaBuiltinJumpConfig, TnuaBuiltinWalk, TnuaBuiltinWalkConfig,
+};
 use bevy_tnua::prelude::*;
 use bevy_tnua_avian3d::prelude::*;
 
@@ -12,15 +15,21 @@ fn main() {
             PhysicsPlugins::default(),
             // We need both Tnua's main controller plugin, and the plugin to connect to the physics
             // backend (in this case Avian 3D)
-            TnuaControllerPlugin::new(FixedUpdate),
+            TnuaControllerPlugin::<ControlScheme>::new(FixedUpdate),
             TnuaAvian3dPlugin::new(FixedUpdate),
         ))
         .add_systems(
             Startup,
             (setup_camera_and_lights, setup_level, setup_player),
         )
-        .add_systems(FixedUpdate, apply_controls.in_set(TnuaUserControlsSystems))
+        .add_systems(Update, apply_controls.in_set(TnuaUserControlsSystems))
         .run();
+}
+
+#[derive(TnuaScheme)]
+#[scheme(basis = TnuaBuiltinWalk)]
+enum ControlScheme {
+    Jump(TnuaBuiltinJump),
 }
 
 // No Tnua-related setup here - this is just normal Bevy stuff.
@@ -71,6 +80,7 @@ fn setup_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut control_scheme_configs: ResMut<Assets<ControlSchemeConfig>>,
 ) {
     commands.spawn((
         Mesh3d(meshes.add(Capsule3d {
@@ -84,7 +94,23 @@ fn setup_player(
         RigidBody::Dynamic,
         Collider::capsule(0.5, 1.0),
         // This is Tnua's interface component.
-        TnuaController::default(),
+        TnuaController::<ControlScheme>::new(control_scheme_configs.add(ControlSchemeConfig {
+            basis: TnuaBuiltinWalkConfig {
+                // The `float_height` must be greater (even if by little) from the distance between
+                // the character's center and the lowest point of its collider.
+                float_height: 1.5,
+                // `TnuaBuiltinWalk` has many other fields for customizing the movement - but they
+                // have sensible defaults. Refer to the `TnuaBuiltinWalk`'s documentation to learn
+                // what they do.
+                ..Default::default()
+            },
+            jump: TnuaBuiltinJumpConfig {
+                // The height is the only mandatory field of the jump action.
+                height: 4.0,
+                // `TnuaBuiltinJump` also has customization fields with sensible defaults.
+                ..Default::default()
+            },
+        })),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
         TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
         // Tnua can fix the rotation, but the character will still get rotated before it can do so.
@@ -93,10 +119,14 @@ fn setup_player(
     ));
 }
 
-fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut TnuaController>) {
+fn apply_controls(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut query: Query<&mut TnuaController<ControlScheme>>,
+) {
     let Ok(mut controller) = query.single_mut() else {
         return;
     };
+    controller.initiate_action_feeding();
 
     let mut direction = Vec3::ZERO;
 
@@ -113,28 +143,19 @@ fn apply_controls(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Tnu
         direction += Vec3::X;
     }
 
-    // Feed the basis every frame. Even if the player doesn't move - just use `desired_velocity:
-    // Vec3::ZERO`. `TnuaController` starts without a basis, which will make the character collider
-    // just fall.
-    controller.basis(TnuaBuiltinWalk {
-        // The `desired_velocity` determines how the character will move.
-        desired_velocity: direction.normalize_or_zero() * 10.0,
-        // The `float_height` must be greater (even if by little) from the distance between the
-        // character's center and the lowest point of its collider.
-        float_height: 1.5,
-        // `TnuaBuiltinWalk` has many other fields for customizing the movement - but they have
-        // sensible defaults. Refer to the `TnuaBuiltinWalk`'s documentation to learn what they do.
+    // Set the basis every frame. Even if the player doesn't move - just use `desired_velocity:
+    // Vec3::ZERO` to reset the previous frame's input.
+    controller.basis = TnuaBuiltinWalk {
+        // The `desired_motion` determines how the character will move.
+        desired_motion: direction.normalize_or_zero(),
+        // The other field is `desired_forward` - but since the character model is a capsule we
+        // don't care the direction its "forward" is pointing.
         ..Default::default()
-    });
+    };
 
     // Feed the jump action every frame as long as the player holds the jump button. If the player
     // stops holding the jump button, simply stop feeding the action.
     if keyboard.pressed(KeyCode::Space) {
-        controller.action(TnuaBuiltinJump {
-            // The height is the only mandatory field of the jump button.
-            height: 4.0,
-            // `TnuaBuiltinJump` also has customization fields with sensible defaults.
-            ..Default::default()
-        });
+        controller.action(ControlScheme::Jump(Default::default()));
     }
 }

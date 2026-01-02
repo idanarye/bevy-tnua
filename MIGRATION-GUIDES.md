@@ -1,3 +1,9 @@
+# Migrating to Tnua ??? (schemes)
+
+- The `State` property of basis and actions is now named `Memory`. This is
+  mostly important for those writing custom basis/actions, but also for those
+  who inspect or modify that internal data (e.g. to decide the animation)
+
 # Migrating to Tnua 0.16
 
 All plugins now support specifying a schedule, which means that they are no

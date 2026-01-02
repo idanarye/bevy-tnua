@@ -9,8 +9,8 @@ use bevy_tnua::math::Vector3;
 use crate::level_mechanics::{Cannon, CannonBullet, PushEffect, TimeToDespawn};
 
 use super::{
-    helper::{LevelSetupHelper3d, LevelSetupHelper3dEntityCommandsExtension},
     PositionPlayer,
+    helper::{LevelSetupHelper3d, LevelSetupHelper3dEntityCommandsExtension},
 };
 
 pub fn setup_level(mut helper: LevelSetupHelper3d) {

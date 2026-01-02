@@ -11,6 +11,9 @@ NOTES:
 
 ## [Unreleased]
 
+### Changed
+- Proximity sensors use the `TnuaSensorOf` relationship.
+
 ## 0.8.0 - 2025-10-26
 ### Added
 - `prelude` module.

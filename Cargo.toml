@@ -3,12 +3,12 @@ members = [
     "physics-integration-layer",
     # "rapier2d", "rapier3d",
     "avian2d", "avian3d",
-    "demos",
+    "demos", "macros",
 ]
 default-members = [".", "demos"]
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 authors = ["IdanArye <idanarye@gmail.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/idanarye/bevy-tnua"
@@ -36,9 +36,12 @@ exclude = [
 [dependencies]
 bevy = { version = "^0.17", default-features = false, features = [
     "bevy_log",
+    "serialize",
 ]}
 bevy-tnua-physics-integration-layer = { version = "^0.10", path = "physics-integration-layer" }
+bevy-tnua-macros = { version = "^0.1", path = "macros" }
 thiserror = "2.0.12"
+serde = { version = "^1", features = ["derive"] }
 
 [dev-dependencies]
 bevy = { version = "^0.17", default-features = false, features = [

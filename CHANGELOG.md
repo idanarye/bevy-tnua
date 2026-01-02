@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- [**BREAKING**] _Schemes_ - a big refactor which completely breaks the API.
+  See the [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-026). Most of
+  the other changes are part of this.
+- Basis and actions are no longer passed dynamically to the controller -
+  instead the user code must define an enum that derives `TnuaScheme`.
+  - The actions are the enum's variants.
+  - The basis is specified via an attribute.
+- Separate both basis and actions into "input" and "config".
+  - Put the configuration
+  - Rename the "state" (of basis and actions) to "memory". The term "state"
+    will now be used to describe the compund input+config+memory of the
+    basis/action currently in effect.
+- Methods like `is_airborne` have been moved from the `TnuaBasis` itself to
+  traits the basis can implement. Actions that needs that data from the basis
+  will need to make it part of their signature's bounds.
+- The control helpers `TnuaSimpleAirActionsCounter` and
+  `TnuaBlipReuseAvoidance` now require traits implemented on the scheme.
+- [**BREAKING**] `TnuaController::initiate_action_feeding` must be invoked each
+  frame before feeding actions.
+- The proximity sensor is now an entity of its own. The basis defines which
+  sensors it'll have, and is in charge of creating them.
+- Instead of adding `TnuaGhostSensor` manually to the sensor, one needs to use
+  `TnuaGhostOverwrites`. That component is added on the character entity
+  itself, which automatically adds `TnuaGhostSensor` to the relevant sensor
+  entities. The `TnuaGhostSensor` still need to be read in order to operate the
+  `TnuaGhostOverwrites`.
+- Upgrade edition to 2024.
+
+### Added
+- Ability to add payload to actions. The payload is also able to modfiy the
+  configuration of the basis and/or the action while the action is running.
+- `TnuaController::action_interrupt` for running actions in other systems
+  (which means it cannot rely on `initiate_action_feeding` being called before)
+- `TnuaGhostOverwrites`, for being able to use ghost sensors outside the
+  schedule (overwriting the sensors' `output` does not work outside schedule
+  because they'll just be written again before the controller can read them)
+- All the configuration assets are deserializable - which means they can be
+  loaded from files.
+  - They are also serializable - which means templates can be saved into files
+    using `TnuaSchemeConfig::write_if_not_exist`.
+- `TnuaController` and `TnuaGhostOverwrites` are fully serializable and
+  deserializable (but only if the scheme itself is
+  serializable/deserializable). This means they should be synchronizable with
+  networking plugins.
+
+### Removed
+- `TnuaController::named_action` - different actions that use the same base
+  `TnuaAction` type should now be done as different variants of the same scheme
+  that use the same action type.
+- `TnuaCrouchEnforcer` - its behavior is now part of `TnuaBuiltinCrouch` (via
+  the new `headroom` configuration for `TnuaBuiltinWalk`)
+- "Unused" fields from some actions - specifically `climbable_entity` and
+  `initiation_direction` from `TnuaBuiltinClimb` and `wall_entity` from
+  `TnuaBuiltinWallSlide`. These fields were there for the user control systems
+  to use, but now they should just be payload in the action variant in the
+  scheme.
+- `proximity_sensor_cast_range` (from both basis and action). Basis should set
+  the cast range when defining their sensors in `get_or_create_sensors`, and
+  action should affect teh sensors through the basis via `influence_basis`.
 
 ## 0.26.0 - 2025-10-14
 ### Changed

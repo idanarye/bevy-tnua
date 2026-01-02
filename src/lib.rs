@@ -22,20 +22,19 @@
 //! defined by the physics backend - Bevy itself will still use single precision, and this is the
 //! precision the position and rotation will use.
 //!
-//! In addition to the physics integration plugin, the
-//! [`TnuaControllerPlugin`](prelude::TnuaControllerPlugin) should also be added.
+//! In addition to the physics integration plugin, the [`TnuaControllerPlugin`] should also be
+//! added.
 //!
 //! Some physics backends support running in different schedules (e.g. `FixedUpdate` to make the
 //! simulation deterministic). When using this feature, the physics integration plugin,
-//! `TnuaControllerPlugin`, and any other Tnua plugin that supports it (such as
-//! [`TnuaCrouchEnforcer`](crate::control_helpers::TnuaCrouchEnforcer)) must also be registered in
-//! that schedule, using their `::new()` method instead of `::default()`. The player controls
-//! systems must also be registered under that same schedule (instead of under `Update`, which is
-//! where it should usually be registered)
+//! `TnuaControllerPlugin`, and any other Tnua plugin that supports it  must also be registered in
+//! that schedule, using their `::new()` method instead of `::default()`.
 //!
 //! A Tnua controlled character must have a dynamic rigid body, everything from
 //! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle`), and a
-//! [`TnuaController`](prelude::TnuaController) (and its automatically added required component):
+//! [`TnuaController`] (and its automatically added required components). The controller is
+//! parameterized by a control scheme enum that derives [`TnuaScheme`] (more on that in the next
+//! section) and needs a configuration (based on the control scheme) as an asset handle:
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # // Not importing from Rapier because there are two versions and the default features does not
@@ -44,11 +43,36 @@
 //! # #[derive(Component)]
 //! # enum RigidBody { Dynamic }
 //! # use bevy_tnua::prelude::*;
+//! # use bevy_tnua::builtins::{TnuaBuiltinWalkConfig, TnuaBuiltinJumpConfig};
 //! # let mut commands: Commands = panic!();
 //! # let mut cmd = commands.spawn_empty();
+//! # #[derive(TnuaScheme)] #[scheme(basis = TnuaBuiltinWalk)] enum ControlScheme {Jump(TnuaBuiltinJump)}
+//! # let control_scheme_configs: Assets<ControlSchemeConfig> = panic!();
 //! cmd.insert(RigidBody::Dynamic);
 //! cmd.insert(TnuaRapier3dIOBundle::default()); // this one depends on the physics backend
-//! cmd.insert(TnuaController::default());
+//! cmd.insert(TnuaController::<ControlScheme>::new(
+//!     // This example creates the configuration by code and injects it to the Assets resource,
+//!     // but a proper game will probably want to load it from an asset file.
+//!     control_scheme_configs.add(ControlSchemeConfig {
+//!         // The basis' configuration is alwayts named `basis`:
+//!         basis: TnuaBuiltinWalkConfig {
+//!             // Must be larger than the height of the entity's center from the bottom of its
+//!             // collider, or else the character will not float and Tnua will not work properly:
+//!             float_height: 2.0,
+//!
+//!             // TnuaBuiltinWalkConfig has many other fields that can be configured:
+//!             ..Default::default()
+//!         },
+//!         // Actions' configurations are named after the variants defining the actions:
+//!         jump: TnuaBuiltinJumpConfig {
+//!             // The full height of the jump, if the player does not release the button:
+//!             height: 4.0,
+//!
+//!             // TnuaBuiltinJumpConfig too has other fields that can be configured:
+//!             ..Default::default()
+//!         },
+//!     })
+//! ));
 //! ```
 //! Typically though it'd also include a `Collider`.
 //!
@@ -70,10 +94,9 @@
 //!
 //! ## Controlling the Character
 //!
-//! To control the character, update the [`TnuaController`](prelude::TnuaController) by feeding it
-//! a [basis](TnuaBasis) and zero or more [actions](TnuaAction). For some of the advanced features
-//! to work, the system that does this needs to be placed inside the [`TnuaUserControlsSystems`]
-//! system set.
+//! To control the character, update the [`TnuaController`] by feeding it a [basis](TnuaBasis) and
+//! zero or more [actions](TnuaAction). For some of the advanced features to work, the system that
+//! does this needs to be placed inside the [`TnuaUserControlsSystems`] system set.
 //!
 //! ```no_run
 //! # use bevy::prelude::*;
@@ -85,64 +108,67 @@
 //! # fn direction_vector(&self) -> Vector3 { Vector3::ZERO }
 //! # fn jump_pressed(&self) -> bool { false }
 //! # }
+//! # #[derive(TnuaScheme)] #[scheme(basis = TnuaBuiltinWalk)] enum ControlScheme {Jump(TnuaBuiltinJump)}
 //! fn player_control_system(mut query: Query<(
-//!     &mut TnuaController,
+//!     &mut TnuaController<ControlScheme>,
 //!     &PlayerInputComponent,  // not part of Tnua - defined in user code
 //! )>) {
 //!     for (mut controller, player_input) in query.iter_mut() {
-//!         controller.basis(TnuaBuiltinWalk {
-//!             // Move in the direction the player entered, at a speed of 10.0:
-//!             desired_velocity: player_input.direction_vector() * 10.0,
+//!         controller.basis = TnuaBuiltinWalk {
+//!             // Move in the direction the player entered:
+//!             desired_motion: player_input.direction_vector(),
 //!
 //!             // Turn the character in the movement direction:
 //!             desired_forward: Dir3::new(player_input.direction_vector()).ok(),
-//!             
-//!             // Must be larger than the height of the entity's center from the bottom of its
-//!             // collider, or else the character will not float and Tnua will not work properly:
-//!             float_height: 2.0,
-//!
-//!             // TnuaBuiltinWalk has many other fields that can be configured:
-//!             ..Default::default()
-//!         });
+//!         };
 //!
 //!         if player_input.jump_pressed() {
 //!             // The jump action must be fed as long as the player holds the button.
-//!             controller.action(TnuaBuiltinJump {
-//!                 // The full height of the jump, if the player does not release the button:
-//!                 height: 4.0,
-//!
-//!                 // TnuaBuiltinJump too has other fields that can be configured:
-//!                 ..Default::default()
-//!             });
+//!             controller.action(ControlScheme::Jump(Default::default()));
 //!         }
 //!     }
 //! }
 //! ```
-//! Refer to the documentation of [`TnuaController`](prelude::TnuaController) for more information,
-//! but essentially the _basis_ controls the general movement and the _action_ is something
-//! special (jump, dash, crouch, etc.)
+//! Refer to the documentation of [`TnuaController`] for more information, but essentially the
+//! _basis_ controls the general movement and the _action_ is something special (jump, dash,
+//! crouch, etc.)
 //!
 //! ## Motion Based Animation
 //!
-//! [`TnuaController`](crate::prelude::TnuaController) can also be used to retreive data that can
-//! be used to decide which animation to play. A useful helper for that is [`TnuaAnimatingState`].
+//! [`TnuaController`] can also be used to retreive data that can be used to decide which animation
+//! to play. A useful helper for that is [`TnuaAnimatingState`].
+pub mod action_state;
 mod animating_helper;
 mod basis_action_traits;
+#[doc(hidden)]
+pub use serde;
+pub mod basis_capabilities;
 pub mod builtins;
 pub mod control_helpers;
 pub mod controller;
+pub mod ghost_overrides;
 pub mod radar_lens;
+pub mod sensor_sets;
 pub mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
-    DynamicAction, DynamicBasis, TnuaAction, TnuaActionContext, TnuaActionInitiationDirective,
-    TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasis, TnuaBasisContext,
+    TnuaAction, TnuaActionContext, TnuaActionDiscriminant, TnuaBasis, TnuaScheme, TnuaSchemeConfig,
+    TnuaUpdateInActionStateResult,
 };
+pub use basis_action_traits::{
+    TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus,
+    TnuaActionState, TnuaBasisContext, TnuaConfigModifier,
+};
+pub use bevy_tnua_macros::TnuaScheme;
+pub use controller::{TnuaController, TnuaControllerPlugin};
+pub use ghost_overrides::TnuaGhostOverwrites;
 
 pub mod prelude {
+    pub use crate::TnuaScheme;
     pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
-    pub use crate::controller::{TnuaController, TnuaControllerPlugin};
-    pub use crate::{TnuaAction, TnuaPipelineSystems, TnuaUserControlsSystems};
+    pub use crate::{
+        TnuaController, TnuaControllerPlugin, TnuaPipelineSystems, TnuaUserControlsSystems,
+    };
 }
 
 pub use bevy_tnua_physics_integration_layer::data_for_backends::*;

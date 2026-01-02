@@ -1,14 +1,16 @@
+use crate::basis_capabilities::TnuaBasisWithGround;
 use crate::math::{AdjustPrecision, AsF32, Float, Vector3};
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::util::MotionHelper;
 use crate::{
-    prelude::*, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
-    TnuaActionLifecycleStatus, TnuaMotor,
+    TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
+    TnuaActionLifecycleStatus, TnuaBasis, TnuaMotor,
 };
 
 /// The basic dash [action](TnuaAction).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct TnuaBuiltinDash {
     /// The direction and distance of the dash.
     ///
@@ -26,7 +28,10 @@ pub struct TnuaBuiltinDash {
 
     /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
+}
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct TnuaBuiltinDashConfig {
     /// The speed the character will move in during the dash.
     pub speed: Float,
 
@@ -47,12 +52,9 @@ pub struct TnuaBuiltinDash {
     pub input_buffer_time: Float,
 }
 
-impl Default for TnuaBuiltinDash {
+impl Default for TnuaBuiltinDashConfig {
     fn default() -> Self {
         Self {
-            displacement: Vector3::ZERO,
-            desired_forward: None,
-            allow_in_air: false,
             speed: 80.0,
             brake_to_speed: 20.0,
             acceleration: 400.0,
@@ -62,22 +64,26 @@ impl Default for TnuaBuiltinDash {
     }
 }
 
-impl TnuaAction for TnuaBuiltinDash {
-    const NAME: &'static str = "TnuaBuiltinStraightDash";
-    type State = TnuaBuiltinDashState;
-    const VIOLATES_COYOTE_TIME: bool = true;
+impl<B: TnuaBasis> TnuaAction<B> for TnuaBuiltinDash
+where
+    B: TnuaBasisWithGround,
+{
+    type Config = TnuaBuiltinDashConfig;
+    type Memory = TnuaBuiltinDashMemory;
 
     fn initiation_decision(
         &self,
-        ctx: crate::TnuaActionContext,
+        config: &Self::Config,
+        _sensors: &B::Sensors<'_>,
+        ctx: crate::TnuaActionContext<B>,
         being_fed_for: &bevy::time::Stopwatch,
     ) -> crate::TnuaActionInitiationDirective {
         if !self.displacement.is_finite() || self.displacement == Vector3::ZERO {
             TnuaActionInitiationDirective::Reject
-        } else if self.allow_in_air || !ctx.basis.is_airborne() {
+        } else if self.allow_in_air || !B::is_airborne(ctx.basis) {
             // Either not airborne, or air jumps are allowed
             TnuaActionInitiationDirective::Allow
-        } else if (being_fed_for.elapsed().as_secs_f64() as Float) < self.input_buffer_time {
+        } else if (being_fed_for.elapsed().as_secs_f64() as Float) < config.input_buffer_time {
             TnuaActionInitiationDirective::Delay
         } else {
             TnuaActionInitiationDirective::Reject
@@ -86,20 +92,22 @@ impl TnuaAction for TnuaBuiltinDash {
 
     fn apply(
         &self,
-        state: &mut Self::State,
-        ctx: TnuaActionContext,
+        config: &Self::Config,
+        memory: &mut Self::Memory,
+        _sensors: &B::Sensors<'_>,
+        ctx: TnuaActionContext<B>,
         _lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
         // TODO: Once `std::mem::variant_count` gets stabilized, use that instead.
         for _ in 0..3 {
-            return match state {
-                TnuaBuiltinDashState::PreDash => {
+            return match memory {
+                TnuaBuiltinDashMemory::PreDash => {
                     let Ok(direction) = Dir3::new(self.displacement.f32()) else {
                         // Probably unneeded because of the `initiation_decision`, but still
                         return TnuaActionLifecycleDirective::Finished;
                     };
-                    *state = TnuaBuiltinDashState::During {
+                    *memory = TnuaBuiltinDashMemory::During {
                         direction,
                         destination: ctx.tracker.translation + self.displacement,
                         desired_forward: self.desired_forward,
@@ -107,7 +115,7 @@ impl TnuaAction for TnuaBuiltinDash {
                     };
                     continue;
                 }
-                TnuaBuiltinDashState::During {
+                TnuaBuiltinDashMemory::During {
                     direction,
                     destination,
                     desired_forward,
@@ -117,7 +125,7 @@ impl TnuaAction for TnuaBuiltinDash {
                         .adjust_precision()
                         .dot(*destination - ctx.tracker.translation);
                     if distance_to_destination < 0.0 {
-                        *state = TnuaBuiltinDashState::Braking {
+                        *memory = TnuaBuiltinDashMemory::Braking {
                             direction: *direction,
                         };
                         continue;
@@ -130,9 +138,9 @@ impl TnuaAction for TnuaBuiltinDash {
 
                     motor.lin = Default::default();
                     motor.lin.acceleration = -ctx.tracker.gravity;
-                    motor.lin.boost = (direction.adjust_precision() * self.speed
+                    motor.lin.boost = (direction.adjust_precision() * config.speed
                         - ctx.tracker.velocity)
-                        .clamp_length_max(ctx.frame_duration * self.acceleration);
+                        .clamp_length_max(ctx.frame_duration * config.acceleration);
                     let expected_speed = direction
                         .adjust_precision()
                         .dot(ctx.tracker.velocity + motor.lin.boost);
@@ -151,13 +159,14 @@ impl TnuaAction for TnuaBuiltinDash {
 
                     TnuaActionLifecycleDirective::StillActive
                 }
-                TnuaBuiltinDashState::Braking { direction } => {
+                TnuaBuiltinDashMemory::Braking { direction } => {
                     let remaining_speed = direction.adjust_precision().dot(ctx.tracker.velocity);
-                    if remaining_speed <= self.brake_to_speed {
+                    if remaining_speed <= config.brake_to_speed {
                         TnuaActionLifecycleDirective::Finished
                     } else {
                         motor.lin.boost = -direction.adjust_precision()
-                            * (remaining_speed - self.brake_to_speed).min(self.brake_acceleration);
+                            * (remaining_speed - config.brake_to_speed)
+                                .min(config.brake_acceleration);
                         TnuaActionLifecycleDirective::StillActive
                     }
                 }
@@ -166,10 +175,22 @@ impl TnuaAction for TnuaBuiltinDash {
         error!("Tnua could not decide on dash state");
         TnuaActionLifecycleDirective::Finished
     }
+
+    fn influence_basis(
+        &self,
+        _config: &Self::Config,
+        _memory: &Self::Memory,
+        _ctx: crate::TnuaBasisContext,
+        _basis_input: &B,
+        _basis_config: &<B as TnuaBasis>::Config,
+        basis_memory: &mut <B as TnuaBasis>::Memory,
+    ) {
+        B::violate_coyote_time(basis_memory);
+    }
 }
 
-#[derive(Clone, Debug, Default)]
-pub enum TnuaBuiltinDashState {
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub enum TnuaBuiltinDashMemory {
     #[default]
     PreDash,
     During {

@@ -2,7 +2,7 @@
 name = "tnua-demos-crate"
 version = "0.0.0"
 publish = false
-edition = "2021"
+edition = "2024"
 exclude = [
     "assets",
 ]
@@ -90,6 +90,7 @@ bevy_framepace = { version = "0.19", optional = true }
 
 clap = { version = "^4", features = ["derive"] }
 ordered-float = "5.0.0"
+serde = { version = "1.0.228", features = ["derive"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "^0.3", features = ["Window", "Location", "Url", "UrlSearchParams"] }

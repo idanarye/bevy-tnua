@@ -5,27 +5,37 @@ use bevy::{
     prelude::*,
 };
 #[cfg(feature = "egui")]
-use bevy_egui::{egui, EguiContexts};
-use bevy_tnua::control_helpers::{
-    TnuaCrouchEnforcer, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
-};
-use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3};
-use bevy_tnua::radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens};
+use bevy_egui::{EguiContexts, egui};
 use bevy_tnua::{
-    builtins::{
-        TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinCrouchState, TnuaBuiltinDash,
-        TnuaBuiltinKnockback, TnuaBuiltinWallSlide,
-    },
+    TnuaGhostOverwrites, TnuaGhostSensor,
+    math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3},
+};
+use bevy_tnua::{TnuaObstacleRadar, prelude::*};
+use bevy_tnua::{
+    builtins::TnuaBuiltinCrouchMemory,
+    radar_lens::{TnuaBlipSpatialRelation, TnuaRadarLens},
+};
+use bevy_tnua::{
+    builtins::{TnuaBuiltinClimb, TnuaBuiltinDash, TnuaBuiltinWallSlide},
     control_helpers::TnuaBlipReuseAvoidance,
 };
-use bevy_tnua::{prelude::*, TnuaObstacleRadar};
-use bevy_tnua::{TnuaGhostSensor, TnuaProximitySensor};
+use bevy_tnua::{
+    builtins::{TnuaBuiltinJump, TnuaBuiltinWalk},
+    control_helpers::{TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper},
+};
 
-use crate::ui::tuning::UiTunable;
+use crate::{
+    character_control_systems::platformer_control_scheme::{
+        DemoControlSchemeActionDiscriminant, DemoControlSchemeActionState, SlowDownWhileCrouching,
+    },
+    ui::tuning::UiTunable,
+};
 
-use super::querying_helpers::ObstacleQueryHelper;
-use super::spatial_ext_facade::SpatialExtFacade;
 use super::Dimensionality;
+use super::{platformer_control_scheme::DemoControlScheme, querying_helpers::ObstacleQueryHelper};
+use super::{
+    platformer_control_scheme::DemoControlSchemeConfig, spatial_ext_facade::SpatialExtFacade,
+};
 
 #[allow(clippy::type_complexity)]
 #[allow(clippy::useless_conversion)]
@@ -37,29 +47,19 @@ pub fn apply_platformer_controls(
         &CharacterMotionConfigForPlatformerDemo,
         // This is the main component used for interacting with Tnua. It is used for both issuing
         // commands and querying the character's state.
-        &mut TnuaController,
-        // This is an helper for preventing the character from standing up while under an
-        // obstacle, since this will make it slam into the obstacle, causing weird physics
-        // behavior.
-        // Most of the job is done by TnuaCrouchEnforcerPlugin - the control system only
-        // needs to "let it know" about the crouch action.
-        &mut TnuaCrouchEnforcer,
-        // The proximity sensor usually works behind the scenes, but we need it here because
-        // manipulating the proximity sensor using data from the ghost sensor is how one-way
-        // platforms work in Tnua.
-        &mut TnuaProximitySensor,
+        &mut TnuaController<DemoControlScheme>,
         // The ghost sensor detects ghost platforms - which are pass-through platforms marked with
         // the `TnuaGhostPlatform` component. Left alone it does not actually affect anything - a
         // user control system (like this very demo here) has to use the data from it and
         // manipulate the proximity sensor.
-        &TnuaGhostSensor,
+        &mut TnuaGhostOverwrites<DemoControlScheme>,
         // This is an helper for implementing one-way platforms.
         &mut TnuaSimpleFallThroughPlatformsHelper,
         // This is an helper for implementing air actions. It counts all the air actions using a
         // single counter, so it cannot be used to implement, for example, one double jump and one
         // air dash per jump - only a single "pool" of air action "energy" shared by all air
         // actions.
-        &mut TnuaSimpleAirActionsCounter,
+        &mut TnuaSimpleAirActionsCounter<DemoControlScheme>,
         // This is a helper for tracking where the camera is looking at
         (
             Option<&CameraControllerFloating>,
@@ -69,7 +69,7 @@ pub fn apply_platformer_controls(
         &TnuaObstacleRadar,
         // This is used to avoid re-initiating actions on the same obstacles until we return to
         // them.
-        &mut TnuaBlipReuseAvoidance,
+        &mut TnuaBlipReuseAvoidance<DemoControlScheme>,
     )>,
     // This is used to run spatial queries on the physics backend. Note that `SpatialExtFacade` is
     // defined in the demos crates, and actual games that use Tnua should instead use the
@@ -79,6 +79,10 @@ pub fn apply_platformer_controls(
     // This is used to determine the qualities of the obstacles (e.g. whether or not they are
     // climbable)
     obstacle_query: Query<ObstacleQueryHelper>,
+    // The proximity sensor usually works behind the scenes, but we need it here because
+    // manipulating the proximity sensor using data from the ghost sensor is how one-way platforms
+    // work in Tnua. &mut TnuaProximitySensor,
+    ghost_sensors_query: Query<&TnuaGhostSensor>,
 ) {
     #[cfg(feature = "egui")]
     if egui_context.ctx_mut().unwrap().wants_keyboard_input() {
@@ -86,7 +90,7 @@ pub fn apply_platformer_controls(
             // The basis remembers its last frame status, so if we cannot feed it proper input this
             // frame (for example - because the GUI takes the input focus) we need to neutralize
             // it.
-            controller.neutralize_basis();
+            controller.basis = Default::default();
         }
         return;
     }
@@ -94,9 +98,7 @@ pub fn apply_platformer_controls(
     for (
         config,
         mut controller,
-        mut crouch_enforcer,
-        mut sensor,
-        ghost_sensor,
+        mut ghost_overwrites,
         mut fall_through_helper,
         mut air_actions_counter,
         camera_contoller,
@@ -104,11 +106,14 @@ pub fn apply_platformer_controls(
         mut blip_reuse_avoidance,
     ) in query.iter_mut()
     {
+        controller.initiate_action_feeding();
+
         // This part is just keyboard input processing. In a real game this would probably be done
         // with a third party plugin.
         let mut direction = Vector3::ZERO;
 
-        let is_climbing = controller.action_name() == Some(TnuaBuiltinClimb::NAME);
+        let is_climbing =
+            controller.action_discriminant() == Some(DemoControlSchemeActionDiscriminant::Climb);
 
         if config.dimensionality == Dimensionality::Dim3 || is_climbing {
             if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
@@ -186,160 +191,171 @@ pub fn apply_platformer_controls(
         // several schemes with observable changes in behavior, and each implementation is rather
         // short and simple.
         let crouch;
-        match config.falling_through {
-            // With this scheme, the player cannot make their character fall through by pressing
-            // the crouch button - the platforms are jump-through only.
-            FallingThroughControlScheme::JumpThroughOnly => {
-                crouch = crouch_pressed;
-                // To achieve this, we simply take the first platform detected by the ghost sensor,
-                // and treat it like a "real" platform.
-                for ghost_platform in ghost_sensor.iter() {
-                    // Because the ghots platforms don't interact with the character through the
-                    // physics engine, and because the ray that detected them starts from the
-                    // center of the character, we usually want to only look at platforms that
-                    // are at least a certain distance lower than that - to limit the point from
-                    // which the character climbs when they collide with the platform.
-                    if config.one_way_platforms_min_proximity <= ghost_platform.proximity {
-                        // By overriding the sensor's output, we make it pretend the ghost platform
-                        // is a real one - which makes Tnua make the character stand on it even
-                        // though the physics engine will not consider them colliding with each
-                        // other.
-                        sensor.output = Some(ghost_platform.clone());
-                        break;
+        if let Some(ghost_sensor) = controller
+            .sensors_entities
+            .ground
+            .and_then(|entity| ghost_sensors_query.get(entity).ok())
+        {
+            match config.falling_through {
+                // With this scheme, the player cannot make their character fall through by pressing
+                // the crouch button - the platforms are jump-through only.
+                FallingThroughControlScheme::JumpThroughOnly => {
+                    crouch = crouch_pressed;
+                    // To achieve this, we simply take the first platform detected by the ghost sensor,
+                    // and treat it like a "real" platform.
+                    ghost_overwrites.ground.clear();
+                    for ghost_platform in ghost_sensor.iter() {
+                        // Because the ghots platforms don't interact with the character through the
+                        // physics engine, and because the ray that detected them starts from the
+                        // center of the character, we usually want to only look at platforms that
+                        // are at least a certain distance lower than that - to limit the point from
+                        // which the character climbs when they collide with the platform.
+                        if config.one_way_platforms_min_proximity <= ghost_platform.proximity {
+                            // By overriding the sensor's output, we make it pretend the ghost platform
+                            // is a real one - which makes Tnua make the character stand on it even
+                            // though the physics engine will not consider them colliding with each
+                            // other.
+                            ghost_overwrites.ground.set(ghost_platform);
+                            break;
+                        }
                     }
                 }
-            }
-            // With this scheme, the player can drop down one-way platforms by pressing the crouch
-            // button. Because it does not use `TnuaSimpleFallThroughPlatformsHelper`, it has
-            // certain limitations:
-            //
-            // 1. If the player releases the crouch button before the character has passed a
-            //    certain distance it'll climb back up on the platform.
-            // 2. If a ghost platform is too close above another platform (either ghost or solid),
-            //    such that when the character floats above the lower platform the higher platform
-            //    is detected at above-minimal proximity, the character will climb up to the higher
-            //    platform - even after explicitly dropping down from it to the lower one.
-            //
-            // Both limitations are greatly affected by the min proximity, but setting it tightly
-            // to minimize them may cause the character to sometimes fall through a ghost platform
-            // without explicitly being told to. To properly overcome these limitations - use
-            // `TnuaSimpleFallThroughPlatformsHelper`.
-            FallingThroughControlScheme::WithoutHelper => {
-                // With this scheme we only care about the first ghost platform the ghost sensor
-                // finds with a proximity higher than the defined minimum. We either treat it as a
-                // real platform, or ignore it and any other platform the sensor has found.
-                let relevant_platform = ghost_sensor.iter().find(|ghost_platform| {
-                    config.one_way_platforms_min_proximity <= ghost_platform.proximity
-                });
-                if crouch_pressed {
-                    // If there is a ghost platform, it means the player wants to fall through it -
-                    // so we "cancel" the crouch, and we don't pass any ghots platform to the
-                    // proximity sensor (because we want to character to fall through)
-                    //
-                    // If there is no ghost platform, it means the character is standing on a real
-                    // platform - so we make it crouch. We don't pass any ghost platform to the
-                    // proximity sensor here either - because there aren't any.
-                    crouch = relevant_platform.is_none();
-                } else {
-                    crouch = false;
-                    if let Some(ghost_platform) = relevant_platform {
-                        // Ghost platforms can only be detected _before_ fully solid platforms, so
-                        // if we detect one we can safely replace the proximity sensor's output
-                        // with it.
+                // With this scheme, the player can drop down one-way platforms by pressing the crouch
+                // button. Because it does not use `TnuaSimpleFallThroughPlatformsHelper`, it has
+                // certain limitations:
+                //
+                // 1. If the player releases the crouch button before the character has passed a
+                //    certain distance it'll climb back up on the platform.
+                // 2. If a ghost platform is too close above another platform (either ghost or solid),
+                //    such that when the character floats above the lower platform the higher platform
+                //    is detected at above-minimal proximity, the character will climb up to the higher
+                //    platform - even after explicitly dropping down from it to the lower one.
+                //
+                // Both limitations are greatly affected by the min proximity, but setting it tightly
+                // to minimize them may cause the character to sometimes fall through a ghost platform
+                // without explicitly being told to. To properly overcome these limitations - use
+                // `TnuaSimpleFallThroughPlatformsHelper`.
+                FallingThroughControlScheme::WithoutHelper => {
+                    // With this scheme we only care about the first ghost platform the ghost sensor
+                    // finds with a proximity higher than the defined minimum. We either treat it as a
+                    // real platform, or ignore it and any other platform the sensor has found.
+                    let relevant_platform = ghost_sensor.iter().find(|ghost_platform| {
+                        config.one_way_platforms_min_proximity <= ghost_platform.proximity
+                    });
+                    if crouch_pressed {
+                        // If there is a ghost platform, it means the player wants to fall through it -
+                        // so we "cancel" the crouch, and we don't pass any ghots platform to the
+                        // proximity sensor (because we want to character to fall through)
                         //
-                        // Do take care to only do this when there is a ghost platform though -
-                        // otherwise it could replace an actual solid platform detection with a
-                        // `None`.
-                        sensor.output = Some(ghost_platform.clone());
+                        // If there is no ghost platform, it means the character is standing on a real
+                        // platform - so we make it crouch. We don't pass any ghost platform to the
+                        // proximity sensor here either - because there aren't any.
+                        crouch = relevant_platform.is_none();
+                        ghost_overwrites.ground.clear();
+                    } else {
+                        crouch = false;
+                        if let Some(ghost_platform) = relevant_platform {
+                            // Ghost platforms can only be detected _before_ fully solid platforms, so
+                            // if we detect one we can safely replace the proximity sensor's output
+                            // with it.
+                            //
+                            // Do take care to only do this when there is a ghost platform though -
+                            // otherwise it could replace an actual solid platform detection with a
+                            // `None`.
+                            ghost_overwrites.ground.set(ghost_platform);
+                        } else {
+                            ghost_overwrites.ground.clear();
+                        }
                     }
                 }
-            }
-            // This scheme uses `TnuaSimpleFallThroughPlatformsHelper` to properly handle fall
-            // through:
-            //
-            // * Pressing the crouch button while standing on a ghost platform will make the
-            //   character fall through it.
-            // * Even if the button is released immediately, the character will not climb back up.
-            //   It'll continue the fall.
-            // * Even if the button is held and there is another ghost platform below, the
-            //   character will only drop one "layer" of ghost platforms.
-            // * If the player drops from a ghost platform to a platform too close to it - the
-            //   character will not climb back up. The player can still climb back up by jumping,
-            //   of course.
-            FallingThroughControlScheme::SingleFall => {
-                // The fall through helper is operated by creating an handler.
-                let mut handler = fall_through_helper.with(
-                    &mut sensor,
-                    ghost_sensor,
-                    config.one_way_platforms_min_proximity,
-                );
-                if crouch_pressed {
-                    // Use `try_falling` to fall through the first ghost platform. It'll return
-                    // `true` if there really was a ghost platform to fall through - in which case
-                    // we want to cancel the crouch. If there was no ghost platform to fall
-                    // through, it returns `false` - in which case we do want to crouch.
-                    //
-                    // The boolean argument to `try_falling` determines if the character should
-                    // fall through "new" ghost platforms. When the player have just pressed the
-                    // crouch button, we pass `true` so that the fall can begin. But in the
-                    // following frames we pass `false` so that if there are more ghost platforms
-                    // below the character will not fall through them.
-                    crouch = !handler.try_falling(crouch_just_pressed);
-                } else {
-                    crouch = false;
-                    // Use `dont_fall` to not fall. If there are platforms that the character
-                    // already stared falling through, it'll continue the fall through and not
-                    // climb back up (like it would with the `WithoutHelper` scheme). Otherwise, it
-                    // will just copy the first ghost platform (above the min proximity) from the
-                    // ghost sensor to the proximity sensor.
-                    handler.dont_fall();
+                // This scheme uses `TnuaSimpleFallThroughPlatformsHelper` to properly handle fall
+                // through:
+                //
+                // * Pressing the crouch button while standing on a ghost platform will make the
+                //   character fall through it.
+                // * Even if the button is released immediately, the character will not climb back up.
+                //   It'll continue the fall.
+                // * Even if the button is held and there is another ghost platform below, the
+                //   character will only drop one "layer" of ghost platforms.
+                // * If the player drops from a ghost platform to a platform too close to it - the
+                //   character will not climb back up. The player can still climb back up by jumping,
+                //   of course.
+                FallingThroughControlScheme::SingleFall => {
+                    // The fall through helper is operated by creating an handler.
+                    let mut handler = fall_through_helper.with(
+                        &mut ghost_overwrites.ground,
+                        ghost_sensor,
+                        config.one_way_platforms_min_proximity,
+                    );
+                    if crouch_pressed {
+                        // Use `try_falling` to fall through the first ghost platform. It'll return
+                        // `true` if there really was a ghost platform to fall through - in which case
+                        // we want to cancel the crouch. If there was no ghost platform to fall
+                        // through, it returns `false` - in which case we do want to crouch.
+                        //
+                        // The boolean argument to `try_falling` determines if the character should
+                        // fall through "new" ghost platforms. When the player have just pressed the
+                        // crouch button, we pass `true` so that the fall can begin. But in the
+                        // following frames we pass `false` so that if there are more ghost platforms
+                        // below the character will not fall through them.
+                        crouch = !handler.try_falling(crouch_just_pressed);
+                    } else {
+                        crouch = false;
+                        // Use `dont_fall` to not fall. If there are platforms that the character
+                        // already stared falling through, it'll continue the fall through and not
+                        // climb back up (like it would with the `WithoutHelper` scheme). Otherwise, it
+                        // will just copy the first ghost platform (above the min proximity) from the
+                        // ghost sensor to the proximity sensor.
+                        handler.dont_fall();
+                    }
                 }
-            }
-            // This scheme is similar to `SingleFall`, with the exception that as long as the
-            // crouch button is pressed the character will keep falling through ghost platforms.
-            FallingThroughControlScheme::KeepFalling => {
-                let mut handler = fall_through_helper.with(
-                    &mut sensor,
-                    ghost_sensor,
-                    config.one_way_platforms_min_proximity,
-                );
-                if crouch_pressed {
-                    // This is done by passing `true` to `try_falling`, allowing it to keep falling
-                    // through new platforms even if the button was not _just_ pressed.
-                    crouch = !handler.try_falling(true);
-                } else {
-                    crouch = false;
-                    handler.dont_fall();
+                // This scheme is similar to `SingleFall`, with the exception that as long as the
+                // crouch button is pressed the character will keep falling through ghost platforms.
+                FallingThroughControlScheme::KeepFalling => {
+                    let mut handler = fall_through_helper.with(
+                        &mut ghost_overwrites.ground,
+                        ghost_sensor,
+                        config.one_way_platforms_min_proximity,
+                    );
+                    if crouch_pressed {
+                        // This is done by passing `true` to `try_falling`, allowing it to keep falling
+                        // through new platforms even if the button was not _just_ pressed.
+                        crouch = !handler.try_falling(true);
+                    } else {
+                        crouch = false;
+                        handler.dont_fall();
+                    }
                 }
-            }
-        };
+            };
+        } else {
+            crouch = crouch_pressed;
+        }
 
-        let speed_factor =
-            // `TnuaController::concrete_action` can be used to determine if an action is currently
+        let slow_down_while_crouching = SlowDownWhileCrouching(
+            // `TnuaController::current_action` can be used to determine if an action is currently
             // running, and query its status. Here, we use it to check if the character is
             // currently crouching, so that we can limit its speed.
-            if let Some((_, state)) = controller.concrete_action::<TnuaBuiltinCrouch>() {
+            if let Some(DemoControlSchemeActionState::Crouch(state, _)) =
+                controller.current_action.as_ref()
+            {
                 // If the crouch is finished (last stages of standing up) we don't need to slow the
                 // character down.
-                if matches!(state, TnuaBuiltinCrouchState::Rising) {
-                    1.0
-                } else {
-                    0.2
-                }
+                !matches!(state.memory, TnuaBuiltinCrouchMemory::Rising)
             } else {
-                1.0
-            };
+                false
+            },
+        );
 
         // The basis is Tnua's most fundamental control command, governing over the character's
         // regular movement. The basis (and, to some extent, the actions as well) contains both
         // configuration - which in this case we copy over from `config.walk` - and controls like
         // `desired_velocity` or `desired_forward` which we compute here based on the current
         // frame's input.
-        controller.basis(TnuaBuiltinWalk {
-            desired_velocity: if turn_in_place {
+        controller.basis = TnuaBuiltinWalk {
+            desired_motion: if turn_in_place {
                 Vector3::ZERO
             } else {
-                direction * speed_factor * config.speed
+                direction
             },
             desired_forward: if let Some(CameraControllerMounted { forward, .. }) =
                 camera_contoller.1
@@ -351,28 +367,28 @@ pub fn apply_platformer_controls(
                 // moves (or when the player explicitly wants to set the direction)
                 Dir3::new(direction.f32()).ok()
             },
-            ..config.walk.clone()
-        });
+        };
 
         let radar_lens = TnuaRadarLens::new(obstacle_radar, &spatial_ext);
 
-        let already_sliding_on = controller
-            .concrete_action::<TnuaBuiltinWallSlide>()
-            .and_then(|(action, _)| {
-                action
-                    .wall_entity
-                    .filter(|entity| obstacle_radar.has_blip(*entity))
-            });
+        let already_sliding_on = if let Some(DemoControlSchemeActionState::WallSlide(_, entity)) =
+            controller.current_action.as_ref()
+            && obstacle_radar.has_blip(*entity)
+        {
+            Some(*entity)
+        } else {
+            None
+        };
 
         let already_climbing_on =
-            controller
-                .concrete_action::<TnuaBuiltinClimb>()
-                .and_then(|(action, _)| {
-                    let entity = action
-                        .climbable_entity
-                        .filter(|entity| obstacle_radar.has_blip(*entity))?;
-                    Some((entity, action.clone()))
-                });
+            if let Some(DemoControlSchemeActionState::Climb(state, entity, initiation_direction)) =
+                controller.current_action.as_ref()
+                && obstacle_radar.has_blip(*entity)
+            {
+                Some((*entity, state.input.clone(), *initiation_direction))
+            } else {
+                None
+            };
 
         let mut walljump_candidate = None;
 
@@ -383,13 +399,15 @@ pub fn apply_platformer_controls(
                     .expect("ObstacleQueryHelper has nothing that could fail when missing")
                     .climbable
             {
-                if let Some((climbable_entity, action)) = already_climbing_on.as_ref() {
+                if let Some((climbable_entity, action, initiation_direction)) =
+                    already_climbing_on.as_ref()
+                {
                     if *climbable_entity != blip.entity() {
                         continue 'blips_loop;
                     }
-                    let dot_initiation = direction.dot(action.initiation_direction);
+                    let dot_initiation = direction.dot(*initiation_direction);
                     let initiation_direction = if 0.5 < dot_initiation {
-                        action.initiation_direction
+                        *initiation_direction
                     } else {
                         Vector3::ZERO
                     };
@@ -401,20 +419,17 @@ pub fn apply_platformer_controls(
                     }
 
                     let mut action = TnuaBuiltinClimb {
-                        climbable_entity: Some(blip.entity()),
                         anchor: blip.closest_point().get(),
-                        desired_climb_velocity: config.climb_speed
-                            * screen_space_direction.dot(Vector3::NEG_Z)
+                        desired_climb_motion: screen_space_direction.dot(Vector3::NEG_Z)
                             * Vector3::Y,
-                        initiation_direction,
                         desired_vec_to_anchor: action.desired_vec_to_anchor,
                         desired_forward: action.desired_forward,
-                        ..config.climb.clone()
+                        ..Default::default()
                     };
 
                     const LOOK_ABOVE_OR_BELOW: Float = 5.0;
                     match action
-                        .desired_climb_velocity
+                        .desired_climb_motion
                         .dot(Vector3::Y)
                         .partial_cmp(&0.0)
                         .unwrap()
@@ -430,7 +445,7 @@ pub fn apply_platformer_controls(
                             } else if initiation_direction == Vector3::ZERO {
                                 continue 'blips_loop;
                             } else {
-                                action.desired_climb_velocity = Vector3::ZERO;
+                                action.desired_climb_motion = Vector3::ZERO;
                             }
                         }
                         Ordering::Equal => {}
@@ -445,26 +460,31 @@ pub fn apply_platformer_controls(
                         }
                     }
 
-                    controller.action(action);
+                    controller.action(DemoControlScheme::Climb(
+                        action,
+                        blip.entity(),
+                        initiation_direction,
+                    ));
                 } else if let TnuaBlipSpatialRelation::Aeside(blip_direction) =
                     blip.spatial_relation(0.5)
+                    && 0.5 < direction.dot(blip_direction.adjust_precision())
                 {
-                    if 0.5 < direction.dot(blip_direction.adjust_precision()) {
-                        let direction_to_anchor = match config.dimensionality {
-                            Dimensionality::Dim2 => Vector3::ZERO,
-                            Dimensionality::Dim3 => -blip
-                                .normal_from_closest_point()
-                                .reject_from_normalized(Vector3::Y),
-                        };
-                        controller.action(TnuaBuiltinClimb {
-                            climbable_entity: Some(blip.entity()),
+                    let direction_to_anchor = match config.dimensionality {
+                        Dimensionality::Dim2 => Vector3::ZERO,
+                        Dimensionality::Dim3 => -blip
+                            .normal_from_closest_point()
+                            .reject_from_normalized(Vector3::Y),
+                    };
+                    controller.action(DemoControlScheme::Climb(
+                        TnuaBuiltinClimb {
                             anchor: blip.closest_point().get(),
                             desired_vec_to_anchor: 0.5 * direction_to_anchor,
                             desired_forward: Dir3::new(direction_to_anchor.f32()).ok(),
-                            initiation_direction: direction.normalize_or_zero(),
-                            ..config.climb.clone()
-                        });
-                    }
+                            ..Default::default()
+                        },
+                        blip.entity(),
+                        direction.normalize_or_zero(),
+                    ));
                 }
             }
             if !blip.is_interactable() {
@@ -503,14 +523,14 @@ pub fn apply_platformer_controls(
                             else {
                                 continue;
                             };
-                            controller.action(TnuaBuiltinWallSlide {
-                                wall_entity: Some(blip.entity()),
-                                contact_point_with_wall: blip.closest_point().get(),
-                                normal,
-                                force_forward: Some(blip_direction),
-                                maintain_distance: Some(0.7),
-                                ..config.wall_slide.clone()
-                            });
+                            controller.action(DemoControlScheme::WallSlide(
+                                TnuaBuiltinWallSlide {
+                                    contact_point_with_wall: blip.closest_point().get(),
+                                    normal,
+                                    force_forward: Some(blip_direction),
+                                },
+                                blip.entity(),
+                            ));
                         }
                     }
                 }
@@ -524,31 +544,31 @@ pub fn apply_platformer_controls(
             // nothing to set from the current frame's input. We do pass it through the crouch
             // enforcer though, which makes sure the character does not stand up if below an
             // obstacle.
-            controller.action(crouch_enforcer.enforcing(config.crouch.clone()));
+            controller.action(DemoControlScheme::Crouch(
+                Default::default(),
+                slow_down_while_crouching,
+            ));
         }
 
         if jump {
             let action_flow_status = controller.action_flow_status().clone();
             if matches!(
                 action_flow_status.ongoing(),
-                Some(TnuaBuiltinJump::NAME | "walljump")
+                Some(
+                    DemoControlSchemeActionDiscriminant::Jump
+                        | DemoControlSchemeActionDiscriminant::WallJump
+                )
             ) {
                 controller.prolong_action();
             } else if let Some((_, walljump_direction)) = walljump_candidate {
-                controller.named_action(
-                    "walljump",
-                    TnuaBuiltinJump {
-                        vertical_displacement: Some(2.0 * walljump_direction.adjust_precision()),
-                        allow_in_air: true,
-                        takeoff_extra_gravity: 3.0 * config.jump.takeoff_extra_gravity,
-                        takeoff_above_velocity: 0.0,
-                        force_forward: Some(-walljump_direction),
-                        ..config.jump.clone()
-                    },
-                );
+                controller.action(DemoControlScheme::WallJump(TnuaBuiltinJump {
+                    vertical_displacement: Some(2.0 * walljump_direction.adjust_precision()),
+                    allow_in_air: true,
+                    force_forward: Some(-walljump_direction),
+                }));
             } else {
-                let current_action_name = controller.action_name();
-                controller.action(TnuaBuiltinJump {
+                let current_action_discriminant = controller.action_discriminant();
+                controller.action(DemoControlScheme::Jump(TnuaBuiltinJump {
                     // Jumping, like crouching, is an action that we either feed or don't. However,
                     // because it can be used in midair, we want to set its `allow_in_air`. The air
                     // counter helps us with that.
@@ -565,17 +585,17 @@ pub fn apply_platformer_controls(
                     // action, but after it it'll return 1 only for `TnuaBuiltinJump::NAME`
                     // (maintaining the jump) and 2 for any other action. Of course, if the player
                     // releases the button and presses it again it'll return 2.
-                    allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinJump::NAME)
+                    allow_in_air: air_actions_counter.air_count_for(DemoControlSchemeActionDiscriminant::Jump)
                         <= config.actions_in_air
                         // We also want to be able to jump from a climb.
-                        || current_action_name == Some(TnuaBuiltinClimb::NAME),
-                    ..config.jump.clone()
-                });
+                        || current_action_discriminant == Some(DemoControlSchemeActionDiscriminant::Climb),
+                    ..Default::default()
+                }));
             }
         }
 
         if dash {
-            controller.action(TnuaBuiltinDash {
+            controller.action(DemoControlScheme::Dash(TnuaBuiltinDash {
                 // Dashing is also an action, but because it has directions we need to provide said
                 // directions. `displacement` is a vector that determines where the jump will bring
                 // us. Note that even after reaching the displacement, the character may still have
@@ -594,10 +614,10 @@ pub fn apply_platformer_controls(
                 } else {
                     Dir3::new(direction.f32()).ok()
                 },
-                allow_in_air: air_actions_counter.air_count_for(TnuaBuiltinDash::NAME)
+                allow_in_air: air_actions_counter
+                    .air_count_for(DemoControlSchemeActionDiscriminant::Dash)
                     <= config.actions_in_air,
-                ..config.dash.clone()
-            });
+            }));
         }
     }
 }
@@ -605,39 +625,18 @@ pub fn apply_platformer_controls(
 #[derive(Component)]
 pub struct CharacterMotionConfigForPlatformerDemo {
     pub dimensionality: Dimensionality,
-    pub speed: Float,
-    pub walk: TnuaBuiltinWalk,
     pub actions_in_air: usize,
-    pub jump: TnuaBuiltinJump,
-    pub crouch: TnuaBuiltinCrouch,
-    pub dash_distance: Float,
-    pub dash: TnuaBuiltinDash,
+    pub dash_distance: Float, // todo: move to TnuaBuiltinDashConfig
     pub one_way_platforms_min_proximity: Float,
     pub falling_through: FallingThroughControlScheme,
-    pub knockback: TnuaBuiltinKnockback,
-    pub wall_slide: TnuaBuiltinWallSlide,
-    pub climb_speed: Float,
-    pub climb: TnuaBuiltinClimb,
 }
 
 impl UiTunable for CharacterMotionConfigForPlatformerDemo {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
-        ui.collapsing("Walking:", |ui| {
-            ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));
-            self.walk.tune(ui);
-        });
         ui.add(egui::Slider::new(&mut self.actions_in_air, 0..=8).text("Max Actions in Air"));
-        ui.collapsing("Jumping:", |ui| {
-            self.jump.tune(ui);
-        });
-        ui.collapsing("Dashing:", |ui| {
-            ui.add(egui::Slider::new(&mut self.dash_distance, 0.0..=40.0).text("Dash Distance"));
-            self.dash.tune(ui);
-        });
-        ui.collapsing("Crouching:", |ui| {
-            self.crouch.tune(ui);
-        });
+        // TODO: dash distance should be moved to TnuaBuiltinDashConfig
+        ui.add(egui::Slider::new(&mut self.dash_distance, 0.0..=40.0).text("Dash Distance"));
         ui.collapsing("One-way Platforms", |ui| {
             ui.add(
                 egui::Slider::new(&mut self.one_way_platforms_min_proximity, 0.0..=2.0)
@@ -645,14 +644,33 @@ impl UiTunable for CharacterMotionConfigForPlatformerDemo {
             );
             self.falling_through.tune(ui);
         });
+    }
+}
+
+impl UiTunable for DemoControlSchemeConfig {
+    fn tune(&mut self, ui: &mut egui::Ui) {
+        ui.collapsing("Walking:", |ui| {
+            self.basis.tune(ui);
+        });
+        ui.collapsing("Jumping:", |ui| {
+            self.jump.tune(ui);
+        });
+        ui.collapsing("Dashing:", |ui| {
+            self.dash.tune(ui);
+        });
+        ui.collapsing("Crouching:", |ui| {
+            self.crouch.tune(ui);
+        });
         ui.collapsing("Knockback:", |ui| {
             self.knockback.tune(ui);
         });
         ui.collapsing("Wall Slide:", |ui| {
             self.wall_slide.tune(ui);
         });
+        ui.collapsing("Wall Jump:", |ui| {
+            self.wall_jump.tune(ui);
+        });
         ui.collapsing("Climb", |ui| {
-            ui.add(egui::Slider::new(&mut self.climb_speed, 0.0..=30.0).text("Climb Speed"));
             self.climb.tune(ui);
         });
     }

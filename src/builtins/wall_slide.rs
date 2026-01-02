@@ -1,17 +1,16 @@
 use crate::{
+    TnuaAction, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
+    TnuaActionLifecycleStatus, TnuaBasis, TnuaMotor, TnuaVelChange,
+    basis_capabilities::TnuaBasisWithGround,
     math::{AdjustPrecision, AsF32, Float, Vector3},
     util::calc_angular_velchange_to_force_forward,
-    TnuaAction, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
-    TnuaActionLifecycleStatus, TnuaMotor, TnuaVelChange,
 };
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// An [action](TnuaAction) for sliding on walls.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinWallSlide {
-    /// The entity of the wall to slide on.
-    pub wall_entity: Option<Entity>,
-
     /// The on the wall where the character touches it.
     ///
     /// Note that this does not actually have to be on an actual wall. It can be a point in the
@@ -24,15 +23,18 @@ pub struct TnuaBuiltinWallSlide {
 
     /// Force the character to face in a particular direction.
     pub force_forward: Option<Dir3>,
+}
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct TnuaBuiltinWallSlideConfig {
     /// When the character slides faster than that speed, slow it down.
     pub max_fall_speed: Float,
 
     /// A distance to maintain from the wall.
     ///
     /// Specifically - the distance from
-    /// [`contact_point_with_wall`](Self::contact_point_with_wall) in the direction of the
-    /// [`normal`](Self::normal).
+    /// [`contact_point_with_wall`](TnuaBuiltinWallSlide::contact_point_with_wall) in the direction
+    /// of the [`normal`](TnuaBuiltinWallSlide::normal).
     pub maintain_distance: Option<Float>,
 
     /// The maximum speed the character is allowed to move sideways on the wall while sliding
@@ -48,13 +50,9 @@ pub struct TnuaBuiltinWallSlide {
     pub max_sideways_acceleration: Float,
 }
 
-impl Default for TnuaBuiltinWallSlide {
+impl Default for TnuaBuiltinWallSlideConfig {
     fn default() -> Self {
         Self {
-            wall_entity: None,
-            contact_point_with_wall: Vector3::ZERO,
-            normal: Dir3::Y,
-            force_forward: None, // obvisouly invalid value
             max_fall_speed: 2.0,
             maintain_distance: None,
             max_sideways_speed: 1.0,
@@ -63,17 +61,29 @@ impl Default for TnuaBuiltinWallSlide {
     }
 }
 
-impl TnuaAction for TnuaBuiltinWallSlide {
-    const NAME: &'static str = "TnuaBuiltinWallSlide";
+impl<B: TnuaBasis> TnuaAction<B> for TnuaBuiltinWallSlide
+where
+    B: TnuaBasisWithGround,
+{
+    type Config = TnuaBuiltinWallSlideConfig;
+    type Memory = TnuaBuiltinWallSlideMemory;
 
-    type State = TnuaBuiltinWallSlideState;
-
-    const VIOLATES_COYOTE_TIME: bool = true;
+    fn initiation_decision(
+        &self,
+        _config: &Self::Config,
+        _sensors: &B::Sensors<'_>,
+        _ctx: crate::TnuaActionContext<B>,
+        _being_fed_for: &bevy::time::Stopwatch,
+    ) -> TnuaActionInitiationDirective {
+        TnuaActionInitiationDirective::Allow
+    }
 
     fn apply(
         &self,
-        _state: &mut Self::State,
-        ctx: crate::TnuaActionContext,
+        config: &Self::Config,
+        _memory: &mut Self::Memory,
+        _sensors: &B::Sensors<'_>,
+        ctx: crate::TnuaActionContext<B>,
         lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
@@ -85,7 +95,7 @@ impl TnuaAction for TnuaBuiltinWallSlide {
             .tracker
             .velocity
             .dot(ctx.up_direction.adjust_precision());
-        let desired_upward_boost = downward_speed - self.max_fall_speed;
+        let desired_upward_boost = downward_speed - config.max_fall_speed;
         let actual_upwrad_boost = motor
             .lin
             .calc_boost(ctx.frame_duration)
@@ -96,7 +106,7 @@ impl TnuaAction for TnuaBuiltinWallSlide {
                 / ctx.frame_duration,
         );
 
-        if let Some(maintain_distance) = self.maintain_distance {
+        if let Some(maintain_distance) = config.maintain_distance {
             let planar_vector = (ctx.tracker.translation - self.contact_point_with_wall)
                 .reject_from(ctx.up_direction.adjust_precision());
             if let Ok((cling_direction, current_cling_distance)) =
@@ -116,9 +126,9 @@ impl TnuaAction for TnuaBuiltinWallSlide {
         let sideways_direction = self.normal.cross(*ctx.up_direction).adjust_precision();
         let projected_sideways_velocity =
             sideways_direction.dot(ctx.tracker.velocity + motor.lin.calc_boost(ctx.frame_duration));
-        if self.max_sideways_speed < projected_sideways_velocity.abs() {
+        if config.max_sideways_speed < projected_sideways_velocity.abs() {
             let desired_sideways_velocity =
-                self.max_sideways_speed * projected_sideways_velocity.signum();
+                config.max_sideways_speed * projected_sideways_velocity.signum();
             let desired_sideways_boost = desired_sideways_velocity - projected_sideways_velocity;
             let desired_sideways_acceleration = desired_sideways_boost / ctx.frame_duration;
             motor.lin +=
@@ -127,9 +137,9 @@ impl TnuaAction for TnuaBuiltinWallSlide {
 
         let sideways_acceleration =
             sideways_direction.dot(motor.lin.calc_acceleration(ctx.frame_duration));
-        if self.max_sideways_acceleration < sideways_acceleration.abs() {
+        if config.max_sideways_acceleration < sideways_acceleration.abs() {
             let desired_sideways_acceleration =
-                self.max_sideways_acceleration * sideways_acceleration.signum();
+                config.max_sideways_acceleration * sideways_acceleration.signum();
             motor.lin += TnuaVelChange::acceleration(
                 sideways_direction * (desired_sideways_acceleration - sideways_acceleration),
             );
@@ -151,14 +161,18 @@ impl TnuaAction for TnuaBuiltinWallSlide {
         TnuaActionLifecycleDirective::StillActive
     }
 
-    fn initiation_decision(
+    fn influence_basis(
         &self,
-        _ctx: crate::TnuaActionContext,
-        _being_fed_for: &bevy::time::Stopwatch,
-    ) -> TnuaActionInitiationDirective {
-        TnuaActionInitiationDirective::Allow
+        _config: &Self::Config,
+        _memory: &Self::Memory,
+        _ctx: crate::TnuaBasisContext,
+        _basis_input: &B,
+        _basis_config: &<B as TnuaBasis>::Config,
+        basis_memory: &mut <B as TnuaBasis>::Memory,
+    ) {
+        B::violate_coyote_time(basis_memory);
     }
 }
 
-#[derive(Default, Debug)]
-pub struct TnuaBuiltinWallSlideState {}
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct TnuaBuiltinWallSlideMemory {}

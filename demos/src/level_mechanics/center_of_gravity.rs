@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_tnua::math::AdjustPrecision;
 use bevy_tnua::TnuaGravity;
+use bevy_tnua::math::AdjustPrecision;
 use ordered_float::OrderedFloat;
 
 use crate::levels_setup::IsPlayer;

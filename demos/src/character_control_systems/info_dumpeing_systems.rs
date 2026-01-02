@@ -1,51 +1,66 @@
 use bevy::{color::palettes::css, prelude::*};
+use bevy_tnua::TnuaSensorsSet;
 use bevy_tnua::prelude::TnuaController;
 use bevy_tnua::{
-    math::AsF32, radar_lens::TnuaRadarLens, TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor,
+    TnuaGhostSensor, TnuaObstacleRadar, TnuaProximitySensor, math::AsF32, radar_lens::TnuaRadarLens,
 };
 
 use crate::ui::info::InfoSource;
 
+use super::platformer_control_scheme::DemoControlScheme;
 use super::spatial_ext_facade::SpatialExtFacade;
 
 #[allow(clippy::type_complexity)]
 pub fn character_control_info_dumping_system(
     mut query: Query<(
         &mut InfoSource,
-        &TnuaController,
-        &TnuaProximitySensor,
-        Option<&TnuaGhostSensor>,
+        &TnuaController<DemoControlScheme>,
+        &TnuaSensorsSet,
         Option<&TnuaObstacleRadar>,
     )>,
+    sensors_query: Query<(&TnuaProximitySensor, Option<&TnuaGhostSensor>)>,
     names_query: Query<&Name>,
 ) {
-    for (mut info_source, controller, sensor, ghost_sensor, obstacle_radar) in query.iter_mut() {
+    for (mut info_source, controller, sensors, obstacle_radar) in query.iter_mut() {
         if !info_source.is_active() {
             continue;
         }
-        info_source.label("Action", controller.action_name().unwrap_or_default());
-        if let Some(sensor_output) = sensor.output.as_ref() {
-            if let Ok(name) = names_query.get(sensor_output.entity) {
-                info_source.label("Standing on", name.as_str());
-            } else {
-                info_source.label("Standing on", format!("{:?}", sensor_output.entity));
-            }
-        } else {
-            info_source.label("Standing on", "<Nothing>");
-        }
-        if let Some(ghost_sensor) = ghost_sensor.as_ref() {
-            let mut text = String::new();
-            for hit in ghost_sensor.iter() {
-                if !text.is_empty() {
-                    text.push_str(", ");
-                }
-                if let Ok(name) = names_query.get(hit.entity) {
-                    text.push_str(name.as_str());
+        info_source.label(
+            "Action",
+            controller
+                .action_discriminant()
+                .map(|action| format!("{action:?}"))
+                .unwrap_or_default(),
+        );
+        for sensor_entity in sensors.iter() {
+            let Ok((sensor, ghost_sensor)) = sensors_query.get(sensor_entity) else {
+                continue;
+            };
+            let label = format!("{sensor_entity} hit");
+
+            if let Some(sensor_output) = sensor.output.as_ref() {
+                if let Ok(name) = names_query.get(sensor_output.entity) {
+                    info_source.label(&label, name.as_str());
                 } else {
-                    text.push_str(&format!("{:?}", hit.entity));
+                    info_source.label(&label, format!("{:?}", sensor_output.entity));
                 }
+            } else {
+                info_source.label(&label, "<Nothing>");
             }
-            info_source.label("Ghost sensor", text);
+            if let Some(ghost_sensor) = ghost_sensor.as_ref() {
+                let mut text = String::new();
+                for hit in ghost_sensor.iter() {
+                    if !text.is_empty() {
+                        text.push_str(", ");
+                    }
+                    if let Ok(name) = names_query.get(hit.entity) {
+                        text.push_str(name.as_str());
+                    } else {
+                        text.push_str(&format!("{:?}", hit.entity));
+                    }
+                }
+                info_source.label(&format!("{sensor_entity} ghost"), text);
+            }
         }
         if let Some(obstacle_radar) = obstacle_radar.as_ref() {
             let mut obstacles = obstacle_radar

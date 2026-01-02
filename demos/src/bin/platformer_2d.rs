@@ -1,42 +1,42 @@
 #[cfg(feature = "avian2d")]
 use avian2d::{prelude as avian, prelude::*};
-use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
-use bevy_tnua::builtins::TnuaBuiltinCrouch;
 use bevy_tnua::control_helpers::{
-    TnuaBlipReuseAvoidance, TnuaCrouchEnforcer, TnuaCrouchEnforcerPlugin,
-    TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
+    TnuaBlipReuseAvoidance, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
 };
 #[allow(unused_imports)]
-use bevy_tnua::math::{float_consts, AsF32, Vector3};
-use bevy_tnua::{prelude::*, TnuaObstacleRadar};
-use bevy_tnua::{TnuaGhostSensor, TnuaToggle};
+use bevy_tnua::math::{AsF32, Vector3, float_consts};
+use bevy_tnua::{TnuaGhostOverwrites, TnuaToggle};
+use bevy_tnua::{TnuaObstacleRadar, prelude::*};
 #[cfg(feature = "avian2d")]
 use bevy_tnua_avian2d::prelude::*;
 #[cfg(feature = "rapier2d")]
 use bevy_tnua_rapier2d::prelude::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
+use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::{
     character_control_info_dumping_system, character_control_radar_visualization_system,
 };
-use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    apply_platformer_controls, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
-    JustPressedCachePlugin,
+use tnua_demos_crate::character_control_systems::platformer_control_scheme::{
+    DemoControlScheme, DemoControlSchemeConfig,
 };
-use tnua_demos_crate::character_control_systems::Dimensionality;
+use tnua_demos_crate::character_control_systems::platformer_control_systems::{
+    CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme, JustPressedCachePlugin,
+    apply_platformer_controls,
+};
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian2d")]
 use tnua_demos_crate::levels_setup::for_2d_platformer::LayerNames;
 use tnua_demos_crate::levels_setup::level_switching::LevelSwitchingPlugin;
-use tnua_demos_crate::levels_setup::{levels_for_2d, IsPlayer};
+use tnua_demos_crate::levels_setup::{IsPlayer, levels_for_2d};
+use tnua_demos_crate::ui::DemoInfoUpdateSystems;
 use tnua_demos_crate::ui::component_alterbation::CommandAlteringSelectors;
 use tnua_demos_crate::ui::info::InfoSource;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::ui::plotting::PlotSource;
-use tnua_demos_crate::ui::DemoInfoUpdateSystems;
 
 fn main() {
     tnua_demos_crate::verify_physics_backends_features!("rapier2d", "avian2d");
@@ -85,15 +85,10 @@ fn main() {
     match app_setup_configuration.schedule_to_use {
         ScheduleToUse::Update => {
             // This is Tnua's main plugin.
-            app.add_plugins(TnuaControllerPlugin::new(Update));
-
-            // This plugin supports `TnuaCrouchEnforcer`, which prevents the character from standing up
-            // while obstructed by an obstacle.
-            app.add_plugins(TnuaCrouchEnforcerPlugin::new(Update));
+            app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(Update));
         }
         ScheduleToUse::FixedUpdate => {
-            app.add_plugins(TnuaControllerPlugin::new(FixedUpdate));
-            app.add_plugins(TnuaCrouchEnforcerPlugin::new(FixedUpdate));
+            app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(FixedUpdate));
         }
     }
 
@@ -104,6 +99,7 @@ fn main() {
     );
     app.add_systems(Update, character_control_radar_visualization_system);
     app.add_plugins(tnua_demos_crate::ui::DemoUi::<
+        DemoControlScheme,
         CharacterMotionConfigForPlatformerDemo,
     >::default());
     app.add_systems(Startup, setup_camera_and_lights);
@@ -113,10 +109,7 @@ fn main() {
     );
     app.add_systems(Startup, setup_player);
     app.add_systems(
-        match app_setup_configuration.schedule_to_use {
-            ScheduleToUse::Update => Update.intern(),
-            ScheduleToUse::FixedUpdate => FixedUpdate.intern(),
-        },
+        Update,
         apply_platformer_controls.in_set(TnuaUserControlsSystems),
     );
     app.add_plugins((LevelMechanicsPlugin, JustPressedCachePlugin));
@@ -144,7 +137,10 @@ fn setup_camera_and_lights(mut commands: Commands) {
     commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
 }
 
-fn setup_player(mut commands: Commands) {
+fn setup_player(
+    mut commands: Commands,
+    mut control_scheme_config_assets: ResMut<Assets<DemoControlSchemeConfig>>,
+) {
     let mut cmd = commands.spawn(IsPlayer);
     cmd.insert(Transform::default());
     cmd.insert(Visibility::default());
@@ -164,7 +160,9 @@ fn setup_player(mut commands: Commands) {
     // `TnuaController` is Tnua's main interface with the user code. Read
     // examples/src/character_control_systems/platformer_control_systems.rs to see how
     // `TnuaController` is used in this example.
-    cmd.insert(TnuaController::default());
+    cmd.insert(TnuaController::<DemoControlScheme>::new(
+        control_scheme_config_assets.add(DemoControlSchemeConfig::new_with_speed(40.0)),
+    ));
 
     // The obstacle radar is used to detect obstacles around the player that the player can use
     // for environment actions (e.g. climbing). The physics backend integration plugin is
@@ -176,33 +174,14 @@ fn setup_player(mut commands: Commands) {
 
     // We use the blip reuse avoidance helper to avoid initiating actions on obstacles we've just
     // finished an action with.
-    cmd.insert(TnuaBlipReuseAvoidance::default());
+    cmd.insert(TnuaBlipReuseAvoidance::<DemoControlScheme>::default());
 
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim2,
-        speed: 40.0,
-        walk: TnuaBuiltinWalk {
-            float_height: 2.0,
-            max_slope: float_consts::FRAC_PI_4,
-            ..Default::default()
-        },
         actions_in_air: 1,
-        jump: TnuaBuiltinJump {
-            height: 4.0,
-            ..Default::default()
-        },
-        crouch: TnuaBuiltinCrouch {
-            float_offset: -0.9,
-            ..Default::default()
-        },
         dash_distance: 10.0,
-        dash: Default::default(),
         one_way_platforms_min_proximity: 1.0,
         falling_through: FallingThroughControlScheme::SingleFall,
-        knockback: Default::default(),
-        wall_slide: Default::default(),
-        climb: Default::default(),
-        climb_speed: 10.0,
     });
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
@@ -323,13 +302,11 @@ fn setup_player(mut commands: Commands) {
             true,
             |mut cmd, use_solver_groups| {
                 if use_solver_groups {
-                    #[cfg(feature = "rapier2d")]
                     cmd.insert(SolverGroups {
                         memberships: Group::GROUP_2,
                         filters: Group::GROUP_2,
                     });
                 } else {
-                    #[cfg(feature = "rapier2d")]
                     cmd.insert(SolverGroups {
                         memberships: Group::ALL,
                         filters: Group::ALL,
@@ -340,30 +317,18 @@ fn setup_player(mut commands: Commands) {
         command_altering_selectors
     });
 
-    // `TnuaCrouchEnforcer` can be used to prevent the character from standing up when obstructed.
-    cmd.insert(TnuaCrouchEnforcer::new(0.5 * Vector3::Y, |cmd| {
-        // It needs a sensor shape because it needs to do a shapecast upwards. Without a sensor shape
-        // it'd do a raycast.
-        #[cfg(feature = "rapier2d")]
-        cmd.insert(TnuaRapier2dSensorShape(
-            bevy_rapier2d::parry::shape::SharedShape::cuboid(0.5, 0.0),
-        ));
-        #[cfg(feature = "avian2d")]
-        cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.0, 0.0)));
-    }));
-
     // The ghost sensor is used for detecting ghost platforms - platforms configured in the physics
     // backend to not contact with the character (or detect the contact but not apply physical
     // forces based on it) and marked with the `TnuaGhostPlatform` component. These can then be
     // used as one-way platforms.
-    cmd.insert(TnuaGhostSensor::default());
+    cmd.insert(TnuaGhostOverwrites::<DemoControlScheme>::default());
 
     // This helper is used to operate the ghost sensor and ghost platforms and implement
     // fall-through behavior where the player can intentionally fall through a one-way platform.
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
 
     // This helper keeps track of air actions like jumps or air dashes.
-    cmd.insert(TnuaSimpleAirActionsCounter::default());
+    cmd.insert(TnuaSimpleAirActionsCounter::<DemoControlScheme>::default());
 
     #[cfg(feature = "egui")]
     cmd.insert((

@@ -43,7 +43,9 @@ impl AppSetupConfiguration {
                 }
                 #[cfg(all(not(feature = "avian"), not(feature = "rapier")))]
                 {
-                    panic!("No schedule was specified, but also no physics engine is avaible. Therefore, there is no fallback.")
+                    panic!(
+                        "No schedule was specified, but also no physics engine is avaible. Therefore, there is no fallback."
+                    )
                 }
             },
             level_to_load: url_params.get("level"),
@@ -99,13 +101,12 @@ impl ScheduleToUse {
             )
             .show_ui(ui, |ui| {
                 for choice in Self::value_variants() {
-                    if let Some(value) = choice.to_possible_value() {
-                        if ui
+                    if let Some(value) = choice.to_possible_value()
+                        && ui
                             .selectable_label(choice == self, value.get_name())
                             .clicked()
-                        {
-                            return Some(choice.clone());
-                        }
+                    {
+                        return Some(choice.clone());
                     }
                 }
                 None

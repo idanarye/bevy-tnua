@@ -2,12 +2,11 @@
 use std::ops::RangeInclusive;
 
 use bevy_tnua::builtins::{
-    TnuaBuiltinClimb, TnuaBuiltinCrouch, TnuaBuiltinDash, TnuaBuiltinKnockback,
-    TnuaBuiltinWallSlide,
+    TnuaBuiltinClimbConfig, TnuaBuiltinCrouchConfig, TnuaBuiltinDashConfig, TnuaBuiltinJumpConfig,
+    TnuaBuiltinKnockbackConfig, TnuaBuiltinWalkConfig, TnuaBuiltinWallSlideConfig,
 };
 #[allow(unused_imports)]
-use bevy_tnua::math::{float_consts, Float};
-use bevy_tnua::prelude::*;
+use bevy_tnua::math::{Float, float_consts};
 
 #[cfg(feature = "egui")]
 use bevy_egui::egui;
@@ -101,9 +100,10 @@ fn slider_or_none(
     });
 }
 
-impl UiTunable for TnuaBuiltinWalk {
+impl UiTunable for TnuaBuiltinWalkConfig {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
+        ui.add(egui::Slider::new(&mut self.speed, 0.0..=60.0).text("Speed"));
         ui.add(egui::Slider::new(&mut self.float_height, 0.0..=10.0).text("Float At"));
         ui.add(egui::Slider::new(&mut self.cling_distance, 0.0..=10.0).text("Cling Distance"));
         ui.add(egui::Slider::new(&mut self.spring_strength, 0.0..=4000.0).text("Spring Strength"));
@@ -150,7 +150,7 @@ impl UiTunable for TnuaBuiltinWalk {
     }
 }
 
-impl UiTunable for TnuaBuiltinJump {
+impl UiTunable for TnuaBuiltinJumpConfig {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.height, 0.0..=10.0).text("Jump Height"));
@@ -198,7 +198,7 @@ impl UiTunable for TnuaBuiltinJump {
         );
     }
 }
-impl UiTunable for TnuaBuiltinCrouch {
+impl UiTunable for TnuaBuiltinCrouchConfig {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(
@@ -215,7 +215,7 @@ impl UiTunable for TnuaBuiltinCrouch {
     }
 }
 
-impl UiTunable for TnuaBuiltinDash {
+impl UiTunable for TnuaBuiltinDashConfig {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.speed, 0.0..=200.0).text("Dash Speed"));
@@ -239,7 +239,7 @@ impl UiTunable for TnuaBuiltinDash {
     }
 }
 
-impl UiTunable for TnuaBuiltinKnockback {
+impl UiTunable for TnuaBuiltinKnockbackConfig {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.no_push_timeout, 0.0..=2.0).text("No Push Timeout"));
@@ -263,7 +263,7 @@ impl UiTunable for TnuaBuiltinKnockback {
     }
 }
 
-impl UiTunable for TnuaBuiltinWallSlide {
+impl UiTunable for TnuaBuiltinWallSlideConfig {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         slider_or_infinity(ui, "Max Fall Speed", &mut self.max_fall_speed, 0.0..=10.0);
@@ -282,9 +282,10 @@ impl UiTunable for TnuaBuiltinWallSlide {
     }
 }
 
-impl UiTunable for TnuaBuiltinClimb {
+impl UiTunable for TnuaBuiltinClimbConfig {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
+        ui.add(egui::Slider::new(&mut self.climb_speed, 0.0..=30.0).text("Climb Speed"));
         slider_or_infinity(ui, "Anchor Speed", &mut self.anchor_speed, 0.0..=300.0);
         slider_or_infinity(
             ui,

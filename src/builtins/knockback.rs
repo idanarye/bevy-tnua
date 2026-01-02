@@ -1,28 +1,33 @@
 use crate::{
+    TnuaAction, TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
+    TnuaActionLifecycleStatus, TnuaBasis, TnuaMotor, TnuaVelChange,
+    basis_capabilities::TnuaBasisWithGround,
     math::{AdjustPrecision, Float, Vector3},
-    prelude::*,
     util::{MotionHelper, VelocityBoundary},
-    TnuaActionContext, TnuaActionInitiationDirective, TnuaActionLifecycleDirective,
-    TnuaActionLifecycleStatus, TnuaMotor, TnuaVelChange,
 };
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Apply this [action](TnuaAction) to shove the character in a way the [basis](crate::TnuaBasis)
 /// cannot easily nullify.
+///
+/// This action is typically applied outside the regular user input system - which means it should
+/// be applied with [`action_interrupt`](crate::TnuaController::action_interrupt).
 ///
 /// Note that this action cannot be cancelled or stopped. Once it starts, it'll resume until the
 /// Pushover boundary is cleared (which means the character overcame the knockback). Unless the
 /// parameters are seriously skewed. The main parameters that can mess it up and unreasonably
 /// prolong the knockback duration are:
-/// * [`no_push_timer`](Self::no_push_timeout). Setting it too high will allow the character to
-///   "move along" with the shove, prolonging the knockback action because the boundary does not
-///   get cleared. The action will not affect the velocity during that time, but it can still
-///   prolong the animation, apply [`force_forward`](Self::force_forward), and prevent other
-///   actions from happening.
-/// * [`barrier_strength_diminishing`](Self::barrier_strength_diminishing). Setting it too low
-///   makes it very hard for the character to push through the boundary. It starts getting slightly
-///   weird below 1.0, and really weird below 0.5. Better keep it at above - 1.0 levels.
-#[derive(Clone, Debug)]
+/// * [`no_push_timer`](TnuaBuiltinKnockbackConfig::no_push_timeout). Setting it too high will
+///   allow the character to "move along" with the shove, prolonging the knockback action because
+///   the boundary does not get cleared. The action will not affect the velocity during that time,
+///   but it can still prolong the animation, apply [`force_forward`](Self::force_forward), and
+///   prevent other actions from happening.
+/// * [`barrier_strength_diminishing`](TnuaBuiltinKnockbackConfig::barrier_strength_diminishing).
+///   Setting it too low makes it very hard for the character to push through the boundary. It
+///   starts getting slightly weird below 1.0, and really weird below 0.5. Better keep it at above
+///   - 1.0 levels.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct TnuaBuiltinKnockback {
     /// Initial impulse to apply to the character before the Pushover stage starts.
     ///
@@ -31,6 +36,17 @@ pub struct TnuaBuiltinKnockback {
     /// boundary based on it.
     pub shove: Vector3,
 
+    /// Force the character to face in a particular direction.
+    ///
+    /// Note that there are no acceleration limits because unlike
+    /// [crate::builtins::TnuaBuiltinWalk::desired_forward] this field will attempt to force the
+    /// direction during a single frame. It is useful for when the knockback animation needs to be
+    /// aligned with the knockback direction.
+    pub force_forward: Option<Dir3>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct TnuaBuiltinKnockbackConfig {
     /// Timeout (in seconds) for abandoning a Pushover boundary that no longer gets pushed.
     pub no_push_timeout: f32,
 
@@ -54,54 +70,58 @@ pub struct TnuaBuiltinKnockback {
     /// [`barrier_strength_diminishing`](Self::barrier_strength_diminishing)) so the actual
     /// acceleration limit will higher than that.
     pub air_acceleration_limit: Float,
-
-    /// Force the character to face in a particular direction.
-    ///
-    /// Note that there are no acceleration limits because unlike
-    /// [TnuaBuiltinWalk::desired_forward] this field will attempt to force the direction during a
-    /// single frame. It is useful for when the knockback animation needs to be aligned with the
-    /// knockback direction.
-    pub force_forward: Option<Dir3>,
 }
 
-impl Default for TnuaBuiltinKnockback {
+impl Default for TnuaBuiltinKnockbackConfig {
     fn default() -> Self {
         Self {
-            shove: Vector3::ZERO,
             no_push_timeout: 0.2,
             barrier_strength_diminishing: 2.0,
             acceleration_limit: 3.0,
             air_acceleration_limit: 1.0,
-            force_forward: None,
         }
     }
 }
 
-impl TnuaAction for TnuaBuiltinKnockback {
-    const NAME: &'static str = "TnuaBuiltinKnockback";
-    type State = TnuaBuiltinKnockbackState;
-    const VIOLATES_COYOTE_TIME: bool = true;
+impl<B: TnuaBasis> TnuaAction<B> for TnuaBuiltinKnockback
+where
+    B: TnuaBasisWithGround,
+{
+    type Config = TnuaBuiltinKnockbackConfig;
+    type Memory = TnuaBuiltinKnockbackMemory;
+
+    fn initiation_decision(
+        &self,
+        _config: &Self::Config,
+        _sensors: &B::Sensors<'_>,
+        _ctx: crate::TnuaActionContext<B>,
+        _being_fed_for: &bevy::time::Stopwatch,
+    ) -> TnuaActionInitiationDirective {
+        TnuaActionInitiationDirective::Allow
+    }
 
     fn apply(
         &self,
-        state: &mut Self::State,
-        ctx: TnuaActionContext,
+        config: &Self::Config,
+        memory: &mut Self::Memory,
+        _sensors: &B::Sensors<'_>,
+        ctx: TnuaActionContext<B>,
         _lifecycle_status: TnuaActionLifecycleStatus,
         motor: &mut TnuaMotor,
     ) -> TnuaActionLifecycleDirective {
-        match state {
-            TnuaBuiltinKnockbackState::Shove => {
+        match memory {
+            TnuaBuiltinKnockbackMemory::Shove => {
                 let Some(boundary) = VelocityBoundary::new(
                     ctx.tracker.velocity,
                     ctx.tracker.velocity + self.shove,
-                    self.no_push_timeout,
+                    config.no_push_timeout,
                 ) else {
                     return TnuaActionLifecycleDirective::Finished;
                 };
                 motor.lin += TnuaVelChange::boost(self.shove);
-                *state = TnuaBuiltinKnockbackState::Pushback { boundary };
+                *memory = TnuaBuiltinKnockbackMemory::Pushback { boundary };
             }
-            TnuaBuiltinKnockbackState::Pushback { boundary } => {
+            TnuaBuiltinKnockbackMemory::Pushback { boundary } => {
                 boundary.update(ctx.tracker.velocity, ctx.frame_duration_as_duration());
                 if boundary.is_cleared() {
                     return TnuaActionLifecycleDirective::Finished;
@@ -109,8 +129,8 @@ impl TnuaAction for TnuaBuiltinKnockback {
                     .calc_boost_part_on_boundary_axis_after_limit(
                         ctx.tracker.velocity,
                         motor.lin.calc_boost(ctx.frame_duration),
-                        ctx.frame_duration * self.acceleration_limit,
-                        self.barrier_strength_diminishing,
+                        ctx.frame_duration * config.acceleration_limit,
+                        config.barrier_strength_diminishing,
                     )
                 {
                     motor.lin.apply_boost_limit(
@@ -132,22 +152,26 @@ impl TnuaAction for TnuaBuiltinKnockback {
         TnuaActionLifecycleDirective::StillActive
     }
 
-    fn initiation_decision(
+    fn influence_basis(
         &self,
-        _ctx: crate::TnuaActionContext,
-        _being_fed_for: &bevy::time::Stopwatch,
-    ) -> TnuaActionInitiationDirective {
-        TnuaActionInitiationDirective::Allow
+        _config: &Self::Config,
+        _memory: &Self::Memory,
+        _ctx: crate::TnuaBasisContext,
+        _basis_input: &B,
+        _basis_config: &<B as TnuaBasis>::Config,
+        basis_memory: &mut <B as TnuaBasis>::Memory,
+    ) {
+        B::violate_coyote_time(basis_memory);
     }
 }
 
-#[derive(Default, Clone, Debug)]
-pub enum TnuaBuiltinKnockbackState {
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+pub enum TnuaBuiltinKnockbackMemory {
     /// Applying the [`shove`](TnuaBuiltinKnockback::shove) impulse to the character.
     #[default]
     Shove,
     /// Hindering the character's ability to overcome the
-    /// [`Shove`](TnuaBuiltinKnockbackState::Shove) while waiting for it to overcome it despite the
+    /// [`Shove`](TnuaBuiltinKnockbackMemory::Shove) while waiting for it to overcome it despite the
     /// hindrance.
     Pushback { boundary: VelocityBoundary },
 }
