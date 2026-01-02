@@ -22,6 +22,7 @@ use bevy::prelude::*;
 /// #     standing: AnimationNodeIndex,
 /// #     running: AnimationNodeIndex,
 /// # }
+/// # #[derive(bevy_tnua::TnuaScheme)] #[scheme(basis = bevy_tnua::builtins::TnuaBuiltinWalk)] enum ControlScheme {}
 /// enum AnimationState {
 ///     Standing,
 ///     Running(Float),
@@ -30,18 +31,14 @@ use bevy::prelude::*;
 /// fn animating_system(
 ///     mut query: &mut Query<(
 ///         &mut TnuaAnimatingState<AnimationState>,
-///         &TnuaController,
+///         &TnuaController<ControlScheme>,
 ///         &mut AnimationPlayer,
 ///     )>,
 ///     animation_nodes: Res<AnimationNodes>,
 /// ) {
 ///     for (mut animating_state, controller, mut animation_player) in query.iter_mut() {
 ///         match animating_state.update_by_discriminant({
-///             let Some((_, basis_state)) = controller.concrete_basis::<TnuaBuiltinWalk>()
-///             else {
-///                 continue;
-///             };
-///             let speed = basis_state.running_velocity.length();
+///             let speed = controller.basis_memory.running_velocity.length();
 ///             if 0.01 < speed {
 ///                 AnimationState::Running(speed)
 ///             } else {

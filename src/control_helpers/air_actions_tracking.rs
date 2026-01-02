@@ -184,8 +184,10 @@ where
     /// # Example
     ///
     /// ```
-    /// use bevy_tnua::control_helpers::TnuaSimpleAirActionsCounter;
-    /// let mut air_actions_counter = TnuaSimpleAirActionsCounter::default();
+    /// # use bevy_tnua::control_helpers::{TnuaSimpleAirActionsCounter, TnuaAirActionDefinition};
+    /// # #[derive(bevy_tnua::TnuaScheme)] #[scheme(basis = bevy_tnua::builtins::TnuaBuiltinWalk)] enum ControlScheme {}
+    /// # impl TnuaAirActionDefinition for ControlScheme { fn is_air_action(_: Self::ActionDiscriminant) -> bool { false } }
+    /// # let mut air_actions_counter = TnuaSimpleAirActionsCounter::<ControlScheme>::default();
     ///
     /// // Reset the air actions count to 3 (excluding the current action). should also be updated as stated in TnuaAirActionsTracker
     /// air_actions_counter.reset_count_to(3);
@@ -226,8 +228,10 @@ where
     /// This is equivalent to setting the counter to 1 using:
     ///
     /// ```no_run
-    /// # use bevy_tnua::control_helpers::TnuaSimpleAirActionsCounter;
-    /// # let mut air_actions_counter = TnuaSimpleAirActionsCounter::default();
+    /// # use bevy_tnua::control_helpers::{TnuaSimpleAirActionsCounter, TnuaAirActionDefinition};
+    /// # #[derive(bevy_tnua::TnuaScheme)] #[scheme(basis = bevy_tnua::builtins::TnuaBuiltinWalk)] enum ControlScheme {}
+    /// # impl TnuaAirActionDefinition for ControlScheme { fn is_air_action(_: Self::ActionDiscriminant) -> bool { false } }
+    /// # let mut air_actions_counter = TnuaSimpleAirActionsCounter::<ControlScheme>::default();
     /// if let Some(count) = air_actions_counter.get_count_mut() {
     ///     *count = 1;
     /// }
