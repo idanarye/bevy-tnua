@@ -30,11 +30,40 @@
 //! `TnuaControllerPlugin`, and any other Tnua plugin that supports it  must also be registered in
 //! that schedule, using their `::new()` method instead of `::default()`.
 //!
+//! ## Defining the control scheme
+//!
+//! The range of movement actions available to the character controller is defined by the _control
+//! scheme_. The controle scheme is an enum that derives [`TnuaScheme`]. It needs to use an
+//! attribute to define the _basis_ - a constant mode of movement that character is always going to
+//! be in. Simple games prboably want to use [`TnuaBuiltinWalk`](crate::builtins::TnuaBuiltinWalk),
+//! which defines a simple floating character that can be moved around with a simple vector and can
+//! be told to face a direcetion.
+//!
+//! The enum's variants define the actions - various movement commands on top of the basis, like
+//! jumping, crouching, climbing, etc. The variants need to be tuple variants, with the action's
+//! type as the first tuple member of each variants.
+//!
+//! ```no_run
+//! # use bevy::prelude::*;
+//! # use bevy_tnua::prelude::*;
+//! #[derive(TnuaScheme)]
+//! #[scheme(basis = TnuaBuiltinWalk)]
+//! enum ControlScheme {
+//!     Jump(TnuaBuiltinJump),
+//!     // more actions can be defined as more variants
+//! }
+//! ```
+//!
+//! For more avaialbe attributes, see [the `TnuaScheme` derive macro](bevy_tnua_macros::TnuaScheme)
+//! documentation
+//!
+//! ## Spawning the character controller
+//!
 //! A Tnua controlled character must have a dynamic rigid body, everything from
 //! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle`), and a
 //! [`TnuaController`] (and its automatically added required components). The controller is
-//! parameterized by a control scheme enum that derives [`TnuaScheme`] (more on that in the next
-//! section) and needs a configuration (based on the control scheme) as an asset handle:
+//! parameterized by the control scheme and needs a configuration (based on the control scheme) as
+//! an asset handle:
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # // Not importing from Rapier because there are two versions and the default features does not
