@@ -9,8 +9,8 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 ## [Unreleased]
 ### Changed
 - [**BREAKING**] _Schemes_ - a big refactor which completely breaks the API.
-  See the [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-026). Most of
-  the other changes are part of this.
+  See the [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-027-schemes).
+  Most of the other changes are part of this.
 - Basis and actions are no longer passed dynamically to the controller -
   instead the user code must define an enum that derives `TnuaScheme`.
   - The actions are the enum's variants.
