@@ -1,5 +1,6 @@
 [package]
 name = "bevy-tnua-macros"
+description = "Macros for the bevy-tnua crate"
 version = "0.1.0"
 edition.workspace = true
 authors.workspace = true
