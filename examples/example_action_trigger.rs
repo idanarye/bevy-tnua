@@ -96,6 +96,7 @@ fn setup_player(
                 ..Default::default()
             },
             dash: TnuaBuiltinDashConfig {
+                horizontal_distance: 10.0,
                 ..Default::default()
             },
         })),
@@ -141,10 +142,11 @@ fn apply_controls(
         ..Default::default()
     };
 
-    // Only need to feed the action while the button is pressed
+    // Only need to feed the action once - because it's a dash it'll continue even with we don't
+    // feed it every frame.
     if keyboard.just_pressed(KeyCode::Space) {
         controller.action_trigger(ControlScheme::Dash(TnuaBuiltinDash {
-            displacement: Vec3::new(0.0, 0.0, -10.0),
+            displacement: direction.normalize_or_zero(),
             ..Default::default()
         }));
     }

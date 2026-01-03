@@ -90,7 +90,8 @@ impl DemoControlSchemeConfig {
                 ..Default::default()
             },
             dash: TnuaBuiltinDashConfig {
-                // TODO: add dash distance of 10.0?
+                horizontal_distance: 10.0,
+                vertical_distance: 0.0,
                 ..Default::default()
             },
             knockback: Default::default(),

@@ -351,9 +351,9 @@ where
                     if relative_velocity <= desired_upward_velocity {
                         let mut velocity_boundary = None;
                         if let Some(horizontal_displacement) = self.horizontal_displacement {
-                            let horizontal_displacement = config.horizontal_distance *
-                                horizontal_displacement
-                                .reject_from(ctx.up_direction.adjust_precision());
+                            let horizontal_displacement = config.horizontal_distance
+                                * horizontal_displacement
+                                    .reject_from(ctx.up_direction.adjust_precision());
                             let already_moved = (ctx.tracker.translation - *origin)
                                 .project_onto(horizontal_displacement.normalize_or_zero());
                             let duration_to_top =

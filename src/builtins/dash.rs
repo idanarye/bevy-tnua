@@ -15,6 +15,10 @@ use crate::{
 pub struct TnuaBuiltinDash {
     /// The direction and distance of the dash.
     ///
+    /// The horizontal and vertical components of this vector are multiplied by the
+    /// [`horizontal_distance`](TnuaBuiltinDashConfig::horizontal_distance) and
+    /// [`vertical_distance`](TnuaBuiltinDashConfig::vertical_distance) configuration fields.
+    ///
     /// This input parameter is cached when the action starts. This means that the control system
     /// does not have to make sure the direction reamins the same even if the player changes it
     /// mid-dash.
@@ -35,6 +39,14 @@ pub struct TnuaBuiltinDash {
 pub struct TnuaBuiltinDashConfig {
     /// The speed the character will move in during the dash.
     pub speed: Float,
+
+    /// Multiplier for the horizontal component of the
+    /// [`displacement`](TnuaBuiltinDash::displacement) given in the input.
+    pub horizontal_distance: Float,
+
+    /// Multiplier for the vertical component of the
+    /// [`displacement`](TnuaBuiltinDash::displacement) given in the input.
+    pub vertical_distance: Float,
 
     /// After the dash, the character will brake until its speed is below that number.
     pub brake_to_speed: Float,
@@ -57,6 +69,8 @@ impl Default for TnuaBuiltinDashConfig {
     fn default() -> Self {
         Self {
             speed: 80.0,
+            horizontal_distance: 1.0,
+            vertical_distance: 1.0,
             brake_to_speed: 20.0,
             acceleration: 400.0,
             brake_acceleration: 200.0,
@@ -104,13 +118,21 @@ where
         for _ in 0..3 {
             return match memory {
                 TnuaBuiltinDashMemory::PreDash => {
-                    let Ok(direction) = Dir3::new(self.displacement.f32()) else {
+                    let horizontal_displacement = self
+                        .displacement
+                        .reject_from(ctx.up_direction.adjust_precision());
+                    let vertical_displacement = self
+                        .displacement
+                        .project_onto(ctx.up_direction.adjust_precision());
+                    let displacement = config.horizontal_distance * horizontal_displacement
+                        + config.vertical_distance * vertical_displacement;
+                    let Ok(direction) = Dir3::new(displacement.f32()) else {
                         // Probably unneeded because of the `initiation_decision`, but still
                         return TnuaActionLifecycleDirective::Finished;
                     };
                     *memory = TnuaBuiltinDashMemory::During {
                         direction,
-                        destination: ctx.tracker.translation + self.displacement,
+                        destination: ctx.tracker.translation + displacement,
                         desired_forward: self.desired_forward,
                         consider_blocked_if_speed_is_less_than: Float::NEG_INFINITY,
                     };

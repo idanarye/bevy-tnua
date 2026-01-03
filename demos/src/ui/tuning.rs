@@ -224,6 +224,13 @@ impl UiTunable for TnuaBuiltinDashConfig {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.speed, 0.0..=200.0).text("Dash Speed"));
+        ui.add(
+            egui::Slider::new(&mut self.horizontal_distance, 0.0..=40.0)
+                .text("Horizontal Distance"),
+        );
+        ui.add(
+            egui::Slider::new(&mut self.vertical_distance, 0.0..=10.0).text("Vertical Distance"),
+        );
         slider_or_infinity(
             ui,
             "Brake to Speed After Dash",

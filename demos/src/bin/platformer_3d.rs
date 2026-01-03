@@ -205,7 +205,6 @@ fn setup_player(
     cmd.insert(CharacterMotionConfigForPlatformerDemo {
         dimensionality: Dimensionality::Dim3,
         actions_in_air: 1,
-        dash_distance: 10.0,
         one_way_platforms_min_proximity: 1.0,
         falling_through: FallingThroughControlScheme::SingleFall,
     });

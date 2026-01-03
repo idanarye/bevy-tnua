@@ -107,6 +107,7 @@ pub fn apply_platformer_controls(
     ) in query.iter_mut()
     {
         controller.initiate_action_feeding();
+        let up_direction = controller.up_direction().unwrap_or(Dir3::Y);
 
         // This part is just keyboard input processing. In a real game this would probably be done
         // with a third party plugin.
@@ -138,12 +139,7 @@ pub fn apply_platformer_controls(
             (Some(camera), None) => Some(camera as &dyn CameraController),
             (Some(_), Some(_)) => panic!("both floating and mounted cameras at the same time"),
         }
-        .map(|c| {
-            c.calculate_transform_for_controls(
-                Dir3::NEG_Z,
-                controller.up_direction().unwrap_or(Dir3::Y),
-            )
-        })
+        .map(|c| c.calculate_transform_for_controls(Dir3::NEG_Z, up_direction))
         .unwrap_or_default();
         let direction = transform_for_controls
             .transform_point(screen_space_direction.f32())
@@ -603,7 +599,10 @@ pub fn apply_platformer_controls(
                 //
                 // The displacement is "frozen" when the action starts - user code does not have to
                 // worry about storing the original direction.
-                displacement: direction.normalize() * config.dash_distance,
+                displacement: direction.normalize()
+                    // Add a vertical component upward which can be controlled by the
+                    // `vertical_distance` field of the configuration.
+                    + up_direction.adjust_precision(),
                 // When set, the `desired_forward` of the dash action "overrides" the
                 // `desired_forward` of the walk basis. Like the displacement, it gets "frozen" -
                 // allowing to easily maintain a forward direction during the dash.
@@ -626,7 +625,6 @@ pub fn apply_platformer_controls(
 pub struct CharacterMotionConfigForPlatformerDemo {
     pub dimensionality: Dimensionality,
     pub actions_in_air: usize,
-    pub dash_distance: Float, // todo: move to TnuaBuiltinDashConfig
     pub one_way_platforms_min_proximity: Float,
     pub falling_through: FallingThroughControlScheme,
 }
@@ -636,7 +634,6 @@ impl UiTunable for CharacterMotionConfigForPlatformerDemo {
     fn tune(&mut self, ui: &mut egui::Ui) {
         ui.add(egui::Slider::new(&mut self.actions_in_air, 0..=8).text("Max Actions in Air"));
         // TODO: dash distance should be moved to TnuaBuiltinDashConfig
-        ui.add(egui::Slider::new(&mut self.dash_distance, 0.0..=40.0).text("Dash Distance"));
         ui.collapsing("One-way Platforms", |ui| {
             ui.add(
                 egui::Slider::new(&mut self.one_way_platforms_min_proximity, 0.0..=2.0)
