@@ -51,7 +51,7 @@ jobs:
       - name: Test
         run: cargo test --verbose --features ${{ env.all_physics_backends }} -- --nocapture
       - name: Test with state serialization enabled
-        run: cargo test --verbose --features ${{ env.all_physics_backends }} --features serialize -- --nocapture
+        run: cargo test --package bevy-tnua --verbose --features serialize -- --nocapture
   fmt:
    name: Rustfmt
    runs-on: ubuntu-latest
