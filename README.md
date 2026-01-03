@@ -57,12 +57,12 @@ Note that:
 
 The basis and actions in the demos can be tweaked with a GUI. They are initialized to the `Default::default()` provided in Tnua, with the following exceptions:
 
-* `TnuaBuiltinWalk::desired_velocity` defaults to the zero vector, but when the user walks the character it is set to a vector of length 20.0 (40.0 in the 2D demo)
-* `TnuaBuiltinWalk::float_height` is set to 2.0 even though it defaults to 0.0. User code should always set the float height based on the model's geometrics.
-* `TnuaBuiltinWalk::max_slope` is set to $\frac{\pi}{4}$ even though it defaults to $\frac{\pi}{2}$ (which disables the slipping behavior, since this is the slope angle of a wall)
-* `TnuaBuiltinJump::height` is set to 4.0 even though it defaults to 0.0. User code should always set the jump height based on the game's requirements (a jump action of zero height is useless)
-* `TnuaBuiltinCrouch::float_offset` is set to -0.9 even though it defaults to 0.0. Just like `float_height`, this value should always be set by user code based on the model's geometric.
-* `TnuaBuiltinDash::displacement` defaults to 0.0, but when the user inputs the command to dash it gets set to a vector of length 10.0.
+* `TnuaBuiltinWalkConfig::float_height` is set to 2.0 even though it defaults to 0.0. User code should always set the float height based on the model's geometrics.
+* `TnuaBuiltinWalkConfig::max_slope` is set to $\frac{\pi}{4}$ even though it defaults to $\frac{\pi}{2}$ (which disables the slipping behavior, since this is the slope angle of a wall)
+* `TnuaBuiltinJumpConfig::height` is set to 4.0 even though it defaults to 0.0. User code should always set the jump height based on the game's requirements (a jump action of zero height is useless)
+* `TnuaBuiltinCrouchConfig::float_offset` is set to -0.9 even though it defaults to 0.0. Just like `float_height`, this value should always be set by user code based on the model's geometric.
+* `TnuaBuiltinDashConfig::horizontal_distance` is set to 10.0 even though it defaults to 1.0.
+* `TnuaBuiltinDashConfig::vertical_distance` is set to 0.0 even though it defaults to 1.0. This means that the vertical component added to it when Shift is pressed in the demo gets zeroed (and the character does not lift to air while dashing) unless that value is changed in the settings UI.
 
 ### Running the Demos Locally
 

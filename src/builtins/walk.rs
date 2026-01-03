@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
 use crate::basis_capabilities::{
-    TnuaBasisWithDisplacement, TnuaBasisWithFrameOfReferenceSurface, TnuaBasisWithFloating,
+    TnuaBasisWithDisplacement, TnuaBasisWithFloating, TnuaBasisWithFrameOfReferenceSurface,
     TnuaBasisWithGround, TnuaBasisWithHeadroom, TnuaBasisWithSpring,
 };
 use crate::ghost_overrides::TnuaGhostOverwrite;
@@ -156,7 +156,7 @@ impl Default for TnuaBuiltinWalkHeadroom {
 impl Default for TnuaBuiltinWalkConfig {
     fn default() -> Self {
         Self {
-            speed: 10.0,
+            speed: 20.0,
             float_height: 0.0,
             headroom: None,
             cling_distance: 1.0,

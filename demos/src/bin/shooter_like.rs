@@ -185,7 +185,7 @@ fn setup_player(
     // examples/src/character_control_systems/platformer_control_systems.rs to see how
     // `TnuaController` is used in this example.
     cmd.insert(TnuaController::<DemoControlScheme>::new(
-        control_scheme_config_assets.add(DemoControlSchemeConfig::new_with_speed(20.0)),
+        control_scheme_config_assets.add(DemoControlSchemeConfig::default()),
     ));
 
     // The obstacle radar is used to detect obstacles around the player that the player can use

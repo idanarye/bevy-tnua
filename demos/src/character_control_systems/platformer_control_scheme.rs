@@ -68,11 +68,10 @@ impl TnuaHasTargetEntity for DemoControlScheme {
     }
 }
 
-impl DemoControlSchemeConfig {
-    pub fn new_with_speed(walk_speed: Float) -> Self {
+impl Default for DemoControlSchemeConfig {
+    fn default() -> Self {
         Self {
             basis: TnuaBuiltinWalkConfig {
-                speed: walk_speed,
                 float_height: 2.0,
                 headroom: Some(TnuaBuiltinWalkHeadroom {
                     distance_to_collider_top: 1.0,

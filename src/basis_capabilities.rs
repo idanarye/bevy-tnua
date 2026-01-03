@@ -64,7 +64,7 @@ pub trait TnuaBasisWithGround: TnuaBasis {
 }
 
 /// The basis can keeps track of the space above the character.
-/// 
+///
 /// Note that it's possible to opt out of this in the configuration.
 pub trait TnuaBasisWithHeadroom: TnuaBasis {
     /// The headroom sensor has detected a ceiling above the character's head.
