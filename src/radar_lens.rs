@@ -7,16 +7,25 @@ use bevy_tnua_physics_integration_layer::{
     spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
 };
 
+/// Helper around [`TnuaObstacleRadar`] that adds useful methods for querying it.
 pub struct TnuaRadarLens<'a, X: TnuaSpatialExt> {
     radar: &'a TnuaObstacleRadar,
     ext: &'a X,
 }
 
 impl<'a, X: TnuaSpatialExt> TnuaRadarLens<'a, X> {
+    /// Create a radar lens around a [`TnuaObstacleRadar`] component.
+    ///
+    /// The `ext` argument is typically a [`SystemParam`](bevy::ecs::system::SystemParam) - which
+    /// means it can be a direct type of an argument of they system funtion (wrappers like
+    /// [`Query`] or [`Res`] are not needed to obtain it). It is typically called
+    /// `TnuaSpatialExt<Backend>` where `<Backend>` is replaced by the name of the physics backend.
     pub fn new(radar: &'a TnuaObstacleRadar, ext: &'a X) -> Self {
         Self { radar, ext }
     }
 
+    /// Similar to [`TnuaObstacleRadar::iter_blips`], but wraps each blip in a
+    /// [`TnuaRadarBlipLens`] which provides helpers for querying the blip in the physics backend.
     pub fn iter_blips(&'_ self) -> impl Iterator<Item = TnuaRadarBlipLens<'_, X>> {
         self.radar.iter_blips().filter_map(|entity| {
             Some(TnuaRadarBlipLens {
@@ -33,6 +42,10 @@ impl<'a, X: TnuaSpatialExt> TnuaRadarLens<'a, X> {
 pub struct TnuaRadarBlipLens<'a, X: TnuaSpatialExt> {
     radar_lens: &'a TnuaRadarLens<'a, X>,
     entity: Entity,
+    /// Physical properties of the collider from the physics backend.
+    ///
+    /// This is typically a tuple of the collider, the position, and the rotation - but these are
+    /// different types in each physics backend.
     pub collider_data: X::ColliderData<'a>,
     closest_point_cache: OnceCell<TnuaPointProjectionResult>,
     closest_point_normal_cache: OnceCell<Vector3>,
@@ -43,16 +56,21 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
         self.radar_lens.radar
     }
 
+    /// The entity that generated the blip.
     pub fn entity(&self) -> Entity {
         self.entity
     }
 
+    /// Check if the physics engine is solving interaction between the controller entity and the
+    /// blip entity.
     pub fn is_interactable(&self) -> bool {
         self.radar_lens
             .ext
             .can_interact(self.radar().tracked_entity(), self.entity)
     }
 
+    /// Closest point (to the controller entity) on the surface of the collider that generated the
+    /// blip.
     pub fn closest_point(&self) -> TnuaPointProjectionResult {
         *self.closest_point_cache.get_or_init(|| {
             self.radar_lens.ext.project_point(
@@ -63,12 +81,16 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
         })
     }
 
+    /// Closest point (to some provided point) on the surface of the collider that generated the
+    /// blip.
     pub fn closest_point_from(&self, point: Vector3, solid: bool) -> TnuaPointProjectionResult {
         self.radar_lens
             .ext
             .project_point(point, solid, &self.collider_data)
     }
 
+    /// Closest point (to an offset from the controller entity) on the surface of the collider that
+    /// generated the blip.
     pub fn closest_point_from_offset(
         &self,
         offset: Vector3,
@@ -77,6 +99,8 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
         self.closest_point_from(self.radar().tracked_position() + offset, solid)
     }
 
+    /// A number between 0.0 (floor) and 1.0 (wall) indicating how close the blip is to a perfectly
+    /// vertical wall.
     pub fn flat_wall_score(&self, up: Dir3, offsets: &[Float]) -> Float {
         let Some(closest_point) = self.closest_point().outside() else {
             return 0.0;
@@ -125,6 +149,11 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
         (closest_above - closest_point).dot(direction.adjust_precision())
     }
 
+    /// The direction from the controller entity to the blip's surface.
+    ///
+    /// If the controller entity is _inside_ the blip surface (possible when the physics engine is
+    /// set to not solve contacts between them), this will still point into the insdie of the blip
+    /// entity.
     pub fn direction_to_closest_point(&self) -> Result<Dir3, InvalidDirectionError> {
         match self.closest_point() {
             TnuaPointProjectionResult::Outside(closest_point) => {
@@ -136,6 +165,8 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
         }
     }
 
+    /// The normal on the surface of the blip collider at the [`closest
+    /// point`](Self::closest_point).
     pub fn normal_from_closest_point(&self) -> Vector3 {
         *self.closest_point_normal_cache.get_or_init(|| {
             let origin = self.radar().tracked_position();
@@ -163,6 +194,7 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
         })
     }
 
+    /// Where is the blip collider located relative to the controller entity.
     pub fn spatial_relation(&self, threshold: Float) -> TnuaBlipSpatialRelation {
         let Ok(direction) = self.direction_to_closest_point() else {
             return TnuaBlipSpatialRelation::Invalid;
@@ -185,6 +217,7 @@ impl<X: TnuaSpatialExt> TnuaRadarBlipLens<'_, X> {
     }
 }
 
+/// Where is the blip collider located relative to the controller entity.
 #[derive(Debug)]
 pub enum TnuaBlipSpatialRelation {
     Invalid,
