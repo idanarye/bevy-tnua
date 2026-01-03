@@ -115,6 +115,19 @@ used:
   Instead, use the `set`/`clear` methods of `TnuaGhostOverwrite` (the fields of
   `TnuaGhostOverwrites` should be of that type)
 
+### Various helpers
+
+- `TnuaCrouchEnforcer` is gone. `TnuaBuiltinCrouch` can do what it did by
+  itself now - but only if the `headroom` field is properly configured in
+  `TnuaBuiltinWalkConfig`.
+- `TnuaSimpleAirActionsCounter` now accepts the control scheme as a generic
+  parameter - and you need to implement `TnuaAirActionDefinition` for your
+  scheme.
+- `TnuaBlipReuseAvoidance` now accepts the control scheme as a generic
+  parameter - and you need to implement `TnuaHasTargetEntity` for your scheme.
+  Note that the entities are no longer part of the actions - they should be
+  part of the payloads.
+
 # Migrating to Tnua 0.16
 
 All plugins now support specifying a schedule, which means that they are no

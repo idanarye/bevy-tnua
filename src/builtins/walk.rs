@@ -56,6 +56,10 @@ pub struct TnuaBuiltinWalkConfig {
     /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) action.
     pub float_height: Float,
 
+    /// Add an upward-facing proximity sensor that can check if the character has room above it.
+    ///
+    /// This is not (currently) used by `TnuaBuiltinWalk` itself, but
+    /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) uses it to determine 
     pub headroom: Option<TnuaBuiltinWalkHeadroom>,
 
     /// Extra distance above the `float_height` where the spring is still in effect.
@@ -125,9 +129,18 @@ pub struct TnuaBuiltinWalkConfig {
     pub max_slope: Float,
 }
 
+/// Definition for an upward-facing proximity sensor that checks for obstacles above the
+/// character's "head".
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TnuaBuiltinWalkHeadroom {
+    /// Disnce from the collider's center to its top.
     pub distance_to_collider_top: Float,
+
+    /// Extra distance, from the top of the collider, for the sensor to cover.
+    ///
+    /// Set this slightly higher than zero. Actions that rely on the headroom sensor will want
+    /// to add their own extra distance anyway by using
+    /// [`set_extra_headroom`](TnuaBasisWithHeadroom::set_extra_headroom).
     pub sensor_extra_distance: Float,
 }
 
