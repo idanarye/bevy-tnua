@@ -169,6 +169,7 @@ The following were used for coding the math and physics of Tnua:
 
 * [bevy_mod_wanderlust](https://github.com/PROMETHIA-27/bevy_mod_wanderlust) - the original inspiration for this mod, and where I got the floating capsule video from. I ended up creating my own plugin because bevy_mod_wanderlust does not support 2D.
 * [Rapier itself has a character controller](https://rapier.rs/docs/user_guides/bevy_plugin/character_controller). It's not a floating character controller, but it's integrated with the physics engine itself and uses that privilege to work out some of the problems the floating model is used to address.
+* [Bevy Ahoy!](https://github.com/janhohenheim/bevy_ahoy) - a kinematic character controller for Avian 3D.
 
 ## License
 
