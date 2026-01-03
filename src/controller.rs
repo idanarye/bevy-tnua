@@ -145,11 +145,15 @@ pub struct TnuaController<S: TnuaScheme> {
             deserialize = "<S::Basis as TnuaBasis>::Memory: Deserialize<'de>",
         ))
     )]
-    pub basis_memory: <S::Basis as TnuaBasis>::Memory,
+    /// A copy of the basis' configuration from the asset.
     pub basis_config: Option<<S::Basis as TnuaBasis>::Config>,
+    /// Kept by the basis itself - but user code may modify if it knows what it`s doing.
+    pub basis_memory: <S::Basis as TnuaBasis>::Memory,
+    /// The entities that hold the [proximity sensors](TnuaProximitySensor) of the basis.
     #[cfg_attr(feature = "serialize", serde(skip))]
     pub sensors_entities:
         <<S::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::Entities,
+    /// An handle to the configuration asset.
     #[cfg_attr(feature = "serialize", serde(skip))]
     pub config: Handle<S::Config>,
     // TODO: If ever possible, make this a fixed size array:
@@ -166,6 +170,12 @@ pub struct TnuaController<S: TnuaScheme> {
             deserialize = "S::ActionState: Deserialize<'de>",
         ))
     )]
+    /// The full state of the currently running action.
+    ///
+    /// Be careful when touching that:
+    /// * Changing the `input` and even `config` is usually fine.
+    /// * Only change the `state` if you know what you're doing.
+    /// * Never change the actual variant.
     pub current_action: Option<S::ActionState>,
 }
 
@@ -229,8 +239,8 @@ impl<S: TnuaScheme> TnuaController<S> {
     pub fn new(config: Handle<S::Config>) -> Self {
         Self {
             basis: Default::default(),
-            basis_memory: Default::default(),
             basis_config: None,
+            basis_memory: Default::default(),
             sensors_entities: Default::default(),
             config,
             actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
@@ -242,6 +252,8 @@ impl<S: TnuaScheme> TnuaController<S> {
         }
     }
 
+    /// Access to the entire basis state. This is what the [basis
+    /// capabilities](crate::basis_capabilities) usually use.
     pub fn basis_access(
         &'_ self,
     ) -> Result<TnuaBasisAccess<'_, S::Basis>, TnuaControllerHasNotPulledConfiguration> {
@@ -255,11 +267,20 @@ impl<S: TnuaScheme> TnuaController<S> {
         })
     }
 
+    /// **Must** be called each frame before feeding the actions (unless [`action`](Self::action))
+    /// is never used)
     pub fn initiate_action_feeding(&mut self) {
         self.action_feeding_initiated = true;
     }
 
     /// Feed an action.
+    ///
+    /// This is used in pull fashion - a system (or set of systems) that checks the state of the
+    /// playter input (or of some NPC controller) and can feed the action **every frame** its still
+    /// on. This system must start by calling
+    /// [`initiate_action_feeding`](Self::initiate_action_feeding).
+    ///
+    /// For pushing actions, use one of the other `action_*` methods.
     pub fn action(&mut self, action: S) {
         assert!(
             self.action_feeding_initiated,
@@ -325,6 +346,12 @@ impl<S: TnuaScheme> TnuaController<S> {
         }
     }
 
+    /// Trigger an action in a push fashion. The action must be one that handles its own duration.
+    ///
+    /// This means that actions like [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch)
+    /// cannot be used with this method - the character will rise after one frame of starting to
+    /// crouch. Actions like ['TnuaBuiltinDash`](crate::builtins::TnuaBuiltinDash) are okay because
+    /// the dash will only end when the motion itself is finished.
     pub fn action_trigger(&mut self, action: S) {
         let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
 
@@ -361,6 +388,8 @@ impl<S: TnuaScheme> TnuaController<S> {
         }
     }
 
+    /// Similar to [`action_trigger`](Self::action_trigger), but can override other action
+    /// contenders and other action feeding methods cannot override it.
     pub fn action_interrupt(&mut self, action: S) {
         // Because this is an interrupt, we ignore the old fed status - but we still care not to
         // set the contender if we are the current action.
@@ -389,6 +418,8 @@ impl<S: TnuaScheme> TnuaController<S> {
         });
     }
 
+    /// Trigger an action in a push fashion. The action will continue until
+    /// [`action_end`](Self::action_end) is called - or until the motion itself is finished.
     pub fn action_start(&mut self, action: S) {
         let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
 
@@ -441,6 +472,7 @@ impl<S: TnuaScheme> TnuaController<S> {
         }
     }
 
+    /// End an action that started with [`action_start`](Self::action_start)
     pub fn action_end(&mut self, action: S::ActionDiscriminant) {
         // Note that even if the action was an interrupt -this is a direct order to end it.
         self.actions_being_fed[action.variant_idx()] = Default::default();

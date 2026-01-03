@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::TnuaBasis;
 use crate::basis_action_traits::TnuaBasisAccess;
 use crate::basis_capabilities::{
-    TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithFloating,
+    TnuaBasisWithDisplacement, TnuaBasisWithFrameOfReferenceSurface, TnuaBasisWithFloating,
     TnuaBasisWithGround, TnuaBasisWithHeadroom, TnuaBasisWithSpring,
 };
 use crate::ghost_overrides::TnuaGhostOverwrite;
@@ -59,7 +59,7 @@ pub struct TnuaBuiltinWalkConfig {
     /// Add an upward-facing proximity sensor that can check if the character has room above it.
     ///
     /// This is not (currently) used by `TnuaBuiltinWalk` itself, but
-    /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) uses it to determine 
+    /// [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch) uses it to determine
     pub headroom: Option<TnuaBuiltinWalkHeadroom>,
 
     /// Extra distance above the `float_height` where the spring is still in effect.
@@ -565,7 +565,7 @@ impl TnuaBasis for TnuaBuiltinWalk {
     }
 }
 
-impl TnuaBasisWithEffectiveVelocity for TnuaBuiltinWalk {
+impl TnuaBasisWithFrameOfReferenceSurface for TnuaBuiltinWalk {
     fn effective_velocity(access: &TnuaBasisAccess<Self>) -> Vector3 {
         access.memory.effective_velocity
     }

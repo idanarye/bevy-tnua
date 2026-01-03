@@ -22,7 +22,7 @@ pub struct TnuaBuiltinWalkSensorsEntities {
     /// The main sensor of the floating character model.
     pub ground: Option<Entity>,
 
-    /// An upward-facing sensor that checks for 
+    /// An upward-facing sensor that checks for
     pub headroom: Option<Entity>,
 }
 

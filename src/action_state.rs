@@ -4,10 +4,18 @@ use serde::{Deserialize, Serialize};
 use crate::{TnuaAction, TnuaActionContext, TnuaBasis};
 use crate::{TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, TnuaBasisContext};
 
+/// The full state of a single [`TnuaAction`].
+///
+/// These are used in the variants of the [action state enum](crate::TnuaScheme::ActionState),
+/// created automatically by [the `TnuaScheme` derive](bevy_tnua_macros::TnuaScheme).
 #[derive(Serialize, Deserialize)]
 pub struct TnuaActionState<A: TnuaAction<B>, B: TnuaBasis> {
+    /// The data that the user control system feeds to the
+    /// [`TnuaController`](crate::TnuaController).
     pub input: A,
+    /// The action configuration, retrieved from an asset.
     pub config: A::Config,
+    /// Initiated when the action starts, and gets updated by the action itself.
     pub memory: A::Memory,
 }
 
@@ -19,12 +27,9 @@ impl<A: TnuaAction<B>, B: TnuaBasis> TnuaActionState<A, B> {
             memory: Default::default(),
         }
     }
-
-    pub fn update_input(&mut self, input: A) {
-        self.input = input;
-    }
 }
 
+#[doc(hidden)]
 pub trait TnuaActionStateInterface<B: TnuaBasis> {
     fn apply(
         &mut self,

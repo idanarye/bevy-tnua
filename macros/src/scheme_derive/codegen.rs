@@ -97,7 +97,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
                             Self::#command_names(action, #(#payload_bindings,)*),
                             #action_state_enum_name::#command_names(state, #(#payload_to_update_bindings,)*),
                         ) => {
-                            state.update_input(action);
+                            state.input = action;
                             #(
                                 // TODO: make this controllable?
                                 *#payload_to_update_bindings = #payload_bindings;

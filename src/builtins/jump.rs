@@ -1,5 +1,5 @@
 use crate::basis_capabilities::{
-    TnuaBasisWithDisplacement, TnuaBasisWithEffectiveVelocity, TnuaBasisWithGround,
+    TnuaBasisWithDisplacement, TnuaBasisWithFrameOfReferenceSurface, TnuaBasisWithGround,
 };
 use crate::util::{
     SegmentedJumpDurationCalculator, SegmentedJumpInitialVelocityCalculator, VelocityBoundary,
@@ -207,7 +207,7 @@ pub enum TnuaBuiltinJumpMemory {
 
 impl<B: TnuaBasis> TnuaAction<B> for TnuaBuiltinJump
 where
-    B: TnuaBasisWithEffectiveVelocity,
+    B: TnuaBasisWithFrameOfReferenceSurface,
     B: TnuaBasisWithDisplacement,
     B: TnuaBasisWithGround,
 {

@@ -181,8 +181,8 @@ pub mod sensor_sets;
 pub mod util;
 pub use animating_helper::{TnuaAnimatingState, TnuaAnimatingStateDirective};
 pub use basis_action_traits::{
-    TnuaAction, TnuaActionContext, TnuaActionDiscriminant, TnuaBasis, TnuaScheme, TnuaSchemeConfig,
-    TnuaUpdateInActionStateResult,
+    TnuaAction, TnuaActionContext, TnuaActionDiscriminant, TnuaBasis, TnuaBasisAccess, TnuaScheme,
+    TnuaSchemeConfig, TnuaUpdateInActionStateResult,
 };
 pub use basis_action_traits::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus,

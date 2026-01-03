@@ -17,31 +17,43 @@ use serde::Serialize;
 
 use crate::math::*;
 
+/// See [the derive macro](bevy_tnua_macros::TnuaScheme).
 pub trait TnuaScheme: 'static + Send + Sync + Sized {
+    /// The base motion controller of the character. Typically
+    /// [`TnuaBuiltinWalk`](crate::builtins::TnuaBuiltinWalk)
     type Basis: TnuaBasis;
+    /// A big configuration struct, containing the configuration of the basis and of all the
+    /// actions.
     type Config: TnuaSchemeConfig<Scheme = Self> + Asset;
+    /// An enum with a unit variant for each variant of the control scheme.
     type ActionDiscriminant: TnuaActionDiscriminant;
+    /// An enum mirroring the control scheme, except instead of just having the input of each
+    /// action each variant has a [`TnuaActionState`] which contains the action's input,
+    /// configuration and memoery. If the variant in the control scheme has payload, they are
+    /// copied to the variant in action state as is.
     type ActionState: TnuaActionState<Basis = Self::Basis, Discriminant = Self::ActionDiscriminant>;
 
+    #[doc(hidden)]
     const NUM_VARIANTS: usize;
 
+    /// The action without the input and payloads.
     fn discriminant(&self) -> Self::ActionDiscriminant;
 
+    #[doc(hidden)]
     fn variant_idx(&self) -> usize {
         self.discriminant().variant_idx()
     }
 
-    fn is_same_action_as(&self, other: &Self) -> bool {
-        self.variant_idx() == other.variant_idx()
-    }
-
+    #[doc(hidden)]
     fn into_action_state_variant(self, config: &Self::Config) -> Self::ActionState;
 
+    #[doc(hidden)]
     fn update_in_action_state(
         self,
         action_state_enum: &mut Self::ActionState,
     ) -> TnuaUpdateInActionStateResult<Self>;
 
+    #[doc(hidden)]
     fn initiation_decision(
         &self,
         config: &Self::Config,
@@ -51,16 +63,26 @@ pub trait TnuaScheme: 'static + Send + Sync + Sized {
     ) -> TnuaActionInitiationDirective;
 }
 
+#[doc(hidden)]
 pub enum TnuaUpdateInActionStateResult<S: TnuaScheme> {
     Success,
     WrongVariant(S),
 }
 
+/// A big configuration struct, containing the configuration of the basis and of all the actions of
+/// a control scheme.
 pub trait TnuaSchemeConfig: Serialize + for<'a> Deserialize<'a> {
+    /// The control scheme this configuration belongs to.
     type Scheme: TnuaScheme<Config = Self>;
 
+    #[doc(hidden)]
     fn basis_config(&self) -> &<<Self::Scheme as TnuaScheme>::Basis as TnuaBasis>::Config;
 
+    /// Use to create a template of the configuration in the assets directory.
+    ///
+    /// The call to this function should be removed after the file is created, to avoid checking it
+    /// on every run and to avoid breaking WASM (which cannot access the assets directory using the
+    /// filesystem)
     fn write_if_not_exist(&self, path: impl AsRef<Path>) -> std::io::Result<()> {
         let serialized = bevy::asset::ron::ser::to_string_pretty(
             self,
@@ -127,6 +149,25 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
         motor: &mut TnuaMotor,
     );
 
+    /// This is where the basis initiates its sensors.
+    ///
+    /// * Use the helper
+    ///   [`ProximitySensorPreparationHelper`](crate::sensor_sets::ProximitySensorPreparationHelper)
+    ///   to create the sensors.
+    /// * Return `None` if - and only if - some _essential_ sensors are missing, because it'll
+    ///   cause the controller to skip frames until it returns `Some`.
+    ///
+    ///   An example of non-essential sensor is the headroom sensor in
+    ///   [`TnuaBuiltinWalkSensors`](crate::builtins::TnuaBuiltinWalkSensors) - the controller can
+    ///   function without it (it just won't be able to do crouch enforcement) so if it's absence
+    ///   does not cause prevent the controller from running (unlike the `ground` sensor, which is
+    ///   essential)
+    /// * Even if some essential sensors are missing, make sure to prepare _all_ the sensors that
+    ///   need preparation before returning `None`. No point preparing one sensor per frame.
+    /// * If a sensor exists but wrongly configured - launch the command to reconfigure it and
+    ///   return the existing sensor. Unless the configuration is totally off (e.g. - sensor points
+    ///   in a very wrong direction) it's probably better to use the misconfigured one than to skip
+    ///   a frame.
     #[allow(clippy::too_many_arguments)]
     fn get_or_create_sensors<'a: 'b, 'b>(
         up_direction: Dir3,
@@ -139,6 +180,9 @@ pub trait TnuaBasis: Default + 'static + Send + Sync {
         has_ghost_overwrites: bool,
     ) -> Option<Self::Sensors<'b>>;
 
+    /// Iterate over each ghost overwrite and the sensor entity of the relevant sensor.
+    ///
+    /// Note that not all sensors need to have ghost overwrites.
     fn ghost_sensor_overwrites<'a>(
         ghost_overwrites: &'a mut <Self::Sensors<'static> as TnuaSensors<'static>>::GhostOverwrites,
         entities: &<Self::Sensors<'static> as TnuaSensors<'static>>::Entities,
@@ -359,32 +403,52 @@ pub trait TnuaAction<B: TnuaBasis>: 'static + Send + Sync {
     }
 }
 
+/// An enum with a unit variant for each variant of the control scheme.
 pub trait TnuaActionDiscriminant:
     'static + Send + Sync + Copy + Clone + PartialEq + Eq + core::fmt::Debug
 {
+    #[doc(hidden)]
     fn variant_idx(&self) -> usize;
 }
 
+/// An enum mirroring the control scheme, except instead of just having the input of each action
+/// each variant has a [`TnuaActionState`] which contains the action's input, configuration and
+/// memoery. If the variant in the control scheme has payload, they are copied to the variant in
+/// action state as is.
 pub trait TnuaActionState: 'static + Send + Sync {
+    /// The basis of the control scheme this action state enum represents.
     type Basis: TnuaBasis;
+    /// An enum with a unit variant for each variant of the control scheme.
     type Discriminant: TnuaActionDiscriminant;
 
+    /// The action without the input and payloads.
     fn discriminant(&self) -> Self::Discriminant;
 
+    #[doc(hidden)]
     fn variant_idx(&self) -> usize {
         self.discriminant().variant_idx()
     }
 
+    #[doc(hidden)]
     fn interface(&self) -> &dyn TnuaActionStateInterface<Self::Basis>;
+    #[doc(hidden)]
     fn interface_mut(&mut self) -> &mut dyn TnuaActionStateInterface<Self::Basis>;
 
+    #[doc(hidden)]
     fn modify_basis_config(&self, basis_config: &mut <Self::Basis as TnuaBasis>::Config);
 }
 
+/// References to the full state of the basis in the controller.
 #[derive(Clone)]
 pub struct TnuaBasisAccess<'a, B: TnuaBasis> {
+    /// The data that the user control system sets in [the `basis` field of the
+    /// `TnuaController`](crate::TnuaController::basis).
     pub input: &'a B,
+    /// The basis configuration, retrieved from an asset and can be modified by payloads that
+    /// implement [`TnuaConfigModifier`].
     pub config: &'a B::Config,
+    /// Initiated when the controller is created, and gets updated by the basis itself or by an
+    /// action (using [`influence_basis`](TnuaAction::influence_basis))
     pub memory: &'a B::Memory,
 }
 
@@ -415,12 +479,25 @@ impl<'a, B: TnuaBasis> TnuaActionContext<'a, B> {
         }
     }
 
+    /// The duration of the current frame where the action is being applied.
     pub fn frame_duration_as_duration(&self) -> Duration {
         #[allow(clippy::useless_conversion)]
         Duration::from_secs_f64(self.frame_duration.into())
     }
 }
 
+/// Implement on payloads that can modify the configuration while the relevant action is running.
+///
+/// Note that the payload needs to have `#[scheme(modify_basis_config)]` on it in the control
+/// scheme in order for this to take effect.
 pub trait TnuaConfigModifier<C> {
+    /// Modify the configuration.
+    ///
+    /// This does not touch the asset itself - it modifies a copy of the configuration stored in
+    /// the controller. Each time this method is called it works on a fresh copy of the
+    /// configuration - one that was just cloned from the asset and was not already modified by
+    /// this payload (though it could have been modified by previous payloads in the action
+    /// variant definition). This means that it's okay to do things like `config.field *= 2.0;` -
+    /// it won't cause the number in the field to explode.
     fn modify_config(&self, config: &mut C);
 }

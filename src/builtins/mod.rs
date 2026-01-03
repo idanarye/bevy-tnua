@@ -15,6 +15,9 @@ pub use knockback::{TnuaBuiltinKnockback, TnuaBuiltinKnockbackConfig, TnuaBuilti
 pub use walk::{
     TnuaBuiltinWalk, TnuaBuiltinWalkConfig, TnuaBuiltinWalkHeadroom, TnuaBuiltinWalkMemory,
 };
+pub use walk_sensors::{
+    TnuaBuiltinWalkSensors, TnuaBuiltinWalkSensorsEntities, TnuaBuiltinWalkSensorsGhostOverwrites,
+};
 pub use wall_slide::{
     TnuaBuiltinWallSlide, TnuaBuiltinWallSlideConfig, TnuaBuiltinWallSlideMemory,
 };
