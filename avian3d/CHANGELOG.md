@@ -11,6 +11,7 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.9.0 - 2026-01-03
 ### Changed
 - Proximity sensors use the `TnuaSensorOf` relationship.
 

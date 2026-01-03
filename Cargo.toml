@@ -37,7 +37,7 @@ exclude = [
 bevy = { version = "^0.17", default-features = false, features = [
     "bevy_log",
 ]}
-bevy-tnua-physics-integration-layer = { version = "^0.10", path = "physics-integration-layer" }
+bevy-tnua-physics-integration-layer = { version = "^0.11", path = "physics-integration-layer" }
 bevy-tnua-macros = { version = "^0.1", path = "macros" }
 thiserror = "2.0.12"
 serde = { version = "^1", features = ["derive"] }

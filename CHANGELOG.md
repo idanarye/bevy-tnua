@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+
+## 0.27.0 - 2026-01-03
 ### Changed
 - [**BREAKING**] _Schemes_ - a big refactor which completely breaks the API.
   See the [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-027-schemes).

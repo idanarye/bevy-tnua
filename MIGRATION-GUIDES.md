@@ -1,4 +1,4 @@
-# Migrating to Tnua 0.27 (schemes)
+# Migrating to Tnua 0.27 ("Schemes")
 
 ## Static definition of supported basis and actions
 
