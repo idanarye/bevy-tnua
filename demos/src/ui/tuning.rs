@@ -196,6 +196,11 @@ impl UiTunable for TnuaBuiltinJumpConfig {
             egui::Slider::new(&mut self.peak_prevention_extra_gravity, 0.0..=100.0)
                 .text("Jump Peak Prevention Extra Gravity"),
         );
+
+        ui.add(
+            egui::Slider::new(&mut self.horizontal_distance, 0.0..=10.0)
+                .text("Horizontal Distance"),
+        );
     }
 }
 impl UiTunable for TnuaBuiltinCrouchConfig {

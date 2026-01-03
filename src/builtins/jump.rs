@@ -27,7 +27,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Default)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaBuiltinJump {
-    pub vertical_displacement: Option<Vector3>,
+    /// In addition to the upward motion, add a vertical component to the jump so that the peak of
+    /// the jump will be at this vector (multiplied by
+    /// [`TnuaBuiltinJumpConfig::horizontal_distance`]) from where it'd be otherwise.
+    pub horizontal_displacement: Option<Vector3>,
 
     /// Allow this action to start even if the character is not touching ground nor in coyote time.
     pub allow_in_air: bool,
@@ -37,7 +40,7 @@ pub struct TnuaBuiltinJump {
     /// Note that there are no acceleration limits because unlike
     /// [crate::builtins::TnuaBuiltinWalk::desired_forward] this field will attempt to force the
     /// direction during a single frame. It is useful for when the jump animation needs to be
-    /// aligned with the [`vertical_displacement`](Self::vertical_displacement).
+    /// aligned with the [`horizontal_displacement`](Self::horizontal_displacement).
     pub force_forward: Option<Dir3>,
 }
 
@@ -121,6 +124,13 @@ pub struct TnuaBuiltinJumpConfig {
     /// action would still get registered and be executed once the jump is possible.
     pub input_buffer_time: Float,
 
+    /// When [`horizontal_displacement`](TnuaBuiltinJump::horizontal_displacement) is given in the
+    /// action input, multiply it by this number.
+    pub horizontal_distance: Float,
+
+    /// When [`force_forward`](TnuaBuiltinJump::force_forward) is given in the action input, only
+    /// enforce it during the first part of the jump (rising up) and once the peak is reached and
+    /// the character falls down allow its direction to be determined by the basis again.
     pub disable_force_forward_after_peak: bool,
 }
 
@@ -137,6 +147,7 @@ impl Default for TnuaBuiltinJumpConfig {
             peak_prevention_extra_gravity: 20.0,
             reschedule_cooldown: None,
             input_buffer_time: 0.2,
+            horizontal_distance: 1.0,
             disable_force_forward_after_peak: true,
         }
     }
@@ -339,11 +350,12 @@ where
                         );
                     if relative_velocity <= desired_upward_velocity {
                         let mut velocity_boundary = None;
-                        if let Some(vertical_displacement) = self.vertical_displacement {
-                            let vertical_displacement = vertical_displacement
+                        if let Some(horizontal_displacement) = self.horizontal_displacement {
+                            let horizontal_displacement = config.horizontal_distance *
+                                horizontal_displacement
                                 .reject_from(ctx.up_direction.adjust_precision());
                             let already_moved = (ctx.tracker.translation - *origin)
-                                .project_onto(vertical_displacement.normalize_or_zero());
+                                .project_onto(horizontal_displacement.normalize_or_zero());
                             let duration_to_top =
                                 SegmentedJumpDurationCalculator::new(relative_velocity)
                                     .add_segment(
@@ -357,7 +369,7 @@ where
                                     )
                                     .duration();
                             let desired_vertical_velocity =
-                                (vertical_displacement - already_moved) / duration_to_top;
+                                (horizontal_displacement - already_moved) / duration_to_top;
                             let desired_boost = (desired_vertical_velocity - effective_velocity)
                                 .reject_from(ctx.up_direction.adjust_precision());
                             motor.lin.boost += desired_boost;

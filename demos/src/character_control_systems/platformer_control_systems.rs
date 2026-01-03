@@ -562,7 +562,7 @@ pub fn apply_platformer_controls(
                 controller.prolong_action();
             } else if let Some((_, walljump_direction)) = walljump_candidate {
                 controller.action(DemoControlScheme::WallJump(TnuaBuiltinJump {
-                    vertical_displacement: Some(2.0 * walljump_direction.adjust_precision()),
+                    horizontal_displacement: Some(walljump_direction.adjust_precision()),
                     allow_in_air: true,
                     force_forward: Some(-walljump_direction),
                 }));

@@ -102,6 +102,7 @@ impl DemoControlSchemeConfig {
                 height: 4.0,
                 takeoff_extra_gravity: 90.0, // 3 times the default
                 takeoff_above_velocity: 0.0,
+                horizontal_distance: 2.0,
                 ..Default::default()
             },
             climb: TnuaBuiltinClimbConfig {

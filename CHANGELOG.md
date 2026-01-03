@@ -71,6 +71,11 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   the cast range when defining their sensors in `get_or_create_sensors`, and
   action should affect teh sensors through the basis via `influence_basis`.
 
+### Fixed
+- Rename `TnuaBuiltinJump::vertical_displacement` to `horizontal_displacement`.
+  This is considered a fix because the name was misleading - the displacement
+  in question is very much horizontal.
+
 ## 0.26.0 - 2025-10-14
 ### Changed
 - Upgrade to Bevy 0.17.
