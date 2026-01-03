@@ -112,7 +112,7 @@ used:
   entity. If you add the `TnuaGhostOverwrites` component to the controller
   entity, it'll automatically add `TnuaGhostSensor` to its (relevant) sensors.
 - Overwriting the `output` field of the `TnuaProximitySensor` no longer works.
-  Instead, use the `set`/`clear` methods of `TnuaGhostOverwrite` (the fields of
+  Instead, use the `set` method of `TnuaGhostOverwrite` (the fields of
   `TnuaGhostOverwrites` should be of that type)
 
 ### Various helpers

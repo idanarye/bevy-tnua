@@ -199,22 +199,21 @@ pub fn apply_platformer_controls(
                     crouch = crouch_pressed;
                     // To achieve this, we simply take the first platform detected by the ghost sensor,
                     // and treat it like a "real" platform.
-                    ghost_overwrites.ground.clear();
-                    for ghost_platform in ghost_sensor.iter() {
-                        // Because the ghots platforms don't interact with the character through the
-                        // physics engine, and because the ray that detected them starts from the
-                        // center of the character, we usually want to only look at platforms that
-                        // are at least a certain distance lower than that - to limit the point from
-                        // which the character climbs when they collide with the platform.
-                        if config.one_way_platforms_min_proximity <= ghost_platform.proximity {
-                            // By overriding the sensor's output, we make it pretend the ghost platform
-                            // is a real one - which makes Tnua make the character stand on it even
-                            // though the physics engine will not consider them colliding with each
-                            // other.
-                            ghost_overwrites.ground.set(ghost_platform);
-                            break;
-                        }
-                    }
+                    ghost_overwrites
+                        .ground
+                        // By overriding the sensor's output, we make it pretend the ghost platform
+                        // is a real one - which makes Tnua make the character stand on it even
+                        // though the physics engine will not consider them colliding with each
+                        // other.
+                        .set(ghost_sensor.iter().find(|ghost_platform| {
+                            // Because the ghots platforms don't interact with the character
+                            // through the physics engine, and because the ray that detected them
+                            // starts from the center of the character, we usually want to only
+                            // look at platforms that are at least a certain distance lower than
+                            // that - to limit the point from which the character climbs when they
+                            // collide with the platform.
+                            config.one_way_platforms_min_proximity <= ghost_platform.proximity
+                        }));
                 }
                 // With this scheme, the player can drop down one-way platforms by pressing the crouch
                 // button. Because it does not use `TnuaSimpleFallThroughPlatformsHelper`, it has
@@ -247,21 +246,17 @@ pub fn apply_platformer_controls(
                         // platform - so we make it crouch. We don't pass any ghost platform to the
                         // proximity sensor here either - because there aren't any.
                         crouch = relevant_platform.is_none();
-                        ghost_overwrites.ground.clear();
+                        ghost_overwrites.ground.set(None);
                     } else {
                         crouch = false;
-                        if let Some(ghost_platform) = relevant_platform {
-                            // Ghost platforms can only be detected _before_ fully solid platforms, so
-                            // if we detect one we can safely replace the proximity sensor's output
-                            // with it.
-                            //
-                            // Do take care to only do this when there is a ghost platform though -
-                            // otherwise it could replace an actual solid platform detection with a
-                            // `None`.
-                            ghost_overwrites.ground.set(ghost_platform);
-                        } else {
-                            ghost_overwrites.ground.clear();
-                        }
+                        // Ghost platforms can only be detected _before_ fully solid platforms, so
+                        // if we detect one we can safely replace the proximity sensor's output
+                        // with it.
+                        //
+                        // Do take care to only do this when there is a ghost platform though -
+                        // otherwise it could replace an actual solid platform detection with a
+                        // `None`.
+                        ghost_overwrites.ground.set(relevant_platform);
                     }
                 }
                 // This scheme uses `TnuaSimpleFallThroughPlatformsHelper` to properly handle fall

@@ -56,15 +56,11 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
     pub fn dont_fall(&mut self) {
         let mut already_falling_through_not_yet_seen =
             self.parent.currently_falling_through.clone();
-        self.ghost_overwrite.clear();
-        for ghost_platform in self.ghost_sensor.iter() {
-            if self.min_proximity <= ghost_platform.proximity
-                && !already_falling_through_not_yet_seen.remove(&ghost_platform.entity)
-            {
-                self.ghost_overwrite.set(ghost_platform);
-                break;
-            }
-        }
+        self.ghost_overwrite
+            .set(self.ghost_sensor.iter().find(|ghost_platform| {
+                self.min_proximity <= ghost_platform.proximity
+                    && !already_falling_through_not_yet_seen.remove(&ghost_platform.entity)
+            }));
         self.parent
             .currently_falling_through
             .retain(|entity| !already_falling_through_not_yet_seen.contains(entity));
@@ -84,29 +80,27 @@ impl TnuaHandleForSimpleFallThroughPlatformsHelper<'_> {
     /// Returns `true` if actually dropping through a platform, to help determining if the
     /// character should be crouching (since these buttons are usually the same)
     pub fn try_falling(&mut self, just_pressed: bool) -> bool {
-        self.ghost_overwrite.clear();
         if !just_pressed && !self.parent.currently_falling_through.is_empty() {
+            self.ghost_overwrite
+                .set(self.ghost_sensor.iter().find(|ghost_platform| {
+                    self.min_proximity <= ghost_platform.proximity
+                        && !self
+                            .parent
+                            .currently_falling_through
+                            .contains(&ghost_platform.entity)
+                }));
+            true
+        } else {
+            self.ghost_overwrite.set(None);
+            self.parent.currently_falling_through.clear();
             for ghost_platform in self.ghost_sensor.iter() {
-                if self.min_proximity <= ghost_platform.proximity
-                    && !self
-                        .parent
+                if self.min_proximity <= ghost_platform.proximity {
+                    self.parent
                         .currently_falling_through
-                        .contains(&ghost_platform.entity)
-                {
-                    self.ghost_overwrite.set(ghost_platform);
-                    return true;
+                        .insert(ghost_platform.entity);
                 }
             }
-            return true;
+            !self.parent.currently_falling_through.is_empty()
         }
-        self.parent.currently_falling_through.clear();
-        for ghost_platform in self.ghost_sensor.iter() {
-            if self.min_proximity <= ghost_platform.proximity {
-                self.parent
-                    .currently_falling_through
-                    .insert(ghost_platform.entity);
-            }
-        }
-        !self.parent.currently_falling_through.is_empty()
     }
 }

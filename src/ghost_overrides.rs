@@ -58,23 +58,16 @@ impl TnuaGhostOverwrite {
     ///
     /// Note that the controller does not use that output has is - it picks an output from the
     /// ghost sensor that matches the output provided here. This is important because the ghost
-    /// sensor will have its list of outputs refrehsed before this happens.
+    /// sensor will have its list of outputs refreshed before this happens.
+    ///
+    /// If set to `None`, the ghost sensor will not be used that frame and the output of the
+    /// regular proximity sensor will be used.
     ///
     /// The ghost overwrite will remain in place until one of the following happens:
-    /// 1. This method is invoked again.
-    /// 2. The [`clear`](Self::clear) method is invoked.
-    /// 3. The ghost sensor no longer has a matching hit in its outputs list.
-    pub fn set(&mut self, sensor_output: &TnuaProximitySensorOutput) {
-        self.0 = Some(sensor_output.entity);
-    }
-
-    /// Clear the ghost overwrite, so that the controller will use the outpuit from the proximity
-    /// sensor instead of one from the ghost sensor.
-    ///
-    /// It's preferable to call this before iterating over the ghost outputs in the user control
-    /// system, so that if no output is chosen one from the previous frame will not linger.
-    pub fn clear(&mut self) {
-        self.0 = None;
+    /// 1. This method is invoked again - either with another output or with `None`.
+    /// 2. The ghost sensor no longer has a matching hit in its outputs list.
+    pub fn set(&mut self, sensor_output: Option<&TnuaProximitySensorOutput>) {
+        self.0 = sensor_output.map(|output| output.entity);
     }
 
     pub(crate) fn find_in<'a>(

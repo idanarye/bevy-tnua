@@ -556,7 +556,7 @@ fn apply_ghost_overwrites<S: TnuaScheme>(
             if let Some(ghost_output) = ghost_overwrite.find_in(&ghost_sensor.0) {
                 proximity_sensor.output = Some(ghost_output.clone());
             } else {
-                ghost_overwrite.clear();
+                ghost_overwrite.set(None);
             }
         }
     }
