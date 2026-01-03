@@ -6,6 +6,11 @@ use crate::TnuaScheme;
 use crate::controller::TnuaActionFlowStatus;
 use crate::prelude::TnuaController;
 
+/// Helper for keeping track on entities the character was just interacting with, so that it won't
+/// immediately interact with again after the action is finished.
+///
+/// For example - this can be use to avoid climbing again on a ladder immediately after dropping
+/// from it.
 #[derive(Component)]
 pub struct TnuaBlipReuseAvoidance<S: TnuaScheme> {
     current_entity: Option<Entity>,
@@ -21,7 +26,13 @@ impl<S: TnuaScheme> Default for TnuaBlipReuseAvoidance<S> {
     }
 }
 
+/// Must be implemented by control schemes that want to use [`TnuaBlipReuseAvoidance`] or
 pub trait TnuaHasTargetEntity: TnuaScheme {
+    /// The entity used by the given action.
+    ///
+    /// Note that entities are not part of the actions themselves - they are part of the payloads.
+    /// It's up to user code to define them in the control scheme for the relevant actions and to
+    /// pass then when feeding these actions.
     fn target_entity(action_state: &Self::ActionState) -> Option<Entity>;
 }
 
@@ -29,6 +40,7 @@ impl<S> TnuaBlipReuseAvoidance<S>
 where
     S: TnuaScheme + TnuaHasTargetEntity,
 {
+    /// Call this every frame.
     pub fn update(&mut self, controller: &TnuaController<S>, radar: &TnuaObstacleRadar) {
         let current_entity = controller
             .current_action
@@ -53,6 +65,8 @@ where
         self.current_entity = current_entity;
     }
 
+    /// Returns true the entity was already interacted with and the character did not move away
+    /// from it yet.
     pub fn should_avoid(&self, entity: Entity) -> bool {
         self.entities_to_avoid.contains_key(&entity)
     }

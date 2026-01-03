@@ -14,7 +14,10 @@ pub struct TnuaAirActionsTracker {
     considered_in_air: bool,
 }
 
+/// Must be implemented by control schemes that want to use [`TnuaAirActionsTracker`] or
+/// [`TnuaSimpleAirActionsCounter`].
 pub trait TnuaAirActionDefinition: TnuaScheme {
+    /// Whether or not this action is capable of making the character airborne.
     fn is_air_action(action: Self::ActionDiscriminant) -> bool;
 }
 
