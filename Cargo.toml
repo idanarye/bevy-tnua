@@ -36,6 +36,7 @@ exclude = [
 [dependencies]
 bevy = { version = "^0.17", default-features = false, features = [
     "bevy_log",
+    "bevy_asset",
 ]}
 bevy-tnua-physics-integration-layer = { version = "^0.11", path = "physics-integration-layer" }
 bevy-tnua-macros = { version = "^0.1", path = "macros" }
@@ -45,7 +46,6 @@ serde = { version = "^1", features = ["derive"] }
 [dev-dependencies]
 bevy = { version = "^0.17", default-features = false, features = [
      "animation",
-    "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
     # "bevy_scene",
