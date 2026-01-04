@@ -59,16 +59,13 @@
 //!
 //! ## Spawning the character controller
 //!
-//! A Tnua controlled character must have a dynamic rigid body, everything from
-//! `Tnua<physics-backend>IOBundle` (e.g. - for Rapier 3D, use `TnuaRapier3dIOBundle`), and a
-//! [`TnuaController`] (and its automatically added required components). The controller is
+//! A Tnua controlled character must have a dynamic rigid body, a [`TnuaConfig`]. The controller is
 //! parameterized by the control scheme and needs a configuration (based on the control scheme) as
 //! an asset handle:
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # // Not importing from Rapier because there are two versions and the default features does not
 //! # // enable either:
-//! # type TnuaRapier3dIOBundle = ();
 //! # #[derive(Component)]
 //! # enum RigidBody { Dynamic }
 //! # use bevy_tnua::prelude::*;
@@ -78,8 +75,8 @@
 //! # #[derive(TnuaScheme)] #[scheme(basis = TnuaBuiltinWalk)] enum ControlScheme {Jump(TnuaBuiltinJump)}
 //! # let control_scheme_configs: Assets<ControlSchemeConfig> = panic!();
 //! cmd.insert(RigidBody::Dynamic);
-//! cmd.insert(TnuaRapier3dIOBundle::default()); // this one depends on the physics backend
-//! cmd.insert(TnuaController::<ControlScheme>::new(
+//! cmd.insert(TnuaController::<ControlScheme>::default());
+//! cmd.insert(TnuaConfig::<ControlScheme>(
 //!     // This example creates the configuration by code and injects it to the Assets resource,
 //!     // but a proper game will probably want to load it from an asset file.
 //!     control_scheme_configs.add(ControlSchemeConfig {

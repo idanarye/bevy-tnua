@@ -18,9 +18,9 @@ pub trait TnuaGhostOverwritesForBasis: 'static + Send + Sync + Default {
 /// [`GhostOverwrites`](TnuaSensors::GhostOverwrites) of the [`Sensors`](TnuaBasis::Sensors) of the
 /// control scheme's basis. The fields of that struct should be of type [`TnuaGhostOverwrite`], and
 /// should have matching fields in the sensors' [`Entities`](TnuaSensors::Entities) (accessible via
-/// the controller's [`sensors_entities`](crate::TnuaController::sensors_entities)) that point to
-/// entities with a [`TnuaGhostSensor`](crate::TnuaGhostSensor) component on them that holds the
-/// ghost hits that can be set in the [`TnuaGhostOverwrite`] using its
+/// the [`TnuaSensorsEntities`](crate::TnuaSensorsEntities) component) that point to entities with
+/// a [`TnuaGhostSensor`](crate::TnuaGhostSensor) component on them that holds the ghost hits that
+/// can be set in the [`TnuaGhostOverwrite`] using its
 /// [`set`](TnuaGhostOverwrite::set) method.
 #[derive(Component, Deref, DerefMut)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
@@ -45,9 +45,9 @@ impl<S: TnuaScheme> Default for TnuaGhostOverwrites<S> {
 ///
 /// Note that this is not a component because it is not stored on the sensor entity - instead it is
 /// stored with the entity that has the [`TnuaController`](crate::TnuaController) component, inside
-/// a [`TnuaGhostOverwrites`] component. To [`TnuaGhostSensor`](crate::TnuaGhostSensor) itself is
-/// stored on the sensor entity - to access it use the
-/// [`sensors_entities`](crate::TnuaController::sensors_entities) field of the controller.
+/// a [`TnuaGhostOverwrites`] component. The [`TnuaGhostSensor`](crate::TnuaGhostSensor) itself is
+/// stored on the sensor entity - to retrieve that [`Entity`] use the
+/// [`TnuaSensorsEntities`](crate::TnuaSensorsEntities) component.
 #[derive(Default)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct TnuaGhostOverwrite(Option<Entity>);
