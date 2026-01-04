@@ -49,7 +49,7 @@ jobs:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Test
-        run: cargo test --verbose --features ${{ env.all_physics_backends }} -- --nocapture
+        run: cargo test --verbose --workspace --exclude tnua-demos-crate -- --nocapture
       - name: Clean disk space before building the test with different features
         run: cargo clean
       - name: Test with state serialization enabled
