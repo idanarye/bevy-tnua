@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Changed
+- [**BREAKING**] The configuration was moved out of `TnuaController` into a
+  component of its own - `TnuaConfig`. It must be added manually instead of via
+  `TnuaController::new` - which was removed in favor of implementing the
+  `Default` trait.
+- Similarly, `sensors_entities` were moved a new component
+  `TnuaSensorsEntities`. This one is added automatically via Bevy's required
+  components mechanism.
+
+### Fixed
+- `TnuaController` no longer `#[serde(skip)`] any of its fields - which means
+  that synchronization should now work properly.
 
 ## 0.27.0 - 2026-01-03
 ### Changed

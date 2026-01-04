@@ -1,9 +1,18 @@
 use crate::ghost_overrides::TnuaGhostOverwritesForBasis;
-use crate::math::*;
+use crate::{TnuaBasis, TnuaScheme, math::*};
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::{
     TnuaGhostSensor, TnuaProximitySensor, TnuaSensorOf,
 };
+
+/// The entities that hold the [proximity sensors](TnuaProximitySensor) of the basis.
+///
+/// Automatically added for [`TnuaController`](crate::TnuaController).
+#[derive(Component, Deref)]
+pub struct TnuaSensorsEntities<S: TnuaScheme> {
+    pub(crate) sensors_entities:
+        <<S::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::Entities,
+}
 
 pub trait TnuaSensors<'a>: 'a + Copy + Clone {
     type Entities: 'static + Send + Sync + Default;

@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
+use crate::TnuaSensorsEntities;
 use crate::basis_capabilities::TnuaBasisWithGround;
 use crate::ghost_overrides::TnuaGhostOverwrites;
-use crate::sensor_sets::TnuaSensors;
 use crate::{
     TnuaActionInitiationDirective, TnuaActionLifecycleDirective, TnuaActionLifecycleStatus, math::*,
 };
@@ -61,6 +61,11 @@ impl<S: TnuaScheme> Plugin for TnuaControllerPlugin<S> {
                 .chain()
                 .in_set(TnuaSystems),
         );
+        app.register_required_components_with::<TnuaController<S>, _>(
+            || TnuaSensorsEntities::<S> {
+                sensors_entities: Default::default(),
+            },
+        );
         app.add_systems(
             self.schedule,
             (apply_ghost_overwrites::<S>, apply_controller_system::<S>)
@@ -108,7 +113,12 @@ struct FedEntry {
     rescheduled_in: Option<Timer>,
 }
 
-/// The main component used for interaction with the controls and animation code.
+/// Configuration for a [`TnuaController`].
+#[derive(Component)]
+pub struct TnuaConfig<S: TnuaScheme>(pub Handle<S::Config>);
+
+/// The main component used for interaction with the controls and animation code (needs a
+/// [`TnuaConfig`])
 ///
 /// Every frame, the game code should invoke
 /// [`initiate_action_feeding`](Self::initiate_action_feeding) and then feed input this component
@@ -149,17 +159,16 @@ pub struct TnuaController<S: TnuaScheme> {
     pub basis_config: Option<<S::Basis as TnuaBasis>::Config>,
     /// Kept by the basis itself - but user code may modify if it knows what it`s doing.
     pub basis_memory: <S::Basis as TnuaBasis>::Memory,
-    /// The entities that hold the [proximity sensors](TnuaProximitySensor) of the basis.
-    #[cfg_attr(feature = "serialize", serde(skip))]
-    pub sensors_entities:
-        <<S::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::Entities,
-    /// An handle to the configuration asset.
-    #[cfg_attr(feature = "serialize", serde(skip))]
-    pub config: Handle<S::Config>,
     // TODO: If ever possible, make this a fixed size array:
     actions_being_fed: Vec<FedEntry>,
     contender_action: Option<ContenderAction<S>>,
-    #[cfg_attr(feature = "serialize", serde(skip))]
+    #[cfg_attr(
+        feature = "serialize",
+        serde(bound(
+            serialize = "S::ActionDiscriminant: Serialize",
+            deserialize = "S::ActionDiscriminant: Deserialize<'de>",
+        ))
+    )]
     action_flow_status: TnuaActionFlowStatus<S::ActionDiscriminant>,
     up_direction: Option<Dir3>,
     action_feeding_initiated: bool,
@@ -179,8 +188,25 @@ pub struct TnuaController<S: TnuaScheme> {
     pub current_action: Option<S::ActionState>,
 }
 
+impl<S: TnuaScheme> Default for TnuaController<S> {
+    fn default() -> Self {
+        Self {
+            basis: Default::default(),
+            basis_config: None,
+            basis_memory: Default::default(),
+            actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
+            contender_action: None,
+            action_flow_status: TnuaActionFlowStatus::NoAction,
+            up_direction: None,
+            action_feeding_initiated: false,
+            current_action: None,
+        }
+    }
+}
+
 /// The result of [`TnuaController::action_flow_status()`].
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum TnuaActionFlowStatus<D: TnuaActionDiscriminant> {
     /// No action is going on.
     #[default]
@@ -236,22 +262,6 @@ impl<D: TnuaActionDiscriminant> TnuaActionFlowStatus<D> {
 }
 
 impl<S: TnuaScheme> TnuaController<S> {
-    pub fn new(config: Handle<S::Config>) -> Self {
-        Self {
-            basis: Default::default(),
-            basis_config: None,
-            basis_memory: Default::default(),
-            sensors_entities: Default::default(),
-            config,
-            actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
-            contender_action: None,
-            action_flow_status: TnuaActionFlowStatus::NoAction,
-            up_direction: None,
-            action_feeding_initiated: false,
-            current_action: None,
-        }
-    }
-
     /// Access to the entire basis state. This is what the [basis
     /// capabilities](crate::basis_capabilities) usually use.
     pub fn basis_access(
@@ -540,14 +550,13 @@ where
 pub struct TnuaControllerHasNotPulledConfiguration;
 
 fn apply_ghost_overwrites<S: TnuaScheme>(
-    mut query: Query<(&TnuaController<S>, &mut TnuaGhostOverwrites<S>)>,
+    mut query: Query<(&TnuaSensorsEntities<S>, &mut TnuaGhostOverwrites<S>)>,
     mut proximity_sensors_query: Query<(&mut TnuaProximitySensor, &TnuaGhostSensor)>,
 ) {
-    for (controller, mut ghost_overwrites) in query.iter_mut() {
-        for (ghost_overwrite, sensor_entity) in S::Basis::ghost_sensor_overwrites(
-            ghost_overwrites.as_mut().as_mut(),
-            &controller.sensors_entities,
-        ) {
+    for (sensors_entities, mut ghost_overwrites) in query.iter_mut() {
+        for (ghost_overwrite, sensor_entity) in
+            S::Basis::ghost_sensor_overwrites(ghost_overwrites.as_mut().as_mut(), sensors_entities)
+        {
             let Ok((mut proximity_sensor, ghost_sensor)) =
                 proximity_sensors_query.get_mut(sensor_entity)
             else {
@@ -568,6 +577,8 @@ fn apply_controller_system<S: TnuaScheme>(
     mut query: Query<(
         Entity,
         &mut TnuaController<S>,
+        &TnuaConfig<S>,
+        &mut TnuaSensorsEntities<S>,
         &TnuaRigidBodyTracker,
         &mut TnuaMotor,
         Option<&TnuaToggle>,
@@ -584,6 +595,8 @@ fn apply_controller_system<S: TnuaScheme>(
     for (
         controller_entity,
         mut controller,
+        config_handle,
+        mut sensors_entities,
         tracker,
         mut motor,
         tnua_toggle,
@@ -597,7 +610,7 @@ fn apply_controller_system<S: TnuaScheme>(
         }
         let controller = controller.as_mut();
 
-        let Some(config) = config_assets.get(&controller.config) else {
+        let Some(config) = config_assets.get(&config_handle.0) else {
             continue;
         };
         controller.basis_config = Some({
@@ -621,7 +634,7 @@ fn apply_controller_system<S: TnuaScheme>(
             up_direction,
             basis_config,
             &controller.basis_memory,
-            &mut controller.sensors_entities,
+            &mut sensors_entities.as_mut().sensors_entities,
             &proximity_sensors_query,
             controller_entity,
             &mut commands,

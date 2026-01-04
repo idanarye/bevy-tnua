@@ -189,14 +189,16 @@ pub use basis_action_traits::{
     TnuaActionState, TnuaBasisContext, TnuaConfigModifier,
 };
 pub use bevy_tnua_macros::TnuaScheme;
-pub use controller::{TnuaController, TnuaControllerPlugin};
+pub use controller::{TnuaConfig, TnuaController, TnuaControllerPlugin};
 pub use ghost_overrides::TnuaGhostOverwrites;
+pub use sensor_sets::TnuaSensorsEntities;
 
 pub mod prelude {
     pub use crate::TnuaScheme;
     pub use crate::builtins::{TnuaBuiltinJump, TnuaBuiltinWalk};
     pub use crate::{
-        TnuaController, TnuaControllerPlugin, TnuaPipelineSystems, TnuaUserControlsSystems,
+        TnuaConfig, TnuaController, TnuaControllerPlugin, TnuaPipelineSystems,
+        TnuaUserControlsSystems,
     };
 }
 

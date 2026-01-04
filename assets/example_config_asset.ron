@@ -1,6 +1,6 @@
 (
     basis: (
-        speed: 10.0,
+        speed: 20.0,
         float_height: 1.5,
         headroom: None,
         cling_distance: 1.0,
@@ -26,6 +26,7 @@
         peak_prevention_extra_gravity: 20.0,
         reschedule_cooldown: None,
         input_buffer_time: 0.2,
+        horizontal_distance: 1.0,
         disable_force_forward_after_peak: true,
     ),
 )

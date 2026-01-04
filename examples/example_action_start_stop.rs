@@ -85,7 +85,10 @@ fn setup_player(
         RigidBody::Dynamic,
         Collider::capsule(0.5, 1.0),
         // This is Tnua's interface component.
-        TnuaController::<ControlScheme>::new(control_scheme_configs.add(ControlSchemeConfig {
+        TnuaController::<ControlScheme>::default(),
+        // The configuration asset can be loaded from a file, but here we are creating it by code
+        // and injecting it to the assets resource.
+        TnuaConfig::<ControlScheme>(control_scheme_configs.add(ControlSchemeConfig {
             basis: TnuaBuiltinWalkConfig {
                 // The `float_height` must be greater (even if by little) from the distance between
                 // the character's center and the lowest point of its collider.

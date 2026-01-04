@@ -7,7 +7,7 @@ use bevy::{
 #[cfg(feature = "egui")]
 use bevy_egui::{EguiContexts, egui};
 use bevy_tnua::{
-    TnuaGhostOverwrites, TnuaGhostSensor,
+    TnuaGhostOverwrites, TnuaGhostSensor, TnuaSensorsEntities,
     math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3},
 };
 use bevy_tnua::{TnuaObstacleRadar, prelude::*};
@@ -48,6 +48,7 @@ pub fn apply_platformer_controls(
         // This is the main component used for interacting with Tnua. It is used for both issuing
         // commands and querying the character's state.
         &mut TnuaController<DemoControlScheme>,
+        &TnuaSensorsEntities<DemoControlScheme>,
         // The ghost sensor detects ghost platforms - which are pass-through platforms marked with
         // the `TnuaGhostPlatform` component. Left alone it does not actually affect anything - a
         // user control system (like this very demo here) has to use the data from it and
@@ -98,6 +99,7 @@ pub fn apply_platformer_controls(
     for (
         config,
         mut controller,
+        sensors_entities,
         mut ghost_overwrites,
         mut fall_through_helper,
         mut air_actions_counter,
@@ -187,8 +189,7 @@ pub fn apply_platformer_controls(
         // several schemes with observable changes in behavior, and each implementation is rather
         // short and simple.
         let crouch;
-        if let Some(ghost_sensor) = controller
-            .sensors_entities
+        if let Some(ghost_sensor) = sensors_entities
             .ground
             .and_then(|entity| ghost_sensors_query.get(entity).ok())
         {

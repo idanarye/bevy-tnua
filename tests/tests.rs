@@ -25,7 +25,7 @@ fn scheme_with_all_actions() {
         Climb(TnuaBuiltinClimb),
     }
 
-    let mut controller = TnuaController::<ControlScheme>::new(Default::default());
+    let mut controller = TnuaController::<ControlScheme>::default();
 
     controller.initiate_action_feeding();
     controller.basis = TnuaBuiltinWalk {
@@ -84,7 +84,7 @@ fn scheme_with_no_actions() {
     #[scheme(basis = TnuaBuiltinWalk)]
     enum ControlScheme {}
 
-    let mut controller = TnuaController::<ControlScheme>::new(Default::default());
+    let mut controller = TnuaController::<ControlScheme>::default();
 
     controller.basis = TnuaBuiltinWalk {
         desired_motion: Vector3::new(1.0, 0.0, 0.0),

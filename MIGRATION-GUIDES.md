@@ -1,3 +1,24 @@
+# Migrating to Tnua 0.28
+
+* Instead of adding the configuration with `TnuaController::new`, add it as a
+  new component - `TnuaConfig`:
+  ```rust
+  // Old way
+  cmd.insert(
+      TnuaController::<ControlScheme>::new(asset_server.load("configuration.ron")),
+  );
+
+  // New way
+  cmd.insert((
+      TnuaController::<ControlScheme>::default(),
+      TnuaConfig::<ControlScheme>(asset_server.load("configuration.ron")),
+  ));
+  ```
+* The `sensors_entities` field of the controller was moved to a new component -
+  `TnuaSensorsEntities`. This component is added automatically via Bevy's
+  required components mechanism, so you don't need to add it yourself, but if
+  you access it in your system you need to request it separately in the query.
+
 # Migrating to Tnua 0.27 ("Schemes")
 
 ## Static definition of supported basis and actions

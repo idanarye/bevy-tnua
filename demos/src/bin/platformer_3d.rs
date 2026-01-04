@@ -183,11 +183,17 @@ fn setup_player(
         cmd.insert(avian::Collider::capsule(0.5, 1.0));
     }
 
-    // `TnuaController` is Tnua's main interface with the user code. Read
-    // examples/src/character_control_systems/platformer_control_systems.rs to see how
-    // `TnuaController` is used in this example.
-    cmd.insert(TnuaController::<DemoControlScheme>::new(
-        control_scheme_config_assets.add(DemoControlSchemeConfig::default()),
+    cmd.insert((
+        // `TnuaController` is Tnua's main interface with the user code. Read
+        // examples/src/character_control_systems/platformer_control_systems.rs to see how
+        // `TnuaController` is used in this example.
+        TnuaController::<DemoControlScheme>::default(),
+        // `TnuaConfig` holds the configuration for the Tnua controller. It can be loaded from a
+        // file as an asset, but in this case we are creating it by code and injecting it to the
+        // assets resource.
+        TnuaConfig::<DemoControlScheme>(
+            control_scheme_config_assets.add(DemoControlSchemeConfig::default()),
+        ),
     ));
 
     // The obstacle radar is used to detect obstacles around the player that the player can use

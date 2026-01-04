@@ -23,7 +23,7 @@ use bevy_tnua::TnuaToggle;
 use bevy_tnua::math::AsF32;
 use bevy_tnua::math::{Float, Vector2, Vector3, float_consts};
 #[cfg(feature = "egui")]
-use bevy_tnua::prelude::TnuaController;
+use bevy_tnua::prelude::TnuaConfig;
 
 #[cfg(feature = "egui")]
 use crate::character_control_systems::platformer_control_systems::CameraControllerFloating;
@@ -146,7 +146,7 @@ fn ui_system<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable>(
         Option<&plotting::PlotSource>,
         Option<&mut info::InfoSource>,
         &mut TnuaToggle,
-        &TnuaController<S>,
+        &TnuaConfig<S>,
         Option<&mut C>,
         Option<&mut CommandAlteringSelectors>,
         Option<&mut CameraControllerFloating>,
@@ -224,7 +224,7 @@ fn ui_system<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable>(
             plot_source,
             mut info_source,
             mut tnua_toggle,
-            controller,
+            config_handle,
             mut tunable,
             command_altering_selectors,
             camera_controller
@@ -290,7 +290,7 @@ fn ui_system<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable>(
                                 }
                             });
 
-                        if let Some(control_scheme_config) = control_scheme_config_assets.get_mut(&controller.config) {
+                        if let Some(control_scheme_config) = control_scheme_config_assets.get_mut(&config_handle.0) {
                             control_scheme_config.tune(ui);
                         }
                         if let Some(tunable) = tunable.as_mut() {

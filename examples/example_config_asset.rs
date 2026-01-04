@@ -132,7 +132,9 @@ fn setup_player(
         RigidBody::Dynamic,
         Collider::capsule(0.5, 1.0),
         // This is Tnua's interface component.
-        TnuaController::<ControlScheme>::new(asset_server.load("example_config_asset.ron")),
+        TnuaController::<ControlScheme>::default(),
+        // This is the configuration.
+        TnuaConfig::<ControlScheme>(asset_server.load("example_config_asset.ron")),
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
         TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
         // Tnua can fix the rotation, but the character will still get rotated before it can do so.
