@@ -10,6 +10,16 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 ### Added
 - `prelude` module.
 
+### Changed
+- Upgrade to bevy_rapier 0.32.
+- Proximity sensors use the `TnuaSensorOf` relationship.
+- `register_required_components` of the Rapier synchronization components is
+  now done on the `TnuaMotor`, since the `TnuaProximitySensor` is no longer on
+  the controller entity.
+
+### Removed
+- `TnuaRapier2dIOBundle`/`TnuaRapier3dIOBundle` (which was already deprecated)
+
 ## 0.14.0 - 2025-09-27
 ### Changed
 - Upgrade to bevy_rapier 0.31.

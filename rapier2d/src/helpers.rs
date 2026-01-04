@@ -8,7 +8,7 @@ pub struct PretendToBeRapierContext<'a> {
 }
 
 // TODO: After https://github.com/dimforge/bevy_rapier/issues/677 is fixed, this can be reomved.
-impl PretendToBeRapierContextItem<'_, '_> {
+impl PretendToBeRapierContextItem<'_, '_, '_> {
     // Note that this is just a copy-paste of the function from Rapier, implemented on the Item
     // instead of the QueryData type itself (which serves more as a descriptor)
     pub fn with_query_pipeline<'a, T>(
