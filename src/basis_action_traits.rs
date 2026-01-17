@@ -84,9 +84,9 @@ pub trait TnuaSchemeConfig: Serialize + for<'de> Deserialize<'de> {
     /// on every run and to avoid breaking WASM (which cannot access the assets directory using the
     /// filesystem)
     fn write_if_not_exist(&self, path: impl AsRef<Path>) -> std::io::Result<()> {
-        let serialized = bevy::asset::ron::ser::to_string_pretty(
+        let serialized = ron::ser::to_string_pretty(
             self,
-            bevy::asset::ron::ser::PrettyConfig::new(),
+            ron::ser::PrettyConfig::new(),
         )
         .expect("Should be able to serialize all configs to RON");
         let file = File::options().write(true).create_new(true).open(path);

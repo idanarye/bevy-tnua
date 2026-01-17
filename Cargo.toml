@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "physics-integration-layer",
-    "rapier2d", "rapier3d",
+    # "rapier2d", "rapier3d",
     "avian2d", "avian3d",
     "demos", "macros",
 ]
@@ -34,7 +34,7 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "^0.17", default-features = false, features = [
+bevy = { version = "^0.18", default-features = false, features = [
     "bevy_log",
     "bevy_asset",
 ]}
@@ -42,10 +42,11 @@ bevy-tnua-physics-integration-layer = { version = "^0.11", path = "physics-integ
 bevy-tnua-macros = { version = "^0.1", path = "macros" }
 thiserror = "2.0.12"
 serde = { version = "^1", features = ["derive"] }
+ron = "0.12.0"
 
 [dev-dependencies]
-bevy = { version = "^0.17", default-features = false, features = [
-     "animation",
+bevy = { version = "^0.18", default-features = false, features = [
+    "gltf_animation",
     # "bevy_audio",
     "bevy_gilrs",
     # "bevy_scene",
@@ -65,7 +66,7 @@ bevy = { version = "^0.17", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-avian3d = { version = "^0.4", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
+avian3d = { version = "^0.5", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
 bevy-tnua-avian3d = { path = "avian3d" }
 
 [package.metadata.docs.rs]
