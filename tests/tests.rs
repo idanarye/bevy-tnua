@@ -38,17 +38,14 @@ fn scheme_with_all_actions() {
     {
         use bevy_tnua::TnuaGhostOverwrites;
 
-        let serialized = bevy::asset::ron::to_string(&(
-            controller,
-            TnuaGhostOverwrites::<ControlScheme>::default(),
-        ))
-        .expect("Unable to serialize");
+        let serialized =
+            ron::to_string(&(controller, TnuaGhostOverwrites::<ControlScheme>::default()))
+                .expect("Unable to serialize");
 
         let (deserialized_controller, _): (
             TnuaController<ControlScheme>,
             TnuaGhostOverwrites<ControlScheme>,
-        ) = bevy::asset::ron::from_str(&serialized)
-            .expect(&format!("Could not deserialize {serialized}"));
+        ) = ron::from_str(&serialized).expect(&format!("Could not deserialize {serialized}"));
 
         assert_eq!(deserialized_controller.basis.desired_motion, Vector3::X);
         assert_eq!(deserialized_controller.basis.desired_forward, Some(Dir3::Z));
@@ -69,11 +66,10 @@ fn scheme_with_all_actions() {
         climb: Default::default(),
     };
 
-    let serialized_config =
-        bevy::asset::ron::to_string(&config).expect("Unable to serialize the configuration");
+    let serialized_config = ron::to_string(&config).expect("Unable to serialize the configuration");
 
-    let deserialized_config: ControlSchemeConfig = bevy::asset::ron::from_str(&serialized_config)
-        .expect("Unable to deserialize the configuration");
+    let deserialized_config: ControlSchemeConfig =
+        ron::from_str(&serialized_config).expect("Unable to deserialize the configuration");
 
     assert_eq!(deserialized_config.basis.float_height, 42.0);
 }
