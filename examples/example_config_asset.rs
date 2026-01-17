@@ -55,7 +55,7 @@ enum ControlScheme {
 }
 
 // Don't write this by hand - use a plugin
-#[derive(Default)]
+#[derive(Default, TypePath)]
 struct ExampleSchemeConfigAssetLoader;
 
 impl AssetLoader for ExampleSchemeConfigAssetLoader {
@@ -73,7 +73,7 @@ impl AssetLoader for ExampleSchemeConfigAssetLoader {
     ) -> Result<Self::Asset, Self::Error> {
         let mut buf = Vec::new();
         reader.read_to_end(&mut buf).await?;
-        let mut deserializer = bevy::asset::ron::Deserializer::from_bytes(&buf)?;
+        let mut deserializer = ron::Deserializer::from_bytes(&buf)?;
         use serde::Deserialize;
         Ok(ControlSchemeConfig::deserialize(&mut deserializer)?)
     }
