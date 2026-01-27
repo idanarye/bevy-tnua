@@ -8,8 +8,10 @@
 //! although less flexible way.
 mod air_actions_tracking;
 mod blip_reuse_avoidance;
+mod counted_actions;
 mod simple_fall_through_platforms;
 
 pub use air_actions_tracking::*;
 pub use blip_reuse_avoidance::*;
+pub use counted_actions::*;
 pub use simple_fall_through_platforms::*;

@@ -1,6 +1,3 @@
-use std::marker::PhantomData;
-
-use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 
 use crate::basis_capabilities::TnuaBasisWithGround;
@@ -29,16 +26,18 @@ impl TnuaAirActionsTracker {
     pub fn update<S>(
         &mut self,
         controller: &TnuaController<S>,
-        is_air_action: impl Fn(S::ActionDiscriminant) -> bool,
     ) -> TnuaAirActionsUpdate<S::ActionDiscriminant>
     where
-        S: TnuaScheme,
+        S: TnuaScheme + TnuaAirActionDefinition,
         S::Basis: TnuaBasisWithGround,
     {
         match controller.action_flow_status() {
             TnuaActionFlowStatus::NoAction => self.update_regardless_of_action(controller),
             TnuaActionFlowStatus::ActionOngoing(action_discriminant) => {
-                if controller.action_discriminant().is_some_and(is_air_action) {
+                if controller
+                    .action_discriminant()
+                    .is_some_and(S::is_air_action)
+                {
                     if self.considered_in_air {
                         TnuaAirActionsUpdate::NoChange
                     } else {
@@ -54,7 +53,10 @@ impl TnuaAirActionsTracker {
                 old: _,
                 new: action_discriminant,
             } => {
-                if controller.action_discriminant().is_some_and(is_air_action) {
+                if controller
+                    .action_discriminant()
+                    .is_some_and(S::is_air_action)
+                {
                     self.considered_in_air = true;
                     TnuaAirActionsUpdate::AirActionStarted(*action_discriminant)
                 } else {
@@ -150,7 +152,7 @@ where
         S: TnuaScheme + TnuaAirActionDefinition,
         S::Basis: TnuaBasisWithGround,
     {
-        let update = self.tracker.update(controller, S::is_air_action);
+        let update = self.tracker.update(controller);
         match update {
             TnuaAirActionsUpdate::NoChange => {}
             TnuaAirActionsUpdate::FreeFallStarted => {
@@ -269,115 +271,5 @@ where
             return actions;
         }
         self.air_actions_count
-    }
-}
-
-pub trait TnuaActionSlots: 'static + Send + Sync + Default {
-    type Scheme: TnuaScheme;
-
-    fn get_mut(
-        &mut self,
-        action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
-    ) -> Option<&mut usize>;
-    fn get(&self, action: <Self::Scheme as TnuaScheme>::ActionDiscriminant) -> Option<usize>;
-}
-
-#[derive(Deref, DerefMut, Component)]
-pub struct TnuaActionsCounter<S: TnuaActionSlots> {
-    tracker: TnuaAirActionsTracker,
-    current_action: Option<(<S::Scheme as TnuaScheme>::ActionDiscriminant, usize)>,
-    #[deref]
-    slots: S,
-}
-
-impl<S: TnuaActionSlots + Default> Default for TnuaActionsCounter<S> {
-    fn default() -> Self {
-        Self {
-            tracker: Default::default(),
-            current_action: None,
-            slots: Default::default(),
-        }
-    }
-}
-
-impl<S: TnuaActionSlots> TnuaActionsCounter<S>
-// TODO: get rid of these requirements
-where
-    <S::Scheme as TnuaScheme>::Basis: TnuaBasisWithGround,
-{
-    /// Call this every frame, at the schedule of [`TnuaControllerPlugin`], to track the actions.
-    pub fn update(&mut self, controller: &TnuaController<S::Scheme>) {
-        let update = self
-            .tracker
-            .update(controller, |action| self.slots.get(action).is_some());
-        match update {
-            TnuaAirActionsUpdate::NoChange => {}
-            TnuaAirActionsUpdate::FreeFallStarted => {
-                // The free fall is considered the first action
-                self.current_action = None;
-                // self.air_actions_count += 1;
-            }
-            TnuaAirActionsUpdate::AirActionStarted(action_discriminant) => {
-                let slot = self
-                    .slots
-                    .get_mut(action_discriminant)
-                    .expect("Should only get AirActionStarted for air actions");
-                self.current_action = Some((action_discriminant, *slot));
-                *slot += 1;
-            }
-            TnuaAirActionsUpdate::ActionFinishedInAir => {
-                self.current_action = None;
-            }
-            TnuaAirActionsUpdate::JustLanded => {
-                self.current_action = None;
-                self.slots = Default::default();
-            }
-        }
-    }
-
-    pub fn count_for(&self, action: <S::Scheme as TnuaScheme>::ActionDiscriminant) -> usize {
-        if let Some((current_action, actions)) = self.current_action
-            && current_action == action
-        {
-            return actions;
-        }
-        self.slots.get(action).unwrap_or_default() // TODO - return None?
-    }
-}
-
-pub struct TnuaAirActionsPlugin<S: TnuaActionSlots> {
-    schedule: InternedScheduleLabel,
-    _phantom: PhantomData<S>,
-}
-
-impl<S: TnuaActionSlots> TnuaAirActionsPlugin<S> {
-    pub fn new(schedule: impl ScheduleLabel) -> Self {
-        Self {
-            schedule: schedule.intern(),
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl<S: TnuaActionSlots> Plugin for TnuaAirActionsPlugin<S>
-where
-    <S::Scheme as TnuaScheme>::Basis: TnuaBasisWithGround,
-{
-    fn build(&self, app: &mut App) {
-        app.register_required_components::<TnuaController<S::Scheme>, TnuaActionsCounter<S>>();
-        app.add_systems(
-            self.schedule,
-            actions_counter_update_system::<S>.in_set(TnuaUserControlsSystems),
-        );
-    }
-}
-
-fn actions_counter_update_system<S: TnuaActionSlots>(
-    mut query: Query<(&mut TnuaActionsCounter<S>, &TnuaController<S::Scheme>)>,
-) where
-    <S::Scheme as TnuaScheme>::Basis: TnuaBasisWithGround,
-{
-    for (mut counter, controller) in query.iter_mut() {
-        counter.update(controller);
     }
 }
