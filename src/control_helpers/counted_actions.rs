@@ -12,6 +12,9 @@ use crate::{
 pub trait TnuaActionSlots: 'static + Send + Sync + Default {
     type Scheme: TnuaScheme;
 
+    fn rule_for(
+        action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
+    ) -> TnuaActionCountingActionRule;
     fn get_mut(
         &mut self,
         action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
@@ -19,7 +22,7 @@ pub trait TnuaActionSlots: 'static + Send + Sync + Default {
     fn get(&self, action: <Self::Scheme as TnuaScheme>::ActionDiscriminant) -> Option<usize>;
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub enum TnuaActionCountingStatus {
     CountActions,
     #[default]
@@ -29,28 +32,43 @@ pub enum TnuaActionCountingStatus {
 /// The result of [`TnuaActionCountingStatus::update()`].
 #[derive(Debug, Clone, Copy)]
 pub enum TnuaActionCountingUpdate<D: TnuaActionDiscriminant> {
-    /// Nothing of interest happened this frame.
+    /// Nothing of interest happened this update.
     NoChange,
 
-    /// The character has just started a free fall this frame.
+    /// The character has just started a duration where the counted actions are limited, without
+    /// performing a counted action.
+    ///
+    /// e.g.: for air actions, this could mean stepping off a cliff into a free fall.
     CountingActivated,
 
+    /// The character has just started a duration where the counted actions are limited by
+    /// performing a counted action.
+    ///
+    /// e.g.: for air actions, this could mean jumping from the ground.
     CountingActivatedByAction(D),
 
-    /// The character has just started an air action this frame.
+    /// The character has just started a counted action this frame, when counted actions are
+    /// already limited.
+    ///
+    /// e.g.: for air actions, this could mean doing an air jump.
     CountedActionStarted(D),
 
-    /// The character has just finished an air action this frame, and is still in the air.
+    /// The character has just finished a counted action this frame, but counted actions are still
+    /// limited.
+    ///
+    /// e.g.: for air actions, this could mean finishing a dash while still in the air.
     ActionFinishedStillCounting,
 
-    /// The character has just landed this frame.
+    /// The duration where the counted actions are limited has ended for the character.
+    ///
+    /// e.g.: for air actions, this could mean the character has landed.
     CountingEnded,
 }
 
 pub enum TnuaActionCountingActionRule {
     Counted,
     Uncounted,
-    ResttingCount,
+    EndingCount,
 }
 
 impl TnuaActionCountingStatus {
@@ -78,7 +96,7 @@ impl TnuaActionCountingStatus {
                     TnuaActionCountingActionRule::Uncounted => {
                         self.update_based_on_basis(controller, status_for_basis)
                     }
-                    TnuaActionCountingActionRule::ResttingCount => match self {
+                    TnuaActionCountingActionRule::EndingCount => match self {
                         Self::CountActions => {
                             *self = Self::ActionsAreFree;
                             TnuaActionCountingUpdate::CountingEnded
@@ -104,7 +122,7 @@ impl TnuaActionCountingStatus {
                 TnuaActionCountingActionRule::Uncounted => {
                     self.update_based_on_basis(controller, status_for_basis)
                 }
-                TnuaActionCountingActionRule::ResttingCount => {
+                TnuaActionCountingActionRule::EndingCount => {
                     *self = Self::ActionsAreFree;
                     TnuaActionCountingUpdate::CountingEnded
                 }
@@ -129,7 +147,6 @@ impl TnuaActionCountingStatus {
         let Ok(basis_access) = controller.basis_access() else {
             return TnuaActionCountingUpdate::NoChange;
         };
-        // TODO: replace the air-related enums with new ones
         match (&self, status_for_basis(&basis_access)) {
             (Self::CountActions, Self::CountActions) => TnuaActionCountingUpdate::NoChange,
             (Self::CountActions, Self::ActionsAreFree) => {
@@ -137,6 +154,7 @@ impl TnuaActionCountingStatus {
                 TnuaActionCountingUpdate::CountingEnded
             }
             (Self::ActionsAreFree, Self::CountActions) => {
+                *self = Self::CountActions;
                 TnuaActionCountingUpdate::CountingActivated
             }
             (Self::ActionsAreFree, Self::ActionsAreFree) => TnuaActionCountingUpdate::NoChange,
@@ -178,29 +196,28 @@ where
                     TnuaActionCountingStatus::ActionsAreFree
                 }
             },
-            |action| {
-                if self.slots.get(action).is_some() {
-                    TnuaActionCountingActionRule::Counted
-                } else {
-                    TnuaActionCountingActionRule::Uncounted
-                }
-            },
+            S::rule_for,
         );
 
         match update {
             TnuaActionCountingUpdate::NoChange => {}
             TnuaActionCountingUpdate::CountingActivated => {
-                // The free fall is considered the first action
                 self.current_action = None;
-                // self.air_actions_count += 1;
+                // No need to reset the slots - we can assume they are already at default
             }
             // TODO: should these two have different meaning?
-            TnuaActionCountingUpdate::CountingActivatedByAction(action_discriminant)
-            | TnuaActionCountingUpdate::CountedActionStarted(action_discriminant) => {
+            TnuaActionCountingUpdate::CountingActivatedByAction(action_discriminant) => {
                 let slot = self
                     .slots
                     .get_mut(action_discriminant)
-                    .expect("Should only get AirActionStarted for air actions");
+                    .expect("Should only get CountingActivatedByAction for air actions");
+                self.current_action = Some((action_discriminant, *slot));
+            }
+            TnuaActionCountingUpdate::CountedActionStarted(action_discriminant) => {
+                let slot = self
+                    .slots
+                    .get_mut(action_discriminant)
+                    .expect("Should only get CountedActionStarted for air actions");
                 self.current_action = Some((action_discriminant, *slot));
                 *slot += 1;
             }

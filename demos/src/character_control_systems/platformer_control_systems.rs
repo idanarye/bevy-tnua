@@ -568,7 +568,7 @@ pub fn apply_platformer_controls(
                     // (maintaining the jump) and 2 for any other action. Of course, if the player
                     // releases the button and presses it again it'll return 2.
                     allow_in_air: air_actions_counter.count_for(DemoControlSchemeActionDiscriminant::Jump)
-                        <= config.actions_in_air
+                        < config.jumps_in_air
                         // We also want to be able to jump from a climb.
                         || current_action_discriminant == Some(DemoControlSchemeActionDiscriminant::Climb),
                     ..Default::default()
@@ -601,7 +601,7 @@ pub fn apply_platformer_controls(
                 },
                 allow_in_air: air_actions_counter
                     .count_for(DemoControlSchemeActionDiscriminant::Dash)
-                    <= config.actions_in_air,
+                    < config.dashes_in_air,
             }));
         }
     }
@@ -610,7 +610,8 @@ pub fn apply_platformer_controls(
 #[derive(Component)]
 pub struct CharacterMotionConfigForPlatformerDemo {
     pub dimensionality: Dimensionality,
-    pub actions_in_air: usize,
+    pub jumps_in_air: usize,
+    pub dashes_in_air: usize,
     pub one_way_platforms_min_proximity: Float,
     pub falling_through: FallingThroughControlScheme,
 }
@@ -618,7 +619,8 @@ pub struct CharacterMotionConfigForPlatformerDemo {
 impl UiTunable for CharacterMotionConfigForPlatformerDemo {
     #[cfg(feature = "egui")]
     fn tune(&mut self, ui: &mut egui::Ui) {
-        ui.add(egui::Slider::new(&mut self.actions_in_air, 0..=8).text("Max Actions in Air"));
+        ui.add(egui::Slider::new(&mut self.jumps_in_air, 0..=8).text("Max Jumps in Air"));
+        ui.add(egui::Slider::new(&mut self.dashes_in_air, 0..=8).text("Max Dashes in Air"));
         // TODO: dash distance should be moved to TnuaBuiltinDashConfig
         ui.collapsing("One-way Platforms", |ui| {
             ui.add(
