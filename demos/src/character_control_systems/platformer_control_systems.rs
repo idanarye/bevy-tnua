@@ -8,6 +8,7 @@ use bevy::{
 use bevy_egui::{EguiContexts, egui};
 use bevy_tnua::{
     TnuaGhostOverwrites, TnuaGhostSensor, TnuaSensorsEntities,
+    control_helpers::TnuaActionsCounter,
     math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3},
 };
 use bevy_tnua::{TnuaObstacleRadar, prelude::*};
@@ -21,7 +22,7 @@ use bevy_tnua::{
 };
 use bevy_tnua::{
     builtins::{TnuaBuiltinJump, TnuaBuiltinWalk},
-    control_helpers::{TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper},
+    control_helpers::TnuaSimpleFallThroughPlatformsHelper,
 };
 
 use crate::{
@@ -31,7 +32,7 @@ use crate::{
     ui::tuning::UiTunable,
 };
 
-use super::Dimensionality;
+use super::{Dimensionality, platformer_control_scheme::DemoControlSchemeAirActions};
 use super::{platformer_control_scheme::DemoControlScheme, querying_helpers::ObstacleQueryHelper};
 use super::{
     platformer_control_scheme::DemoControlSchemeConfig, spatial_ext_facade::SpatialExtFacade,
@@ -56,11 +57,8 @@ pub fn apply_platformer_controls(
         &mut TnuaGhostOverwrites<DemoControlScheme>,
         // This is an helper for implementing one-way platforms.
         &mut TnuaSimpleFallThroughPlatformsHelper,
-        // This is an helper for implementing air actions. It counts all the air actions using a
-        // single counter, so it cannot be used to implement, for example, one double jump and one
-        // air dash per jump - only a single "pool" of air action "energy" shared by all air
-        // actions.
-        &mut TnuaSimpleAirActionsCounter<DemoControlScheme>,
+        // This is an helper for implementing air actions.
+        &TnuaActionsCounter<DemoControlSchemeAirActions>,
         // This is a helper for tracking where the camera is looking at
         (
             Option<&CameraControllerFloating>,
@@ -102,7 +100,7 @@ pub fn apply_platformer_controls(
         sensors_entities,
         mut ghost_overwrites,
         mut fall_through_helper,
-        mut air_actions_counter,
+        air_actions_counter,
         camera_contoller,
         obstacle_radar,
         mut blip_reuse_avoidance,
@@ -171,14 +169,6 @@ pub fn apply_platformer_controls(
         let crouch_pressed = keyboard.any_pressed(crouch_buttons);
         let crouch_just_pressed = just_pressed.crouch;
         just_pressed.was_read = true;
-
-        // This needs to be called once per frame. It lets the air actions counter know about the
-        // air status of the character. Specifically:
-        // * Is it grounded or is it midair?
-        // * Did any air action just start?
-        // * Did any air action just finished?
-        // * Is any air action currently ongoing?
-        air_actions_counter.update(controller.as_ref());
 
         // This also needs to be called once per frame. It checks which obstacles needs to be
         // blocked - e.g. because we've just finished an action on them and we don't want to
@@ -577,7 +567,7 @@ pub fn apply_platformer_controls(
                     // action, but after it it'll return 1 only for `TnuaBuiltinJump::NAME`
                     // (maintaining the jump) and 2 for any other action. Of course, if the player
                     // releases the button and presses it again it'll return 2.
-                    allow_in_air: air_actions_counter.air_count_for(DemoControlSchemeActionDiscriminant::Jump)
+                    allow_in_air: air_actions_counter.count_for(DemoControlSchemeActionDiscriminant::Jump)
                         <= config.actions_in_air
                         // We also want to be able to jump from a climb.
                         || current_action_discriminant == Some(DemoControlSchemeActionDiscriminant::Climb),
@@ -610,7 +600,7 @@ pub fn apply_platformer_controls(
                     Dir3::new(direction.f32()).ok()
                 },
                 allow_in_air: air_actions_counter
-                    .air_count_for(DemoControlSchemeActionDiscriminant::Dash)
+                    .count_for(DemoControlSchemeActionDiscriminant::Dash)
                     <= config.actions_in_air,
             }));
         }

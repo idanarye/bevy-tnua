@@ -6,7 +6,7 @@ use bevy_tnua::builtins::{
     TnuaBuiltinKnockback, TnuaBuiltinWalk, TnuaBuiltinWalkConfig, TnuaBuiltinWalkHeadroom,
     TnuaBuiltinWallSlide, TnuaBuiltinWallSlideConfig,
 };
-use bevy_tnua::control_helpers::{TnuaAirActionDefinition, TnuaHasTargetEntity};
+use bevy_tnua::control_helpers::{TnuaActionSlots, TnuaAirActionDefinition, TnuaHasTargetEntity};
 use bevy_tnua::math::*;
 use bevy_tnua::{TnuaConfigModifier, TnuaScheme};
 
@@ -50,6 +50,37 @@ impl TnuaAirActionDefinition for DemoControlScheme {
             DemoControlSchemeActionDiscriminant::WallSlide => true,
             DemoControlSchemeActionDiscriminant::WallJump => true,
             DemoControlSchemeActionDiscriminant::Climb => true,
+        }
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct DemoControlSchemeAirActions {
+    jump: usize,
+    dash: usize,
+}
+
+impl TnuaActionSlots for DemoControlSchemeAirActions {
+    type Scheme = DemoControlScheme;
+
+    fn get_mut(
+        &mut self,
+        action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
+    ) -> Option<&mut usize> {
+        match action {
+            DemoControlSchemeActionDiscriminant::Jump
+            | DemoControlSchemeActionDiscriminant::WallJump => Some(&mut self.jump),
+            DemoControlSchemeActionDiscriminant::Dash => Some(&mut self.dash),
+            _ => None,
+        }
+    }
+
+    fn get(&self, action: <Self::Scheme as TnuaScheme>::ActionDiscriminant) -> Option<usize> {
+        match action {
+            DemoControlSchemeActionDiscriminant::Jump
+            | DemoControlSchemeActionDiscriminant::WallJump => Some(self.jump),
+            DemoControlSchemeActionDiscriminant::Dash => Some(self.dash),
+            _ => None,
         }
     }
 }

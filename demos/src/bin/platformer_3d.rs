@@ -4,7 +4,8 @@ use bevy::prelude::*;
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
 use bevy_tnua::control_helpers::{
-    TnuaBlipReuseAvoidance, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
+    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleAirActionsCounter,
+    TnuaSimpleFallThroughPlatformsHelper,
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{AsF32, Vector3, float_consts};
@@ -21,7 +22,7 @@ use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_radar_visualization_system;
 use tnua_demos_crate::character_control_systems::platformer_control_scheme::{
-    DemoControlScheme, DemoControlSchemeConfig,
+    DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     CameraControllerFloating, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
@@ -91,9 +92,16 @@ fn main() {
         ScheduleToUse::Update => {
             // This is Tnua's main plugin.
             app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(Update));
+            // This plugin updates the TnuaActionsCounter.
+            app.add_plugins(TnuaAirActionsPlugin::<DemoControlSchemeAirActions>::new(
+                Update,
+            ));
         }
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(FixedUpdate));
+            app.add_plugins(TnuaAirActionsPlugin::<DemoControlSchemeAirActions>::new(
+                FixedUpdate,
+            ));
         }
     }
 
