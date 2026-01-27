@@ -164,7 +164,7 @@ impl Default for TnuaBuiltinWalkConfig {
             spring_dampening: 1.2,
             acceleration: 60.0,
             air_acceleration: 20.0,
-            coyote_time: 30.15,
+            coyote_time: 0.15,
             free_fall_extra_gravity: 60.0,
             tilt_offset_angvel: 5.0,
             tilt_offset_angacl: 500.0,
