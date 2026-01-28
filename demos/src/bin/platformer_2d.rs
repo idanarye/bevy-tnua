@@ -4,7 +4,7 @@ use bevy::prelude::*;
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
 use bevy_tnua::control_helpers::{
-    TnuaBlipReuseAvoidance, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
+    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleFallThroughPlatformsHelper
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{AsF32, Vector3, float_consts};
@@ -21,7 +21,7 @@ use tnua_demos_crate::character_control_systems::info_dumpeing_systems::{
     character_control_info_dumping_system, character_control_radar_visualization_system,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_scheme::{
-    DemoControlScheme, DemoControlSchemeConfig,
+    DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme, JustPressedCachePlugin,
@@ -86,9 +86,16 @@ fn main() {
         ScheduleToUse::Update => {
             // This is Tnua's main plugin.
             app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(Update));
+            // This plugin updates the TnuaActionsCounter.
+            app.add_plugins(TnuaAirActionsPlugin::<DemoControlSchemeAirActions>::new(
+                Update,
+            ));
         }
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(FixedUpdate));
+            app.add_plugins(TnuaAirActionsPlugin::<DemoControlSchemeAirActions>::new(
+                FixedUpdate,
+            ));
         }
     }
 
@@ -332,9 +339,6 @@ fn setup_player(
     // This helper is used to operate the ghost sensor and ghost platforms and implement
     // fall-through behavior where the player can intentionally fall through a one-way platform.
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
-
-    // This helper keeps track of air actions like jumps or air dashes.
-    cmd.insert(TnuaSimpleAirActionsCounter::<DemoControlScheme>::default());
 
     #[cfg(feature = "egui")]
     cmd.insert((

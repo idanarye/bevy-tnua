@@ -4,8 +4,7 @@ use bevy::prelude::*;
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
 use bevy_tnua::control_helpers::{
-    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleAirActionsCounter,
-    TnuaSimpleFallThroughPlatformsHelper,
+    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleFallThroughPlatformsHelper,
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{AsF32, Vector3, float_consts};
@@ -374,9 +373,6 @@ fn setup_player(
     // This helper is used to operate the ghost sensor and ghost platforms and implement
     // fall-through behavior where the player can intentionally fall through a one-way platform.
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
-
-    // This helper keeps track of air actions like jumps or air dashes.
-    cmd.insert(TnuaSimpleAirActionsCounter::<DemoControlScheme>::default());
 
     #[cfg(feature = "egui")]
     cmd.insert((

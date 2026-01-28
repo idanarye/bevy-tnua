@@ -7,7 +7,7 @@ use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
 use bevy_tnua::control_helpers::{
-    TnuaBlipReuseAvoidance, TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper,
+    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleFallThroughPlatformsHelper
 };
 use bevy_tnua::math::{AdjustPrecision, AsF32, Quaternion, float_consts};
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostOverwrites, TnuaToggle};
@@ -23,7 +23,7 @@ use tnua_demos_crate::character_animating_systems::platformer_animating_systems:
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::character_control_systems::platformer_control_scheme::{
-    DemoControlScheme, DemoControlSchemeConfig,
+    DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     CameraControllerMounted, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
@@ -91,9 +91,16 @@ fn main() {
         ScheduleToUse::Update => {
             // This is Tnua's main plugin.
             app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(Update));
+            // This plugin updates the TnuaActionsCounter.
+            app.add_plugins(TnuaAirActionsPlugin::<DemoControlSchemeAirActions>::new(
+                Update,
+            ));
         }
         ScheduleToUse::FixedUpdate => {
             app.add_plugins(TnuaControllerPlugin::<DemoControlScheme>::new(FixedUpdate));
+            app.add_plugins(TnuaAirActionsPlugin::<DemoControlSchemeAirActions>::new(
+                FixedUpdate,
+            ));
         }
     }
 
@@ -366,9 +373,6 @@ fn setup_player(
     // This helper is used to operate the ghost sensor and ghost platforms and implement
     // fall-through behavior where the player can intentionally fall through a one-way platform.
     cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
-
-    // This helper keeps track of air actions like jumps or air dashes.
-    cmd.insert(TnuaSimpleAirActionsCounter::<DemoControlScheme>::default());
 
     #[cfg(feature = "egui")]
     cmd.insert((
