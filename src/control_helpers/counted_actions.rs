@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+pub use bevy_tnua_macros::TnuaActionSlots;
+
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
 

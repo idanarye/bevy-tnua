@@ -1,9 +1,12 @@
 use proc_macro2::TokenStream;
 use syn::{DeriveInput, parse::Error, parse_macro_input, spanned::Spanned};
 
+use self::action_slots_derive::codegen::generate_action_slots_derive;
+use self::action_slots_derive::parsed::ParsedActionSlots;
 use self::scheme_derive::codegen::generate_scheme_derive;
 use self::scheme_derive::parsed::ParsedScheme;
 
+mod action_slots_derive;
 mod scheme_derive;
 #[allow(unused)]
 mod util;
@@ -93,4 +96,17 @@ fn impl_derive_tnua_scheme(ast: &syn::DeriveInput) -> Result<TokenStream, Error>
             ));
         }
     })
+}
+
+#[proc_macro_derive(TnuaActionSlots, attributes(slots))]
+pub fn derive_tnua_action_slots(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match impl_derive_tnua_action_slots(&input) {
+        Ok(output) => output.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+fn impl_derive_tnua_action_slots(ast: &syn::DeriveInput) -> Result<TokenStream, Error> {
+    generate_action_slots_derive(&ParsedActionSlots::new(ast)?)
 }

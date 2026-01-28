@@ -4,7 +4,7 @@ use bevy::prelude::*;
 #[cfg(feature = "rapier2d")]
 use bevy_rapier2d::{prelude as rapier, prelude::*};
 use bevy_tnua::control_helpers::{
-    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleFallThroughPlatformsHelper
+    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleFallThroughPlatformsHelper,
 };
 #[allow(unused_imports)]
 use bevy_tnua::math::{AsF32, Vector3, float_consts};
@@ -21,7 +21,7 @@ use tnua_demos_crate::character_control_systems::info_dumpeing_systems::{
     character_control_info_dumping_system, character_control_radar_visualization_system,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_scheme::{
-    DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig
+    DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme, JustPressedCachePlugin,

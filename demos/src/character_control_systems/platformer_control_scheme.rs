@@ -54,63 +54,13 @@ impl TnuaAirActionDefinition for DemoControlScheme {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, TnuaActionSlots)]
+#[slots(scheme = DemoControlScheme, ending(WallSlide, WallJump, Climb))]
 pub struct DemoControlSchemeAirActions {
+    #[slots(Jump)]
     jump: usize,
+    #[slots(Dash)]
     dash: usize,
-}
-
-impl TnuaActionSlots for DemoControlSchemeAirActions {
-    type Scheme = DemoControlScheme;
-
-    fn rule_for(
-        action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
-    ) -> bevy_tnua::control_helpers::TnuaActionCountingActionRule {
-        match action {
-            DemoControlSchemeActionDiscriminant::Jump => {
-                bevy_tnua::control_helpers::TnuaActionCountingActionRule::Counted
-            }
-            DemoControlSchemeActionDiscriminant::Dash => {
-                bevy_tnua::control_helpers::TnuaActionCountingActionRule::Counted
-            }
-            DemoControlSchemeActionDiscriminant::Crouch => {
-                bevy_tnua::control_helpers::TnuaActionCountingActionRule::Uncounted
-            }
-            DemoControlSchemeActionDiscriminant::Knockback => {
-                bevy_tnua::control_helpers::TnuaActionCountingActionRule::Uncounted
-            }
-            DemoControlSchemeActionDiscriminant::WallSlide => {
-                bevy_tnua::control_helpers::TnuaActionCountingActionRule::EndingCount
-            }
-            DemoControlSchemeActionDiscriminant::WallJump => {
-                bevy_tnua::control_helpers::TnuaActionCountingActionRule::EndingCount
-            }
-            DemoControlSchemeActionDiscriminant::Climb => {
-                bevy_tnua::control_helpers::TnuaActionCountingActionRule::EndingCount
-            }
-        }
-    }
-
-    fn get_mut(
-        &mut self,
-        action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
-    ) -> Option<&mut usize> {
-        match action {
-            DemoControlSchemeActionDiscriminant::Jump
-            | DemoControlSchemeActionDiscriminant::WallJump => Some(&mut self.jump),
-            DemoControlSchemeActionDiscriminant::Dash => Some(&mut self.dash),
-            _ => None,
-        }
-    }
-
-    fn get(&self, action: <Self::Scheme as TnuaScheme>::ActionDiscriminant) -> Option<usize> {
-        match action {
-            DemoControlSchemeActionDiscriminant::Jump
-            | DemoControlSchemeActionDiscriminant::WallJump => Some(self.jump),
-            DemoControlSchemeActionDiscriminant::Dash => Some(self.dash),
-            _ => None,
-        }
-    }
 }
 
 impl TnuaHasTargetEntity for DemoControlScheme {

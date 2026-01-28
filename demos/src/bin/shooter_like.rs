@@ -7,7 +7,7 @@ use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
 #[cfg(feature = "rapier3d")]
 use bevy_rapier3d::{prelude as rapier, prelude::*};
 use bevy_tnua::control_helpers::{
-    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleFallThroughPlatformsHelper
+    TnuaAirActionsPlugin, TnuaBlipReuseAvoidance, TnuaSimpleFallThroughPlatformsHelper,
 };
 use bevy_tnua::math::{AdjustPrecision, AsF32, Quaternion, float_consts};
 use bevy_tnua::{TnuaAnimatingState, TnuaGhostOverwrites, TnuaToggle};
@@ -23,7 +23,7 @@ use tnua_demos_crate::character_animating_systems::platformer_animating_systems:
 };
 use tnua_demos_crate::character_control_systems::Dimensionality;
 use tnua_demos_crate::character_control_systems::platformer_control_scheme::{
-    DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig
+    DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
     CameraControllerMounted, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer](physics-integration-layer/CHANGELOG.md), [bevy-tnua-rapier](rapier3d/CHANGELOG.md), [bevy-tnua-avian](avian3d/CHANGELOG.md).
 
 ## [Unreleased]
+### Added
+- New and improved air action tracking:
+  - `TnuaActionSlots` for defining which actions can be done mid-air and using
+    which counters.
+  - `TnuaActionsCounter` for keeping track on the slots' counters.
+  - `TnuaAirActionsPlugin` for doing the tracking on air actions (the items
+    above are generic enough to be used for other, similar mechanisms)
+
 ### Fixed
 - Default coyote time was accidentally 30.15. Changed it to back 0.15.
 
