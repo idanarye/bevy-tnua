@@ -24,8 +24,7 @@ use tnua_demos_crate::character_control_systems::platformer_control_scheme::{
     DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme, JustPressedCachePlugin,
-    apply_platformer_controls,
+    CharacterMotionConfigForPlatformerDemo, JustPressedCachePlugin, apply_platformer_controls,
 };
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian2d")]
@@ -105,10 +104,7 @@ fn main() {
         character_control_info_dumping_system.in_set(DemoInfoUpdateSystems),
     );
     app.add_systems(Update, character_control_radar_visualization_system);
-    app.add_plugins(tnua_demos_crate::ui::DemoUi::<
-        DemoControlScheme,
-        CharacterMotionConfigForPlatformerDemo,
-    >::default());
+    app.add_plugins(tnua_demos_crate::ui::DemoUi::<DemoControlScheme>::default());
     app.add_systems(Startup, setup_camera_and_lights);
     app.add_plugins(
         LevelSwitchingPlugin::new(app_setup_configuration.level_to_load.as_ref())
@@ -172,9 +168,15 @@ fn setup_player(
         // `TnuaConfig` holds the configuration for the Tnua controller. It can be loaded from a
         // file as an asset, but in this case we are creating it by code and injecting it to the
         // assets resource.
-        TnuaConfig::<DemoControlScheme>(
-            control_scheme_config_assets.add(DemoControlSchemeConfig::default()),
-        ),
+        TnuaConfig::<DemoControlScheme>(control_scheme_config_assets.add(
+            DemoControlSchemeConfig {
+                ext: CharacterMotionConfigForPlatformerDemo {
+                    dimensionality: Dimensionality::Dim2,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        )),
     ));
 
     // The obstacle radar is used to detect obstacles around the player that the player can use
@@ -188,14 +190,6 @@ fn setup_player(
     // We use the blip reuse avoidance helper to avoid initiating actions on obstacles we've just
     // finished an action with.
     cmd.insert(TnuaBlipReuseAvoidance::<DemoControlScheme>::default());
-
-    cmd.insert(CharacterMotionConfigForPlatformerDemo {
-        dimensionality: Dimensionality::Dim2,
-        jumps_in_air: 1,
-        dashes_in_air: 1,
-        one_way_platforms_min_proximity: 1.0,
-        falling_through: FallingThroughControlScheme::SingleFall,
-    });
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
     cmd.insert(TnuaToggle::default());

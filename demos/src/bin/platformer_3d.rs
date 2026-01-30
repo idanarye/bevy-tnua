@@ -16,7 +16,6 @@ use bevy_tnua_avian3d::prelude::*;
 use bevy_tnua_rapier3d::prelude::*;
 
 use tnua_demos_crate::app_setup_options::{AppSetupConfiguration, ScheduleToUse};
-use tnua_demos_crate::character_control_systems::Dimensionality;
 #[cfg(feature = "egui")]
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_info_dumping_system;
 use tnua_demos_crate::character_control_systems::info_dumpeing_systems::character_control_radar_visualization_system;
@@ -24,8 +23,7 @@ use tnua_demos_crate::character_control_systems::platformer_control_scheme::{
     DemoControlScheme, DemoControlSchemeAirActions, DemoControlSchemeConfig,
 };
 use tnua_demos_crate::character_control_systems::platformer_control_systems::{
-    CameraControllerFloating, CharacterMotionConfigForPlatformerDemo, FallingThroughControlScheme,
-    apply_platformer_controls,
+    CameraControllerFloating, apply_platformer_controls,
 };
 use tnua_demos_crate::level_mechanics::LevelMechanicsPlugin;
 #[cfg(feature = "avian3d")]
@@ -110,10 +108,7 @@ fn main() {
         character_control_info_dumping_system.in_set(DemoInfoUpdateSystems),
     );
     app.add_systems(Update, character_control_radar_visualization_system);
-    app.add_plugins(tnua_demos_crate::ui::DemoUi::<
-        DemoControlScheme,
-        CharacterMotionConfigForPlatformerDemo,
-    >::default());
+    app.add_plugins(tnua_demos_crate::ui::DemoUi::<DemoControlScheme>::default());
     app.add_systems(Startup, setup_camera_and_lights);
     app.add_plugins(
         LevelSwitchingPlugin::new(app_setup_configuration.level_to_load.as_ref())
@@ -214,14 +209,6 @@ fn setup_player(
     // We use the blip reuse avoidance helper to avoid initiating actions on obstacles we've just
     // finished an action with.
     cmd.insert(TnuaBlipReuseAvoidance::<DemoControlScheme>::default());
-
-    cmd.insert(CharacterMotionConfigForPlatformerDemo {
-        dimensionality: Dimensionality::Dim3,
-        jumps_in_air: 1,
-        dashes_in_air: 1,
-        one_way_platforms_min_proximity: 1.0,
-        falling_through: FallingThroughControlScheme::SingleFall,
-    });
 
     // An entity's Tnua behavior can be toggled individually with this component, if inserted.
     cmd.insert(TnuaToggle::default());

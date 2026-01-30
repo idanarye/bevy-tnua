@@ -37,7 +37,17 @@ use tuning::UiTunable;
 #[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
 pub struct DemoInfoUpdateSystems;
 
-pub struct DemoUi<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable> {
+// Before we moved it into the `config_ext`, `CharacterMotionConfigForPlatformerDemo` was passed to
+// the `DemoUi` plugin to be tuned. This replaces it so that the mechanism for passing a tunable
+// component will remain, in case its ever needed again.
+#[derive(Component)]
+pub struct EmptyTunable;
+
+impl UiTunable for EmptyTunable {
+    fn tune(&mut self, _ui: &mut egui::Ui) {}
+}
+
+pub struct DemoUi<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable = EmptyTunable> {
     _phantom: PhantomData<(S, C)>,
 }
 

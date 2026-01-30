@@ -15,6 +15,10 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   - `TnuaAirActionsPlugin` for doing the tracking on air actions (the items
     above are generic enough to be used for other, similar mechanisms)
   See the [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-030).
+- `#[scheme(config_ext = ...)]` parameter for the `TnuaScheme` derive macro.
+  This parameter adds an extension field to the generated configuration struct,
+  allowing to store user defined settings in the same asset as Tnua's scheme
+  configuration.
 
 ### Deprecated
 - `TnuaAirActionsTracker` - use `TnuaActionsCounter` instead.

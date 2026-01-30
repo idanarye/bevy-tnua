@@ -13,6 +13,7 @@ pub struct ParsedScheme<'a> {
     pub action_state_enum_name: syn::Ident,
     pub basis: syn::Type,
     pub serde: Option<proc_macro2::Span>,
+    pub config_ext: Option<syn::Type>,
     pub commands: Vec<ParsedCommand<'a>>,
 }
 
@@ -27,6 +28,7 @@ impl<'a> ParsedScheme<'a> {
             action_state_enum_name: ident_with_suffix(&ast.ident, "ActionState"),
             basis: attr_on_enum.basis,
             serde: attr_on_enum.serde,
+            config_ext: attr_on_enum.config_ext,
             commands: data_enum
                 .variants
                 .iter()
@@ -60,12 +62,14 @@ impl<'a> ParsedScheme<'a> {
 struct AttrOnEnum {
     basis: syn::Type,
     serde: Option<proc_macro2::Span>,
+    config_ext: Option<syn::Type>,
 }
 
 impl AttrOnEnum {
     fn new(ast: &syn::DeriveInput) -> syn::Result<Self> {
         let mut basis: Option<syn::Type> = None;
         let mut serde: Option<proc_macro2::Span> = None;
+        let mut config_ext: Option<syn::Type> = None;
         for arg in AttrArg::iter_in_list_attributes(&ast.attrs, "scheme")? {
             match arg.name().to_string().as_str() {
                 "basis" => {
@@ -78,6 +82,10 @@ impl AttrOnEnum {
                         "serializing and deserializing the entire state",
                     )?;
                 }
+                "config_ext" => {
+                    arg.already_set_if(config_ext.is_some())?;
+                    config_ext = Some(arg.key_value()?.parse_value()?);
+                }
                 _ => Err(arg.unknown_parameter())?,
             }
         }
@@ -86,6 +94,7 @@ impl AttrOnEnum {
                 "Scheme is missing basis (`#[scheme(basis = ...)])`",
             ))?,
             serde,
+            config_ext,
         })
     }
 }

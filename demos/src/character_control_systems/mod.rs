@@ -1,10 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 pub mod info_dumpeing_systems;
 pub mod platformer_control_scheme;
 pub mod platformer_control_systems;
 mod querying_helpers;
 mod spatial_ext_facade;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Dimensionality {
     Dim2,
     Dim3,

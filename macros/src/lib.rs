@@ -38,6 +38,11 @@ mod util;
 ///   * Even without this setting and without the `serialize` feature on the bevy-tnua crate, the
 ///     generated configuration struct and the action discriminant enum will still get these
 ///     derives.
+/// * `#[scheme(config_ext = ...)]` - add an extension field to the configuration struct generated
+///   for the control scheme. The field will have the name `ext` and the type specified by this
+///   parameter. This allows adding user-defined settings that the user control systems can utilize
+///   for character control related decisions (e.g. - max number of air actions allowed), and load
+///   these settings from the same asset.
 ///
 /// Each variant **must** be a tuple variant, where the first element of the tuple is the action,
 /// followed by zero or more payloads.

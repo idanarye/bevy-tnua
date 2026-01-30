@@ -29,6 +29,7 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
         basis,
         serde: _,
         commands,
+        config_ext: _,
     } = parsed;
 
     let num_variants: syn::Index = commands.len().into();

@@ -24,6 +24,7 @@ use bevy_tnua::{
     builtins::{TnuaBuiltinJump, TnuaBuiltinWalk},
     control_helpers::TnuaSimpleFallThroughPlatformsHelper,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
     character_control_systems::platformer_control_scheme::{
@@ -32,23 +33,34 @@ use crate::{
     ui::tuning::UiTunable,
 };
 
-use super::{Dimensionality, platformer_control_scheme::DemoControlSchemeAirActions};
+pub use super::{
+    Dimensionality,
+    platformer_control_scheme::{
+        CharacterMotionConfigForPlatformerDemo, DemoControlSchemeAirActions,
+    },
+};
 use super::{platformer_control_scheme::DemoControlScheme, querying_helpers::ObstacleQueryHelper};
 use super::{
     platformer_control_scheme::DemoControlSchemeConfig, spatial_ext_facade::SpatialExtFacade,
 };
 
-#[allow(clippy::type_complexity)]
-#[allow(clippy::useless_conversion)]
+#[allow(
+    clippy::type_complexity,
+    clippy::too_many_arguments,
+    clippy::useless_conversion
+)]
 pub fn apply_platformer_controls(
     #[cfg(feature = "egui")] mut egui_context: EguiContexts,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut just_pressed: ResMut<JustPressedCache>,
     mut query: Query<(
-        &CharacterMotionConfigForPlatformerDemo,
         // This is the main component used for interacting with Tnua. It is used for both issuing
         // commands and querying the character's state.
         &mut TnuaController<DemoControlScheme>,
+        // And handle for the configuration. We need this because we store in the config (using
+        // `config_ext`) a `CharacterMotionConfigForPlatformerDemo` which we need to determine how
+        // to operate this control system.
+        &TnuaConfig<DemoControlScheme>,
         &TnuaSensorsEntities<DemoControlScheme>,
         // The ghost sensor detects ghost platforms - which are pass-through platforms marked with
         // the `TnuaGhostPlatform` component. Left alone it does not actually affect anything - a
@@ -70,6 +82,7 @@ pub fn apply_platformer_controls(
         // them.
         &mut TnuaBlipReuseAvoidance<DemoControlScheme>,
     )>,
+    config_assets: Res<Assets<DemoControlSchemeConfig>>,
     // This is used to run spatial queries on the physics backend. Note that `SpatialExtFacade` is
     // defined in the demos crates, and actual games that use Tnua should instead use the
     // appropriate type from the physics backend integration crate they use - e.g.
@@ -85,7 +98,7 @@ pub fn apply_platformer_controls(
 ) {
     #[cfg(feature = "egui")]
     if egui_context.ctx_mut().unwrap().wants_keyboard_input() {
-        for (_, mut controller, ..) in query.iter_mut() {
+        for (mut controller, ..) in query.iter_mut() {
             // The basis remembers its last frame status, so if we cannot feed it proper input this
             // frame (for example - because the GUI takes the input focus) we need to neutralize
             // it.
@@ -95,8 +108,8 @@ pub fn apply_platformer_controls(
     }
 
     for (
-        config,
         mut controller,
+        config,
         sensors_entities,
         mut ghost_overwrites,
         mut fall_through_helper,
@@ -106,6 +119,9 @@ pub fn apply_platformer_controls(
         mut blip_reuse_avoidance,
     ) in query.iter_mut()
     {
+        let Some(config) = config_assets.get(&config.0) else {
+            continue;
+        };
         controller.initiate_action_feeding();
         let up_direction = controller.up_direction().unwrap_or(Dir3::Y);
 
@@ -116,7 +132,7 @@ pub fn apply_platformer_controls(
         let is_climbing =
             controller.action_discriminant() == Some(DemoControlSchemeActionDiscriminant::Climb);
 
-        if config.dimensionality == Dimensionality::Dim3 || is_climbing {
+        if config.ext.dimensionality == Dimensionality::Dim3 || is_climbing {
             if keyboard.any_pressed([KeyCode::ArrowUp, KeyCode::KeyW]) {
                 direction -= Vector3::Z;
             }
@@ -145,7 +161,7 @@ pub fn apply_platformer_controls(
             .transform_point(screen_space_direction.f32())
             .adjust_precision();
 
-        let jump = match (config.dimensionality, is_climbing) {
+        let jump = match (config.ext.dimensionality, is_climbing) {
             (Dimensionality::Dim2, true) => keyboard.any_pressed([KeyCode::Space]),
             (Dimensionality::Dim2, false) => {
                 keyboard.any_pressed([KeyCode::Space, KeyCode::ArrowUp, KeyCode::KeyW])
@@ -161,7 +177,7 @@ pub fn apply_platformer_controls(
         let turn_in_place =
             !has_mounted_camera && keyboard.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
-        let crouch_buttons = match (config.dimensionality, is_climbing) {
+        let crouch_buttons = match (config.ext.dimensionality, is_climbing) {
             (Dimensionality::Dim2, true) => CROUCH_BUTTONS_3D.iter().copied(),
             (Dimensionality::Dim2, false) => CROUCH_BUTTONS_2D.iter().copied(),
             (Dimensionality::Dim3, _) => CROUCH_BUTTONS_3D.iter().copied(),
@@ -183,7 +199,7 @@ pub fn apply_platformer_controls(
             .ground
             .and_then(|entity| ghost_sensors_query.get(entity).ok())
         {
-            match config.falling_through {
+            match config.ext.falling_through {
                 // With this scheme, the player cannot make their character fall through by pressing
                 // the crouch button - the platforms are jump-through only.
                 FallingThroughControlScheme::JumpThroughOnly => {
@@ -203,7 +219,7 @@ pub fn apply_platformer_controls(
                             // look at platforms that are at least a certain distance lower than
                             // that - to limit the point from which the character climbs when they
                             // collide with the platform.
-                            config.one_way_platforms_min_proximity <= ghost_platform.proximity
+                            config.ext.one_way_platforms_min_proximity <= ghost_platform.proximity
                         }));
                 }
                 // With this scheme, the player can drop down one-way platforms by pressing the crouch
@@ -226,7 +242,7 @@ pub fn apply_platformer_controls(
                     // finds with a proximity higher than the defined minimum. We either treat it as a
                     // real platform, or ignore it and any other platform the sensor has found.
                     let relevant_platform = ghost_sensor.iter().find(|ghost_platform| {
-                        config.one_way_platforms_min_proximity <= ghost_platform.proximity
+                        config.ext.one_way_platforms_min_proximity <= ghost_platform.proximity
                     });
                     if crouch_pressed {
                         // If there is a ghost platform, it means the player wants to fall through it -
@@ -267,7 +283,7 @@ pub fn apply_platformer_controls(
                     let mut handler = fall_through_helper.with(
                         &mut ghost_overwrites.ground,
                         ghost_sensor,
-                        config.one_way_platforms_min_proximity,
+                        config.ext.one_way_platforms_min_proximity,
                     );
                     if crouch_pressed {
                         // Use `try_falling` to fall through the first ghost platform. It'll return
@@ -297,7 +313,7 @@ pub fn apply_platformer_controls(
                     let mut handler = fall_through_helper.with(
                         &mut ghost_overwrites.ground,
                         ghost_sensor,
-                        config.one_way_platforms_min_proximity,
+                        config.ext.one_way_platforms_min_proximity,
                     );
                     if crouch_pressed {
                         // This is done by passing `true` to `try_falling`, allowing it to keep falling
@@ -451,7 +467,7 @@ pub fn apply_platformer_controls(
                     blip.spatial_relation(0.5)
                     && 0.5 < direction.dot(blip_direction.adjust_precision())
                 {
-                    let direction_to_anchor = match config.dimensionality {
+                    let direction_to_anchor = match config.ext.dimensionality {
                         Dimensionality::Dim2 => Vector3::ZERO,
                         Dimensionality::Dim3 => -blip
                             .normal_from_closest_point()
@@ -571,7 +587,7 @@ pub fn apply_platformer_controls(
                     // any other action. Of course, if the player releases the button and presses
                     // it again it'll return 2.
                     allow_in_air: air_actions.count_for(DemoControlSchemeActionDiscriminant::Jump)
-                        <= config.jumps_in_air
+                        <= config.ext.jumps_in_air
                         // We also want to be able to jump from a climb.
                         || current_action_discriminant == Some(DemoControlSchemeActionDiscriminant::Climb),
                     ..Default::default()
@@ -603,19 +619,10 @@ pub fn apply_platformer_controls(
                     Dir3::new(direction.f32()).ok()
                 },
                 allow_in_air: air_actions.count_for(DemoControlSchemeActionDiscriminant::Dash)
-                    <= config.dashes_in_air,
+                    <= config.ext.dashes_in_air,
             }));
         }
     }
-}
-
-#[derive(Component)]
-pub struct CharacterMotionConfigForPlatformerDemo {
-    pub dimensionality: Dimensionality,
-    pub jumps_in_air: usize,
-    pub dashes_in_air: usize,
-    pub one_way_platforms_min_proximity: Float,
-    pub falling_through: FallingThroughControlScheme,
 }
 
 impl UiTunable for CharacterMotionConfigForPlatformerDemo {
@@ -660,10 +667,11 @@ impl UiTunable for DemoControlSchemeConfig {
         ui.collapsing("Climb", |ui| {
             self.climb.tune(ui);
         });
+        self.ext.tune(ui);
     }
 }
 
-#[derive(Component, Debug, PartialEq, Default)]
+#[derive(Component, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub enum FallingThroughControlScheme {
     JumpThroughOnly,
     WithoutHelper,
@@ -772,12 +780,16 @@ impl Plugin for JustPressedCachePlugin {
 }
 
 fn collect_just_pressed_cache(
-    query: Query<&CharacterMotionConfigForPlatformerDemo>,
+    query: Query<&TnuaConfig<DemoControlScheme>>,
+    config_assets: Res<Assets<DemoControlSchemeConfig>>,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut just_pressed: ResMut<JustPressedCache>,
 ) {
     for config in &query {
-        let crouch_buttons = match config.dimensionality {
+        let Some(config) = config_assets.get(&config.0) else {
+            continue;
+        };
+        let crouch_buttons = match config.ext.dimensionality {
             Dimensionality::Dim2 => CROUCH_BUTTONS_2D.iter().copied(),
             Dimensionality::Dim3 => CROUCH_BUTTONS_3D.iter().copied(),
         };

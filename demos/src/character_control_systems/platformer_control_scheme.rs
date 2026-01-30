@@ -9,9 +9,13 @@ use bevy_tnua::builtins::{
 use bevy_tnua::control_helpers::{TnuaActionSlots, TnuaAirActionDefinition, TnuaHasTargetEntity};
 use bevy_tnua::math::*;
 use bevy_tnua::{TnuaConfigModifier, TnuaScheme};
+use serde::{Deserialize, Serialize};
+
+use super::Dimensionality;
+use super::platformer_control_systems::FallingThroughControlScheme;
 
 #[derive(TnuaScheme)]
-#[scheme(basis = TnuaBuiltinWalk)]
+#[scheme(basis = TnuaBuiltinWalk, config_ext = CharacterMotionConfigForPlatformerDemo)]
 pub enum DemoControlScheme {
     Jump(TnuaBuiltinJump),
     Crouch(
@@ -28,6 +32,27 @@ pub enum DemoControlScheme {
         // Initiation direction:
         Vector3,
     ),
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CharacterMotionConfigForPlatformerDemo {
+    pub dimensionality: Dimensionality,
+    pub jumps_in_air: usize,
+    pub dashes_in_air: usize,
+    pub one_way_platforms_min_proximity: Float,
+    pub falling_through: FallingThroughControlScheme,
+}
+
+impl Default for CharacterMotionConfigForPlatformerDemo {
+    fn default() -> Self {
+        Self {
+            dimensionality: Dimensionality::Dim3,
+            jumps_in_air: 1,
+            dashes_in_air: 1,
+            one_way_platforms_min_proximity: 1.0,
+            falling_through: FallingThroughControlScheme::SingleFall,
+        }
+    }
 }
 
 pub struct SlowDownWhileCrouching(pub bool);
@@ -117,6 +142,13 @@ impl Default for DemoControlSchemeConfig {
             climb: TnuaBuiltinClimbConfig {
                 climb_speed: 10.0,
                 ..Default::default()
+            },
+            ext: CharacterMotionConfigForPlatformerDemo {
+                dimensionality: Dimensionality::Dim3,
+                jumps_in_air: 1,
+                dashes_in_air: 1,
+                one_way_platforms_min_proximity: 1.0,
+                falling_through: FallingThroughControlScheme::SingleFall,
             },
         }
     }
