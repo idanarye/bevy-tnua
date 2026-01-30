@@ -240,25 +240,22 @@ impl<S: TnuaActionSlots> Default for TnuaActionsCounter<S> {
     }
 }
 
-impl<S: TnuaActionSlots> TnuaActionsCounter<S>
-// TODO: get rid of these requirements
-where
-    <S::Scheme as TnuaScheme>::Basis: TnuaBasisWithGround,
-{
+impl<S: TnuaActionSlots> TnuaActionsCounter<S> {
     /// Call this every frame, at the schedule of
     /// [`TnuaControllerPlugin`](crate::TnuaControllerPlugin), to track the actions.
-    pub fn update(&mut self, controller: &TnuaController<S::Scheme>) {
-        let update = self.counting_status.update(
-            controller,
-            |basis| {
-                if <<S::Scheme as TnuaScheme>::Basis as TnuaBasisWithGround>::is_airborne(basis) {
-                    TnuaActionCountingStatus::CountActions
-                } else {
-                    TnuaActionCountingStatus::ActionsAreFree
-                }
-            },
-            S::rule_for,
-        );
+    ///
+    /// The predicate and the [`TnuaActionSlots`] from the generic parameter define how the
+    /// counters will get updated.
+    pub fn update(
+        &mut self,
+        controller: &TnuaController<S::Scheme>,
+        status_for_basis: impl FnOnce(
+            &TnuaBasisAccess<<S::Scheme as TnuaScheme>::Basis>,
+        ) -> TnuaActionCountingStatus,
+    ) {
+        let update = self
+            .counting_status
+            .update(controller, status_for_basis, S::rule_for);
 
         match update {
             TnuaActionCountingUpdate::NoChange => {}
@@ -365,6 +362,12 @@ fn actions_counter_update_system<S: TnuaActionSlots>(
     <S::Scheme as TnuaScheme>::Basis: TnuaBasisWithGround,
 {
     for (mut counter, controller) in query.iter_mut() {
-        counter.update(controller);
+        counter.update(controller, |basis| {
+            if <<S::Scheme as TnuaScheme>::Basis as TnuaBasisWithGround>::is_airborne(basis) {
+                TnuaActionCountingStatus::CountActions
+            } else {
+                TnuaActionCountingStatus::ActionsAreFree
+            }
+        });
     }
 }
