@@ -4,6 +4,8 @@ pub use bevy_tnua_macros::TnuaActionSlots;
 
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
+#[cfg(feature = "serialize")]
+use serde::{Deserialize, Serialize};
 
 use crate::basis_capabilities::TnuaBasisWithGround;
 use crate::controller::TnuaActionFlowStatus;
@@ -27,6 +29,7 @@ pub trait TnuaActionSlots: 'static + Send + Sync {
 }
 
 #[derive(Default, Debug)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum TnuaActionCountingStatus {
     CountActions,
     #[default]
@@ -167,8 +170,16 @@ impl TnuaActionCountingStatus {
 }
 
 #[derive(Deref, DerefMut, Component)]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaActionsCounter<S: TnuaActionSlots> {
     counting_status: TnuaActionCountingStatus,
+    #[cfg_attr(
+        feature = "serialize",
+        serde(bound(
+            serialize = "<S::Scheme as TnuaScheme>::ActionDiscriminant: Serialize",
+            deserialize = "<S::Scheme as TnuaScheme>::ActionDiscriminant: Deserialize<'de>",
+        ))
+    )]
     current_action: Option<(<S::Scheme as TnuaScheme>::ActionDiscriminant, usize)>,
     #[deref]
     slots: S,
