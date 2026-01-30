@@ -7,7 +7,8 @@ use crate::{TnuaActionDiscriminant, prelude::*};
 
 /// An helper for tracking air actions.
 ///
-/// It's [`update`](Self::update) must be called every frame - even when the result is not used.
+/// It's [`update`](Self::update) must be called every frame - even when the result is not used -
+/// in the same schedule as [`TnuaControllerPlugin`].
 ///
 /// For simpler usage, see [`TnuaSimpleAirActionsCounter`].
 #[derive(Default)]
@@ -24,7 +25,8 @@ pub trait TnuaAirActionDefinition: TnuaScheme {
 }
 
 impl TnuaAirActionsTracker {
-    /// Call this every frame to track the air actions.
+    /// Call this every frame, in the same schedule as [`TnuaControllerPlugin`], to track the air
+    /// actions.
     pub fn update<S>(
         &mut self,
         controller: &TnuaController<S>,
@@ -125,7 +127,8 @@ pub enum TnuaAirActionsUpdate<D: TnuaActionDiscriminant> {
 
 /// A simple counter that counts together all the air actions a character is able to perform.
 ///
-/// It's [`update`](Self::update) must be called every frame.
+/// It's [`update`](Self::update) must be called every frame, in the same schedule as
+/// [`TnuaControllerPlugin`].
 #[derive(Component)]
 #[deprecated = "Use TnuaActionsCounter instead"]
 pub struct TnuaSimpleAirActionsCounter<S: TnuaScheme> {
@@ -149,7 +152,8 @@ where
     S: TnuaScheme + TnuaAirActionDefinition,
     S::Basis: TnuaBasisWithGround,
 {
-    /// Call this every frame to track the air actions.
+    /// Call this every frame, in the same schedule as [`TnuaControllerPlugin`], to track the air
+    /// actions.
     pub fn update(&mut self, controller: &TnuaController<S>)
     where
         S: TnuaScheme + TnuaAirActionDefinition,

@@ -13,21 +13,38 @@ use crate::{
     TnuaActionDiscriminant, TnuaBasisAccess, TnuaController, TnuaScheme, TnuaUserControlsSystems,
 };
 
+/// See [the derive macro](bevy_tnua_macros::TnuaActionSlots).
 pub trait TnuaActionSlots: 'static + Send + Sync {
+    /// The scheme who's actions are assigned to the slots.
     type Scheme: TnuaScheme;
 
+    /// A state where all the slot counters are zeroed.
     const ZEROES: Self;
 
+    /// Decision what to do when an action starts.
     fn rule_for(
         action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
     ) -> TnuaActionCountingActionRule;
+
+    /// Get a mutable reference to the counter of the action's slot.
+    ///
+    /// Note that not all actions have slots. For actions not assigned to any slot, this will
+    /// return `None`.
     fn get_mut(
         &mut self,
         action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
     ) -> Option<&mut usize>;
+
+    /// Get the value of the counter of the action's slot.
+    ///
+    /// Note that not all actions have slots. For actions not assigned to any slot, this will
+    /// return `None`.
     fn get(&self, action: <Self::Scheme as TnuaScheme>::ActionDiscriminant) -> Option<usize>;
 }
 
+/// An helper for tracking whether or not the character is in a situation when actions are counted.
+///
+/// This is a low level construct. Prefer using [`TnuaActionsCounter`], which uses this internally.
 #[derive(Default, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub enum TnuaActionCountingStatus {
@@ -72,14 +89,33 @@ pub enum TnuaActionCountingUpdate<D: TnuaActionDiscriminant> {
     CountingEnded,
 }
 
+/// A decision, defined by [`TnuaActionSlots`], regarding an individual action.
 pub enum TnuaActionCountingActionRule {
+    /// This action needs to be counted.
+    ///
+    /// Only return this for actions that are assigned to a slot.
     Counted,
+    /// This action does not participate in the action counting.
     Uncounted,
+    /// This action ends the counting, even if otherwise the condition for that is not met.
+    ///
+    /// For example - when counting air actions, performing a wall slide action would reset the
+    /// counters even though the character is not "grounded".
     EndingCount,
 }
 
 impl TnuaActionCountingStatus {
-    fn update<S: TnuaScheme>(
+    /// Call this every frame, in the same schedule as
+    /// [`TnuaControllerPlugin`](crate::TnuaControllerPlugin), to track the scenario where the
+    /// actions are counted.
+    ///
+    /// The predicates determine what to do based on the state of the current basis and - if an
+    /// action just started - based on that action.
+    ///
+    /// This function both changes the [`TnuaActionCountingStatus`] and returns a
+    /// [`TnuaActionCountingUpdate`] that can be used to decide how to update a more complex type
+    /// (like [`TnuaActionsCounter`]) that does the actual action counting.
+    pub fn update<S: TnuaScheme>(
         &mut self,
         controller: &TnuaController<S>,
         status_for_basis: impl FnOnce(&TnuaBasisAccess<S::Basis>) -> TnuaActionCountingStatus,
@@ -169,6 +205,16 @@ impl TnuaActionCountingStatus {
     }
 }
 
+/// An helper for counting the actions in scenarios where actions can only be done a limited amount
+/// of times. Mainly used for implementing air actions.
+///
+/// It's [`update`](Self::update) must be called every frame - even when the result is not used -
+/// in the same schedule as [`TnuaControllerPlugin`](crate::TnuaControllerPlugin). For air actions,
+/// this can usually be done with [`TnuaAirActionsPlugin`].
+///
+/// This type exposes the slots struct to allow manual interference with the counting, but the
+/// actually checking of counters should use [`count_for`](Self::count_for) which also takes into
+/// account the currently active action.
 #[derive(Component)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaActionsCounter<S: TnuaActionSlots> {
@@ -181,8 +227,7 @@ pub struct TnuaActionsCounter<S: TnuaActionSlots> {
         ))
     )]
     current_action: Option<(<S::Scheme as TnuaScheme>::ActionDiscriminant, usize)>,
-    #[deref]
-    slots: S,
+    pub slots: S,
 }
 
 impl<S: TnuaActionSlots> Default for TnuaActionsCounter<S> {
@@ -200,7 +245,8 @@ impl<S: TnuaActionSlots> TnuaActionsCounter<S>
 where
     <S::Scheme as TnuaScheme>::Basis: TnuaBasisWithGround,
 {
-    /// Call this every frame, at the schedule of [`TnuaControllerPlugin`], to track the actions.
+    /// Call this every frame, at the schedule of
+    /// [`TnuaControllerPlugin`](crate::TnuaControllerPlugin), to track the actions.
     pub fn update(&mut self, controller: &TnuaController<S::Scheme>) {
         let update = self.counting_status.update(
             controller,
@@ -246,6 +292,30 @@ where
         }
     }
 
+    /// The amount of actions already performed during the current couting duration.
+    ///
+    /// Each slot gets counted separately. If the action does not belong to any slot, or if actions
+    /// are not currently being counted, this returns 0.
+    ///
+    /// If the specified action is currently running, it will not be considered as part of the
+    /// count. This is done so that user control systems will keep feeding it - with `allow_in_air:
+    /// true` - for as long as the player holds the button.
+    ///
+    /// ```no_run
+    /// # use bevy_tnua::prelude::*;
+    /// # use bevy_tnua::control_helpers::{TnuaActionSlots, TnuaActionsCounter};
+    /// # #[derive(TnuaScheme)] #[scheme(basis = TnuaBuiltinWalk)] enum ControlScheme {Jump(TnuaBuiltinJump)}
+    /// # #[derive(TnuaActionSlots)] #[slots(scheme = ControlScheme)] struct AirActionSlots {#[slots(Jump)] jump: usize}
+    /// # let mut controller = TnuaController::<ControlScheme>::default();
+    /// let air_actions: TnuaActionsCounter<AirActionSlots>; // actually get this from a Query
+    ///
+    /// # air_actions = Default::default();
+    /// controller.action(ControlScheme::Jump(TnuaBuiltinJump {
+    ///     // Allow one air jump
+    ///     allow_in_air: air_actions.count_for(ControlSchemeActionDiscriminant::Jump) < 1,
+    ///     ..Default::default()
+    /// }));
+    /// ```
     pub fn count_for(&self, action: <S::Scheme as TnuaScheme>::ActionDiscriminant) -> usize {
         if let Some((current_action, actions)) = self.current_action
             && current_action == action
@@ -256,6 +326,12 @@ where
     }
 }
 
+/// Use the action slots definition to track air actions.
+///
+/// Must use the same schedule as the [`TnuaControllerPlugin`](crate::TnuaControllerPlugin).
+///
+/// Note that this will automatically make [`TnuaActionsCounter<S>`] a dependency component of the
+/// [`TnuaController`] parametrized to `S`'s [`Scheme`](TnuaActionSlots::Scheme).
 pub struct TnuaAirActionsPlugin<S: TnuaActionSlots> {
     schedule: InternedScheduleLabel,
     _phantom: PhantomData<S>,
