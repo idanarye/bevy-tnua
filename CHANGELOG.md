@@ -15,6 +15,10 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   - `TnuaAirActionsPlugin` for doing the tracking on air actions (the items
     above are generic enough to be used for other, similar mechanisms)
 
+### Deprecated
+- `TnuaAirActionsTracker` - use `TnuaActionsCounter` instead.
+- `TnuaSimpleAirActionsCounter` - use `TnuaActionsCounter` instead.
+
 ### Fixed
 - Default coyote time was accidentally 30.15. Changed it to back 0.15.
 

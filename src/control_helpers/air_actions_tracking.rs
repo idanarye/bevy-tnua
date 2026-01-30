@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use bevy::prelude::*;
 
 use crate::basis_capabilities::TnuaBasisWithGround;
@@ -10,6 +11,7 @@ use crate::{TnuaActionDiscriminant, prelude::*};
 ///
 /// For simpler usage, see [`TnuaSimpleAirActionsCounter`].
 #[derive(Default)]
+#[deprecated = "Use TnuaActionCountingStatus instead"]
 pub struct TnuaAirActionsTracker {
     considered_in_air: bool,
 }
@@ -125,6 +127,7 @@ pub enum TnuaAirActionsUpdate<D: TnuaActionDiscriminant> {
 ///
 /// It's [`update`](Self::update) must be called every frame.
 #[derive(Component)]
+#[deprecated = "Use TnuaActionsCounter instead"]
 pub struct TnuaSimpleAirActionsCounter<S: TnuaScheme> {
     tracker: TnuaAirActionsTracker,
     current_action: Option<(S::ActionDiscriminant, usize)>,
