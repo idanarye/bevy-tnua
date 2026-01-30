@@ -182,10 +182,7 @@ fn apply_controls(
                 // Use this intstead of accessing the slot directly, because it does not count the
                 // current jump. This is important because the Jump action needs to be fed for as
                 // long as the player holds the button, otherwise Tnua will shorten the jump.
-                .get(ControlSchemeActionDiscriminant::Jump)
-                // Note that passingg action discriminants of actions that are not associated with
-                // any slot will fail.
-                .expect("this cannot fail because Jump has a slot")
+                .count_for(ControlSchemeActionDiscriminant::Jump)
                 // `TnuaActionsCounter::get` returns the nubmer of air actions already performed in
                 // that slot. It is up to the user control system to determine what this number
                 // means. Usually it is enough to compare it against the number of actions allowed,
@@ -203,8 +200,7 @@ fn apply_controls(
                 // For the Dash we pass a differnt discriminant, and because we defined a different
                 // slot for it it will be counted separately from the Jump. This means the player
                 // can perform one air jump and one air dash during each jump.
-                .get(ControlSchemeActionDiscriminant::Dash)
-                .expect("this cannot fail because Dash has a slot")
+                .count_for(ControlSchemeActionDiscriminant::Dash)
                 < 1,
             ..Default::default()
         }));

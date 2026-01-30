@@ -169,7 +169,7 @@ impl TnuaActionCountingStatus {
     }
 }
 
-#[derive(Deref, DerefMut, Component)]
+#[derive(Component)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaActionsCounter<S: TnuaActionSlots> {
     counting_status: TnuaActionCountingStatus,
