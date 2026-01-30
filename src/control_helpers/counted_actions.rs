@@ -276,8 +276,8 @@ impl<S: TnuaActionSlots> TnuaActionsCounter<S> {
                     .slots
                     .get_mut(action_discriminant)
                     .expect("Should only get CountedActionStarted for air actions");
-                self.current_action = Some((action_discriminant, *slot));
                 *slot += 1;
+                self.current_action = Some((action_discriminant, *slot));
             }
             TnuaActionCountingUpdate::ActionFinishedStillCounting => {
                 self.current_action = None;
@@ -289,14 +289,22 @@ impl<S: TnuaActionSlots> TnuaActionsCounter<S> {
         }
     }
 
-    /// The amount of actions already performed during the current couting duration.
+    /// Calculate the "number" of an action.
+    ///
+    /// If actions are not currently being counted, this will return 0. Otherwise, it will return
+    /// the number the requested action will be - meaning the first one in the counting duration
+    /// will be numbered 1.
+    ///
+    /// If the specified action is currently running, this method will return the number of the
+    /// currently running action, not the next action of the same variant. This is done so that
+    /// user control systems will keep feeding it - with `allow_in_air: true` - for as long as the
+    /// player holds the button. Note that this means that while the very action that triggered the
+    /// counting (e.g. - jumping off the ground when counting air actions) is still active, its
+    /// number will be 0 (even though action counting starts from 1, this action was from before
+    /// the counting so it gets to be 0)
     ///
     /// Each slot gets counted separately. If the action does not belong to any slot, or if actions
     /// are not currently being counted, this returns 0.
-    ///
-    /// If the specified action is currently running, it will not be considered as part of the
-    /// count. This is done so that user control systems will keep feeding it - with `allow_in_air:
-    /// true` - for as long as the player holds the button.
     ///
     /// ```no_run
     /// # use bevy_tnua::prelude::*;
@@ -308,8 +316,10 @@ impl<S: TnuaActionSlots> TnuaActionsCounter<S> {
     ///
     /// # air_actions = Default::default();
     /// controller.action(ControlScheme::Jump(TnuaBuiltinJump {
-    ///     // Allow one air jump
-    ///     allow_in_air: air_actions.count_for(ControlSchemeActionDiscriminant::Jump) < 1,
+    ///     allow_in_air: air_actions.count_for(ControlSchemeActionDiscriminant::Jump)
+    ///         // Allow one air jump - use <= instead of < because the first one in the air will
+    ///         // be have its `count_for` return 1.
+    ///         <= 1,
     ///     ..Default::default()
     /// }));
     /// ```
@@ -319,7 +329,13 @@ impl<S: TnuaActionSlots> TnuaActionsCounter<S> {
         {
             return actions;
         }
-        self.slots.get(action).unwrap_or_default() // TODO - return None?
+        let Some(slot_value) = self.slots.get(action) else {
+            return 0; // non-counted action
+        };
+        match self.counting_status {
+            TnuaActionCountingStatus::CountActions => slot_value + 1,
+            TnuaActionCountingStatus::ActionsAreFree => slot_value,
+        }
     }
 }
 

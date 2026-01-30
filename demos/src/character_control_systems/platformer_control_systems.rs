@@ -100,7 +100,7 @@ pub fn apply_platformer_controls(
         sensors_entities,
         mut ghost_overwrites,
         mut fall_through_helper,
-        air_actions_counter,
+        air_actions,
         camera_contoller,
         obstacle_radar,
         mut blip_reuse_avoidance,
@@ -560,15 +560,18 @@ pub fn apply_platformer_controls(
                     // was considered "grounded" - including the first jump (if it was done from the
                     // ground) or the initiation of a free fall.
                     //
-                    // `air_count_for` needs the name of the action to be performed (in this case
-                    // `TnuaBuiltinJump::NAME`) because if the player is still holding the jump button,
-                    // we want it to be considered as the same air action number. So, if the player
-                    // performs an air jump, before the air jump `air_count_for` will return 1 for any
-                    // action, but after it it'll return 1 only for `TnuaBuiltinJump::NAME`
-                    // (maintaining the jump) and 2 for any other action. Of course, if the player
-                    // releases the button and presses it again it'll return 2.
-                    allow_in_air: air_actions_counter.count_for(DemoControlSchemeActionDiscriminant::Jump)
-                        < config.jumps_in_air
+                    // `count_for` needs the discriminant of the action to be performed (in this
+                    // case `DemoControlSchemeActionDiscriminant::Jump`) because it needs to know
+                    // which slot to use and because if the player is still holding the jump
+                    // button, we want it to be considered as the same jump action number. So, if
+                    // the player performs an air jump, before the `Jump` action becomes the active
+                    // action in the controller `count_for` will return 1 for any action on the
+                    // jump slot, but after it it'll return 1 only for
+                    // `DemoControlSchemeActionDiscriminant::Jump` (maintaining the jump) and 2 for
+                    // any other action. Of course, if the player releases the button and presses
+                    // it again it'll return 2.
+                    allow_in_air: air_actions.count_for(DemoControlSchemeActionDiscriminant::Jump)
+                        <= config.jumps_in_air
                         // We also want to be able to jump from a climb.
                         || current_action_discriminant == Some(DemoControlSchemeActionDiscriminant::Climb),
                     ..Default::default()
@@ -599,9 +602,9 @@ pub fn apply_platformer_controls(
                 } else {
                     Dir3::new(direction.f32()).ok()
                 },
-                allow_in_air: air_actions_counter
+                allow_in_air: air_actions
                     .count_for(DemoControlSchemeActionDiscriminant::Dash)
-                    < config.dashes_in_air,
+                    <= config.dashes_in_air,
             }));
         }
     }

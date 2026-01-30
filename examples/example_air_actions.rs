@@ -188,7 +188,7 @@ fn apply_controls(
                 // means. Usually it is enough to compare it against the number of actions allowed,
                 // but it can also be used for more complex logic (e.g. reduce the height of the
                 // second jump)
-                < 1,
+                <= 1,
             ..Default::default()
         }));
     }
@@ -201,7 +201,7 @@ fn apply_controls(
                 // slot for it it will be counted separately from the Jump. This means the player
                 // can perform one air jump and one air dash during each jump.
                 .count_for(ControlSchemeActionDiscriminant::Dash)
-                < 1,
+                <= 1,
             ..Default::default()
         }));
     }
