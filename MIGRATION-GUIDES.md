@@ -1,3 +1,71 @@
+# Migrating to Tnua 0.30
+
+`TnuaSimpleAirActionsCounter` is deprecated, and needs to be replaced by
+`TnuaActionsCounter`.
+
+Say you have this:
+
+```rust
+#[derive(TnuaScheme)]
+#[scheme(basis = TnuaBuiltinWalk)]
+enum ControlScheme {
+    Jump(TnuaBuiltinJump),
+    Dash(TnuaBuiltinDash),
+    Crouch(TnuaBuiltinCrouch),
+}
+```
+
+Previously you'd have to implement:
+```rust
+impl TnuaAirActionDefinition {
+    fn is_air_action(action: Self::ActionDiscriminant) -> bool {
+        match action {
+            ControlSchemeActionDiscriminant::Jump => true,
+            ControlSchemeActionDiscriminant::Dash => true,
+            ControlSchemeActionDiscriminant::Crouch => false,
+        }
+    }
+}
+```
+
+And then add a `TnuaSimpleAirActionsCounter<ControlScheme>` component and call
+its `update` every frame. This is deprecated.
+
+Instead, define a slots struct:
+
+```rust
+#[derive(TnuaActionSlots)]
+#[slots(scheme = ControlScheme)]
+struct AirActionSlots {
+    #[slots(Jump)]
+    jump: usize,
+    #[slots(Dash)]
+    dash: usize,
+    // `Crouch` is not assigned to any slot because it's not an air action.
+}
+```
+
+Instead of having a single counter for all the air actions, each slot is
+counted separately. A slot can have multiple actions assigned to it, so if you
+want the old behavior (air jumps and air dashes are both counted as the same
+resource) you can just define a single slot.
+
+With `TnuaSimpleAirActionsCounter` you'd call `update` manually. Here, you should instead use a plugin:
+
+```rust
+app.add_plugins(TnuaAirActionsPlugin::<AirActionSlots>::new(
+    // This has to be the same schedule `TnuaControllerPlugin` was registered with
+    FixedUpdate,
+));
+```
+
+This will add `TnuaActionsCounter<AirActionSlots>` as the dependency of
+`TnuaController<ControlScheme>` and also add a system that automatically calls
+`TnuaActionsCounter::update`.
+
+`TnuaActionsCounter::count_for` is used exactly like
+`TnuaSimpleAirActionsCounter::air_count_for`.
+
 # Migrating to Tnua 0.28
 
 * Instead of adding the configuration with `TnuaController::new`, add it as a

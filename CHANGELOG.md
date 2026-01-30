@@ -14,6 +14,7 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   - `TnuaActionsCounter` for keeping track on the slots' counters.
   - `TnuaAirActionsPlugin` for doing the tracking on air actions (the items
     above are generic enough to be used for other, similar mechanisms)
+  See the [migration guide](MIGRATION-GUIDES.md#migrating-to-tnua-030).
 
 ### Deprecated
 - `TnuaAirActionsTracker` - use `TnuaActionsCounter` instead.
