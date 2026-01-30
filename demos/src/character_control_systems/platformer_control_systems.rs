@@ -602,8 +602,7 @@ pub fn apply_platformer_controls(
                 } else {
                     Dir3::new(direction.f32()).ok()
                 },
-                allow_in_air: air_actions
-                    .count_for(DemoControlSchemeActionDiscriminant::Dash)
+                allow_in_air: air_actions.count_for(DemoControlSchemeActionDiscriminant::Dash)
                     <= config.dashes_in_air,
             }));
         }
