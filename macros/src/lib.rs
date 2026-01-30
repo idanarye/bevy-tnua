@@ -51,7 +51,7 @@ mod util;
 /// ```ignore
 /// #[derive(TnuaScheme)]
 /// #[scheme(basis = TnuaBuiltinWalk)]
-/// pub enum DemoControlScheme {
+/// pub enum ControlScheme {
 ///     Jump(TnuaBuiltinJump),
 ///     Crouch(
 ///         TnuaBuiltinCrouch,
@@ -98,6 +98,41 @@ fn impl_derive_tnua_scheme(ast: &syn::DeriveInput) -> Result<TokenStream, Error>
     })
 }
 
+/// Define the behavior of action that can be performed a limited amount of times during certain
+/// durations (e.g. air actions)
+///
+/// This macro must be defined on a struct with a `#[slots(scheme = ...)]` attribute on the struct
+/// itself, pointing to a [`TnuaScheme`] that the slots belong to.
+///
+/// Each field of the struct must have the type [`usize`], and have a `#[slots(...)]` attribute on
+/// it listing the actions (variants of the scheme enum) belonging to that slot.
+///
+/// Not all actions need to be assigned to slots, but every slot needs at least one action assigned
+/// to it.
+///
+/// A single action must not be assigned to more than one slot, but a single slot is allowed to
+/// have multiple actions (`#[slots(Action1, Action2, ...)]`)
+///
+/// The main attribute on the struct can also have a `#[slots(ending(...))]` parameter, listing
+/// actions that end the counting. This is used to signal that the counting should start anew after
+/// these actions, even if the regular conditions for terminating and re-starting the counting
+/// don't occur. For example - when counting air actions, a wall slide should end the counting so
+/// that after jumping from it'd be a new air duration and the player could air-jump again even if
+/// they've exhausted all the air jumps before the wall slide.
+///
+/// Example:
+///
+/// ```ignore
+/// #[derive(Debug, TnuaActionSlots)]
+/// #[slots(scheme = ControlScheme, ending(WallSlide))]
+/// pub struct DemoControlSchemeAirActions {
+///     #[slots(Jump)]
+///     jump: usize,
+///     #[slots(Dash)]
+///     dash: usize,
+///     // Other actions, like `Crouch`
+/// }
+/// ```
 #[proc_macro_derive(TnuaActionSlots, attributes(slots))]
 pub fn derive_tnua_action_slots(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
