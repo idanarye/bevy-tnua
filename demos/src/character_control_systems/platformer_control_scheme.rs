@@ -54,7 +54,7 @@ impl TnuaAirActionDefinition for DemoControlScheme {
     }
 }
 
-#[derive(Default, Debug, TnuaActionSlots)]
+#[derive(Debug, TnuaActionSlots)]
 #[slots(scheme = DemoControlScheme, ending(WallSlide, WallJump, Climb))]
 pub struct DemoControlSchemeAirActions {
     #[slots(Jump)]

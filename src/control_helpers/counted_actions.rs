@@ -11,8 +11,10 @@ use crate::{
     TnuaActionDiscriminant, TnuaBasisAccess, TnuaController, TnuaScheme, TnuaUserControlsSystems,
 };
 
-pub trait TnuaActionSlots: 'static + Send + Sync + Default {
+pub trait TnuaActionSlots: 'static + Send + Sync {
     type Scheme: TnuaScheme;
+
+    const ZEROES: Self;
 
     fn rule_for(
         action: <Self::Scheme as TnuaScheme>::ActionDiscriminant,
@@ -172,12 +174,12 @@ pub struct TnuaActionsCounter<S: TnuaActionSlots> {
     slots: S,
 }
 
-impl<S: TnuaActionSlots + Default> Default for TnuaActionsCounter<S> {
+impl<S: TnuaActionSlots> Default for TnuaActionsCounter<S> {
     fn default() -> Self {
         Self {
             counting_status: Default::default(),
             current_action: None,
-            slots: Default::default(),
+            slots: S::ZEROES,
         }
     }
 }
@@ -228,7 +230,7 @@ where
             }
             TnuaActionCountingUpdate::CountingEnded => {
                 self.current_action = None;
-                self.slots = Default::default();
+                self.slots = S::ZEROES;
             }
         }
     }

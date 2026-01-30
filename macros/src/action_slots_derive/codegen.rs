@@ -15,6 +15,8 @@ pub fn generate_action_slots_derive(parsed: &ParsedActionSlots) -> syn::Result<T
     // This type is a mouthful, and gets repeated alot
     let discriminant = quote!(<Self::Scheme as bevy_tnua::TnuaScheme>::ActionDiscriminant);
 
+    let slot_names_for_zeroes = slots.iter().map(|slot| slot.counter_name);
+
     let counted_actions = slots.iter().flat_map(|slot| slot.actions.iter());
 
     let get_mut_branches = slots.iter().map(|slot| {
@@ -40,6 +42,12 @@ pub fn generate_action_slots_derive(parsed: &ParsedActionSlots) -> syn::Result<T
     Ok(quote! {
         impl bevy_tnua::control_helpers::TnuaActionSlots for #slots_name {
             type Scheme = #scheme;
+
+            const ZEROES: Self = Self {
+                #(
+                    #slot_names_for_zeroes: 0,
+                )*
+            };
 
             fn rule_for(action: #discriminant) -> bevy_tnua::control_helpers::TnuaActionCountingActionRule {
                 match action {
