@@ -94,7 +94,7 @@ Tnua is broken into different crates that update separately, so this is broken i
 
 | bevy | bevy-tnua-physics-integration-layer | bevy-tnua   |
 |------|-------------------------------------|-------------|
-| 0.18 | 0.12                                | 0.29        |
+| 0.18 | 0.12                                | 0.29, 0.30  |
 | 0.17 | 0.11                                | 0.27, 0.28  |
 | 0.17 | 0.10                                | 0.26        |
 | 0.16 | 0.9                                 | 0.25        |
