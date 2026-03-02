@@ -8,9 +8,7 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 
 ## [Unreleased]
 ### Changed
-- Upgrade to bevy 0.18.
-- Upgrade to bevy_rapier3d 0.33.
-- Upgrade to bevy-tnua-physics-integration-layer 0.12.
+- Upgrade to bevy 0.18 and bevy_rapier3d 0.33.
 
 ## 0.15.0 - 2026-01-04
 ### Changed
