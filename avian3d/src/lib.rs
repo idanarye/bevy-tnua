@@ -76,7 +76,9 @@ impl Plugin for TnuaAvian3dPlugin {
             (
                 update_rigid_body_trackers_system,
                 update_proximity_sensors_system,
-                update_obstacle_radars_system,
+                update_obstacle_radars_system
+                    // Both use SpatialQuery, which uses a ResMut
+                    .ambiguous_with(update_proximity_sensors_system),
             )
                 .in_set(TnuaPipelineSystems::Sensors),
         );
@@ -132,7 +134,7 @@ fn update_rigid_body_trackers_system(
 
 #[allow(clippy::type_complexity)]
 fn update_proximity_sensors_system(
-    spatial_query_pipeline: Res<SpatialQueryPipeline>,
+    spatial_query: SpatialQuery,
     mut sensor_query: Query<(
         &mut TnuaProximitySensor,
         &TnuaSensorOf,
@@ -323,7 +325,7 @@ fn update_proximity_sensors_system(
                         .to_scaled_axis()
                         .dot(cast_direction.adjust_precision()),
                 );
-                spatial_query_pipeline.shape_hits_callback(
+                spatial_query.shape_hits_callback(
                     shape,
                     cast_origin,
                     owner_rotation.mul_quat(sensor.cast_shape_rotation.adjust_precision()),
@@ -345,7 +347,7 @@ fn update_proximity_sensors_system(
                     },
                 );
             } else {
-                spatial_query_pipeline.ray_hits_callback(
+                spatial_query.ray_hits_callback(
                     cast_origin,
                     cast_direction,
                     sensor.cast_range,
@@ -369,7 +371,7 @@ fn update_proximity_sensors_system(
 }
 
 fn update_obstacle_radars_system(
-    spatial_query_pipeline: Res<SpatialQueryPipeline>,
+    spatial_query: SpatialQuery,
     gravity: Res<Gravity>,
     mut radars_query: Query<(Entity, &mut TnuaObstacleRadar, &Position)>,
 ) {
@@ -382,7 +384,7 @@ fn update_obstacle_radars_system(
             radar_position.0,
             Dir3::new(gravity.0.f32()).unwrap_or(Dir3::Y),
         );
-        spatial_query_pipeline.shape_intersections_callback(
+        spatial_query.shape_intersections_callback(
             &Collider::cylinder(radar.radius, radar.height),
             radar_position.0,
             Default::default(),
