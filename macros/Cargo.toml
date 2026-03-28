@@ -13,6 +13,7 @@ keywords.workspace = true
 proc-macro = true
 
 [dependencies]
+atterate = "0.0.2"
 convert_case = "0.10.0"
 proc-macro2 = "1"
 quote = "1"

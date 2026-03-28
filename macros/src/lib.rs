@@ -8,8 +8,6 @@ use self::scheme_derive::parsed::ParsedScheme;
 
 mod action_slots_derive;
 mod scheme_derive;
-#[allow(unused)]
-mod util;
 
 /// Make an enum a control scheme for a Tnua character controller.
 ///

@@ -2,7 +2,7 @@ use convert_case::{Case, Casing};
 use quote::{quote, quote_spanned};
 use syn::Ident;
 
-use crate::util::{AttrArg, StaticError, ident_with_suffix};
+use atterate::{AttrArg, StaticError, ident_with_suffix};
 
 #[derive(Debug)]
 pub struct ParsedScheme<'a> {

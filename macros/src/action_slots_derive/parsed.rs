@@ -1,7 +1,7 @@
 use syn::Error;
 use syn::spanned::Spanned;
 
-use crate::util::{AttrArg, StaticError};
+use atterate::{AttrArg, StaticError};
 
 #[derive(Debug)]
 pub struct ParsedActionSlots<'a> {
