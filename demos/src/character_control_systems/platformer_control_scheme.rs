@@ -25,6 +25,7 @@ pub enum DemoControlScheme {
     Dash(TnuaBuiltinDash),
     Knockback(TnuaBuiltinKnockback),
     WallSlide(TnuaBuiltinWallSlide, Entity),
+    #[scheme(same_trigger(Jump))]
     WallJump(TnuaBuiltinJump),
     Climb(
         TnuaBuiltinClimb,

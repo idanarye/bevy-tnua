@@ -493,27 +493,18 @@ pub fn apply_platformer_controls(
                 TnuaBlipSpatialRelation::Above => {}
                 TnuaBlipSpatialRelation::Below => {}
                 TnuaBlipSpatialRelation::Aeside(blip_direction) => {
-                    let dot_threshold = if already_sliding_on == Some(blip.entity()) {
+                    let dot_threshold = if Some(blip.entity()) == already_sliding_on {
                         -0.1
                     } else {
                         0.0
                     };
                     if controller.is_airborne().unwrap() {
                         let dot_direction = direction.dot(blip_direction.adjust_precision());
-                        if dot_direction <= -0.7 {
-                            if let Some((best_entity, best_dot, best_direction)) =
-                                walljump_candidate.as_mut()
-                            {
-                                if *best_dot < dot_direction {
-                                    *best_entity = blip.entity();
-                                    *best_dot = dot_direction;
-                                    *best_direction = blip_direction;
-                                }
-                            } else {
-                                walljump_candidate =
-                                    Some((blip.entity(), dot_direction, blip_direction));
-                            }
+
+                        if Some(blip.entity()) == already_sliding_on {
+                            walljump_candidate = Some((blip.entity(), -blip_direction));
                         }
+
                         if dot_threshold < dot_direction
                             && 0.8 < blip.flat_wall_score(Dir3::Y, &[-1.0, 1.0])
                         {
@@ -534,8 +525,6 @@ pub fn apply_platformer_controls(
                 }
             }
         }
-        let walljump_candidate =
-            walljump_candidate.map(|(entity, _, blip_direction)| (entity, -blip_direction));
 
         if crouch {
             // Crouching is an action. We either feed it or we don't - other than that there is
