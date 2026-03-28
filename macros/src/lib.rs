@@ -49,6 +49,21 @@ mod scheme_derive;
 /// related to the actions - except when they are annotated by `#[scheme(modify_basis_config)]`.
 /// Such payloads will modify the configuration when the action they are part of is in effect.
 ///
+/// A variant may have a `#[scheme(...)]` attribute, supporting the following parameters:
+///
+/// * `#[scheme(same_trigger(OtherAction)]` - when `OtherAction` is one of the other action
+///   variants (which must not have a `same_trigger` of its own). This will get both actions (as
+///   well as any other action annotated with the same `same_trigger`) to share a slot in Tnua's
+///   feeding mechanism - which means that if one action is fed, all the others are treated as if
+///   alredy fed. Use this for actions that share a button - for example, a regular jump and a
+///   wall-jump. Without this mechanism, if the player holds the jump button and jumps toward a
+///   wall, the moment the user control system detects that the conditions for a wall-jump are met
+///   it'll send the wall-jump action - and since that action was not fed that frame, Tnua will
+///   consider it a new action ("just pressed") and immediately invoke the wall-jump. But if the
+///   wall-jump has `same_trigger` as the jump - Tnua will see that the jump action is still being
+///   fed (even if the action itself is over) and thus the wall-jump will also be considered
+///   "already fed" and won't trigger until the player releases and re-presses the button.
+///
 /// Example:
 ///
 /// ```ignore
@@ -68,6 +83,12 @@ mod scheme_derive;
 ///         // the character is sliding on.
 ///         Entity,
 ///     ),
+///     // The wall-jump uses the same button as the jump, so we annotate them with `same_trigger`.
+///     #[scheme(same_trigger(Jump))]
+///     // Wall-jump also uses `TnuaBuiltinJump`, but it's a separate variant so that it can have
+///     // its own configuration and so that systems that introspect the current action can tell
+///     // the difference - e.g. the animating system can play a different animation.
+///     WallJump(TnuaBuiltinJump)
 /// }
 /// ```
 ///
