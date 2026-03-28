@@ -397,10 +397,10 @@ pub trait TnuaActionDiscriminant:
     'static + Send + Sync + Copy + Clone + PartialEq + Eq + core::fmt::Debug
 {
     #[doc(hidden)]
-    const NUM_VARIANTS: usize;
+    const NUM_FEED_STATUS_SLOTS: usize;
 
     #[doc(hidden)]
-    fn variant_idx(&self) -> usize;
+    fn feed_status_slot(&self) -> usize;
 }
 
 /// An enum mirroring the control scheme, except instead of just having the input of each action

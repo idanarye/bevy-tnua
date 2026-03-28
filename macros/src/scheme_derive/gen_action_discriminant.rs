@@ -64,9 +64,9 @@ pub fn generate_action_discriminant(parsed: &ParsedScheme) -> syn::Result<TokenS
         }
 
         impl bevy_tnua::TnuaActionDiscriminant for #action_discriminant_name {
-            const NUM_VARIANTS: usize = #num_variants;
+            const NUM_FEED_STATUS_SLOTS: usize = #num_variants;
 
-            fn variant_idx(&self) -> usize {
+            fn feed_status_slot(&self) -> usize {
                 match self {
                     #(
                         Self::#command_names => #variant_indices,

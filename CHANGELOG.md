@@ -20,6 +20,8 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
   - Change them to skip the actions annotated with `same_trigger`.
   - Move them both the `TnuaActionDiscriminant` trait - with no helper methods
     to access them from the other traits.
+  - Rename `variant_idx` to `feed_status_slot` and `NUM_VARIANTS` to
+    `NUM_FEED_STATUS_SLOTS`.
 
 ## 0.30.0 - 2026-01-31
 ### Added
