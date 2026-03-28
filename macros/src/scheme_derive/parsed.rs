@@ -109,10 +109,22 @@ pub struct ParsedCommand<'a> {
     pub action_type: &'a syn::Type,
     pub command_name_snake: syn::Ident,
     pub payloads: Vec<ParsedPayload<'a>>,
+    pub same_trigger: Option<Ident>,
 }
 
 impl<'a> ParsedCommand<'a> {
     pub fn new(variant: &'a syn::Variant) -> syn::Result<Self> {
+        let mut same_trigger: Option<Ident> = None;
+        for arg in AttrArg::iter_in_list_attributes(&variant.attrs, "scheme")? {
+            match arg.name().to_string().as_str() {
+                "same_trigger" => {
+                    arg.already_set_if(same_trigger.is_some())?;
+                    same_trigger = Some(syn::parse2(arg.sub_attr()?.args)?);
+                }
+                _ => Err(arg.unknown_parameter())?,
+            }
+        }
+
         let fields_unnamed = match &variant.fields {
             syn::Fields::Named(_) => Err(StaticError::Spanned(
                 variant,
@@ -137,6 +149,7 @@ impl<'a> ParsedCommand<'a> {
                 variant.ident.span(),
             ),
             payloads,
+            same_trigger,
         })
     }
 }
