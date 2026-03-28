@@ -32,7 +32,6 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
         config_ext: _,
     } = parsed;
 
-    let num_variants: syn::Index = commands.len().into();
     let command_names = commands.iter().map(|c| c.command_name).collect::<Vec<_>>();
     let command_names_snake = commands
         .iter()
@@ -60,8 +59,6 @@ fn generate_main_trait(parsed: &ParsedScheme) -> syn::Result<TokenStream> {
             type Config = #config_struct_name;
             type ActionDiscriminant = #action_discriminant_name;
             type ActionState = #action_state_enum_name;
-
-            const NUM_VARIANTS: usize = #num_variants;
 
             fn discriminant(&self) -> #action_discriminant_name {
                 match self {

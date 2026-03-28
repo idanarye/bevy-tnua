@@ -13,6 +13,13 @@ pub fn generate_action_discriminant(parsed: &ParsedScheme) -> syn::Result<TokenS
         commands,
         ..
     } = parsed;
+
+    let num_variants: syn::Index = commands
+        .iter()
+        .filter(|c| c.same_trigger.is_none())
+        .count()
+        .into();
+
     let command_names = commands.iter().map(|c| c.command_name).collect::<Vec<_>>();
 
     let mut same_trigger_targets: HashMap<&syn::Ident, Option<usize>> = commands
@@ -57,6 +64,8 @@ pub fn generate_action_discriminant(parsed: &ParsedScheme) -> syn::Result<TokenS
         }
 
         impl bevy_tnua::TnuaActionDiscriminant for #action_discriminant_name {
+            const NUM_VARIANTS: usize = #num_variants;
+
             fn variant_idx(&self) -> usize {
                 match self {
                     #(

@@ -14,6 +14,13 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 ### Added
 - `#[scheme(same_trigger = ...)]` parameter for the `TnuaScheme` derive macro.
 
+### Changed
+- Internal changes to `variant_idx` and `NUM_VARIANTS` - not considered
+  "breaking" because these were marked as `#[doc(hidden)]`:
+  - Change them to skip the actions annotated with `same_trigger`.
+  - Move them both the `TnuaActionDiscriminant` trait - with no helper methods
+    to access them from the other traits.
+
 ## 0.30.0 - 2026-01-31
 ### Added
 - New and improved air action tracking:

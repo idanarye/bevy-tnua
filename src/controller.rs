@@ -194,7 +194,9 @@ impl<S: TnuaScheme> Default for TnuaController<S> {
             basis: Default::default(),
             basis_config: None,
             basis_memory: Default::default(),
-            actions_being_fed: (0..S::NUM_VARIANTS).map(|_| Default::default()).collect(),
+            actions_being_fed: (0..S::ActionDiscriminant::NUM_VARIANTS)
+                .map(|_| Default::default())
+                .collect(),
             contender_action: None,
             action_flow_status: TnuaActionFlowStatus::NoAction,
             up_direction: None,
@@ -296,7 +298,7 @@ impl<S: TnuaScheme> TnuaController<S> {
             self.action_feeding_initiated,
             "Feeding action without invoking `initiate_action_feeding()`"
         );
-        let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
+        let fed_entry = &mut self.actions_being_fed[action.discriminant().variant_idx()];
 
         match fed_entry.status {
             FedStatus::Lingering
@@ -363,7 +365,7 @@ impl<S: TnuaScheme> TnuaController<S> {
     /// crouch. Actions like ['TnuaBuiltinDash`](crate::builtins::TnuaBuiltinDash) are okay because
     /// the dash will only end when the motion itself is finished.
     pub fn action_trigger(&mut self, action: S) {
-        let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
+        let fed_entry = &mut self.actions_being_fed[action.discriminant().variant_idx()];
 
         match fed_entry.status {
             FedStatus::Lingering
@@ -403,7 +405,7 @@ impl<S: TnuaScheme> TnuaController<S> {
     pub fn action_interrupt(&mut self, action: S) {
         // Because this is an interrupt, we ignore the old fed status - but we still care not to
         // set the contender if we are the current action.
-        self.actions_being_fed[action.variant_idx()] = FedEntry {
+        self.actions_being_fed[action.discriminant().variant_idx()] = FedEntry {
             status: FedStatus::Interrupt,
             rescheduled_in: None,
         };
@@ -431,7 +433,7 @@ impl<S: TnuaScheme> TnuaController<S> {
     /// Trigger an action in a push fashion. The action will continue until
     /// [`action_end`](Self::action_end) is called - or until the motion itself is finished.
     pub fn action_start(&mut self, action: S) {
-        let fed_entry = &mut self.actions_being_fed[action.variant_idx()];
+        let fed_entry = &mut self.actions_being_fed[action.discriminant().variant_idx()];
 
         match fed_entry.status {
             FedStatus::Lingering | FedStatus::Fresh | FedStatus::Trigger | FedStatus::Interrupt => {
@@ -689,7 +691,7 @@ fn apply_controller_system<S: TnuaScheme>(
 
         let has_valid_contender =
             if let Some(contender_action) = controller.contender_action.as_mut() {
-                if controller.actions_being_fed[contender_action.action.variant_idx()]
+                if controller.actions_being_fed[contender_action.action.discriminant().variant_idx()]
                     .status
                     .considered_fed()
                 {
@@ -728,7 +730,7 @@ fn apply_controller_system<S: TnuaScheme>(
         if let Some(action_state) = controller.current_action.as_mut() {
             let lifecycle_status = if has_valid_contender {
                 TnuaActionLifecycleStatus::CancelledInto
-            } else if controller.actions_being_fed[action_state.variant_idx()]
+            } else if controller.actions_being_fed[action_state.discriminant().variant_idx()]
                 .status
                 .considered_fed()
             {
@@ -775,7 +777,7 @@ fn apply_controller_system<S: TnuaScheme>(
                 TnuaActionLifecycleDirective::Finished
                 | TnuaActionLifecycleDirective::Reschedule { .. } => {
                     if let TnuaActionLifecycleDirective::Reschedule { after_seconds } = directive {
-                        controller.actions_being_fed[action_state.variant_idx()].rescheduled_in =
+                        controller.actions_being_fed[action_state.discriminant().variant_idx()].rescheduled_in =
                             Some(Timer::from_seconds(after_seconds.f32(), TimerMode::Once));
                     }
                     controller.current_action = if has_valid_contender {
@@ -785,7 +787,7 @@ fn apply_controller_system<S: TnuaScheme>(
                         let mut contender_action_state =
                             contender_action.action.into_action_state_variant(config);
 
-                        controller.actions_being_fed[contender_action_state.variant_idx()]
+                        controller.actions_being_fed[contender_action_state.discriminant().variant_idx()]
                             .rescheduled_in = None;
 
                         let contender_directive = contender_action_state.interface_mut().apply(
@@ -836,7 +838,7 @@ fn apply_controller_system<S: TnuaScheme>(
                                     contender_directive
                                 {
                                     controller.actions_being_fed
-                                        [contender_action_state.variant_idx()]
+                                        [contender_action_state.discriminant().variant_idx()]
                                     .rescheduled_in = Some(Timer::from_seconds(
                                         after_seconds.f32(),
                                         TimerMode::Once,

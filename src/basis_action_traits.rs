@@ -33,16 +33,8 @@ pub trait TnuaScheme: 'static + Send + Sync + Sized {
     /// copied to the variant in action state as is.
     type ActionState: TnuaActionState<Basis = Self::Basis, Discriminant = Self::ActionDiscriminant>;
 
-    #[doc(hidden)]
-    const NUM_VARIANTS: usize;
-
     /// The action without the input and payloads.
     fn discriminant(&self) -> Self::ActionDiscriminant;
-
-    #[doc(hidden)]
-    fn variant_idx(&self) -> usize {
-        self.discriminant().variant_idx()
-    }
 
     #[doc(hidden)]
     fn into_action_state_variant(self, config: &Self::Config) -> Self::ActionState;
@@ -405,6 +397,9 @@ pub trait TnuaActionDiscriminant:
     'static + Send + Sync + Copy + Clone + PartialEq + Eq + core::fmt::Debug
 {
     #[doc(hidden)]
+    const NUM_VARIANTS: usize;
+
+    #[doc(hidden)]
     fn variant_idx(&self) -> usize;
 }
 
@@ -420,11 +415,6 @@ pub trait TnuaActionState: 'static + Send + Sync {
 
     /// The action without the input and payloads.
     fn discriminant(&self) -> Self::Discriminant;
-
-    #[doc(hidden)]
-    fn variant_idx(&self) -> usize {
-        self.discriminant().variant_idx()
-    }
 
     #[doc(hidden)]
     fn interface(&self) -> &dyn TnuaActionStateInterface<Self::Basis>;
