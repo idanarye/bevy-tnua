@@ -359,6 +359,30 @@ impl<S: TnuaScheme> TnuaController<S> {
         }
     }
 
+    /// Pretend to feed an action.
+    ///
+    /// This makes Tnua think the action is being fed without actually causing it to happen. Useful
+    /// for when the player press the button but the action cannot be sent (e.g. - wall jumping
+    /// button, but character is not next to a wall) - feeding a fake action will prevent Tnua from
+    /// triggering the action when it can, eventually, be sent - but the player did not release the
+    /// button so it shouldn't be invoked.
+    pub fn action_fake(&mut self, action: S::ActionDiscriminant) {
+        let fed_entry = &mut self.actions_being_fed[action.feed_status_slot()];
+        match fed_entry.status {
+            FedStatus::Not => {
+                *fed_entry = FedEntry {
+                    status: FedStatus::Fresh,
+                    rescheduled_in: None,
+                };
+            }
+            FedStatus::Lingering
+            | FedStatus::Fresh
+            | FedStatus::Trigger
+            | FedStatus::Interrupt
+            | FedStatus::Held => fed_entry.status = FedStatus::Fresh,
+        }
+    }
+
     /// Trigger an action in a push fashion. The action must be one that handles its own duration.
     ///
     /// This means that actions like [`TnuaBuiltinCrouch`](crate::builtins::TnuaBuiltinCrouch)

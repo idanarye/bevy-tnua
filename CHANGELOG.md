@@ -13,6 +13,7 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ### Added
 - `#[scheme(same_trigger = ...)]` parameter for the `TnuaScheme` derive macro.
+- `TnuaController::action_fake` for fake-feeding actions.
 
 ### Changed
 - Internal changes to `variant_idx` and `NUM_VARIANTS` - not considered
