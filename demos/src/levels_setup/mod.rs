@@ -1,3 +1,5 @@
+pub mod close_platforms_2d;
+pub mod close_platforms_3d;
 pub mod compound_colliders_2d;
 pub mod compound_colliders_3d;
 pub mod dynamic_bodies_2d;
@@ -22,6 +24,7 @@ pub fn levels_for_2d(plugin: &mut LevelSwitchingPlugin) {
     plugin.add("DynamicBodies", dynamic_bodies_2d::setup_level);
     plugin.add("JungleGym", jungle_gym_2d::setup_level);
     plugin.add("Planet", planet_2d::setup_level);
+    plugin.add("ClosePlatforms", close_platforms_2d::setup_level);
 }
 
 pub fn levels_for_3d(plugin: &mut LevelSwitchingPlugin) {
@@ -31,4 +34,5 @@ pub fn levels_for_3d(plugin: &mut LevelSwitchingPlugin) {
     plugin.add("DynamicBodies", dynamic_bodies_3d::setup_level);
     plugin.add("JungleGym", jungle_gym::setup_level);
     plugin.add("Planet", planet_3d::setup_level);
+    plugin.add("ClosePlatforms", close_platforms_3d::setup_level);
 }
