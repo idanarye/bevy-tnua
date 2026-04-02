@@ -15,6 +15,7 @@ use bevy_tnua_physics_integration_layer::math::AsF32;
 use bevy_tnua_physics_integration_layer::math::Float;
 use bevy_tnua_physics_integration_layer::math::Vector3;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
+use ordered_float::OrderedFloat;
 pub use spatial_ext::TnuaSpatialExtAvian3d;
 
 use bevy_tnua_physics_integration_layer::TnuaPipelineSystems;
@@ -200,7 +201,7 @@ fn update_proximity_sensors_system(
 
             let collision_layers = collision_layers_query.get(owner_entity).ok();
 
-            let mut final_sensor_output = None;
+            let mut final_sensor_output: Option<TnuaProximitySensorOutput> = None;
             if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                 ghost_sensor.0.clear();
             }
@@ -310,7 +311,13 @@ fn update_proximity_sensors_system(
                 } else if entity_is_sensor || excluded_by_collision_layers() {
                     true
                 } else {
-                    final_sensor_output = Some(sensor_output);
+                    if final_sensor_output.as_ref().is_none_or(|current_output| {
+                        sensor_output.proximity < current_output.proximity
+                    }) {
+                        // Hits are not guaranteed to be ordered, so we need to make them ordered.
+                        // See https://github.com/idanarye/bevy-tnua/issues/123
+                        final_sensor_output = Some(sensor_output);
+                    }
                     false
                 }
             };
@@ -364,6 +371,18 @@ fn update_proximity_sensors_system(
                         })
                     },
                 );
+            }
+            if let Some(ghost_sensor) = ghost_sensor.as_mut() {
+                // Hits are not guaranteed to be ordered, so we need to make them ordered.
+                // See https://github.com/idanarye/bevy-tnua/issues/123
+                if let Some(final_sensor_output) = final_sensor_output.as_ref() {
+                    ghost_sensor
+                        .0
+                        .retain(|ghost_hit| ghost_hit.proximity < final_sensor_output.proximity);
+                }
+                ghost_sensor
+                    .0
+                    .sort_by_key(|ghost_hit| OrderedFloat(ghost_hit.proximity));
             }
             sensor.output = final_sensor_output;
         },
