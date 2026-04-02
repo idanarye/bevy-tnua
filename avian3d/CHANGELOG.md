@@ -11,6 +11,11 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.11.1 - 2026-04-03
+### Fixed
+- Manually enforce hit order in ray/shape casts (fixes
+  https://github.com/idanarye/bevy-tnua/issues/123)
+
 ## 0.11.0 - 2026-03-17
 ### Changed
 - Upgrade to Avian 0.6.
