@@ -43,7 +43,7 @@ avian2d = ["avian", "dep:avian2d", "dep:bevy-tnua-avian2d"]
 avian3d = ["avian", "dep:avian3d", "dep:bevy-tnua-avian3d"]
 
 [dependencies]
-bevy = { version = "^0.18", default-features = false, features = [
+bevy = { version = "^0.19", default-features = false, features = [
     "gltf_animation",
     "bevy_asset",
     # "bevy_audio",

@@ -12,7 +12,7 @@ documentation = "https://docs.rs/bevy-tnua-avian3d"
 readme = "../README.md"
 
 [dependencies]
-bevy = { version = "^0.18", default-features = false }
+bevy = { version = "^0.19", default-features = false }
 avian3d = { version = "^0.6", default-features = false, features = ["3d", "debug-plugin", "parallel"] }
 bevy-tnua-physics-integration-layer = { version = "^0.12", path = "../physics-integration-layer" }
 ordered-float = "5.3.0"
