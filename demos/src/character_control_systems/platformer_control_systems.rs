@@ -97,7 +97,7 @@ pub fn apply_platformer_controls(
     ghost_sensors_query: Query<&TnuaGhostSensor>,
 ) {
     #[cfg(feature = "egui")]
-    if egui_context.ctx_mut().unwrap().wants_keyboard_input() {
+    if egui_context.ctx_mut().unwrap().egui_wants_keyboard_input() {
         for (mut controller, ..) in query.iter_mut() {
             // The basis remembers its last frame status, so if we cannot feed it proper input this
             // frame (for example - because the GUI takes the input focus) we need to neutralize

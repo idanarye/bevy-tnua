@@ -152,7 +152,7 @@ impl LevelSetupHelper2d<'_, '_> {
         transform: Transform,
         #[allow(unused)] radius: Float,
     ) -> EntityCommands<'_> {
-        let font = FontSourceTemplate(self.asset_server.load("FiraSans-Bold.ttf"));
+        let font = FontSource::Handle(self.asset_server.load("FiraSans-Bold.ttf"));
         let child = self
             .spawn((
                 LevelObject,

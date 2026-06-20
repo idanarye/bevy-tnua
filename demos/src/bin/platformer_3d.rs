@@ -137,7 +137,7 @@ fn setup_camera_and_lights(mut commands: Commands) {
     commands.spawn((
         DirectionalLight {
             illuminance: 4000.0,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             ..Default::default()
         },
         Transform::default().looking_at(-Vec3::Y, Vec3::Z),
@@ -165,7 +165,7 @@ fn setup_player(
     mut control_scheme_config_assets: ResMut<Assets<DemoControlSchemeConfig>>,
 ) {
     let mut cmd = commands.spawn(IsPlayer);
-    cmd.insert(SceneRoot(asset_server.load("player.glb#Scene0")));
+    cmd.insert(WorldAsserRoot(asset_server.load("player.glb#Scene0")));
     cmd.insert(GltfSceneHandler {
         names_from: asset_server.load("player.glb"),
     });

@@ -84,7 +84,7 @@ impl Plugin for TnuaRapier2dPlugin {
 /// The [`SharedShape`](parry::shape::SharedShape) can be constructed using the re-exported
 /// [`bevy_rapier2d::parry`], or by constructing a [`Collider`] first and taking it's
 /// [`raw`](Collider::raw) field.
-#[derive(Component)]
+#[derive(Component, Send, Sync)]
 pub struct TnuaRapier2dSensorShape(pub parry::shape::SharedShape);
 
 #[allow(clippy::type_complexity)]

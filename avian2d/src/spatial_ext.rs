@@ -29,12 +29,12 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian2d<'_, '_> {
     ) -> TnuaPointProjectionResult {
         let (collider, position, rotation) = collider_data;
         let (projected_point, is_inside) =
-            collider.project_point(**position, **rotation, point.truncate(), solid);
+            collider.project_point(**position, **rotation, point.truncate().into(), solid);
         let projected_point = projected_point.extend(point.z);
         if is_inside {
-            TnuaPointProjectionResult::Inside(projected_point)
+            TnuaPointProjectionResult::Inside(projected_point.into())
         } else {
-            TnuaPointProjectionResult::Outside(projected_point)
+            TnuaPointProjectionResult::Outside(projected_point.into())
         }
     }
 
@@ -50,8 +50,8 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian2d<'_, '_> {
             .cast_ray(
                 **position,
                 **rotation,
-                origin.truncate(),
-                direction.truncate(),
+                origin.truncate().into(),
+                direction.truncate().into(),
                 max_time_of_impact,
                 true,
             )

@@ -24,7 +24,8 @@ use bevy_tnua::math::AsF32;
 use bevy_tnua::math::{Float, Vector2, Vector3, float_consts};
 #[cfg(feature = "egui")]
 use bevy_tnua::prelude::TnuaConfig;
-
+#[cfg(feature = "egui")]
+use bevy_ecs::schedule::ScheduleLabel;
 #[cfg(feature = "egui")]
 use crate::character_control_systems::platformer_control_systems::CameraControllerFloating;
 
@@ -34,7 +35,7 @@ use self::plotting::{make_update_plot_data_system, plot_source_rolling_update};
 
 use tuning::UiTunable;
 
-#[derive(SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(ScheduleLabel, SystemSet, Clone, PartialEq, Eq, Debug, Hash)]
 pub struct DemoInfoUpdateSystems;
 
 // Before we moved it into the `config_ext`, `CharacterMotionConfigForPlatformerDemo` was passed to
