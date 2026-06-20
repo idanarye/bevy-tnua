@@ -1,3 +1,4 @@
+use bevy::pbr::prelude::MeshMaterial3d;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_tnua::math::Vector3;
 

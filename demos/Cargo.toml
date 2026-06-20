@@ -52,6 +52,8 @@ bevy = { version = "^0.19", default-features = false, features = [
     # "bevy_winit",
     "bevy_render",
     "bevy_gltf",
+    "system_font_discovery",
+    "bevy_pbr",
     "ktx2",
     "zstd_rust",
     "tonemapping_luts",

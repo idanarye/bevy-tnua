@@ -300,7 +300,7 @@ fn ui_system<S: TnuaScheme, C: Component<Mutability = Mutable> + UiTunable>(
                                 }
                             });
 
-                        if let Some(control_scheme_config) = control_scheme_config_assets.get_mut(&config_handle.0) {
+                        if let Some(mut control_scheme_config) = control_scheme_config_assets.get_mut(&config_handle.0) {
                             control_scheme_config.tune(ui);
                         }
                         if let Some(tunable) = tunable.as_mut() {

@@ -152,15 +152,15 @@ impl LevelSetupHelper2d<'_, '_> {
         transform: Transform,
         #[allow(unused)] radius: Float,
     ) -> EntityCommands<'_> {
-        let font = self.asset_server.load("FiraSans-Bold.ttf");
+        let font = FontSourceTemplate(self.asset_server.load("FiraSans-Bold.ttf"));
         let child = self
             .spawn((
                 LevelObject,
                 Text::new(text.to_string()),
-                TextLayout::new_with_justify(Justify::Center),
+                TextLayout::justify(Justify::Center),
                 TextFont {
                     font,
-                    font_size: 72.0,
+                    font_size: FontSize::Px(72.0),
                     ..default()
                 },
                 TextColor(css::WHITE.into()),
