@@ -55,25 +55,25 @@ jobs:
       - name: Test with state serialization enabled
         run: cargo test --package bevy-tnua --verbose --features serialize -- --nocapture
   fmt:
-   name: Rustfmt
-   runs-on: ubuntu-latest
-   steps:
-     - uses: actions/checkout@v3
-     - uses: dtolnay/rust-toolchain@master
-       with:
-         toolchain: 1.92.0
-         components: rustfmt
-     - name: Run fmt --all -- --check
-       run: cargo fmt --all -- --check
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.0
+          components: rustfmt
+      - name: Run fmt --all -- --check
+        run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.92.0
+          toolchain: 1.96.0
           components: clippy
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
@@ -92,14 +92,14 @@ jobs:
     name: Docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.92.0
+          toolchain: 1.96.0
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: cache
         with:
           path: ~/.cargo
@@ -137,14 +137,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - uses: jetli/wasm-bindgen-action@v0.1.0
         with:
-          version: 'latest'
+          version: "latest"
       - uses: dtolnay/rust-toolchain@master
         with:
           targets: wasm32-unknown-unknown
-          toolchain: 1.92.0
+          toolchain: 1.96.0
       - name: Get package names
         id: get-package-names
         run: |-
@@ -222,13 +222,13 @@ jobs:
           }
           build_for_backend rapier
           build_for_backend avian
-          build_for_backend avian 64 --no-default-features --features f64 --features egui 
+          build_for_backend avian 64 --no-default-features --features f64 --features egui
           cp -R demos/assets/ target/doc/demos/
       - name: Add read permissions
         run: |-
           chmod --recursive +r target/doc
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: target/doc
   deploy-ghpages:
@@ -241,4 +241,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
