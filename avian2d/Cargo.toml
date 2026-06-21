@@ -13,9 +13,7 @@ readme = "../README.md"
 
 [dependencies]
 bevy = { version = "^0.19", default-features = false }
-# DO NOT COMMIT
-#avian2d = { version = "^0.6", default-features = false, features = ["2d", "debug-plugin", "parallel"]}
-avian2d = { git = "https://github.com/avianphysics/avian.git", package = "avian2d",  default-features = false, features = ["2d", "debug-plugin", "parallel", "parry-f32"], optional = true }
+avian2d = { version = "^0.7", default-features = false, features = ["2d", "debug-plugin", "parallel"]}
 bevy-tnua-physics-integration-layer = { version = "^0.12", path = "../physics-integration-layer" }
 ordered-float = "5.3.0"
 

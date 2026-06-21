@@ -15,7 +15,6 @@ use bevy_tnua_physics_integration_layer::math::AsF32;
 use bevy_tnua_physics_integration_layer::math::Float;
 use bevy_tnua_physics_integration_layer::math::Vector3;
 use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
-
 use ordered_float::OrderedFloat;
 pub use spatial_ext::TnuaSpatialExtAvian3d;
 

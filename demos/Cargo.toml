@@ -78,16 +78,11 @@ bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
 
 bevy_rapier3d = { version = "^0.34", features = ["debug-render-3d"], optional = true }
 bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
-# do not commit
-#avian2d = { version = "^0.6.1", default-features = false, features = ["2d","debug-plugin", "parry-f32", "parallel"], optional = true}
-avian2d = { git = "https://github.com/avianphysics/avian.git", package = "avian2d",  default-features = false, features = ["2d", "debug-plugin", "parallel", "parry-f32"], optional = true }
+avian2d = { version = "^0.7", default-features = false, features = ["2d","debug-plugin", "parry-f32", "parallel"], optional = true}
 
 bevy-tnua-avian2d = { path = "../avian2d", default-features = false, optional = true }
 
-# DO NOT COMMIT
-# patching a soon to be published version of avian3d
-# avian3d = { version = "^0.6", default-features = false, features = ["3d","debug-plugin", "parry-f32", "parallel"], optional = true }
-avian3d = { git = "https://github.com/avianphysics/avian.git", package = "avian3d", features = ["3d", "debug-plugin", "parallel", "parry-f32"], optional=true }
+avian3d = { version = "^0.7", default-features = false, features = ["3d", "debug-plugin", "parallel", "parry-f32"], optional=true }
 bevy-tnua-avian3d = { path = "../avian3d", default-features = false, optional = true }
 
 bevy_egui = { version = "0.40", optional = true, default-features = false, features = ["bevy_ui", "default_fonts", "render"] }
