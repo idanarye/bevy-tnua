@@ -368,8 +368,8 @@ fn update_proximity_sensors_system(
                             entity: ray_hit_data.entity.into(),
                             proximity: ray_hit_data.distance,
                             intersection_point: cast_origin
-                                + ray_hit_data.distance * cast_direction.into().adjust_precision(),
-                            normal: Dir3::new(ray_hit_data.normal.into())
+                                + ray_hit_data.distance * cast_direction.adjust_precision(),
+                            normal: Dir3::new(ray_hit_data.normal)
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },

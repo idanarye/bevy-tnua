@@ -153,7 +153,7 @@ fn setup_camera_and_lights(mut commands: Commands) {
     commands.spawn((
         DirectionalLight {
             illuminance: 4000.0,
-            shadows_maps_enabled: true,
+            shadow_maps_enabled: true,
             ..Default::default()
         },
         Transform::default().looking_at(-Vec3::Y, Vec3::Z),
@@ -166,7 +166,7 @@ fn setup_player(
     mut control_scheme_config_assets: ResMut<Assets<DemoControlSchemeConfig>>,
 ) {
     let mut cmd = commands.spawn(IsPlayer);
-    cmd.insert(SceneRoot(asset_server.load("player.glb#Scene0")));
+    cmd.insert(WorldAssetRoot(asset_server.load("player.glb#Scene0")));
     cmd.insert(GltfSceneHandler {
         names_from: asset_server.load("player.glb"),
     });
@@ -231,13 +231,13 @@ fn setup_player(
                 "Sensor Shape",
                 1,
                 &[
-                    ("no", |mut cmd| {
+                    ("no", |cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.remove::<TnuaRapier3dSensorShape>();
                         #[cfg(feature = "avian3d")]
                         cmd.remove::<TnuaAvian3dSensorShape>();
                     }),
-                    ("flat (underfit)", |mut cmd| {
+                    ("flat (underfit)", |cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.49),
@@ -245,7 +245,7 @@ fn setup_player(
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.49, 0.0)));
                     }),
-                    ("flat (exact)", |mut cmd| {
+                    ("flat (exact)", |cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.5),
@@ -253,7 +253,7 @@ fn setup_player(
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.5, 0.0)));
                     }),
-                    ("flat (overfit)", |mut cmd| {
+                    ("flat (overfit)", |cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.51),
@@ -261,7 +261,7 @@ fn setup_player(
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.51, 0.0)));
                     }),
-                    ("ball (underfit)", |mut cmd| {
+                    ("ball (underfit)", |cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::ball(0.49),
@@ -269,7 +269,7 @@ fn setup_player(
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::sphere(0.49)));
                     }),
-                    ("ball (exact)", |mut cmd| {
+                    ("ball (exact)", |cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::ball(0.5),
@@ -279,7 +279,7 @@ fn setup_player(
                     }),
                 ],
             )
-            .with_checkbox("Lock Tilt", false, |mut cmd, lock_tilt| {
+            .with_checkbox("Lock Tilt", false, |cmd, lock_tilt| {
                 // Tnua will automatically apply angular impulses/forces to fix the tilt and make
                 // the character stand upward, but it is also possible to just let the physics
                 // engine prevent rotation (other than around the Y axis, for turning)
@@ -301,7 +301,7 @@ fn setup_player(
             .with_checkbox(
                 "Phase Through Collision Groups",
                 true,
-                |mut cmd, use_collision_groups| {
+                |cmd, use_collision_groups| {
                     #[cfg(feature = "rapier3d")]
                     if use_collision_groups {
                         cmd.insert(CollisionGroups {
@@ -381,7 +381,7 @@ fn grab_ungrab_mouse(
     if cursor_options.visible {
         if mouse_buttons.just_pressed(MouseButton::Left) {
             #[cfg(feature = "egui")]
-            if egui_context.ctx_mut().unwrap().is_pointer_over_area() {
+            if egui_context.ctx_mut().unwrap().is_pointer_over_egui() {
                 return;
             }
             cursor_options.grab_mode = CursorGrabMode::Locked;

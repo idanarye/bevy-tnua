@@ -1,9 +1,7 @@
-use avian3d::{
-    collision::collider::{Collider, CollisionLayers, Sensor},
-    physics_transform::{Position, Rotation},
-};
-use bevy::ecs::{query::Has, system::Query};
-use bevy_ecs::entity::Entity;
+use crate::{Position, Rotation};
+use avian3d::collision::collider::{CollisionLayers, Sensor};
+use avian3d::prelude::Collider;
+use bevy::ecs::{entity::Entity, query::Has, system::Query};
 use bevy_tnua_physics_integration_layer::{
     math::{Float, Vector3},
     spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
