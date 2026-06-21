@@ -335,11 +335,9 @@ fn update_proximity_sensors_system(
                 );
                 spatial_query.shape_hits_callback(
                     shape,
-                    cast_origin.into(),
-                    owner_rotation
-                        .mul_quat(sensor.cast_shape_rotation.adjust_precision())
-                        .into(),
-                    cast_direction.into(),
+                    cast_origin,
+                    owner_rotation.mul_quat(sensor.cast_shape_rotation.adjust_precision()),
+                    cast_direction,
                     &ShapeCastConfig {
                         max_distance: sensor.cast_range,
                         ignore_origin_penetration: true,
@@ -348,28 +346,28 @@ fn update_proximity_sensors_system(
                     &query_filter,
                     |shape_hit_data| {
                         apply_cast(CastResult {
-                            entity: shape_hit_data.entity.into(),
+                            entity: shape_hit_data.entity,
                             proximity: shape_hit_data.distance,
-                            intersection_point: shape_hit_data.point1.into(),
-                            normal: Dir3::new(shape_hit_data.normal1.into())
+                            intersection_point: shape_hit_data.point1,
+                            normal: Dir3::new(shape_hit_data.normal1.f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },
                 );
             } else {
                 spatial_query.ray_hits_callback(
-                    cast_origin.into(),
-                    cast_direction.into(),
+                    cast_origin,
+                    cast_direction,
                     sensor.cast_range,
                     true,
                     &query_filter,
                     |ray_hit_data| {
                         apply_cast(CastResult {
-                            entity: ray_hit_data.entity.into(),
+                            entity: ray_hit_data.entity,
                             proximity: ray_hit_data.distance,
                             intersection_point: cast_origin
                                 + ray_hit_data.distance * cast_direction.adjust_precision(),
-                            normal: Dir3::new(ray_hit_data.normal)
+                            normal: Dir3::new(ray_hit_data.normal.f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
                     },
@@ -404,7 +402,7 @@ fn update_obstacle_radars_system(
         radar.pre_marking_update(
             radar_owner_entity,
             radar_position.0,
-            Dir3::new(gravity.0.into()).unwrap_or(Dir3::Y),
+            Dir3::new(gravity.0.f32()).unwrap_or(Dir3::Y),
         );
         spatial_query.shape_intersections_callback(
             &Collider::cylinder(radar.radius, radar.height),

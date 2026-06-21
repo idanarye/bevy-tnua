@@ -31,11 +31,11 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian3d<'_, '_> {
     ) -> TnuaPointProjectionResult {
         let (collider, position, rotation) = collider_data;
         let (projected_point, is_inside) =
-            collider.project_point(**position, **rotation, point.into(), solid);
+            collider.project_point(**position, **rotation, point, solid);
         if is_inside {
-            TnuaPointProjectionResult::Inside(projected_point.into())
+            TnuaPointProjectionResult::Inside(projected_point)
         } else {
-            TnuaPointProjectionResult::Outside(projected_point.into())
+            TnuaPointProjectionResult::Outside(projected_point)
         }
     }
 
@@ -47,16 +47,14 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian3d<'_, '_> {
         collider_data: &Self::ColliderData<'a>,
     ) -> Option<(Float, Vector3)> {
         let (collider, position, rotation) = collider_data;
-        collider
-            .cast_ray(
-                **position,
-                **rotation,
-                origin.into(),
-                direction.into(),
-                max_time_of_impact,
-                true,
-            )
-            .into()
+        collider.cast_ray(
+            **position,
+            **rotation,
+            origin,
+            direction,
+            max_time_of_impact,
+            true,
+        )
     }
 
     fn can_interact(&self, entity1: Entity, entity2: Entity) -> bool {

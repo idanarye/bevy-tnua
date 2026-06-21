@@ -37,12 +37,12 @@ impl TnuaSpatialExt for TnuaSpatialExtRapier2d<'_, '_> {
         collider_data: &Self::ColliderData<'a>,
     ) -> TnuaPointProjectionResult {
         let (collider, position, rotation) = collider_data;
-        let result = collider.project_point(*position.into(), *rotation, point.truncate(), solid);
+        let result = collider.project_point(*position, *rotation, point.truncate(), solid);
         let projected_point = result.point.extend(point.z);
         if result.is_inside {
-            TnuaPointProjectionResult::Inside(projected_point.into())
+            TnuaPointProjectionResult::Inside(projected_point)
         } else {
-            TnuaPointProjectionResult::Outside(projected_point.into())
+            TnuaPointProjectionResult::Outside(projected_point)
         }
     }
 
@@ -56,10 +56,10 @@ impl TnuaSpatialExt for TnuaSpatialExtRapier2d<'_, '_> {
         let (collider, position, rotation) = collider_data;
         collider
             .cast_ray_and_get_normal(
-                *position.into(),
+                *position,
                 *rotation,
-                origin.truncate().into(),
-                direction.truncate().into(),
+                origin.truncate(),
+                direction.truncate(),
                 max_time_of_impact,
                 true,
             )
