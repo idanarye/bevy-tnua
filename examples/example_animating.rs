@@ -73,7 +73,7 @@ fn setup_camera_and_lights(mut commands: Commands) {
     commands.spawn((
         DirectionalLight {
             illuminance: 4000.0,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             ..Default::default()
         },
         Transform::default().looking_at(-Vec3::Y, Vec3::Z),
@@ -109,7 +109,7 @@ fn setup_player(
     commands.insert_resource(PlayerGltfHandle(asset_server.load("player.glb")));
 
     commands.spawn((
-        SceneRoot(asset_server.load("player.glb#Scene0")),
+        WorldAssetRoot(asset_server.load("player.glb#Scene0")),
         Transform::from_xyz(0.0, 2.0, 0.0),
         // We'll need this in the `handle_animating` system to keep track of the players animating
         // state.
