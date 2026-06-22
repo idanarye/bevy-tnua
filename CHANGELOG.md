@@ -8,6 +8,10 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+## 0.32.0 - 2026-06-23
+### Changed
+- Upgrade to Bevy 0.19.
+
 ## 0.31.0 - 2026-04-01
 ### Fixed
 - [**BREAKING**] `#[scheme]` attribute on `TnuaScheme` variants now generate

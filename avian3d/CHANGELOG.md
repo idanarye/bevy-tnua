@@ -11,6 +11,10 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.12.0 - 2026-06-23
+### Changed
+- Upgrade to Bevy 0.19.
+
 ## 0.11.1 - 2026-04-03
 ### Fixed
 - Manually enforce hit order in ray/shape casts (fixes
