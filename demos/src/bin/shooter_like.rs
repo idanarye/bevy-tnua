@@ -381,7 +381,7 @@ fn grab_ungrab_mouse(
     if cursor_options.visible {
         if mouse_buttons.just_pressed(MouseButton::Left) {
             #[cfg(feature = "egui")]
-            if egui_context.ctx_mut().unwrap().is_pointer_over_area() {
+            if egui_context.ctx_mut().unwrap().is_pointer_over_egui() {
                 return;
             }
             cursor_options.grab_mode = CursorGrabMode::Locked;
