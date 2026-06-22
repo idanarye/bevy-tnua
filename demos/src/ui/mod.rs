@@ -9,6 +9,8 @@ pub mod tuning;
 
 use std::marker::PhantomData;
 
+#[cfg(feature = "egui")]
+use crate::character_control_systems::platformer_control_systems::CameraControllerFloating;
 use bevy::ecs::component::Mutable;
 use bevy::prelude::*;
 #[cfg(feature = "egui")]
@@ -24,8 +26,6 @@ use bevy_tnua::math::AsF32;
 use bevy_tnua::math::{Float, Vector2, Vector3, float_consts};
 #[cfg(feature = "egui")]
 use bevy_tnua::prelude::TnuaConfig;
-#[cfg(feature = "egui")]
-use crate::character_control_systems::platformer_control_systems::CameraControllerFloating;
 
 use self::component_alterbation::CommandAlteringSelectors;
 #[cfg(feature = "egui")]
