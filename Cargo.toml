@@ -58,6 +58,7 @@ bevy = { version = "^0.19", default-features = false, features = [
     "zstd_rust",
     "tonemapping_luts",
     "bevy_text",
+    "bevy_pbr",
     "bevy_log",
     "reflect_auto_register",
     # "png",

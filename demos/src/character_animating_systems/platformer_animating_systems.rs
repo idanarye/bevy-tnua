@@ -130,7 +130,9 @@ pub fn animate_platformer_character(
                 }
                 // Jumping and dashing can be chained, we want to start a new jump/dash animation
                 // when one jump/dash is chained to another.
-                AnimationState::Jumping | AnimationState::Dashing if controller.action_flow_status().just_starting().is_some() => {
+                AnimationState::Jumping | AnimationState::Dashing
+                    if controller.action_flow_status().just_starting().is_some() =>
+                {
                     player.seek_all_by(0.0);
                 }
                 // For other animations we don't have anything special to do - so we just let them
