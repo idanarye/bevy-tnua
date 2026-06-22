@@ -231,13 +231,13 @@ fn setup_player(
                 "Sensor Shape",
                 1,
                 &[
-                    ("no", |cmd| {
+                    ("no", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.remove::<TnuaRapier3dSensorShape>();
                         #[cfg(feature = "avian3d")]
                         cmd.remove::<TnuaAvian3dSensorShape>();
                     }),
-                    ("flat (underfit)", |cmd| {
+                    ("flat (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.49),
@@ -245,7 +245,7 @@ fn setup_player(
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.49, 0.0)));
                     }),
-                    ("flat (exact)", |cmd| {
+                    ("flat (exact)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.5),
@@ -253,7 +253,7 @@ fn setup_player(
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.5, 0.0)));
                     }),
-                    ("flat (overfit)", |cmd| {
+                    ("flat (overfit)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::cylinder(0.0, 0.51),
@@ -261,7 +261,7 @@ fn setup_player(
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::cylinder(0.51, 0.0)));
                     }),
-                    ("ball (underfit)", |cmd| {
+                    ("ball (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::ball(0.49),
@@ -269,7 +269,7 @@ fn setup_player(
                         #[cfg(feature = "avian3d")]
                         cmd.insert(TnuaAvian3dSensorShape(avian::Collider::sphere(0.49)));
                     }),
-                    ("ball (exact)", |cmd| {
+                    ("ball (exact)", |mut cmd| {
                         #[cfg(feature = "rapier3d")]
                         cmd.insert(TnuaRapier3dSensorShape(
                             bevy_rapier3d::parry::shape::SharedShape::ball(0.5),
@@ -279,7 +279,7 @@ fn setup_player(
                     }),
                 ],
             )
-            .with_checkbox("Lock Tilt", false, |cmd, lock_tilt| {
+            .with_checkbox("Lock Tilt", false, |mut cmd, lock_tilt| {
                 // Tnua will automatically apply angular impulses/forces to fix the tilt and make
                 // the character stand upward, but it is also possible to just let the physics
                 // engine prevent rotation (other than around the Y axis, for turning)
@@ -301,7 +301,7 @@ fn setup_player(
             .with_checkbox(
                 "Phase Through Collision Groups",
                 true,
-                |cmd, use_collision_groups| {
+                |mut cmd, use_collision_groups| {
                     #[cfg(feature = "rapier3d")]
                     if use_collision_groups {
                         cmd.insert(CollisionGroups {
@@ -381,7 +381,7 @@ fn grab_ungrab_mouse(
     if cursor_options.visible {
         if mouse_buttons.just_pressed(MouseButton::Left) {
             #[cfg(feature = "egui")]
-            if egui_context.ctx_mut().unwrap().is_pointer_over_egui() {
+            if egui_context.ctx_mut().unwrap().is_pointer_over_area() {
                 return;
             }
             cursor_options.grab_mode = CursorGrabMode::Locked;

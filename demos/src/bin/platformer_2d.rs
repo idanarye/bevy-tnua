@@ -203,13 +203,13 @@ fn setup_player(
                 "Sensor Shape",
                 1,
                 &[
-                    ("Point", |_cmd| {
+                    ("Point", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.remove::<TnuaRapier2dSensorShape>();
                         #[cfg(feature = "avian2d")]
                         cmd.remove::<TnuaAvian2dSensorShape>();
                     }),
-                    ("Flat (underfit)", |_cmd| {
+                    ("Flat (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(
                             bevy_rapier2d::parry::shape::SharedShape::cuboid(0.49, 0.0),
@@ -219,7 +219,7 @@ fn setup_player(
                             0.99, 0.0,
                         )));
                     }),
-                    ("Flat (exact)", |_cmd| {
+                    ("Flat (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(
                             bevy_rapier2d::parry::shape::SharedShape::cuboid(0.5, 0.0),
@@ -227,7 +227,7 @@ fn setup_player(
                         #[cfg(feature = "avian2d")]
                         cmd.insert(TnuaAvian2dSensorShape(avian::Collider::rectangle(1.0, 0.0)));
                     }),
-                    ("flat (overfit)", |_cmd| {
+                    ("flat (overfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(
                             bevy_rapier2d::parry::shape::SharedShape::cuboid(0.51, 0.0),
@@ -237,7 +237,7 @@ fn setup_player(
                             1.01, 0.0,
                         )));
                     }),
-                    ("Ball (underfit)", |_cmd| {
+                    ("Ball (underfit)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(
                             bevy_rapier2d::parry::shape::SharedShape::ball(0.49),
@@ -245,7 +245,7 @@ fn setup_player(
                         #[cfg(feature = "avian2d")]
                         cmd.insert(TnuaAvian2dSensorShape(avian::Collider::circle(0.49)));
                     }),
-                    ("Ball (exact)", |_cmd| {
+                    ("Ball (exact)", |mut cmd| {
                         #[cfg(feature = "rapier2d")]
                         cmd.insert(TnuaRapier2dSensorShape(
                             bevy_rapier2d::parry::shape::SharedShape::ball(0.5),
@@ -255,7 +255,7 @@ fn setup_player(
                     }),
                 ],
             )
-            .with_checkbox("Lock Tilt", false, |_cmd, lock_tilt| {
+            .with_checkbox("Lock Tilt", false, |mut cmd, lock_tilt| {
                 // Tnua will automatically apply angular impulses/forces to fix the tilt and make
                 // the character stand upward, but it is also possible to just let the physics
                 // engine prevent rotation (other than around the Y axis, for turning)
@@ -274,7 +274,7 @@ fn setup_player(
             .with_checkbox(
                 "Phase Through Collision Groups",
                 true,
-                |_cmd, _use_collision_groups| {
+                |mut cmd, use_collision_groups| {
                     #[cfg(feature = "rapier2d")]
                     if use_collision_groups {
                         cmd.insert(CollisionGroups {

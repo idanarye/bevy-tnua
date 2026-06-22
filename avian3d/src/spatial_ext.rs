@@ -1,7 +1,5 @@
-use crate::{Position, Rotation};
-use avian3d::collision::collider::{CollisionLayers, Sensor};
-use avian3d::prelude::Collider;
-use bevy::ecs::{entity::Entity, query::Has, system::Query, system::SystemParam};
+use avian3d::prelude::*;
+use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_tnua_physics_integration_layer::{
     math::{Float, Vector3},
     spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
