@@ -74,7 +74,7 @@ impl<'w, 's> LevelSetupHelper3d<'w, 's> {
         let scene = self.asset_server.load(path.to_string());
         let mut cmd = self.spawn_named(name);
 
-        cmd.insert((SceneRoot(scene), transform));
+        cmd.insert((WorldAssetRoot(scene), transform));
 
         #[cfg(feature = "rapier3d")]
         cmd.insert(rapier::Collider::cuboid(
