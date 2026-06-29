@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: cache
         with:
           path: ~/.cargo
@@ -78,7 +78,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: cache
         with:
           path: ~/.cargo
@@ -99,7 +99,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: cache
         with:
           path: ~/.cargo
