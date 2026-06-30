@@ -32,7 +32,7 @@ jobs:
         rust: [1.96.0, nightly]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: Install rust
         uses: dtolnay/rust-toolchain@master
         with:
@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: cache
         with:
           path: ~/.cargo
@@ -58,7 +58,7 @@ jobs:
    name: Rustfmt
    runs-on: ubuntu-latest
    steps:
-     - uses: actions/checkout@v3
+     - uses: actions/checkout@v7
      - uses: dtolnay/rust-toolchain@master
        with:
          toolchain: 1.96.0
@@ -70,7 +70,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.0
@@ -78,7 +78,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: cache
         with:
           path: ~/.cargo
@@ -92,14 +92,14 @@ jobs:
     name: Docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.0
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libudev-dev
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: cache
         with:
           path: ~/.cargo
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - uses: jetli/wasm-bindgen-action@v0.1.0
         with:
           version: 'latest'
