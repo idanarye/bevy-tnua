@@ -108,8 +108,8 @@ fn update_rigid_body_trackers_system(
         *tracker = TnuaRigidBodyTracker {
             translation,
             rotation,
-            velocity: velocity.linvel.extend(0.0),
-            angvel: Vec3::new(0.0, 0.0, velocity.angvel),
+            velocity: velocity.linear.extend(0.0),
+            angvel: Vec3::new(0.0, 0.0, velocity.angular),
             gravity: tnua_gravity
                 .map(|g| g.0)
                 .unwrap_or(rapier_config.gravity.extend(0.0)),
@@ -269,9 +269,12 @@ fn update_proximity_sensors_system(
             if let Some(ghost_sensor) = ghost_sensor.as_mut() {
                 ghost_sensor.0.clear();
             }
-            let isometry: rapier::na::Isometry2<f32> = {
+            let pose = {
                 let (_, rotation, translation) = transform.to_scale_rotation_translation();
-                (translation.truncate(), rotation.z).into()
+                rapier::math::Pose::from_parts(
+                    translation.truncate(),
+                    rapier::math::Rot2::new(rotation.z),
+                )
             };
             sensor.output = 'sensor_output: loop {
                 if let Some(CastResult {
@@ -287,7 +290,7 @@ fn update_proximity_sensors_system(
                     if let Some(owner_collider) = owner_collider
                         && owner_collider
                             .shape()
-                            .contains_point(&isometry, &intersection_point.into())
+                            .contains_point(&pose, intersection_point.into())
                     {
                         // I hate having to do this so much, but without it it sometimes enters an
                         // infinte loop...
@@ -304,9 +307,9 @@ fn update_proximity_sensors_system(
                     let entity_angvel;
                     if let Ok((entity_transform, entity_velocity)) = other_object_query.get(entity)
                     {
-                        entity_angvel = Vec3::new(0.0, 0.0, entity_velocity.angvel);
-                        entity_linvel = entity_velocity.linvel.extend(0.0)
-                            + if 0.0 < entity_velocity.angvel.abs() {
+                        entity_angvel = Vec3::new(0.0, 0.0, entity_velocity.angular);
+                        entity_linvel = entity_velocity.linear.extend(0.0)
+                            + if 0.0 < entity_velocity.angular.abs() {
                                 let relative_point =
                                     intersection_point - entity_transform.translation().truncate();
                                 // NOTE: no need to project relative_point on the rotation plane, it will not
@@ -411,13 +414,13 @@ fn apply_motors_system(
             TnuaToggle::Enabled => {}
         }
         if motor.lin.boost.is_finite() {
-            velocity.linvel += motor.lin.boost.truncate();
+            velocity.linear += motor.lin.boost.truncate();
         }
         if motor.lin.acceleration.is_finite() {
             external_force.force = motor.lin.acceleration.truncate() * mass_properties.get().mass;
         }
         if motor.ang.boost.is_finite() {
-            velocity.angvel += motor.ang.boost.z;
+            velocity.angular += motor.ang.boost.z;
         }
         if motor.ang.acceleration.is_finite() {
             external_force.torque =

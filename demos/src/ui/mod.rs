@@ -93,14 +93,14 @@ where
             app.add_systems(
                 Update,
                 make_update_plot_data_system(|velocity: &bevy_rapier2d::prelude::Velocity| {
-                    velocity.linvel.extend(0.0)
+                    velocity.linear.extend(0.0)
                 }),
             );
             #[cfg(feature = "rapier3d")]
             app.add_systems(
                 Update,
                 make_update_plot_data_system(|velocity: &bevy_rapier3d::prelude::Velocity| {
-                    velocity.linvel
+                    velocity.linear
                 }),
             );
             #[cfg(feature = "avian2d")]

@@ -181,14 +181,14 @@ fn handle_player_positioning(
 
         #[cfg(feature = "rapier2d")]
         if let Some(velocity) = player.rapier2d_velocity.as_mut() {
-            velocity.linvel = Default::default();
-            velocity.angvel = Default::default();
+            velocity.linear = Default::default();
+            velocity.angular = Default::default();
         }
 
         #[cfg(feature = "rapier3d")]
         if let Some(velocity) = player.rapier3d_velocity.as_mut() {
-            velocity.linvel = Default::default();
-            velocity.angvel = Default::default();
+            velocity.linear = Default::default();
+            velocity.angular = Default::default();
         }
 
         #[cfg(feature = "avian2d")]

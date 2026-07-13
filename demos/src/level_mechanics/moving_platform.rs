@@ -12,7 +12,7 @@ impl Plugin for MovingPlatformPlugin {
             Update,
             MovingPlatform::make_system(
                 |velocity: &mut bevy_rapier2d::prelude::Velocity, linvel: Vector3| {
-                    velocity.linvel = linvel.truncate();
+                    velocity.linear = linvel.truncate();
                 },
             ),
         );
@@ -21,7 +21,7 @@ impl Plugin for MovingPlatformPlugin {
             Update,
             MovingPlatform::make_system(
                 |velocity: &mut bevy_rapier3d::prelude::Velocity, linvel: Vector3| {
-                    velocity.linvel = linvel;
+                    velocity.linear = linvel;
                 },
             ),
         );
