@@ -288,7 +288,7 @@ fn update_proximity_sensors_system(
                     if let Some(owner_collider) = owner_collider
                         && owner_collider
                             .shape()
-                            .contains_point(&pose, intersection_point.into())
+                            .contains_point(&pose, intersection_point)
                     {
                         // I hate having to do this so much, but without it it sometimes enters an
                         // infinte loop...
