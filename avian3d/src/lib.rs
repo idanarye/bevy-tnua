@@ -421,39 +421,65 @@ fn update_obstacle_radars_system(
 
 #[allow(clippy::type_complexity)]
 fn apply_motors_system(
+    mut commands: Commands,
     mut query: Query<(
+        Entity,
         &TnuaMotor,
         &ComputedMass,
         &ComputedAngularInertia,
-        Forces,
+        &mut AngularVelocity,
+        &mut LinearVelocity,
+        Option<&mut ConstantTorque>,
+        Option<&mut ConstantForce>,
         Option<&TnuaToggle>,
         Option<&TnuaGravity>,
     )>,
 ) {
-    for (motor, mass, inertia, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
+    for (
+        entity,
+        motor,
+        mass,
+        inertia,
+        mut ang_vel,
+        mut lin_vel,
+        mut constant_torque,
+        mut constant_force,
+        tnua_toggle,
+        tnua_gravity,
+    ) in query.iter_mut()
+    {
+        let (Some(constant_torque), Some(constant_force)) =
+            (constant_torque.as_mut(), constant_force.as_mut())
+        else {
+            commands
+                .entity(entity)
+                .insert((ConstantTorque::default(), ConstantForce::default()));
+            continue;
+        };
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
-                // *external_force = Default::default();
+                **constant_force = Default::default();
+                **constant_torque = Default::default();
                 return;
             }
             TnuaToggle::Enabled => {}
         }
+
         if motor.lin.boost.is_finite() {
-            forces.apply_linear_impulse(motor.lin.boost * mass.value());
+            **lin_vel += motor.lin.boost;
         }
         if motor.lin.acceleration.is_finite() {
-            forces.apply_linear_acceleration(motor.lin.acceleration);
+            ***constant_force = motor.lin.acceleration * mass.value();
         }
         if motor.ang.boost.is_finite() {
-            forces.apply_angular_impulse(inertia.value() * motor.ang.boost);
+            **ang_vel += motor.ang.boost;
         }
         if motor.ang.acceleration.is_finite() {
-            // NOTE: I did not actually verify that this is correct. Nothing uses angular
-            // acceleration yet - only angular impulses.
-            forces.apply_angular_acceleration(motor.ang.acceleration);
+            ***constant_torque =
+                motor.ang.acceleration * inertia.principal_angular_inertia_with_local_frame().0;
         }
         if let Some(gravity) = tnua_gravity {
-            forces.apply_force(gravity.0 * mass.value());
+            ***constant_force += gravity.0 * mass.value();
         }
     }
 }
