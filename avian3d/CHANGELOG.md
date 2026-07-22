@@ -11,6 +11,12 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.12.1 - 2026-07-23
+### Fixed
+- Improper application of angular impulses which causing [weird "breakdancing"
+  behavior](https://github.com/idanarye/bevy-tnua/issues/126) (Thanks
+  @Devlyn-Nelson)
+
 ## 0.12.0 - 2026-06-23
 ### Changed
 - Upgrade to Bevy 0.19.
