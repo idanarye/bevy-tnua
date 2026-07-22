@@ -414,36 +414,33 @@ fn update_obstacle_radars_system(
 fn apply_motors_system(
     mut query: Query<(
         &TnuaMotor,
-        &ComputedMass,
-        &ComputedAngularInertia,
         Forces,
         Option<&TnuaToggle>,
         Option<&TnuaGravity>,
     )>,
 ) {
-    for (motor, mass, inertia, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
+    for (motor, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
                 return;
             }
             TnuaToggle::Enabled => {}
         }
+
         if motor.lin.boost.is_finite() {
-            forces.apply_linear_impulse(motor.lin.boost.truncate() * mass.value());
+            *forces.linear_velocity_mut() += motor.lin.boost.truncate();
         }
         if motor.lin.acceleration.is_finite() {
-            forces.apply_force(motor.lin.acceleration.truncate() * mass.value());
+            forces.apply_linear_acceleration(motor.lin.acceleration.truncate());
         }
         if motor.ang.boost.is_finite() {
-            forces.apply_angular_impulse(inertia.value() * motor.ang.boost.z);
+            *forces.angular_velocity_mut() += motor.ang.boost.z;
         }
         if motor.ang.acceleration.is_finite() {
-            // NOTE: I did not actually verify that this is correct. Nothing uses angular
-            // acceleration yet - only angular impulses.
-            forces.apply_angular_acceleration(motor.ang.acceleration.z);
+            forces.apply_torque(motor.ang.acceleration.z);
         }
         if let Some(gravity) = tnua_gravity {
-            forces.apply_force(gravity.0.truncate() * mass.value());
+            forces.apply_linear_acceleration(gravity.0.truncate());
         }
     }
 }

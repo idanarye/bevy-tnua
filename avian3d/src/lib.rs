@@ -11,23 +11,19 @@ mod spatial_ext;
 use avian3d::{prelude::*, schedule::PhysicsStepSystems};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::AsF32;
-use bevy_tnua_physics_integration_layer::math::Float;
-use bevy_tnua_physics_integration_layer::math::Vector3;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
 use ordered_float::OrderedFloat;
 pub use spatial_ext::TnuaSpatialExtAvian3d;
 
-use bevy_tnua_physics_integration_layer::TnuaPipelineSystems;
-use bevy_tnua_physics_integration_layer::TnuaSystems;
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
-use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostPlatform, TnuaNotPlatform};
-use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostSensor, TnuaSensorOf};
-use bevy_tnua_physics_integration_layer::data_for_backends::{
-    TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
+use bevy_tnua_physics_integration_layer::{
+    TnuaPipelineSystems, TnuaSystems,
+    data_for_backends::{
+        TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaNotPlatform,
+        TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaSensorOf,
+        TnuaToggle,
+    },
+    math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3},
+    obstacle_radar::TnuaObstacleRadar,
 };
-use bevy_tnua_physics_integration_layer::obstacle_radar::TnuaObstacleRadar;
 
 pub mod prelude {
     pub use crate::{TnuaAvian3dPlugin, TnuaAvian3dSensorShape, TnuaSpatialExtAvian3d};
@@ -423,37 +419,33 @@ fn update_obstacle_radars_system(
 fn apply_motors_system(
     mut query: Query<(
         &TnuaMotor,
-        &ComputedMass,
-        &ComputedAngularInertia,
         Forces,
         Option<&TnuaToggle>,
         Option<&TnuaGravity>,
     )>,
 ) {
-    for (motor, mass, inertia, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
+    for (motor, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
-                // *external_force = Default::default();
                 return;
             }
             TnuaToggle::Enabled => {}
         }
+
         if motor.lin.boost.is_finite() {
-            forces.apply_linear_impulse(motor.lin.boost * mass.value());
+            *forces.linear_velocity_mut() += motor.lin.boost;
         }
         if motor.lin.acceleration.is_finite() {
             forces.apply_linear_acceleration(motor.lin.acceleration);
         }
         if motor.ang.boost.is_finite() {
-            forces.apply_angular_impulse(inertia.value() * motor.ang.boost);
+            *forces.angular_velocity_mut() += motor.ang.boost;
         }
         if motor.ang.acceleration.is_finite() {
-            // NOTE: I did not actually verify that this is correct. Nothing uses angular
-            // acceleration yet - only angular impulses.
-            forces.apply_angular_acceleration(motor.ang.acceleration);
+            forces.apply_torque(motor.ang.acceleration);
         }
         if let Some(gravity) = tnua_gravity {
-            forces.apply_force(gravity.0 * mass.value());
+            forces.apply_linear_acceleration(gravity.0);
         }
     }
 }
