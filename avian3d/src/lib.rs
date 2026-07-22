@@ -11,23 +11,19 @@ mod spatial_ext;
 use avian3d::{prelude::*, schedule::PhysicsStepSystems};
 use bevy::ecs::schedule::{InternedScheduleLabel, ScheduleLabel};
 use bevy::prelude::*;
-use bevy_tnua_physics_integration_layer::math::AsF32;
-use bevy_tnua_physics_integration_layer::math::Float;
-use bevy_tnua_physics_integration_layer::math::Vector3;
-use bevy_tnua_physics_integration_layer::math::{AdjustPrecision, Quaternion};
 use ordered_float::OrderedFloat;
 pub use spatial_ext::TnuaSpatialExtAvian3d;
 
-use bevy_tnua_physics_integration_layer::TnuaPipelineSystems;
-use bevy_tnua_physics_integration_layer::TnuaSystems;
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaGravity;
-use bevy_tnua_physics_integration_layer::data_for_backends::TnuaToggle;
-use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostPlatform, TnuaNotPlatform};
-use bevy_tnua_physics_integration_layer::data_for_backends::{TnuaGhostSensor, TnuaSensorOf};
-use bevy_tnua_physics_integration_layer::data_for_backends::{
-    TnuaMotor, TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker,
+use bevy_tnua_physics_integration_layer::{
+    TnuaPipelineSystems, TnuaSystems,
+    data_for_backends::{
+        TnuaGhostPlatform, TnuaGhostSensor, TnuaGravity, TnuaMotor, TnuaNotPlatform,
+        TnuaProximitySensor, TnuaProximitySensorOutput, TnuaRigidBodyTracker, TnuaSensorOf,
+        TnuaToggle,
+    },
+    math::{AdjustPrecision, AsF32, Float, Quaternion, Vector3},
+    obstacle_radar::TnuaObstacleRadar,
 };
-use bevy_tnua_physics_integration_layer::obstacle_radar::TnuaObstacleRadar;
 
 pub mod prelude {
     pub use crate::{TnuaAvian3dPlugin, TnuaAvian3dSensorShape, TnuaSpatialExtAvian3d};
@@ -421,65 +417,35 @@ fn update_obstacle_radars_system(
 
 #[allow(clippy::type_complexity)]
 fn apply_motors_system(
-    mut commands: Commands,
     mut query: Query<(
-        Entity,
         &TnuaMotor,
-        &ComputedMass,
-        &ComputedAngularInertia,
-        &mut AngularVelocity,
-        &mut LinearVelocity,
-        Option<&mut ConstantTorque>,
-        Option<&mut ConstantForce>,
+        Forces,
         Option<&TnuaToggle>,
         Option<&TnuaGravity>,
     )>,
 ) {
-    for (
-        entity,
-        motor,
-        mass,
-        inertia,
-        mut ang_vel,
-        mut lin_vel,
-        mut constant_torque,
-        mut constant_force,
-        tnua_toggle,
-        tnua_gravity,
-    ) in query.iter_mut()
-    {
-        let (Some(constant_torque), Some(constant_force)) =
-            (constant_torque.as_mut(), constant_force.as_mut())
-        else {
-            commands
-                .entity(entity)
-                .insert((ConstantTorque::default(), ConstantForce::default()));
-            continue;
-        };
+    for (motor, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
-                **constant_force = Default::default();
-                **constant_torque = Default::default();
                 return;
             }
             TnuaToggle::Enabled => {}
         }
 
         if motor.lin.boost.is_finite() {
-            **lin_vel += motor.lin.boost;
+            *forces.linear_velocity_mut() += motor.lin.boost;
         }
         if motor.lin.acceleration.is_finite() {
-            ***constant_force = motor.lin.acceleration * mass.value();
+            forces.apply_force(motor.lin.acceleration);
         }
         if motor.ang.boost.is_finite() {
-            **ang_vel += motor.ang.boost;
+            *forces.angular_velocity_mut() += motor.ang.boost;
         }
         if motor.ang.acceleration.is_finite() {
-            ***constant_torque =
-                motor.ang.acceleration * inertia.principal_angular_inertia_with_local_frame().0;
+            forces.apply_torque(motor.ang.acceleration);
         }
         if let Some(gravity) = tnua_gravity {
-            ***constant_force += gravity.0 * mass.value();
+            forces.apply_force(gravity.0);
         }
     }
 }
