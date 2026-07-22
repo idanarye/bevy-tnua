@@ -414,13 +414,12 @@ fn update_obstacle_radars_system(
 fn apply_motors_system(
     mut query: Query<(
         &TnuaMotor,
-        &ComputedMass,
         Forces,
         Option<&TnuaToggle>,
         Option<&TnuaGravity>,
     )>,
 ) {
-    for (motor, mass, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
+    for (motor, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
                 return;
@@ -432,7 +431,7 @@ fn apply_motors_system(
             *forces.linear_velocity_mut() += motor.lin.boost.truncate();
         }
         if motor.lin.acceleration.is_finite() {
-            forces.apply_force(motor.lin.acceleration.truncate() * mass.value());
+            forces.apply_linear_acceleration(motor.lin.acceleration.truncate());
         }
         if motor.ang.boost.is_finite() {
             *forces.angular_velocity_mut() += motor.ang.boost.z;
@@ -441,7 +440,7 @@ fn apply_motors_system(
             forces.apply_torque(motor.ang.acceleration.z);
         }
         if let Some(gravity) = tnua_gravity {
-            forces.apply_force(gravity.0.truncate() * mass.value());
+            forces.apply_linear_acceleration(gravity.0.truncate());
         }
     }
 }
