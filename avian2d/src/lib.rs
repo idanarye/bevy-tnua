@@ -435,10 +435,10 @@ fn apply_motors_system(
             forces.apply_force(motor.lin.acceleration.truncate() * mass.value());
         }
         if motor.ang.boost.is_finite() {
-            *forces.angular_velocity_mut() += motor.ang.boost.length();
+            *forces.angular_velocity_mut() += motor.ang.boost.z;
         }
         if motor.ang.acceleration.is_finite() {
-            forces.apply_torque(motor.ang.acceleration.length());
+            forces.apply_torque(motor.ang.acceleration.z);
         }
         if let Some(gravity) = tnua_gravity {
             forces.apply_force(gravity.0.truncate() * mass.value());
