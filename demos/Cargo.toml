@@ -51,7 +51,7 @@ avian3d = [
 ]
 
 [dependencies]
-bevy = { version = "^0.19", default-features = false, features = [
+bevy = { version = "^0.20", default-features = false, features = [
     "gltf_animation",
     "bevy_asset",
     # "bevy_audio",
@@ -80,10 +80,10 @@ bevy = { version = "^0.19", default-features = false, features = [
 bevy-tnua = { path = ".." }
 bevy-tnua-physics-integration-layer = { path = "../physics-integration-layer" }
 
-bevy_rapier2d = { version = "^0.36", features = ["debug-render-2d"], optional = true }
+bevy_rapier2d = { version = "^0.37", features = ["debug-render-2d"], optional = true }
 bevy-tnua-rapier2d = { path = "../rapier2d", optional = true }
 
-bevy_rapier3d = { version = "^0.36", features = ["debug-render-3d"], optional = true }
+bevy_rapier3d = { version = "^0.37", features = ["debug-render-3d"], optional = true }
 bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 
 # avian2d = { version = "^0.7", default-features = false, features = ["2d","debug-plugin", "parallel"], optional = true}
@@ -92,7 +92,7 @@ bevy-tnua-rapier3d = { path = "../rapier3d", optional = true }
 # avian3d = { version = "^0.7", default-features = false, features = ["3d", "debug-plugin", "parallel"], optional=true }
 # bevy-tnua-avian3d = { path = "../avian3d", default-features = false, optional = true }
 
-bevy_egui = { version = "0.42", optional = true, default-features = false, features = ["default_fonts", "render"] }
+bevy_egui = { version = "0.43", optional = true, default-features = false, features = ["default_fonts", "render"] }
 egui_plot = { version = "0.37", optional = true }
 egui_extras = { version = "0.36", optional = true }
 

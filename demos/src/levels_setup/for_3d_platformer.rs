@@ -73,6 +73,7 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
             cmd.insert(SolverGroups {
                 memberships: Group::empty(),
                 filters: Group::empty(),
+                test_mode: Default::default(),
             });
         }
         #[cfg(feature = "avian3d")]
@@ -99,6 +100,7 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
                 CollisionGroups {
                     memberships: Group::GROUP_1,
                     filters: Group::GROUP_1,
+                    test_mode: Default::default(),
                 },
             ),
             #[cfg(feature = "avian3d")]
@@ -120,6 +122,7 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
         .insert(SolverGroups {
             memberships: Group::GROUP_1,
             filters: Group::GROUP_1,
+            test_mode: Default::default(),
         });
 
     helper

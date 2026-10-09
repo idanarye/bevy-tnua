@@ -77,6 +77,7 @@ pub fn setup_level(mut helper: LevelSetupHelper2d) {
                 SolverGroups {
                     memberships: Group::empty(),
                     filters: Group::empty(),
+                    test_mode: Default::default(),
                 },
                 #[cfg(feature = "avian2d")]
                 CollisionLayers::new([LayerNames::FallThrough], [LayerNames::FallThrough]),
@@ -97,6 +98,7 @@ pub fn setup_level(mut helper: LevelSetupHelper2d) {
             CollisionGroups {
                 memberships: Group::GROUP_1,
                 filters: Group::GROUP_1,
+                test_mode: Default::default(),
             },
             #[cfg(feature = "avian2d")]
             CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
@@ -114,6 +116,7 @@ pub fn setup_level(mut helper: LevelSetupHelper2d) {
         .insert(SolverGroups {
             memberships: Group::GROUP_1,
             filters: Group::GROUP_1,
+            test_mode: Default::default(),
         });
 
     helper

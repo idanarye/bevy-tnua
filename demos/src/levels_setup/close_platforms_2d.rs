@@ -35,6 +35,7 @@ pub fn setup_level(mut helper: LevelSetupHelper2d) {
                 SolverGroups {
                     memberships: Group::empty(),
                     filters: Group::empty(),
+                    test_mode: Default::default(),
                 },
                 #[cfg(feature = "avian2d")]
                 CollisionLayers::new(
