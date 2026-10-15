@@ -307,11 +307,13 @@ fn setup_player(
                         cmd.insert(CollisionGroups {
                             memberships: Group::GROUP_2,
                             filters: Group::GROUP_2,
+                            test_mode: Default::default(),
                         });
                     } else {
                         cmd.insert(CollisionGroups {
                             memberships: Group::ALL,
                             filters: Group::ALL,
+                            test_mode: Default::default(),
                         });
                     }
                     #[cfg(feature = "avian3d")]
@@ -339,11 +341,13 @@ fn setup_player(
                     cmd.insert(SolverGroups {
                         memberships: Group::GROUP_2,
                         filters: Group::GROUP_2,
+                        test_mode: Default::default(),
                     });
                 } else {
                     cmd.insert(SolverGroups {
                         memberships: Group::ALL,
                         filters: Group::ALL,
+                        test_mode: Default::default(),
                     });
                 }
             },

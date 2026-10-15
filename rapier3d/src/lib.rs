@@ -176,10 +176,7 @@ fn update_proximity_sensors_system(
             let owner_collider = get_collider(rapier_context.colliders, owner_entity);
             if let Some(owner_collider) = owner_collider {
                 let collision_groups = owner_collider.collision_groups();
-                query_filter.groups = Some(CollisionGroups {
-                    memberships: Group::from_bits_truncate(collision_groups.memberships.bits()),
-                    filters: Group::from_bits_truncate(collision_groups.filter.bits()),
-                });
+                query_filter.groups = Some(CollisionGroups::from(collision_groups));
                 owner_solver_groups = owner_collider.solver_groups();
             } else {
                 owner_solver_groups = InteractionGroups::all();
@@ -192,13 +189,11 @@ fn update_proximity_sensors_system(
             let do_cast = |cast_range_skip: f32,
                            already_visited_ghost_entities: &HashSet<Entity>|
              -> Option<CastResult> {
-                let predicate = |other_entity: Entity| {
-                    if not_platform_query.contains(other_entity) {
-                        return false;
-                    }
-                    if let Some(other_collider) =
-                        get_collider(rapier_context.colliders, other_entity)
-                    {
+                let predicate =
+                    |other_entity: Entity, other_collider: &rapier::geometry::Collider| {
+                        if not_platform_query.contains(other_entity) {
+                            return false;
+                        }
                         if !other_collider.solver_groups().test(owner_solver_groups) {
                             if has_ghost_sensor && ghost_platforms_query.contains(other_entity) {
                                 if already_visited_ghost_entities.contains(&other_entity) {
@@ -211,9 +206,8 @@ fn update_proximity_sensors_system(
                         if other_collider.is_sensor() {
                             return false;
                         }
-                    }
-                    true
-                };
+                        true
+                    };
                 let query_filter = query_filter.predicate(&predicate);
                 let cast_origin = cast_origin + cast_range_skip * *cast_direction;
                 let cast_range = sensor.cast_range - cast_range_skip;
@@ -372,7 +366,7 @@ fn update_obstacle_radars_system(
             Dir3::new(rapier_config.gravity).unwrap_or(Dir3::Y),
         );
         rapier_context.with_query_pipeline(Default::default(), |query_pipeline| {
-            for obstacle_entity in query_pipeline.intersect_shape(
+            for (obstacle_entity, _) in query_pipeline.intersect_shape(
                 radar_translation,
                 radar_rotation,
                 &parry::shape::Cylinder::new(0.5 * radar.height, radar.radius),
