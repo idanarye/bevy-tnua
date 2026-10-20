@@ -383,7 +383,7 @@ fn update_physics_active_from_ui(
     }
     #[cfg(feature = "avian2d")]
     if let Some(gravity) = gravity_avian2d.as_mut() {
-        gravity.0 = setting_from_ui.gravity.truncate();
+        gravity.0 = setting_from_ui.gravity.truncate().f32();
     }
     #[cfg(feature = "avian3d")]
     if let Some(physics_time) = physics_time_avian3d.as_mut() {

@@ -121,7 +121,9 @@ fn update_rigid_body_trackers_system(
             rotation: Quat::from(*rotation).adjust_precision(),
             velocity: linaer_velocity.0.extend(0.0).adjust_precision(),
             angvel: Vector3::new(0.0, 0.0, angular_velocity.0.adjust_precision()),
-            gravity: tnua_gravity.map(|g| g.0).unwrap_or(gravity.0.extend(0.0).adjust_precision()),
+            gravity: tnua_gravity
+                .map(|g| g.0)
+                .unwrap_or(gravity.0.extend(0.0).adjust_precision()),
         };
     }
 }
@@ -263,7 +265,8 @@ fn update_proximity_sensors_system(
                         entity_angvel = Vector3::ZERO;
                         entity_linvel = Vector3::ZERO;
                     } else {
-                        entity_angvel = Vector3::new(0.0, 0.0, entity_angular_velocity.0.adjust_precision());
+                        entity_angvel =
+                            Vector3::new(0.0, 0.0, entity_angular_velocity.0.adjust_precision());
                         entity_linvel = entity_linear_velocity.0.extend(0.0).adjust_precision()
                             + if 0.0 < entity_angvel.length_squared() {
                                 let relative_point =
@@ -319,11 +322,7 @@ fn update_proximity_sensors_system(
                 spatial_query.shape_hits_callback(
                     shape,
                     cast_origin.truncate().adjust_precision(),
-                    sensor
-                        .cast_shape_rotation
-                        .to_scaled_axis()
-                        .z
-                        .f32(),
+                    sensor.cast_shape_rotation.to_scaled_axis().z.f32(),
                     cast_direction_2d,
                     &ShapeCastConfig {
                         max_distance: sensor.cast_range.f32(),

@@ -1,7 +1,8 @@
 use avian2d::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_tnua_physics_integration_layer::{
-    math::{AsF32, AdjustPrecision, Float, Vector3}, spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
+    math::{AdjustPrecision, AsF32, Float, Vector3},
+    spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
 };
 
 #[derive(SystemParam)]
@@ -54,7 +55,12 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian2d<'_, '_> {
                 max_time_of_impact.f32(),
                 true,
             )
-            .map(|(time_of_impact, normal)| (time_of_impact.adjust_precision(), normal.extend(0.0).adjust_precision()))
+            .map(|(time_of_impact, normal)| {
+                (
+                    time_of_impact.adjust_precision(),
+                    normal.extend(0.0).adjust_precision(),
+                )
+            })
     }
 
     fn can_interact(&self, entity1: Entity, entity2: Entity) -> bool {

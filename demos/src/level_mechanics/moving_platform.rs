@@ -1,7 +1,7 @@
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::*;
-use bevy_tnua::math::{AdjustPrecision, Float, Vector3};
+use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Vector3};
 
 pub struct MovingPlatformPlugin;
 
