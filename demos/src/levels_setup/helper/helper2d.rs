@@ -43,7 +43,7 @@ impl LevelSetupHelper2d<'_, '_> {
         #[cfg(feature = "avian2d")]
         {
             cmd.insert(avian::RigidBody::Static);
-            cmd.insert(avian::Collider::half_space(Vector2::Y));
+            cmd.insert(avian::Collider::half_space(Vec2::Y));
         }
 
         cmd
@@ -75,7 +75,7 @@ impl LevelSetupHelper2d<'_, '_> {
         #[cfg(feature = "avian2d")]
         {
             cmd.insert(avian::RigidBody::Static);
-            cmd.insert(avian::Collider::rectangle(size.x, size.y));
+            cmd.insert(avian::Collider::rectangle(size.x.f32(), size.y.f32()));
         }
 
         cmd
@@ -136,7 +136,13 @@ impl LevelSetupHelper2d<'_, '_> {
             cmd.insert(avian::Collider::compound(
                 parts
                     .iter()
-                    .map(|&(pos, rot, size)| (pos, rot, avian::Collider::rectangle(size.x, size.y)))
+                    .map(|&(pos, rot, size)| {
+                        (
+                            avian::Position(pos),
+                            rot.f32(),
+                            avian::Collider::rectangle(size.x.f32(), size.y.f32()),
+                        )
+                    })
                     .collect(),
             ));
         }
@@ -174,7 +180,10 @@ impl LevelSetupHelper2d<'_, '_> {
             #[cfg(feature = "rapier2d")]
             rapier::Collider::ball(radius),
             #[cfg(feature = "avian2d")]
-            (avian::RigidBody::Static, avian::Collider::circle(radius)),
+            (
+                avian::RigidBody::Static,
+                avian::Collider::circle(radius.f32()),
+            ),
         ));
         cmd
     }
@@ -208,7 +217,7 @@ impl LevelSetupHelper2d<'_, '_> {
         #[cfg(feature = "avian2d")]
         {
             cmd.insert(avian::RigidBody::Dynamic);
-            cmd.insert(avian::Collider::rectangle(size.x, size.y));
+            cmd.insert(avian::Collider::rectangle(size.x.f32(), size.y.f32()));
         }
 
         cmd
@@ -236,7 +245,10 @@ impl LevelSetupHelper2d<'_, '_> {
             #[cfg(feature = "rapier2d")]
             rapier::Collider::ball(radius),
             #[cfg(feature = "avian2d")]
-            (avian::RigidBody::Static, avian::Collider::circle(radius)),
+            (
+                avian::RigidBody::Static,
+                avian::Collider::circle(radius.f32()),
+            ),
         ));
 
         cmd

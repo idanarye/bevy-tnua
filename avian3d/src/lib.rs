@@ -124,7 +124,9 @@ fn update_rigid_body_trackers_system(
             rotation: rotation.adjust_precision(),
             velocity: linaer_velocity.0.adjust_precision(),
             angvel: angular_velocity.0.adjust_precision(),
-            gravity: tnua_gravity.map(|g| g.0).unwrap_or(gravity.0),
+            gravity: tnua_gravity
+                .map(|g| g.0)
+                .unwrap_or(gravity.0.adjust_precision()),
         };
     }
 }
@@ -326,15 +328,18 @@ fn update_proximity_sensors_system(
                     cast_direction.adjust_precision(),
                     rotation
                         .to_scaled_axis()
+                        .adjust_precision()
                         .dot(cast_direction.adjust_precision()),
                 );
                 spatial_query.shape_hits_callback(
                     shape,
                     cast_origin,
-                    owner_rotation.mul_quat(sensor.cast_shape_rotation.adjust_precision()),
+                    owner_rotation
+                        .mul_quat(sensor.cast_shape_rotation.adjust_precision())
+                        .f32(),
                     cast_direction,
                     &ShapeCastConfig {
-                        max_distance: sensor.cast_range,
+                        max_distance: sensor.cast_range.f32(),
                         ignore_origin_penetration: true,
                         ..default()
                     },
@@ -342,7 +347,7 @@ fn update_proximity_sensors_system(
                     |shape_hit_data| {
                         apply_cast(CastResult {
                             entity: shape_hit_data.entity,
-                            proximity: shape_hit_data.distance,
+                            proximity: shape_hit_data.distance.adjust_precision(),
                             intersection_point: shape_hit_data.point1,
                             normal: Dir3::new(shape_hit_data.normal1.f32())
                                 .unwrap_or_else(|_| -cast_direction),
@@ -353,15 +358,16 @@ fn update_proximity_sensors_system(
                 spatial_query.ray_hits_callback(
                     cast_origin,
                     cast_direction,
-                    sensor.cast_range,
+                    sensor.cast_range.f32(),
                     true,
                     &query_filter,
                     |ray_hit_data| {
                         apply_cast(CastResult {
                             entity: ray_hit_data.entity,
-                            proximity: ray_hit_data.distance,
+                            proximity: ray_hit_data.distance.adjust_precision(),
                             intersection_point: cast_origin
-                                + ray_hit_data.distance * cast_direction.adjust_precision(),
+                                + ray_hit_data.distance.adjust_precision()
+                                    * cast_direction.adjust_precision(),
                             normal: Dir3::new(ray_hit_data.normal.f32())
                                 .unwrap_or_else(|_| -cast_direction),
                         })
@@ -400,9 +406,9 @@ fn update_obstacle_radars_system(
             Dir3::new(gravity.0.f32()).unwrap_or(Dir3::Y),
         );
         spatial_query.shape_intersections_callback(
-            &Collider::cylinder(radar.radius, radar.height),
+            &Collider::cylinder(radar.radius.f32(), radar.height.f32()),
             radar_position.0,
-            Default::default(),
+            Rotation::default(),
             &SpatialQueryFilter::DEFAULT,
             |obstacle_entity| {
                 if radar_owner_entity == obstacle_entity {
@@ -433,19 +439,19 @@ fn apply_motors_system(
         }
 
         if motor.lin.boost.is_finite() {
-            *forces.linear_velocity_mut() += motor.lin.boost;
+            *forces.linear_velocity_mut() += motor.lin.boost.f32();
         }
         if motor.lin.acceleration.is_finite() {
-            forces.apply_linear_acceleration(motor.lin.acceleration);
+            forces.apply_linear_acceleration(motor.lin.acceleration.f32());
         }
         if motor.ang.boost.is_finite() {
-            *forces.angular_velocity_mut() += motor.ang.boost;
+            *forces.angular_velocity_mut() += motor.ang.boost.f32();
         }
         if motor.ang.acceleration.is_finite() {
-            forces.apply_torque(motor.ang.acceleration);
+            forces.apply_torque(motor.ang.acceleration.f32());
         }
         if let Some(gravity) = tnua_gravity {
-            forces.apply_linear_acceleration(gravity.0);
+            forces.apply_linear_acceleration(gravity.0.f32());
         }
     }
 }

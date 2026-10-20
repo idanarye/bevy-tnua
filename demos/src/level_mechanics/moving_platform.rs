@@ -1,7 +1,7 @@
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::*;
-use bevy_tnua::math::{AdjustPrecision, Float, Vector3};
+use bevy_tnua::math::{AdjustPrecision, AsF32, Float, Vector3};
 
 pub struct MovingPlatformPlugin;
 
@@ -30,7 +30,7 @@ impl Plugin for MovingPlatformPlugin {
             Update,
             MovingPlatform::make_system(
                 |velocity: &mut avian2d::prelude::LinearVelocity, linvel: Vector3| {
-                    velocity.0 = linvel.truncate();
+                    velocity.0 = linvel.truncate().f32();
                 },
             ),
         );
@@ -39,7 +39,7 @@ impl Plugin for MovingPlatformPlugin {
             Update,
             MovingPlatform::make_system(
                 |velocity: &mut avian3d::prelude::LinearVelocity, linvel: Vector3| {
-                    velocity.0 = linvel;
+                    velocity.0 = linvel.f32();
                 },
             ),
         );

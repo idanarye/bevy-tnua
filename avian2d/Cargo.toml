@@ -12,9 +12,9 @@ documentation = "https://docs.rs/bevy-tnua-avian2d"
 readme = "../README.md"
 
 [dependencies]
-bevy = { version = "^0.19", default-features = false }
-avian2d = { version = "^0.7", default-features = false, features = ["2d", "debug-plugin", "parallel"]}
-bevy-tnua-physics-integration-layer = { version = "^0.13", path = "../physics-integration-layer" }
+bevy = { version = "^0.20", default-features = false }
+avian2d = { version = "^0.8", default-features = false, features = ["2d", "debug-plugin", "parallel"]}
+bevy-tnua-physics-integration-layer = { version = "^0.14", path = "../physics-integration-layer" }
 ordered-float = "5.3.0"
 
 [package.metadata.docs.rs]
@@ -22,7 +22,7 @@ all-features = true
 features = ["bevy/bevy_asset"]
 
 [features]
-default = [  "avian2d/f32", "avian2d/parry-f32" ]
+default = ["avian2d/parry-f32"]
 f64 = [
     "avian2d/f64",
     "avian2d/parry-f64",
