@@ -30,7 +30,7 @@ impl Plugin for MovingPlatformPlugin {
             Update,
             MovingPlatform::make_system(
                 |velocity: &mut avian2d::prelude::LinearVelocity, linvel: Vector3| {
-                    velocity.0 = linvel.truncate();
+                    velocity.0 = linvel.truncate().f32();
                 },
             ),
         );
@@ -39,7 +39,7 @@ impl Plugin for MovingPlatformPlugin {
             Update,
             MovingPlatform::make_system(
                 |velocity: &mut avian3d::prelude::LinearVelocity, linvel: Vector3| {
-                    velocity.0 = linvel;
+                    velocity.0 = linvel.f32();
                 },
             ),
         );
