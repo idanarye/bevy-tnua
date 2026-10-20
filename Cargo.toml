@@ -2,7 +2,7 @@
 members = [
     "physics-integration-layer",
     "rapier2d", "rapier3d",
-    # "avian2d", "avian3d",
+    "avian2d", "avian3d",
     "demos", "macros",
 ]
 default-members = [".", "demos"]
@@ -30,7 +30,6 @@ readme = "README.md"
 exclude = [
     "assets",
 ]
-autoexamples = false # when Avian is lagging behind, we can't build the examples
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -68,8 +67,8 @@ bevy = { version = "^0.20", default-features = false, features = [
     "x11",
     # "filesystem_watcher",
 ] }
-# avian3d = { version = "^0.7", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
-# bevy-tnua-avian3d = { path = "avian3d" }
+avian3d = { version = "^0.7", features = ["3d", "debug-plugin", "parallel", "parry-f32"] }
+bevy-tnua-avian3d = { path = "avian3d" }
 
 [package.metadata.docs.rs]
 all-features = true
