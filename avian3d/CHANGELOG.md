@@ -11,6 +11,10 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.13.0 - 2026-10-22
+### Changed
+- Upgrade to Bevy 0.20.
+
 ## 0.12.1 - 2026-07-23
 ### Fixed
 - Improper application of angular impulses which causing [weird "breakdancing"

@@ -135,7 +135,7 @@ Tnua is broken into different crates that update separately, so this is broken i
 
 | bevy | bevy-tnua-physics-integration-layer | bevy-tnua-avian | avian |
 |------|-------------------------------------|-----------------|-------|
-| 0.20 | 0.14                                |                 |       |
+| 0.20 | 0.14                                | 0.13            | 0.8   |
 | 0.19 | 0.13                                | 0.12            | 0.7   |
 | 0.18 | 0.12                                | 0.11            | 0.6   |
 | 0.18 | 0.12                                | 0.10            | 0.5   |
