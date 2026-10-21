@@ -396,6 +396,6 @@ fn update_physics_active_from_ui(
     }
     #[cfg(feature = "avian3d")]
     if let Some(gravity) = gravity_avian3d.as_mut() {
-        gravity.0 = setting_from_ui.gravity;
+        gravity.0 = setting_from_ui.gravity.f32();
     }
 }

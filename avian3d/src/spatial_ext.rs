@@ -1,7 +1,7 @@
 use avian3d::prelude::*;
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_tnua_physics_integration_layer::{
-    math::{Float, Vector3},
+    math::{AdjustPrecision, AsF32, Float, Vector3},
     spatial_ext::{TnuaPointProjectionResult, TnuaSpatialExt},
 };
 
@@ -29,7 +29,7 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian3d<'_, '_> {
     ) -> TnuaPointProjectionResult {
         let (collider, position, rotation) = collider_data;
         let (projected_point, is_inside) =
-            collider.project_point(**position, **rotation, point, solid);
+            collider.project_point(position.0, **rotation, point, solid);
         if is_inside {
             TnuaPointProjectionResult::Inside(projected_point)
         } else {
@@ -45,14 +45,18 @@ impl TnuaSpatialExt for TnuaSpatialExtAvian3d<'_, '_> {
         collider_data: &Self::ColliderData<'a>,
     ) -> Option<(Float, Vector3)> {
         let (collider, position, rotation) = collider_data;
-        collider.cast_ray(
-            **position,
-            **rotation,
-            origin,
-            direction,
-            max_time_of_impact,
-            true,
-        )
+        collider
+            .cast_ray(
+                position.0,
+                **rotation,
+                origin.adjust_precision(),
+                direction.f32(),
+                max_time_of_impact.f32(),
+                true,
+            )
+            .map(|(time_of_impact, normal)| {
+                (time_of_impact.adjust_precision(), normal.adjust_precision())
+            })
     }
 
     fn can_interact(&self, entity1: Entity, entity2: Entity) -> bool {

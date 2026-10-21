@@ -40,7 +40,7 @@ impl<'w, 's> LevelSetupHelper3d<'w, 's> {
         #[cfg(feature = "avian3d")]
         {
             cmd.insert(avian::RigidBody::Static);
-            cmd.insert(avian::Collider::half_space(Vector3::Y));
+            cmd.insert(avian::Collider::half_space(Vector3::Y.f32()));
         }
 
         cmd
@@ -85,7 +85,11 @@ impl<'w, 's> LevelSetupHelper3d<'w, 's> {
         #[cfg(feature = "avian3d")]
         {
             cmd.insert(avian::RigidBody::Static);
-            cmd.insert(avian::Collider::cuboid(size.x, size.y, size.z));
+            cmd.insert(avian::Collider::cuboid(
+                size.x.f32(),
+                size.y.f32(),
+                size.z.f32(),
+            ));
         }
 
         cmd
@@ -129,7 +133,7 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
             #[cfg(feature = "avian3d")]
             (
                 avian::RigidBody::Static,
-                avian::Collider::cuboid(size.x, size.y, size.z),
+                avian::Collider::cuboid(size.x.f32(), size.y.f32(), size.z.f32()),
             ),
         ));
 
@@ -190,7 +194,11 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
                     parts
                         .iter()
                         .map(|&(pos, rot, size)| {
-                            (pos, rot, avian::Collider::cuboid(size.x, size.y, size.z))
+                            (
+                                pos,
+                                rot.f32(),
+                                avian::Collider::cuboid(size.x.f32(), size.y.f32(), size.z.f32()),
+                            )
                         })
                         .collect(),
                 ),
@@ -222,7 +230,7 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
             #[cfg(feature = "avian3d")]
             (
                 avian::RigidBody::Static,
-                avian::Collider::cylinder(radius, 2.0 * half_height),
+                avian::Collider::cylinder(radius.f32(), 2.0 * half_height.f32()),
             ),
         ));
 
@@ -247,7 +255,10 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
             #[cfg(feature = "rapier3d")]
             (rapier::RigidBody::Dynamic, rapier::Collider::ball(radius)),
             #[cfg(feature = "avian3d")]
-            (avian::RigidBody::Dynamic, avian::Collider::sphere(radius)),
+            (
+                avian::RigidBody::Dynamic,
+                avian::Collider::sphere(radius.f32()),
+            ),
         ));
 
         cmd
@@ -271,7 +282,10 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
             #[cfg(feature = "rapier3d")]
             rapier::Collider::ball(radius),
             #[cfg(feature = "avian3d")]
-            (avian::RigidBody::Static, avian::Collider::sphere(radius)),
+            (
+                avian::RigidBody::Static,
+                avian::Collider::sphere(radius.f32()),
+            ),
         ));
 
         cmd
@@ -305,7 +319,10 @@ impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
     ) -> &mut Self {
         self.insert((
             #[cfg(feature = "avian3d")]
-            (avian::LinearVelocity(velocity), avian::RigidBody::Kinematic),
+            (
+                avian::LinearVelocity(velocity.f32()),
+                avian::RigidBody::Kinematic,
+            ),
             #[cfg(feature = "rapier3d")]
             (
                 rapier::Velocity::linear(velocity),
@@ -320,7 +337,10 @@ impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
     ) -> &mut Self {
         self.insert((
             #[cfg(feature = "avian3d")]
-            (avian::AngularVelocity(angvel), avian::RigidBody::Kinematic),
+            (
+                avian::AngularVelocity(angvel.f32()),
+                avian::RigidBody::Kinematic,
+            ),
             #[cfg(feature = "rapier3d")]
             (
                 rapier::Velocity::angular(angvel),
@@ -332,7 +352,7 @@ impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
     fn add_ball_collider(&mut self, #[allow(unused)] radius: Float) -> &mut Self {
         self.insert((
             #[cfg(feature = "avian3d")]
-            avian::Collider::sphere(radius),
+            avian::Collider::sphere(radius.f32()),
             #[cfg(feature = "rapier3d")]
             rapier::Collider::ball(radius),
         ))
