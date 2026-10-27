@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::mem::discriminant;
 
 use bevy::prelude::*;
@@ -86,6 +87,36 @@ pub struct TnuaAnimatingState<State> {
 impl<State> Default for TnuaAnimatingState<State> {
     fn default() -> Self {
         Self { state: None }
+    }
+}
+
+impl<State> FromTemplate for TnuaAnimatingState<State> {
+    type Template = TnuaAnimatingStateTemplate<State>;
+}
+
+pub struct TnuaAnimatingStateTemplate<State> {
+    _phantom: PhantomData<State>,
+}
+
+impl<State> Template for TnuaAnimatingStateTemplate<State> {
+    type Output = TnuaAnimatingState<State>;
+
+    fn build_template(&self, _: &mut bevy::ecs::template::TemplateContext) -> Result<Self::Output> {
+        Ok(TnuaAnimatingState::default())
+    }
+
+    fn clone_template(&self) -> Self {
+        Self {
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<State> Default for TnuaAnimatingStateTemplate<State> {
+    fn default() -> Self {
+        Self {
+            _phantom: PhantomData,
+        }
     }
 }
 

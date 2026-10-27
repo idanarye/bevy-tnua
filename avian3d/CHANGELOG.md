@@ -11,6 +11,10 @@ NOTES:
 
 ## [Unreleased]
 
+### Added
+- BSN support: implement `FromTemplate` for `TnuaAvian2dSensorShape` and
+  `TnuaAvian3dSensorShape`.
+
 ## 0.13.0 - 2026-10-22
 ### Changed
 - Upgrade to Bevy 0.20.

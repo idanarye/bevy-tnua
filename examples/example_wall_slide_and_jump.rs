@@ -37,67 +37,56 @@ enum ControlScheme {
 
 // No Tnua-related setup here - this is just normal Bevy stuff.
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
-    ));
-
-    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
-
-    // A directly-down light to tell where the player is going to land.
-    commands.spawn((
+    commands.spawn_scene_list(bsn_list! {
+        Camera3d
+        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y)
+        --
+        PointLight
+        Transform::from_xyz(5.0, 5.0, 5.0)
+        --
+        // A directly-down light to tell where the player is going to land.
         DirectionalLight {
             illuminance: 4000.0,
             shadow_maps_enabled: true,
-            ..Default::default()
-        },
-        Transform::default().looking_at(-Vec3::Y, Vec3::Z),
-    ));
+        }
+        Transform::default().looking_at(-Vec3::Y, Vec3::Z)
+    });
 }
 
 // No Tnua-related setup here - this is just normal Bevy (and Avian) stuff.
-fn setup_level(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn setup_level(mut commands: Commands) {
     // Spawn the ground.
-    commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(128.0, 128.0))),
-        MeshMaterial3d(materials.add(Color::WHITE)),
-        RigidBody::Static,
-        Collider::half_space(Vec3::Y),
-    ));
+    commands.spawn_scene(bsn! {
+        Mesh3d(asset_value(Plane3d::default().mesh().size(128.0, 128.0)))
+        MeshMaterial3d<StandardMaterial>(asset_value(Color::WHITE))
+        RigidBody::Static
+        Collider::half_space(Vec3::Y)
+    });
 
     // Spawn walls for the player to slide and jump on
     for x in [-4.0, 4.0] {
-        commands.spawn((
-            Mesh3d(meshes.add(Cuboid::new(1.0, 20.0, 6.0))),
-            MeshMaterial3d(materials.add(Color::from(css::GRAY))),
-            Transform::from_xyz(x, 10.0, 0.0),
-            RigidBody::Static,
-            Collider::cuboid(1.0, 20.0, 6.0),
-        ));
+        commands.spawn_scene(bsn! {
+            Mesh3d(asset_value(Cuboid::new(1.0, 20.0, 6.0)))
+            MeshMaterial3d<StandardMaterial>(asset_value(Color::from(css::GRAY)))
+            Transform::from_xyz(x, 10.0, 0.0)
+            RigidBody::Static
+            Collider::cuboid(1.0, 20.0, 6.0)
+        });
     }
 }
 
-fn setup_player(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut control_scheme_configs: ResMut<Assets<ControlSchemeConfig>>,
-) {
-    commands.spawn((
-        Mesh3d(meshes.add(Capsule3d {
+fn setup_player(mut commands: Commands) {
+    commands.spawn_scene(bsn! {
+        Mesh3d(asset_value(Capsule3d {
             radius: 0.5,
             half_length: 0.5,
-        })),
-        MeshMaterial3d(materials.add(Color::from(css::DARK_CYAN))),
-        Transform::from_xyz(0.0, 2.0, 0.0),
-        RigidBody::Dynamic,
-        Collider::capsule(0.5, 1.0),
-        TnuaController::<ControlScheme>::default(),
-        TnuaConfig::<ControlScheme>(control_scheme_configs.add(ControlSchemeConfig {
+        }))
+        MeshMaterial3d<StandardMaterial>(asset_value(Color::from(css::DARK_CYAN)))
+        Transform::from_xyz(0.0, 2.0, 0.0)
+        RigidBody::Dynamic
+        Collider::capsule(0.5, 1.0)
+        TnuaController<ControlScheme>
+        TnuaConfig<ControlScheme>(asset_value(ControlSchemeConfig {
             basis: TnuaBuiltinWalkConfig {
                 float_height: 1.5,
                 ..Default::default()
@@ -116,11 +105,11 @@ fn setup_player(
                 horizontal_distance: 5.0,
                 ..Default::default()
             },
-        })),
-        TnuaObstacleRadar::new(0.6, 1.0),
-        TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
-        LockedAxes::ROTATION_LOCKED,
-    ));
+        }))
+        TnuaObstacleRadar { radius: 0.6, height: 1.0 }
+        TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0))
+        LockedAxes::ROTATION_LOCKED
+    });
 }
 
 fn apply_controls(

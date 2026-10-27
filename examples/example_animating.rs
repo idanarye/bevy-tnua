@@ -62,37 +62,31 @@ struct AnimationNodes {
 
 // No Tnua-related setup here - this is just normal Bevy stuff.
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
-    ));
-
-    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
-
-    // A directly-down light to tell where the player is going to land.
-    commands.spawn((
+    commands.spawn_scene_list(bsn_list! {
+        Camera3d
+        Transform::from_xyz(0.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y)
+        --
+        PointLight
+        Transform::from_xyz(5.0, 5.0, 5.0)
+        --
+        // A directly-down light to tell where the player is going to land.
         DirectionalLight {
             illuminance: 4000.0,
             shadow_maps_enabled: true,
-            ..Default::default()
-        },
-        Transform::default().looking_at(-Vec3::Y, Vec3::Z),
-    ));
+        }
+        Transform::default().looking_at(-Vec3::Y, Vec3::Z)
+    });
 }
 
 // No Tnua-related setup here - this is just normal Bevy (and Avian) stuff.
-fn setup_level(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn setup_level(mut commands: Commands) {
     // Spawn the ground.
-    commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(128.0, 128.0))),
-        MeshMaterial3d(materials.add(Color::WHITE)),
-        RigidBody::Static,
-        Collider::half_space(Vec3::Y),
-    ));
+    commands.spawn_scene(bsn! {
+        Mesh3d(asset_value(Plane3d::default().mesh().size(128.0, 128.0)))
+        MeshMaterial3d<StandardMaterial>(asset_value(Color::WHITE))
+        RigidBody::Static
+        Collider::half_space(Vec3::Y)
+    });
 }
 
 // Bevy assets are a bit weird. We'll use this resource to hold onto the model file so that we can
@@ -100,29 +94,25 @@ fn setup_level(
 #[derive(Resource)]
 struct PlayerGltfHandle(Handle<Gltf>);
 
-fn setup_player(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut control_scheme_configs: ResMut<Assets<ControlSchemeConfig>>,
-) {
+fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     // We'll need this in `prepare_animations` to build the animation graph.
     commands.insert_resource(PlayerGltfHandle(asset_server.load("player.glb")));
 
-    commands.spawn((
-        WorldAssetRoot(asset_server.load("player.glb#Scene0")),
-        Transform::from_xyz(0.0, 2.0, 0.0),
+    commands.spawn_scene(bsn! {
+        WorldAssetRoot("player.glb#Scene0")
+        Transform::from_xyz(0.0, 2.0, 0.0)
         // We'll need this in the `handle_animating` system to keep track of the players animating
         // state.
-        TnuaAnimatingState::<AnimationState>::default(),
+        TnuaAnimatingState<AnimationState>
         // The player character needs to be configured as a dynamic rigid body of the physics
         // engine.
-        RigidBody::Dynamic,
-        Collider::capsule(0.5, 1.0),
+        RigidBody::Dynamic
+        Collider::capsule(0.5, 1.0)
         // This is Tnua's interface component.
-        TnuaController::<ControlScheme>::default(),
+        TnuaController<ControlScheme>
         // The configuration asset can be loaded from a file, but here we are creating it by code
         // and injecting it to the assets resource.
-        TnuaConfig::<ControlScheme>(control_scheme_configs.add(ControlSchemeConfig {
+        TnuaConfig<ControlScheme>(asset_value(ControlSchemeConfig {
             basis: TnuaBuiltinWalkConfig {
                 speed: 10.0,
                 // The `float_height` must be greater (even if by little) from the distance between
@@ -139,13 +129,13 @@ fn setup_player(
                 // `TnuaBuiltinJump` also has customization fields with sensible defaults.
                 ..Default::default()
             },
-        })),
+        }))
         // A sensor shape is not strictly necessary, but without it we'll get weird results.
-        TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0)),
+        TnuaAvian3dSensorShape(Collider::cylinder(0.49, 0.0))
         // Tnua can fix the rotation, but the character will still get rotated before it can do so.
         // By locking the rotation we can prevent this.
-        LockedAxes::ROTATION_LOCKED.unlock_rotation_y(),
-    ));
+        LockedAxes::ROTATION_LOCKED.unlock_rotation_y()
+    });
 }
 
 // No Tnua-related setup here - this is just for dealing with Bevy's animation graph.

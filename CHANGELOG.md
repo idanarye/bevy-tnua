@@ -8,6 +8,10 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+### Added
+- BSN support: implement `FromTemplate` for `TnuaController`, `TnuaConfig`, and
+  `TnuaAnimatingState`.
+
 ## 0.33.0 - 2026-10-15
 ### Changed
 - Upgrade to Bevy 0.20.

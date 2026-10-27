@@ -22,6 +22,33 @@ pub struct TnuaObstacleRadar {
     blips: HashMap<Entity, BlipStatus>,
 }
 
+impl FromTemplate for TnuaObstacleRadar {
+    type Template = TnuaObstacleRadarTemplate;
+}
+
+#[derive(Default)]
+pub struct TnuaObstacleRadarTemplate {
+    /// The radius of the radar's cylinder.
+    pub radius: Float,
+    /// The height of the radar's cylinder.
+    pub height: Float,
+}
+
+impl Template for TnuaObstacleRadarTemplate {
+    type Output = TnuaObstacleRadar;
+
+    fn build_template(&self, _: &mut bevy::ecs::template::TemplateContext) -> Result<Self::Output> {
+        Ok(TnuaObstacleRadar::new(self.radius, self.height))
+    }
+
+    fn clone_template(&self) -> Self {
+        Self {
+            radius: self.radius,
+            height: self.height,
+        }
+    }
+}
+
 impl TnuaObstacleRadar {
     pub fn new(radius: Float, height: Float) -> Self {
         Self {

@@ -76,6 +76,7 @@ impl<S: TnuaScheme> Plugin for TnuaControllerPlugin<S> {
 }
 
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
+#[derive(Clone)]
 struct ContenderAction<S: TnuaScheme> {
     action: S,
     being_fed_for: Stopwatch,
@@ -106,7 +107,7 @@ impl FedStatus {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 struct FedEntry {
     status: FedStatus,
@@ -114,7 +115,7 @@ struct FedEntry {
 }
 
 /// Configuration for a [`TnuaController`].
-#[derive(Component)]
+#[derive(Component, FromTemplate)]
 pub struct TnuaConfig<S: TnuaScheme>(pub Handle<S::Config>);
 
 /// The main component used for interaction with the controls and animation code (needs a
@@ -204,6 +205,39 @@ impl<S: TnuaScheme> Default for TnuaController<S> {
             current_action: None,
         }
     }
+}
+
+pub struct TnuaControllerTemplate<S: TnuaScheme> {
+    _phantom: PhantomData<S>,
+}
+
+impl<S: TnuaScheme> Default for TnuaControllerTemplate<S> {
+    fn default() -> Self {
+        Self {
+            _phantom: Default::default(),
+        }
+    }
+}
+
+impl<S: TnuaScheme> Template for TnuaControllerTemplate<S> {
+    type Output = TnuaController<S>;
+
+    fn build_template(
+        &self,
+        _context: &mut bevy::ecs::template::TemplateContext,
+    ) -> Result<Self::Output> {
+        Ok(TnuaController::default())
+    }
+
+    fn clone_template(&self) -> Self {
+        Self {
+            _phantom: Default::default(),
+        }
+    }
+}
+
+impl<S: TnuaScheme> FromTemplate for TnuaController<S> {
+    type Template = TnuaControllerTemplate<S>;
 }
 
 /// The result of [`TnuaController::action_flow_status()`].

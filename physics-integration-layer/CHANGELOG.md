@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- BSN support: implement `FromTemplate` for `TnuaObstacleRadarTemplate`.
+
 ## 0.14.0 - 2026-10-15
 ### Changed
 - Upgrade to Bevy 0.20.

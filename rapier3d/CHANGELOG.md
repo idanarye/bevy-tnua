@@ -8,6 +8,10 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 
 ## [Unreleased]
 
+### Added
+- BSN support: implement `FromTemplate` for `TnuaRapier2dSensorShape` and
+  `TnuaRapier3dSensorShape`.
+
 ## 0.19.0 - 2026-10-15
 ### Changed
 - Upgrade to bevy_rapier 0.37.
