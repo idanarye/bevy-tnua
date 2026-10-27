@@ -88,8 +88,31 @@ impl Plugin for TnuaAvian3dPlugin {
 }
 
 /// Add this component to make [`TnuaProximitySensor`] cast a shape instead of a ray.
-#[derive(Component, FromTemplate)]
+#[derive(Component)]
 pub struct TnuaAvian3dSensorShape(pub Collider);
+
+impl FromTemplate for TnuaAvian3dSensorShape {
+    type Template = TnuaAvian3dSensorShapeTemplate;
+}
+
+#[derive(Default)]
+pub struct TnuaAvian3dSensorShapeTemplate(pub Option<Collider>);
+
+impl Template for TnuaAvian3dSensorShapeTemplate {
+    type Output = TnuaAvian3dSensorShape;
+
+    fn build_template(&self, _: &mut bevy::ecs::template::TemplateContext) -> Result<Self::Output> {
+        Ok(TnuaAvian3dSensorShape(self.0.clone().ok_or_else(|| {
+            BevyError::error(
+                "TnuaAvian3dSensorShape does not have a default value. Must provide shape",
+            )
+        })?))
+    }
+
+    fn clone_template(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
 
 #[allow(clippy::type_complexity)]
 fn update_rigid_body_trackers_system(

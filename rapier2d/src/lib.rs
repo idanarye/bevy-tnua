@@ -84,8 +84,31 @@ impl Plugin for TnuaRapier2dPlugin {
 /// The [`SharedShape`](parry::shape::SharedShape) can be constructed using the re-exported
 /// [`bevy_rapier2d::parry`], or by constructing a [`Collider`] first and taking it's
 /// [`raw`](Collider::raw) field.
-#[derive(Component, FromTemplate)]
+#[derive(Component)]
 pub struct TnuaRapier2dSensorShape(pub parry::shape::SharedShape);
+
+impl FromTemplate for TnuaRapier2dSensorShape {
+    type Template = TnuaRapier2dSensorShapeTemplate;
+}
+
+#[derive(Default)]
+pub struct TnuaRapier2dSensorShapeTemplate(pub Option<parry::shape::SharedShape>);
+
+impl Template for TnuaRapier2dSensorShapeTemplate {
+    type Output = TnuaRapier2dSensorShape;
+
+    fn build_template(&self, _: &mut bevy::ecs::template::TemplateContext) -> Result<Self::Output> {
+        Ok(TnuaRapier2dSensorShape(self.0.clone().ok_or_else(|| {
+            BevyError::error(
+                "TnuaRapier2dSensorShape does not have a default value. Must provide shape",
+            )
+        })?))
+    }
+
+    fn clone_template(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
 
 #[allow(clippy::type_complexity)]
 fn update_rigid_body_trackers_system(
