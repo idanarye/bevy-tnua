@@ -98,11 +98,13 @@ impl Template for TnuaRapier2dSensorShapeTemplate {
     type Output = TnuaRapier2dSensorShape;
 
     fn build_template(&self, _: &mut bevy::ecs::template::TemplateContext) -> Result<Self::Output> {
-        Ok(TnuaRapier2dSensorShape(self.0.clone().ok_or_else(|| {
-            BevyError::error(
-                "TnuaRapier2dSensorShape does not have a default value. Must provide shape",
-            )
-        })?))
+        Ok(TnuaRapier2dSensorShape(self.0.clone().ok_or_else(
+            || {
+                BevyError::error(
+                    "TnuaRapier2dSensorShape does not have a default value. Must provide shape",
+                )
+            },
+        )?))
     }
 
     fn clone_template(&self) -> Self {

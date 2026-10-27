@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::obstacle_radar::TnuaObstacleRadar;
@@ -15,6 +17,29 @@ use crate::prelude::TnuaController;
 pub struct TnuaBlipReuseAvoidance<S: TnuaScheme> {
     current_entity: Option<Entity>,
     entities_to_avoid: HashMap<Entity, S::ActionDiscriminant>,
+}
+
+impl<S: TnuaScheme> FromTemplate for TnuaBlipReuseAvoidance<S> {
+    type Template = TnuaBlipReuseAvoidanceTemplate<S>;
+}
+
+#[derive(Default)]
+pub struct TnuaBlipReuseAvoidanceTemplate<S> {
+    _phantom: PhantomData<S>,
+}
+
+impl<S: TnuaScheme> Template for TnuaBlipReuseAvoidanceTemplate<S> {
+    type Output = TnuaBlipReuseAvoidance<S>;
+
+    fn build_template(&self, _: &mut bevy::ecs::template::TemplateContext) -> Result<Self::Output> {
+        Ok(Default::default())
+    }
+
+    fn clone_template(&self) -> Self {
+        Self {
+            _phantom: PhantomData,
+        }
+    }
 }
 
 impl<S: TnuaScheme> Default for TnuaBlipReuseAvoidance<S> {

@@ -11,7 +11,7 @@ pub use crate::obstacle_radar::TnuaObstacleRadar;
 ///
 /// This component is not mandatory - if omitted, Tnua will just assume it is enabled for that
 /// entity.
-#[derive(Component, Default, Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Component, Default, Debug, PartialEq, Eq, Clone, Copy, FromTemplate)]
 pub enum TnuaToggle {
     /// Do not update the sensors, and do not apply forces from the motor.
     ///
@@ -288,15 +288,15 @@ impl TnuaGhostSensor {
 /// See <https://github.com/idanarye/bevy-tnua/wiki/Jump-fall-Through-Platforms>
 ///
 /// See `TnuaSimpleFallThroughPlatformsHelper`.
-#[derive(Component, Default, Debug)]
+#[derive(Component, Default, Debug, FromTemplate)]
 pub struct TnuaGhostPlatform;
 
 /// Change the gravity for a Tnua-controlled character.
-#[derive(Component, Debug)]
+#[derive(Component, Debug, FromTemplate)]
 pub struct TnuaGravity(pub Vector3);
 
 /// Marker component for colliders which Tnua should not treat as platform.
 ///
 /// This means that the ray/shape cast ignores these hits.
-#[derive(Component, Default, Debug)]
+#[derive(Component, Default, Debug, FromTemplate)]
 pub struct TnuaNotPlatform;

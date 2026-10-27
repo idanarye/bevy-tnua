@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use bevy::prelude::*;
 use bevy_tnua_physics_integration_layer::data_for_backends::TnuaProximitySensorOutput;
 
@@ -25,6 +27,28 @@ pub trait TnuaGhostOverwritesForBasis: 'static + Send + Sync + Default {
 #[derive(Component, Deref, DerefMut)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct TnuaGhostOverwrites<S: TnuaScheme>(pub <<<S as TnuaScheme>::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::GhostOverwrites);
+
+impl<S: TnuaScheme> FromTemplate for TnuaGhostOverwrites<S> {
+    type Template = TnuaGhostOverwritesTemplate<S>;
+}
+
+pub struct TnuaGhostOverwritesTemplate<S: TnuaScheme> {
+    _phantom: PhantomData<S>,
+}
+
+impl<S: TnuaScheme> Template for TnuaGhostOverwritesTemplate<S> {
+    type Output = TnuaGhostOverwrites<S>;
+
+    fn build_template(&self, _: &mut bevy::ecs::template::TemplateContext) -> Result<Self::Output> {
+        Ok(Default::default())
+    }
+
+    fn clone_template(&self) -> Self {
+        Self {
+            _phantom: PhantomData,
+        }
+    }
+}
 
 impl<S: TnuaScheme> AsMut<
 <<<S as TnuaScheme>::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::GhostOverwrites
