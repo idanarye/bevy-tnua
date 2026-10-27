@@ -23,9 +23,16 @@ impl<S: TnuaScheme> FromTemplate for TnuaBlipReuseAvoidance<S> {
     type Template = TnuaBlipReuseAvoidanceTemplate<S>;
 }
 
-#[derive(Default)]
 pub struct TnuaBlipReuseAvoidanceTemplate<S> {
     _phantom: PhantomData<S>,
+}
+
+impl<S> Default for TnuaBlipReuseAvoidanceTemplate<S> {
+    fn default() -> Self {
+        Self {
+            _phantom: PhantomData,
+        }
+    }
 }
 
 impl<S: TnuaScheme> Template for TnuaBlipReuseAvoidanceTemplate<S> {

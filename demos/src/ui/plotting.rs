@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_egui::egui;
 use egui_plot::{Corner, Legend, Plot};
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone)]
 pub struct PlotSource {
     input: Vec<Vec<(&'static str, f32)>>,
     fields: Vec<Vec<&'static str>>,

@@ -8,7 +8,7 @@ pub struct AnimationsHandler {
     pub animations: HashMap<String, AnimationNodeIndex>,
 }
 
-#[derive(Component)]
+#[derive(Component, FromTemplate)]
 pub struct GltfSceneHandler {
     pub names_from: Handle<Gltf>,
 }

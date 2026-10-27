@@ -132,7 +132,7 @@ pub struct DemoUiPhysicsBackendSettings {
     pub gravity: Vector3,
 }
 
-#[derive(Component)]
+#[derive(Component, Default, Clone)]
 pub struct TrackedEntity(pub String);
 
 fn apply_selectors(

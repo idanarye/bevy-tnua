@@ -5,10 +5,10 @@ use bevy::{
     prelude::*,
 };
 
-#[derive(Component)]
+#[derive(Component, Default, Clone)]
 pub struct LevelObject;
 
-#[derive(Component)]
+#[derive(Component, Default, Clone)]
 pub struct IsPlayer;
 
 #[derive(Component)]

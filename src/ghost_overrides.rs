@@ -36,6 +36,14 @@ pub struct TnuaGhostOverwritesTemplate<S: TnuaScheme> {
     _phantom: PhantomData<S>,
 }
 
+impl<S: TnuaScheme> Default for TnuaGhostOverwritesTemplate<S> {
+    fn default() -> Self {
+        Self {
+            _phantom: PhantomData,
+        }
+    }
+}
+
 impl<S: TnuaScheme> Template for TnuaGhostOverwritesTemplate<S> {
     type Output = TnuaGhostOverwrites<S>;
 

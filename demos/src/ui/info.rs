@@ -4,12 +4,13 @@ use bevy::prelude::*;
 #[cfg(feature = "egui")]
 use bevy_egui::egui;
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub struct InfoSource {
     is_active: bool,
     data: BTreeMap<String, Option<InfoBit>>,
 }
 
+#[derive(Clone)]
 pub enum InfoBit {
     Label(#[cfg(feature = "egui")] egui::WidgetText),
 }

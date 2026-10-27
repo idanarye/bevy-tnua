@@ -713,7 +713,7 @@ pub trait CameraController {
 }
 
 /// A camera controller that follows the player.
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct CameraControllerMounted {
     pub forward: Vector3,
     pub pitch_angle: Float,
@@ -736,7 +736,7 @@ impl CameraController for CameraControllerMounted {
 
 /// A fixed camera that is located at `from` and looks at `to`. The camera position is updated via
 /// the UI (requires the "egui" feature)
-#[derive(Component)]
+#[derive(Component, FromTemplate)]
 pub struct CameraControllerFloating {
     pub looking_from: Vector3,
     pub looking_to: Vector3,

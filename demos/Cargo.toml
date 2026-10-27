@@ -54,7 +54,7 @@ bevy = { version = "^0.20", default-features = false, features = [
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
-    # "bevy_scene",
+    "bevy_scene",
     # "bevy_winit",
     "bevy_render",
     "bevy_gltf",

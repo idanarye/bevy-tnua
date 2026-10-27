@@ -127,21 +127,19 @@ fn main() {
 }
 
 fn setup_camera_and_lights(mut commands: Commands) {
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(30.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y),
-    ));
-
-    commands.spawn((PointLight::default(), Transform::from_xyz(5.0, 5.0, 5.0)));
-
-    commands.spawn((
+    commands.spawn_scene_list(bsn_list! {
+        Camera3d
+        Transform::from_xyz(30.0, 16.0, 40.0).looking_at(Vec3::new(0.0, 10.0, 0.0), Vec3::Y)
+        --
+        PointLight
+        Transform::from_xyz(5.0, 5.0, 5.0)
+        --
         DirectionalLight {
             illuminance: 4000.0,
             shadow_maps_enabled: true,
-            ..Default::default()
-        },
-        Transform::default().looking_at(-Vec3::Y, Vec3::Z),
-    ));
+        }
+        Transform::default().looking_at(-Vec3::Y, Vec3::Z)
+    });
 }
 
 /// Updates the camera trasfrom from the the [`CameraControllerFloating`] component. The
@@ -159,67 +157,88 @@ fn apply_camera_transform(
     *camera = Transform::from_translation(from.f32()).looking_at(to.f32(), Vec3::Y);
 }
 
-fn setup_player(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut control_scheme_config_assets: ResMut<Assets<DemoControlSchemeConfig>>,
-) {
-    let mut cmd = commands.spawn(IsPlayer);
-    cmd.insert(WorldAssetRoot(asset_server.load("player.glb#Scene0")));
-    cmd.insert(GltfSceneHandler {
-        names_from: asset_server.load("player.glb"),
-    });
-    cmd.insert(CameraControllerFloating {
-        looking_from: Vector3::new(0.0, 16.0, 40.0),
-        looking_to: Vector3::new(0.0, 10.0, 0.0),
-    });
-    // The character entity must be configured as a dynamic rigid body of the physics backend.
-    #[cfg(feature = "rapier3d")]
-    {
-        cmd.insert(rapier::RigidBody::Dynamic);
-        cmd.insert(rapier::Collider::capsule_y(0.5, 0.5));
-    }
-    #[cfg(feature = "avian3d")]
-    {
-        cmd.insert(avian::RigidBody::Dynamic);
-        cmd.insert(avian::Collider::capsule(0.5, 1.0));
-    }
+fn setup_player(mut commands: Commands) {
+    let mut cmd = commands.spawn_scene(bsn! {
+        IsPlayer
+        WorldAssetRoot("player.glb#Scene0")
+        GltfSceneHandler {
+            names_from: "player.glb",
+        }
+        CameraControllerFloating {
+            looking_from: Vector3::new(0.0, 16.0, 40.0),
+            looking_to: Vector3::new(0.0, 10.0, 0.0),
+        }
+        // The character entity must be configured as a dynamic rigid body of the physics backend.
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::RigidBody::Dynamic
+                    rapier::Collider::capsule_y(0.5, 0.5)
+            }
+        }
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::RigidBody::Dynamic
+                    avian::Collider::capsule(0.5, 1.0)
+            }
+        }
 
-    cmd.insert((
         // `TnuaController` is Tnua's main interface with the user code. Read
         // examples/src/character_control_systems/platformer_control_systems.rs to see how
         // `TnuaController` is used in this example.
-        TnuaController::<DemoControlScheme>::default(),
+        TnuaController<DemoControlScheme>
+
         // `TnuaConfig` holds the configuration for the Tnua controller. It can be loaded from a
         // file as an asset, but in this case we are creating it by code and injecting it to the
         // assets resource.
-        TnuaConfig::<DemoControlScheme>(
-            control_scheme_config_assets.add(DemoControlSchemeConfig::default()),
-        ),
-    ));
+        TnuaConfig<DemoControlScheme>(
+            asset_value(DemoControlSchemeConfig::default()),
+        )
 
-    // The obstacle radar is used to detect obstacles around the player that the player can use
-    // for environment actions (e.g. climbing). The physics backend integration plugin is
-    // responsible for generating the collider in a child object. The collider is a cylinder around
-    // the player character (it needs to be a little bigger than the character's collider),
-    // configured so that it'll generate collision data without generating forces for the actual
-    // physics simulation.
-    cmd.insert(TnuaObstacleRadar::new(1.0, 3.0));
+        // The obstacle radar is used to detect obstacles around the player that the player can use
+        // for environment actions (e.g. climbing). The physics backend integration plugin is
+        // responsible for generating the collider in a child object. The collider is a cylinder
+        // around the player character (it needs to be a little bigger than the character's
+        // collider), configured so that it'll generate collision data without generating forces
+        // for the actual physics simulation.
+        TnuaObstacleRadar { radius: 1.0, height: 3.0 }
 
-    // We use the blip reuse avoidance helper to avoid initiating actions on obstacles we've just
-    // finished an action with.
-    cmd.insert(TnuaBlipReuseAvoidance::<DemoControlScheme>::default());
+        // We use the blip reuse avoidance helper to avoid initiating actions on obstacles we've
+        // just finished an action with.
+        TnuaBlipReuseAvoidance<DemoControlScheme>
 
-    // An entity's Tnua behavior can be toggled individually with this component, if inserted.
-    cmd.insert(TnuaToggle::default());
+        // An entity's Tnua behavior can be toggled individually with this component, if inserted.
+        TnuaToggle
 
-    // This is an helper component for deciding which animation to play. Tnua itself does not
-    // actually interact with `TnuaAnimatingState` - it's there so that animating systems could use
-    // the information from `TnuaController` to animate the character.
-    //
-    // Read examples/src/character_animating_systems/platformer_animating_systems.rs to see how
-    // `TnuaAnimatingState` is used in this example.
-    cmd.insert(TnuaAnimatingState::<AnimationState>::default());
+        // This is an helper component for deciding which animation to play. Tnua itself does not
+        // actually interact with `TnuaAnimatingState` - it's there so that animating systems could
+        // use the information from `TnuaController` to animate the character.
+        //
+        // Read examples/src/character_animating_systems/platformer_animating_systems.rs to see how
+        // `TnuaAnimatingState` is used in this example.
+        TnuaAnimatingState<AnimationState>
+
+        // The ghost sensor is used for detecting ghost platforms - platforms configured in the
+        // physics backend to not contact with the character (or detect the contact but not apply
+        // physical forces based on it) and marked with the `TnuaGhostPlatform` component. These
+        // can then be used as one-way platforms.
+        TnuaGhostOverwrites<DemoControlScheme>
+
+        // This helper is used to operate the ghost sensor and ghost platforms and implement
+        // fall-through behavior where the player can intentionally fall through a one-way
+        // platform.
+        TnuaSimpleFallThroughPlatformsHelper
+
+        @{
+            #[cfg(feature = "egui")]
+            bsn! {
+                tnua_demos_crate::ui::TrackedEntity("Player")
+                    PlotSource
+                    InfoSource
+            }
+        }
+    });
 
     cmd.insert({
         let command_altering_selectors = CommandAlteringSelectors::default()
@@ -354,21 +373,4 @@ fn setup_player(
         );
         command_altering_selectors
     });
-
-    // The ghost sensor is used for detecting ghost platforms - platforms configured in the physics
-    // backend to not contact with the character (or detect the contact but not apply physical
-    // forces based on it) and marked with the `TnuaGhostPlatform` component. These can then be
-    // used as one-way platforms.
-    cmd.insert(TnuaGhostOverwrites::<DemoControlScheme>::default());
-
-    // This helper is used to operate the ghost sensor and ghost platforms and implement
-    // fall-through behavior where the player can intentionally fall through a one-way platform.
-    cmd.insert(TnuaSimpleFallThroughPlatformsHelper::default());
-
-    #[cfg(feature = "egui")]
-    cmd.insert((
-        tnua_demos_crate::ui::TrackedEntity("Player".to_owned()),
-        PlotSource::default(),
-        InfoSource::default(),
-    ));
 }
