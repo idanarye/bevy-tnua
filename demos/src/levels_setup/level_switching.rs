@@ -17,6 +17,28 @@ pub struct PositionPlayer {
     ttl: Timer,
 }
 
+impl FromTemplate for PositionPlayer {
+    type Template = PositionPlayerTemplate;
+}
+
+#[derive(Default)]
+pub struct PositionPlayerTemplate(pub Vec3);
+
+impl Template for PositionPlayerTemplate {
+    type Output = PositionPlayer;
+
+    fn build_template(&self, _: &mut bevy::ecs::template::TemplateContext) -> Result<Self::Output> {
+        Ok(PositionPlayer {
+            position: self.0,
+            ttl: Timer::new(Duration::from_millis(500), TimerMode::Once),
+        })
+    }
+
+    fn clone_template(&self) -> Self {
+        Self(self.0)
+    }
+}
+
 impl From<Vec3> for PositionPlayer {
     fn from(position: Vec3) -> Self {
         Self {

@@ -256,23 +256,10 @@ impl LevelSetupHelper2d<'_, '_> {
 }
 
 pub trait LevelSetupHelper2dEntityCommandsExtension {
-    fn make_kinematic(&mut self) -> &mut Self;
     fn make_sensor(&mut self) -> &mut Self;
 }
 
 impl LevelSetupHelper2dEntityCommandsExtension for EntityCommands<'_> {
-    fn make_kinematic(&mut self) -> &mut Self {
-        self.insert((
-            #[cfg(feature = "avian2d")]
-            avian::RigidBody::Kinematic,
-            #[cfg(feature = "rapier2d")]
-            (
-                rapier::Velocity::default(),
-                rapier::RigidBody::KinematicVelocityBased,
-            ),
-        ))
-    }
-
     fn make_sensor(&mut self) -> &mut Self {
         self.insert((
             #[cfg(feature = "avian2d")]
@@ -280,5 +267,123 @@ impl LevelSetupHelper2dEntityCommandsExtension for EntityCommands<'_> {
             #[cfg(feature = "rapier2d")]
             rapier::Sensor,
         ))
+    }
+}
+
+pub fn the_floor(color: impl Into<Color>) -> impl Scene {
+    bsn! {
+        #Floor
+        Sprite {
+            custom_size: Vec2::new(128.0, 0.5),
+            color: color,
+        }
+        @{
+            #[cfg(feature = "rapier2d")]
+            bsn! {
+                rapier::Collider::halfspace(Vec2::Y).unwrap()
+            }
+        }
+        @{
+            #[cfg(feature = "avian2d")]
+            bsn! {
+                avian::RigidBody::Static
+                    avian::Collider::half_space(Vec2::Y)
+            }
+        }
+    }
+}
+
+pub fn a_rectangle(color: impl Into<Color>, size: Vector2) -> impl Scene {
+    bsn! {
+        Sprite {
+            custom_size: {size.f32()},
+            color: color,
+        }
+
+        @{
+            #[cfg(feature = "rapier2d")]
+            bsn! {
+                rapier::Collider::cuboid(
+                    0.5 * size.x.f32(),
+                    0.5 * size.y.f32(),
+                )
+            }
+        }
+        @{
+            #[cfg(feature = "avian2d")]
+            bsn! {
+                avian::RigidBody::Static
+                avian::Collider::rectangle(size.x.f32(), size.y.f32())
+            }
+        }
+    }
+}
+
+pub fn a_text_circle(
+    text: impl ToString,
+    text_scale: Float,
+    #[allow(unused)] radius: Float,
+) -> impl Scene {
+    let text = text.to_string();
+    bsn! {
+        Children [
+            LevelObject
+            Text::new(text)
+            TextLayout::justify(Justify::Center)
+            TextFont {
+                // font: {FontSource::Family("FiraSans-Bold.ttf".into())},
+                font_size: FontSize::Px(72.0),
+            }
+            TextColor(css::WHITE)
+            Transform::from_xyz(0.0, 0.0, 1.0).with_scale(text_scale.f32() * Vec3::ONE)
+        ]
+        @{
+            #[cfg(feature = "rapier2d")]
+            bsn! {
+                rapier::Collider::ball(radius)
+            }
+        }
+        @{
+            #[cfg(feature = "avian2d")]
+            bsn! {
+                avian::RigidBody::Static
+                avian::Collider::circle(radius.f32())
+            }
+        }
+    }
+}
+
+pub fn make_kinematic() -> impl Scene {
+    bsn! {
+        @{
+            #[cfg(feature = "avian2d")]
+            bsn! {
+                avian::RigidBody::Kinematic
+            }
+        }
+        @{
+            #[cfg(feature = "rapier2d")]
+            bsn! {
+                rapier::Velocity
+                rapier::RigidBody::KinematicVelocityBased
+            }
+        }
+    }
+}
+
+pub fn make_sensor() -> impl Scene {
+    bsn! {
+        @{
+            #[cfg(feature = "avian2d")]
+            bsn! {
+                avian::Sensor
+            }
+        }
+        @{
+            #[cfg(feature = "rapier2d")]
+            bsn! {
+                rapier::Sensor
+            }
+        }
     }
 }

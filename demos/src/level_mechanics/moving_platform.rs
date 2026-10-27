@@ -47,7 +47,7 @@ impl Plugin for MovingPlatformPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, FromTemplate)]
 pub struct MovingPlatform {
     pub current_leg: usize,
     pub speed: Float,

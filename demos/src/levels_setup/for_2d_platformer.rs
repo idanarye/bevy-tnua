@@ -3,18 +3,21 @@
 use bevy::{color::palettes::css, prelude::*};
 
 #[cfg(feature = "avian2d")]
-use avian2d::{prelude as avian, prelude::*};
+use avian2d::prelude::*;
 #[cfg(feature = "rapier2d")]
-use bevy_rapier2d::{prelude as rapier, prelude::*};
+use bevy_rapier2d::prelude::*;
 use bevy_tnua::TnuaGhostPlatform;
 #[allow(unused_imports)]
 use bevy_tnua::math::{AdjustPrecision, Vector2, Vector3};
 
-use crate::level_mechanics::MovingPlatform;
+use crate::{
+    level_mechanics::MovingPlatform,
+    levels_setup::helper::helper2d::{a_rectangle, a_text_circle, make_kinematic, make_sensor},
+};
 
 use super::{
     PositionPlayer,
-    helper::{LevelSetupHelper2d, LevelSetupHelper2dEntityCommandsExtension},
+    helper::{LevelSetupHelper2d, helper2d::the_floor},
 };
 
 #[cfg(feature = "avian2d")]
@@ -28,128 +31,108 @@ pub enum LayerNames {
 }
 
 pub fn setup_level(mut helper: LevelSetupHelper2d) {
-    helper.spawn(PositionPlayer::from(Vec3::new(0.0, 2.0, 0.0)));
-
-    helper.spawn_floor(css::GRAY);
-
-    helper.spawn_rectangle(
-        "Moderate Slope",
-        css::GRAY,
-        Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
-        Vector2::new(10.0, 0.1),
-    );
-    helper.spawn_rectangle(
-        "Steep Slope",
-        css::GRAY,
-        Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
-        Vector2::new(10.0, 0.1),
-    );
-    helper.spawn_rectangle(
-        "Box to Step on",
-        css::GRAY,
-        Transform::from_xyz(-4.0, 1.0, 0.0),
-        Vector2::new(4.0, 2.0),
-    );
-    helper.spawn_rectangle(
-        "Floating Box",
-        css::GRAY,
-        Transform::from_xyz(-10.0, 4.0, 0.0),
-        Vector2::new(6.0, 1.0),
-    );
-    helper.spawn_rectangle(
-        "Box to Crawl Under",
-        css::GRAY,
-        Transform::from_xyz(-20.0, 2.6, 0.0),
-        Vector2::new(6.0, 1.0),
-    );
+    helper.spawn_scene_list(bsn_list! {
+        PositionPlayer(Vec3::new(0.0, 2.0, 0.0))
+        --
+        @the_floor(css::GRAY)
+        --
+        #Moderate_Slope
+        @a_rectangle(css::GRAY, Vector2::new(10.0, 0.1))
+        Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6))
+        --
+        #Steep_Slope
+        @a_rectangle(css::GRAY, Vector2::new(10.0, 0.1))
+        Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0))
+        --
+        #Box_to_Step_on
+        @a_rectangle(css::GRAY, Vector2::new(4.0, 2.0))
+        Transform::from_xyz(-4.0, 1.0, 0.0)
+        --
+        #Floating_Box
+        @a_rectangle(css::GRAY, Vector2::new(6.0, 1.0))
+        Transform::from_xyz(-10.0, 4.0, 0.0)
+        --
+        #Box_to_Crawl_Under
+        @a_rectangle(css::GRAY, Vector2::new(6.0, 1.0))
+        Transform::from_xyz(-20.0, 2.6, 0.0)
+    });
 
     // Fall-through platforms
     for (i, y) in [5.0, 7.5].into_iter().enumerate() {
-        helper
-            .spawn_rectangle(
-                format!("Fall Through #{}", i + 1),
-                css::PINK,
-                Transform::from_xyz(-20.0, y, -1.0),
-                Vector2::new(6.0, 0.5),
-            )
-            .insert((
+        helper.spawn_scene(bsn! {
+            Name(format!("Fall_Through_#{}", i + 1))
+            @a_rectangle(css::PINK, Vector2::new(6.0, 0.5))
+            Transform::from_xyz(-20.0, y, -1.0)
+            @{
                 #[cfg(feature = "rapier2d")]
-                SolverGroups {
-                    memberships: Group::empty(),
-                    filters: Group::empty(),
-                    test_mode: Default::default(),
-                },
+                bsn! {
+                    SolverGroups {
+                        memberships: Group::empty(),
+                        filters: Group::empty(),
+                    }
+                }
+            }
+            @{
                 #[cfg(feature = "avian2d")]
-                CollisionLayers::new([LayerNames::FallThrough], [LayerNames::FallThrough]),
-                TnuaGhostPlatform,
-            ));
+                bsn! {
+                    CollisionLayers::new([LayerNames::FallThrough], [LayerNames::FallThrough])
+                }
+            }
+            TnuaGhostPlatform
+        });
     }
 
-    helper
-        .spawn_text_circle(
-            "Collision Groups",
-            "collision\ngroups",
-            0.01,
-            Transform::from_xyz(10.0, 2.0, 0.0),
-            1.0,
-        )
-        .insert((
+    helper.spawn_scene(bsn! {
+        #Collision_Groups
+        @a_text_circle("collision\ngroups", 0.01, 1.0)
+        Transform::from_xyz(10.0, 2.0, 0.0)
+        @{
             #[cfg(feature = "rapier2d")]
-            CollisionGroups {
-                memberships: Group::GROUP_1,
-                filters: Group::GROUP_1,
-                test_mode: Default::default(),
-            },
+            bsn! {
+                CollisionGroups {
+                    memberships: Group::GROUP_1,
+                    filters: Group::GROUP_1,
+                }
+            }
+        }
+        @{
             #[cfg(feature = "avian2d")]
-            CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
-        ));
+            bsn! {
+                CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough])
+            }
+        }
+    });
 
     #[cfg(feature = "rapier2d")]
-    helper
-        .spawn_text_circle(
-            "Solver Groups",
-            "solver\ngroups",
-            0.01,
-            Transform::from_xyz(15.0, 2.0, 0.0),
-            1.0,
-        )
-        .insert(SolverGroups {
+    helper.spawn_scene(bsn! {
+        #Solver_Groups
+        @a_text_circle("solver\ngroups", 0.01, 1.0)
+        Transform::from_xyz(15.0, 2.0, 0.0)
+        SolverGroups {
             memberships: Group::GROUP_1,
             filters: Group::GROUP_1,
-            test_mode: Default::default(),
-        });
+        }
+    });
 
-    helper
-        .spawn_text_circle(
-            "Sensor",
-            "sensor",
-            0.01,
-            Transform::from_xyz(20.0, 2.0, 0.0),
-            1.0,
-        )
-        .insert((
-            #[cfg(feature = "rapier2d")]
-            rapier::Sensor,
-            #[cfg(feature = "avian2d")]
-            avian::Sensor,
-        ));
-
-    // spawn moving platform
-    helper
-        .spawn_rectangle(
-            "Moving Platform",
-            css::BLUE,
-            Transform::from_xyz(-4.0, 6.0, 0.0),
-            Vector2::new(4.0, 1.0),
-        )
-        .make_kinematic()
-        .insert(MovingPlatform::new(
-            4.0,
-            &[
+    helper.spawn_scene_list(bsn_list! {
+        #Sensor
+        @a_text_circle("sensor", 0.01, 1.0)
+        Transform::from_xyz(20.0, 2.0, 0.0)
+        @make_sensor()
+        --
+        // spawn moving platform
+        #Moving_Platform
+        @a_rectangle(css::BLUE, Vector2::new(4.0, 1.0))
+        Transform::from_xyz(-4.0, 6.0, 0.0)
+        @make_kinematic()
+        MovingPlatform {
+            speed: 4.0,
+            locations: vec![
                 Vector3::new(-4.0, 6.0, 0.0),
                 Vector3::new(-8.0, 6.0, 0.0),
                 Vector3::new(-8.0, 10.0, 0.0),
                 Vector3::new(-4.0, 10.0, 0.0),
             ],
-        ));
+        }
+    });
 }
