@@ -12,12 +12,15 @@ use bevy_tnua::math::{AdjustPrecision, Vector2, Vector3};
 
 use crate::{
     level_mechanics::MovingPlatform,
-    levels_setup::helper::helper2d::{a_rectangle, a_text_circle, make_kinematic, make_sensor},
+    levels_setup::{
+        LevelObject,
+        helper::helper2d::{a_rectangle, a_text_circle, make_kinematic, make_sensor},
+    },
 };
 
 use super::{
     PositionPlayer,
-    helper::{LevelSetupHelper2d, helper2d::the_floor},
+    helper::helper2d::{make_intangible, the_floor},
 };
 
 #[cfg(feature = "avian2d")]
@@ -30,60 +33,54 @@ pub enum LayerNames {
     PhaseThrough,
 }
 
-pub fn setup_level(mut helper: LevelSetupHelper2d) {
-    helper.spawn_scene_list(bsn_list! {
+pub fn setup_level(mut commands: Commands) {
+    commands.spawn_scene_list(bsn_list! {
         PositionPlayer(Vec3::new(0.0, 2.0, 0.0))
         --
         @the_floor(css::GRAY)
+        LevelObject
         --
         #Moderate_Slope
+        LevelObject
         @a_rectangle(css::GRAY, Vector2::new(10.0, 0.1))
         Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6))
         --
         #Steep_Slope
+        LevelObject
         @a_rectangle(css::GRAY, Vector2::new(10.0, 0.1))
         Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0))
         --
         #Box_to_Step_on
+        LevelObject
         @a_rectangle(css::GRAY, Vector2::new(4.0, 2.0))
         Transform::from_xyz(-4.0, 1.0, 0.0)
         --
         #Floating_Box
+        LevelObject
         @a_rectangle(css::GRAY, Vector2::new(6.0, 1.0))
         Transform::from_xyz(-10.0, 4.0, 0.0)
         --
         #Box_to_Crawl_Under
+        LevelObject
         @a_rectangle(css::GRAY, Vector2::new(6.0, 1.0))
         Transform::from_xyz(-20.0, 2.6, 0.0)
     });
 
     // Fall-through platforms
     for (i, y) in [5.0, 7.5].into_iter().enumerate() {
-        helper.spawn_scene(bsn! {
+        commands.spawn_scene(bsn! {
             Name(format!("Fall_Through_#{}", i + 1))
+                LevelObject
             @a_rectangle(css::PINK, Vector2::new(6.0, 0.5))
             Transform::from_xyz(-20.0, y, -1.0)
-            @{
-                #[cfg(feature = "rapier2d")]
-                bsn! {
-                    SolverGroups {
-                        memberships: Group::empty(),
-                        filters: Group::empty(),
-                    }
-                }
-            }
-            @{
-                #[cfg(feature = "avian2d")]
-                bsn! {
-                    CollisionLayers::new([LayerNames::FallThrough], [LayerNames::FallThrough])
-                }
-            }
+            @make_intangible()
             TnuaGhostPlatform
         });
     }
 
-    helper.spawn_scene(bsn! {
+    commands.spawn_scene(bsn! {
         #Collision_Groups
+        LevelObject
         @a_text_circle("collision\ngroups", 0.01, 1.0)
         Transform::from_xyz(10.0, 2.0, 0.0)
         @{
@@ -104,8 +101,9 @@ pub fn setup_level(mut helper: LevelSetupHelper2d) {
     });
 
     #[cfg(feature = "rapier2d")]
-    helper.spawn_scene(bsn! {
+    commands.spawn_scene(bsn! {
         #Solver_Groups
+        LevelObject
         @a_text_circle("solver\ngroups", 0.01, 1.0)
         Transform::from_xyz(15.0, 2.0, 0.0)
         SolverGroups {
@@ -114,14 +112,16 @@ pub fn setup_level(mut helper: LevelSetupHelper2d) {
         }
     });
 
-    helper.spawn_scene_list(bsn_list! {
+    commands.spawn_scene_list(bsn_list! {
         #Sensor
+        LevelObject
         @a_text_circle("sensor", 0.01, 1.0)
         Transform::from_xyz(20.0, 2.0, 0.0)
         @make_sensor()
         --
         // spawn moving platform
         #Moving_Platform
+        LevelObject
         @a_rectangle(css::BLUE, Vector2::new(4.0, 1.0))
         Transform::from_xyz(-4.0, 6.0, 0.0)
         @make_kinematic()

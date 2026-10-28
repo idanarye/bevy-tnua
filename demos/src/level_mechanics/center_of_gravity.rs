@@ -13,7 +13,7 @@ impl Plugin for CenterOfGravityPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default, Clone)]
 pub struct IsCenterOfGraity;
 
 fn add_or_remove_components(

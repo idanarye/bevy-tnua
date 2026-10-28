@@ -24,5 +24,5 @@ impl Plugin for LevelMechanicsPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default, Clone)]
 pub struct Climbable;
