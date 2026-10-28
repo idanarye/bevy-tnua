@@ -10,12 +10,18 @@ use bevy_tnua::TnuaGhostPlatform;
 #[allow(unused_imports)]
 use bevy_tnua::math::{AdjustPrecision, Vector3};
 
-use crate::level_mechanics::MovingPlatform;
-
-use super::{
-    PositionPlayer,
-    helper::{LevelSetupHelper3d, LevelSetupHelper3dEntityCommandsExtension},
+use crate::{
+    level_mechanics::MovingPlatform,
+    levels_setup::{
+        LevelObject,
+        helper::helper3d::{
+            a_cuboid, a_cylinder, an_invisible_cuboid, make_kinematic,
+            make_kinematic_with_angular_velocity, make_sensor, the_floor,
+        },
+    },
 };
+
+use super::PositionPlayer;
 
 #[cfg(feature = "avian3d")]
 #[derive(PhysicsLayer, Default)]
@@ -27,130 +33,123 @@ pub enum LayerNames {
     PhaseThrough,
 }
 
-pub fn setup_level(mut helper: LevelSetupHelper3d) {
-    helper.spawn(PositionPlayer::from(Vec3::new(0.0, 10.0, 0.0)));
-
-    helper.spawn_floor(css::WHITE);
-
-    let mut obstacles_helper = helper.with_color(css::GRAY);
-    obstacles_helper.spawn_cuboid(
-        "Moderate Slope",
-        Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6)),
-        Vector3::new(10.0, 0.1, 2.0),
-    );
-    obstacles_helper.spawn_cuboid(
-        "Steep Slope",
-        Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
-        Vector3::new(10.0, 0.1, 2.0),
-    );
-    obstacles_helper.spawn_cuboid(
-        "Box to Step on",
-        Transform::from_xyz(-4.0, 1.0, 0.0),
-        Vector3::new(4.0, 2.0, 2.0),
-    );
-    obstacles_helper.spawn_cuboid(
-        "Floating Box",
-        Transform::from_xyz(-10.0, 4.0, 0.0),
-        Vector3::new(6.0, 1.0, 2.0),
-    );
-    obstacles_helper.spawn_cuboid(
-        "Box to Crawl Under",
-        Transform::from_xyz(0.0, 2.6, -5.0),
-        Vector3::new(6.0, 1.0, 2.0),
-    );
-
-    // Fall-through platforms
-    //let fall_through_obstacles_material = materials.add(css::PINK.with_alpha(0.8));
-    let mut fall_through_obstacles_helper = helper.with_color(css::PINK.with_alpha(0.8));
-    for (i, y) in [2.0, 4.5].into_iter().enumerate() {
-        let mut cmd = fall_through_obstacles_helper.spawn_cuboid(
-            format!("Fall Through #{}", i + 1),
-            Transform::from_xyz(6.0, y, 10.0),
-            Vector3::new(6.0, 0.5, 2.0),
-        );
-        #[cfg(feature = "rapier3d")]
+pub fn setup_level(mut commands: Commands) {
+    commands.spawn_scene_list(bsn_list! {
+        PositionPlayer(Vec3::new(0.0, 10.0, 0.0))
+        --
+        @the_floor(css::WHITE)
+        LevelObject
+        --
+        #Moderate_Slope
+        LevelObject
+        Transform::from_xyz(7.0, 7.0, 0.0).with_rotation(Quat::from_rotation_z(0.6))
+        @a_cuboid(css::GRAY, Vector3::new(10.0, 0.1, 2.0))
+        --
+        #Steep_Slope
+        LevelObject
+        Transform::from_xyz(14.0, 14.0, 0.0).with_rotation(Quat::from_rotation_z(1.0))
+        @a_cuboid(css::GRAY, Vector3::new(10.0, 0.1, 2.0))
+        --
+        #Box_to_Step_on
+        LevelObject
+        Transform::from_xyz(-4.0, 1.0, 0.0)
+        @a_cuboid(css::GRAY, Vector3::new(4.0, 2.0, 2.0))
+        --
+        #Floating_Box
+        LevelObject
+        Transform::from_xyz(-10.0, 4.0, 0.0)
+        @a_cuboid(css::GRAY, Vector3::new(6.0, 1.0, 2.0))
+        --
+        #Box_to_Crawl_Under
+        LevelObject
+        Transform::from_xyz(0.0, 2.6, -5.0)
+        @a_cuboid(css::GRAY, Vector3::new(6.0, 1.0, 2.0))
+        --
+        // Fall-through platforms
         {
-            cmd.insert(SolverGroups {
-                memberships: Group::empty(),
-                filters: Group::empty(),
-                test_mode: Default::default(),
-            });
+            [2.0, 4.5].into_iter().enumerate().map(|(i, y)| {
+                bsn! {
+                    Name(format!("Fall_Through_#{}", i + 1))
+                        LevelObject
+                        @a_cuboid(css::PINK.with_alpha(0.8), Vector3::new(6.0, 0.5, 2.0))
+                        Transform::from_xyz(6.0, y, 10.0)
+                        @{
+                            #[cfg(feature = "rapier3d")]
+                            bsn! {
+                                SolverGroups {
+                                    memberships: Group::empty(),
+                                    filters: Group::empty(),
+                                }
+                            }
+                        }
+                    @{
+                        #[cfg(feature = "avian3d")]
+                        bsn! {
+                            CollisionLayers::new(
+                                [LayerNames::FallThrough],
+                                [LayerNames::FallThrough],
+                            )
+                        }
+                    }
+                    TnuaGhostPlatform
+                }
+            }).collect::<Vec<_>>()
         }
-        #[cfg(feature = "avian3d")]
-        {
-            cmd.insert(CollisionLayers::new(
-                [LayerNames::FallThrough],
-                [LayerNames::FallThrough],
-            ));
-        }
-        cmd.insert(TnuaGhostPlatform);
-    }
-
-    helper
-        .spawn_scene_cuboid(
-            "Collision Groups",
-            "collision-groups-text.glb#Scene0",
-            Transform::from_xyz(10.0, 2.0, 1.0),
-            Vector3::new(4.0, 2.0, 4.0),
-        )
-        .insert((
+        --
+        #Collision_Groups
+        LevelObject
+        WorldAssetRoot("collision-groups-text.glb#Scene0")
+        @an_invisible_cuboid(Vector3::new(4.0, 2.0, 4.0))
+        Transform::from_xyz(10.0, 2.0, 1.0)
+        @{
             #[cfg(feature = "rapier3d")]
-            (
-                rapier::Collider::cuboid(2.0, 1.0, 2.0),
+            bsn! {
+                rapier::Collider::cuboid(2.0, 1.0, 2.0)
                 CollisionGroups {
                     memberships: Group::GROUP_1,
                     filters: Group::GROUP_1,
-                    test_mode: Default::default(),
-                },
-            ),
+                }
+            }
+        }
+        @{
             #[cfg(feature = "avian3d")]
-            (
-                avian::RigidBody::Static,
-                avian::Collider::cuboid(4.0, 2.0, 4.0),
-                CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough]),
-            ),
-        ));
-
-    #[cfg(feature = "rapier3d")]
-    helper
-        .spawn_scene_cuboid(
-            "Solver Groups",
-            "solver-groups-text.glb#Scene0",
-            Transform::from_xyz(15.0, 2.0, 1.0), // .with_scale(0.01 * Vec3::ONE),
-            Vector3::new(4.0, 2.0, 4.0),
-        )
-        .insert(SolverGroups {
-            memberships: Group::GROUP_1,
-            filters: Group::GROUP_1,
-            test_mode: Default::default(),
-        });
-
-    helper
-        .spawn_scene_cuboid(
-            "Sensor",
-            "sensor-text.glb#Scene0",
-            Transform::from_xyz(20.0, 2.0, 1.0),
-            Vector3::new(4.0, 2.0, 4.0),
-        )
-        .insert((
+            bsn! {
+                avian::RigidBody::Static
+                avian::Collider::cuboid(4.0, 2.0, 4.0)
+                CollisionLayers::new([LayerNames::PhaseThrough], [LayerNames::PhaseThrough])
+            },
+        }
+        --
+        {
             #[cfg(feature = "rapier3d")]
-            rapier::Sensor,
-            #[cfg(feature = "avian3d")]
-            avian::Sensor,
-        ));
-
-    // spawn moving and spinning platforms
-    let mut moving_platform_helper = helper.with_color(css::BLUE);
-    moving_platform_helper
-        .spawn_cuboid(
-            "Moving Platform",
-            Transform::from_xyz(-4.0, 6.0, 0.0),
-            Vector3::new(4.0, 1.0, 4.0),
-        )
-        .make_kinematic()
-        .insert(MovingPlatform::new(
-            4.0,
-            &[
+            bsn_list! {
+                #Solver_Groups
+                LevelObject
+                WorldAssetRoot("solver-groups-text.glb#Scene0")
+                @an_invisible_cuboid(Vector3::new(4.0, 2.0, 4.0))
+                Transform::from_xyz(15.0, 2.0, 1.0) // .with_scale(0.01 * Vec3::ONE),
+                SolverGroups {
+                    memberships: Group::GROUP_1,
+                    filters: Group::GROUP_1,
+                }
+            }
+        }
+        --
+        #Sensor
+        LevelObject
+        WorldAssetRoot("sensor-text.glb#Scene0")
+        @an_invisible_cuboid(Vector3::new(4.0, 2.0, 4.0))
+        Transform::from_xyz(20.0, 2.0, 1.0)
+        @make_sensor()
+        --
+        // spawn moving and spinning platforms
+        #Moving_Platform
+        @a_cuboid(css::BLUE, Vector3::new(4.0, 1.0, 4.0))
+        Transform::from_xyz(-4.0, 6.0, 0.0)
+        @make_kinematic()
+        MovingPlatform {
+            speed: 4.0,
+            locations: vec![
                 Vector3::new(-4.0, 6.0, 0.0),
                 Vector3::new(-8.0, 6.0, 0.0),
                 Vector3::new(-8.0, 10.0, 0.0),
@@ -158,14 +157,11 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
                 Vector3::new(-4.0, 10.0, -4.0),
                 Vector3::new(-4.0, 10.0, 0.0),
             ],
-        ));
-
-    moving_platform_helper
-        .spawn_cylinder(
-            "Spinning Platform",
-            Transform::from_xyz(-2.0, 2.0, 10.0),
-            3.0,
-            0.5,
-        )
-        .make_kinematic_with_angular_velocity(Vector3::Y);
+        }
+        --
+        #Spinning_Platform
+        @a_cylinder(css::BLUE, 3.0, 0.5)
+        Transform::from_xyz(-2.0, 2.0, 10.0)
+        @make_kinematic_with_angular_velocity(Vector3::Y)
+    });
 }

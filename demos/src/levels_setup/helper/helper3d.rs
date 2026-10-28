@@ -293,26 +293,12 @@ impl LevelSetupHelper3dWithMaterial<'_, '_, '_> {
 }
 
 pub trait LevelSetupHelper3dEntityCommandsExtension {
-    fn make_kinematic(&mut self) -> &mut Self;
     fn make_kinematic_with_linear_velocity(&mut self, velocity: Vector3) -> &mut Self;
-    fn make_kinematic_with_angular_velocity(&mut self, angvel: Vector3) -> &mut Self;
     fn add_ball_collider(&mut self, radius: Float) -> &mut Self;
     fn make_sensor(&mut self) -> &mut Self;
 }
 
 impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
-    fn make_kinematic(&mut self) -> &mut Self {
-        self.insert((
-            #[cfg(feature = "avian3d")]
-            avian::RigidBody::Kinematic,
-            #[cfg(feature = "rapier3d")]
-            (
-                rapier::Velocity::default(),
-                rapier::RigidBody::KinematicVelocityBased,
-            ),
-        ))
-    }
-
     fn make_kinematic_with_linear_velocity(
         &mut self,
         #[allow(unused)] velocity: Vector3,
@@ -326,24 +312,6 @@ impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
             #[cfg(feature = "rapier3d")]
             (
                 rapier::Velocity::linear(velocity),
-                rapier::RigidBody::KinematicVelocityBased,
-            ),
-        ))
-    }
-
-    fn make_kinematic_with_angular_velocity(
-        &mut self,
-        #[allow(unused)] angvel: Vector3,
-    ) -> &mut Self {
-        self.insert((
-            #[cfg(feature = "avian3d")]
-            (
-                avian::AngularVelocity(angvel.f32()),
-                avian::RigidBody::Kinematic,
-            ),
-            #[cfg(feature = "rapier3d")]
-            (
-                rapier::Velocity::angular(angvel),
                 rapier::RigidBody::KinematicVelocityBased,
             ),
         ))
@@ -365,5 +333,198 @@ impl LevelSetupHelper3dEntityCommandsExtension for EntityCommands<'_> {
             #[cfg(feature = "rapier3d")]
             rapier::Sensor,
         ))
+    }
+}
+
+// BSN
+
+pub fn the_floor(color: impl Into<Color>) -> impl Scene {
+    bsn! {
+        #Floor
+        Mesh3d(asset_value(Plane3d::default().mesh().size(128.0, 128.0)))
+        MeshMaterial3d<StandardMaterial>(asset_value(color.into()))
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::Collider::halfspace(Vec3::Y).unwrap()
+            }
+        }
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::RigidBody::Static
+                avian::Collider::half_space(Vector3::Y.f32())
+            }
+        }
+    }
+}
+
+pub fn a_cuboid(color: impl Into<Color>, size: Vector3) -> impl Scene {
+    bsn! {
+        Mesh3d(asset_value(Cuboid::from_size(size.f32())))
+        MeshMaterial3d<StandardMaterial>(asset_value(color.into()))
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::Collider::cuboid(0.5 * size.x.f32(), 0.5 * size.y.f32(), 0.5 * size.z.f32())
+            }
+        }
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::RigidBody::Static
+                avian::Collider::cuboid(size.x.f32(), size.y.f32(), size.z.f32())
+            }
+        }
+    }
+}
+
+pub fn an_invisible_cuboid(#[allow(unused)] size: Vector3) -> impl Scene {
+    bsn! {
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::Collider::cuboid(
+                    0.5 * size.x.f32(),
+                    0.5 * size.y.f32(),
+                    0.5 * size.z.f32(),
+                )
+            }
+        }
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::RigidBody::Static
+                avian::Collider::cuboid(
+                        size.x.f32(),
+                        size.y.f32(),
+                        size.z.f32(),
+                )
+            }
+        }
+    }
+}
+
+pub fn a_cylinder(color: impl Into<Color>, radius: Float, half_height: Float) -> impl Scene {
+    bsn! {
+        Mesh3d(asset_value(Cylinder {
+            radius: radius.f32(),
+            half_height: half_height.f32(),
+        }))
+
+        MeshMaterial3d<StandardMaterial>(asset_value(color.into()))
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::Collider::cylinder(half_height, radius)
+            }
+        }
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::RigidBody::Static
+                avian::Collider::cylinder(radius.f32(), 2.0 * half_height.f32())
+            }
+        }
+    }
+}
+
+#[allow(unused)]
+pub fn make_kinematic() -> impl Scene {
+    bsn! {
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::RigidBody::Kinematic
+            }
+        }
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::Velocity
+                    rapier::RigidBody::KinematicVelocityBased
+            }
+        }
+    }
+}
+
+#[allow(unused)]
+pub fn make_kinematic_with_angular_velocity(angvel: Vector3) -> impl Scene {
+    bsn! {
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::AngularVelocity({angvel.f32()})
+                avian::RigidBody::Kinematic
+            }
+        }
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::Velocity::angular(angvel)
+                rapier::RigidBody::KinematicVelocityBased
+            }
+        }
+    }
+}
+
+#[allow(unused)]
+pub fn make_dynamic() -> impl Scene {
+    bsn! {
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::RigidBody::Dynamic
+            }
+        }
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::Velocity
+                    rapier::RigidBody::Dynamic
+            }
+        }
+    }
+}
+
+#[allow(unused)]
+pub fn make_sensor() -> impl Scene {
+    bsn! {
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::Sensor
+            }
+        }
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::Sensor
+            }
+        }
+    }
+}
+
+#[allow(unused)]
+pub fn make_intangible() -> impl Scene {
+    bsn! {
+        @{
+            #[cfg(feature = "rapier3d")]
+            bsn! {
+                rapier::SolverGroups {
+                    memberships: rapier::Group::empty(),
+                    filters: rapier::Group::empty(),
+                }
+            }
+        }
+        @{
+            #[cfg(feature = "avian3d")]
+            bsn! {
+                avian::CollisionLayers::new(
+                    [crate::levels_setup::for_3d_platformer::LayerNames::FallThrough],
+                    [crate::levels_setup::for_3d_platformer::LayerNames::FallThrough],
+                )
+            }
+        }
     }
 }
