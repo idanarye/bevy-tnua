@@ -2,11 +2,6 @@ use bevy::pbr::prelude::MeshMaterial3d;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_tnua::math::Vector3;
 
-//#[cfg(feature = "avian3d")]
-//use avian3d::{prelude as avian, prelude::*};
-//#[cfg(feature = "rapier3d")]
-//use bevy_rapier3d::{prelude as rapier, prelude::*};
-
 use crate::level_mechanics::{Cannon, CannonBullet, PushEffect, TimeToDespawn};
 use crate::levels_setup::LevelObject;
 use crate::levels_setup::helper::helper3d::{
