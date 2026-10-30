@@ -8,7 +8,7 @@ impl Plugin for TimeToDespawnPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default, Clone)]
 pub struct TimeToDespawn(Timer);
 
 impl TimeToDespawn {

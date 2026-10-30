@@ -144,6 +144,7 @@ pub fn setup_level(mut commands: Commands) {
         --
         // spawn moving and spinning platforms
         #Moving_Platform
+        LevelObject
         @a_cuboid(css::BLUE, Vector3::new(4.0, 1.0, 4.0))
         Transform::from_xyz(-4.0, 6.0, 0.0)
         @make_kinematic()
@@ -160,6 +161,7 @@ pub fn setup_level(mut commands: Commands) {
         }
         --
         #Spinning_Platform
+        LevelObject
         @a_cylinder(css::BLUE, 3.0, 0.5)
         Transform::from_xyz(-2.0, 2.0, 10.0)
         @make_kinematic_with_angular_velocity(Vector3::Y)

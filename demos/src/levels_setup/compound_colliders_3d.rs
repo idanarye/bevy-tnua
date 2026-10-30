@@ -1,16 +1,19 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_tnua::math::{Quaternion, Vector3};
 
+use crate::levels_setup::LevelObject;
+use crate::levels_setup::helper::helper3d::{a_cuboid, some_compound_cuboids};
+
 use super::PositionPlayer;
-use super::helper::LevelSetupHelper3d;
 
-pub fn setup_level(mut helper: LevelSetupHelper3d) {
-    helper.spawn(PositionPlayer::from(Vec3::new(0.0, 2.0, 0.0)));
-
-    helper.with_color(css::BROWN).spawn_compound_cuboids(
-        "Area",
-        Transform::default(),
-        &[
+pub fn setup_level(mut commands: Commands) {
+    commands.spawn_scene_list(bsn_list! {
+        PositionPlayer(Vec3::new(0.0, 2.0, 0.0))
+        --
+        #Area
+        LevelObject
+        Transform
+        @some_compound_cuboids(css::BROWN, [
             (
                 Vector3::new(0.0, 0.0, 0.0),
                 Quaternion::IDENTITY,
@@ -21,12 +24,11 @@ pub fn setup_level(mut helper: LevelSetupHelper3d) {
                 Quaternion::IDENTITY,
                 Vector3::new(1.0, 10.0, 4.0),
             ),
-        ],
-    );
-
-    helper.with_color(css::LIGHT_CORAL).spawn_cuboid(
-        "Bug Replicator",
-        Transform::from_xyz(-10.0, 1.0, 0.0),
-        Vector3::new(4.0, 2.5, 4.0),
-    );
+        ])
+        --
+        #Bug_Replicator
+        LevelObject
+        Transform::from_xyz(-10.0, 1.0, 0.0)
+        @a_cuboid(css::LIGHT_CORAL, Vector3::new(4.0, 2.5, 4.0))
+    });
 }

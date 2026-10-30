@@ -2,22 +2,29 @@ use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_tnua::TnuaNotPlatform;
 
+use crate::levels_setup::LevelObject;
+use crate::levels_setup::helper::helper3d::{a_ball, make_dynamic, the_floor};
+
 use super::PositionPlayer;
-use super::helper::LevelSetupHelper3d;
 
-pub fn setup_level(mut helper: LevelSetupHelper3d) {
-    helper.spawn(PositionPlayer::from(Vec3::new(0.0, 10.0, 0.0)));
-
-    helper.spawn_floor(css::WHITE);
-
-    helper
-        .with_color(css::ORANGE_RED)
-        .spawn_dynamic_ball("Nonplatform Ball", Transform::from_xyz(4.0, 4.0, 0.0), 0.45)
-        .insert(TnuaNotPlatform);
-
-    helper.with_color(css::GREEN_YELLOW).spawn_dynamic_ball(
-        "Platform Ball",
-        Transform::from_xyz(-4.0, 4.0, 0.0),
-        0.45,
-    );
+pub fn setup_level(mut commands: Commands) {
+    commands.spawn_scene_list(bsn_list! {
+        PositionPlayer(Vec3::new(0.0, 10.0, 0.0))
+        --
+        @the_floor(css::WHITE)
+        LevelObject
+        --
+        #Nonplatform_Ball
+        LevelObject
+        Transform::from_xyz(4.0, 4.0, 0.0)
+        @a_ball(css::ORANGE_RED, 0.45)
+        @make_dynamic()
+        TnuaNotPlatform
+        --
+        #Platform_Ball
+        LevelObject
+        Transform::from_xyz(-4.0, 4.0, 0.0)
+        @a_ball(css::GREEN_YELLOW, 0.45)
+        @make_dynamic()
+    });
 }
