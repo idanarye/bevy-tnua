@@ -24,7 +24,7 @@ pub trait TnuaGhostOverwritesForBasis: 'static + Send + Sync + Default {
 /// a [`TnuaGhostSensor`](crate::TnuaGhostSensor) component on them that holds the ghost hits that
 /// can be set in the [`TnuaGhostOverwrite`] using its
 /// [`set`](TnuaGhostOverwrite::set) method.
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Reflect)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct TnuaGhostOverwrites<S: TnuaScheme>(pub <<<S as TnuaScheme>::Basis as TnuaBasis>::Sensors<'static> as TnuaSensors<'static>>::GhostOverwrites);
 

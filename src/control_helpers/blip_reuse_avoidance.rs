@@ -13,7 +13,7 @@ use crate::prelude::TnuaController;
 ///
 /// For example - this can be use to avoid climbing again on a ladder immediately after dropping
 /// from it.
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct TnuaBlipReuseAvoidance<S: TnuaScheme> {
     current_entity: Option<Entity>,
     entities_to_avoid: HashMap<Entity, S::ActionDiscriminant>,

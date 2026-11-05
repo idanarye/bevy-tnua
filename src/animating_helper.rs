@@ -79,7 +79,7 @@ use bevy::prelude::*;
 ///     }
 /// }
 /// ```
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct TnuaAnimatingState<State> {
     state: Option<State>,
 }

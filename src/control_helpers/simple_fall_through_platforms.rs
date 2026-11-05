@@ -13,7 +13,7 @@ use crate::ghost_overrides::TnuaGhostOverwrite;
 /// [`TnuaController`](crate::TnuaController), use [`with`](Self::with), and call one of the
 /// methods of [the returned handle object](TnuaHandleForSimpleFallThroughPlatformsHelper). See the
 /// description of these methods to determine which one to call.
-#[derive(Component, Default, FromTemplate)]
+#[derive(Component, Default, FromTemplate, Reflect)]
 pub struct TnuaSimpleFallThroughPlatformsHelper {
     currently_falling_through: HashSet<Entity>,
 }

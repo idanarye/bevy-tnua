@@ -82,7 +82,7 @@ struct ContenderAction<S: TnuaScheme> {
     being_fed_for: Stopwatch,
 }
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 enum FedStatus {
     #[default]
@@ -107,7 +107,7 @@ impl FedStatus {
     }
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Reflect)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 struct FedEntry {
     status: FedStatus,
@@ -115,7 +115,7 @@ struct FedEntry {
 }
 
 /// Configuration for a [`TnuaController`].
-#[derive(Component, FromTemplate)]
+#[derive(Component, FromTemplate, Reflect)]
 pub struct TnuaConfig<S: TnuaScheme>(pub Handle<S::Config>);
 
 /// The main component used for interaction with the controls and animation code (needs a
@@ -143,7 +143,7 @@ pub struct TnuaConfig<S: TnuaScheme>(pub Handle<S::Config>);
 ///   `TnuaAction`](crate::TnuaAction#implementors) for more information.
 ///
 /// Without [`TnuaControllerPlugin`] of the same scheme this component will not do anything.
-#[derive(Component)]
+#[derive(Component, Reflect)]
 #[require(TnuaMotor, TnuaRigidBodyTracker)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 pub struct TnuaController<S: TnuaScheme> {

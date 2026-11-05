@@ -10,7 +10,7 @@ use crate::math::{Float, Vector3};
 /// form or position. See `TnuaRadarLens` in the main Tnua crate, which wraps this with a
 /// [`TnuaSpatialExt`](crate::spatial_ext::TnuaSpatialExt) to provide many helper methods for
 /// running more queries on the detected obstacles.
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct TnuaObstacleRadar {
     /// The radius of the radar's cylinder.
     pub radius: Float,
@@ -115,6 +115,7 @@ impl TnuaObstacleRadar {
     }
 }
 
+#[derive(Reflect)]
 pub enum BlipStatus {
     Unseen,
     Seen,

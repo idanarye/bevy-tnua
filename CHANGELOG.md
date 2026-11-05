@@ -8,6 +8,9 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+### Added
+- `#[derive(Reflect)]` to anything that implements `FromTemplate`.
+
 ## 0.33.1 - 2026-10-30
 ### Added
 - BSN support: implement `FromTemplate` for:

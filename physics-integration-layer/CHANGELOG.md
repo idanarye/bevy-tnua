@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- `#[derive(Reflect)]` to anything that implements `FromTemplate`.
+
 ## 0.14.1 - 2026-10-30
 ### Added
 - BSN support: implement `FromTemplate` for:
