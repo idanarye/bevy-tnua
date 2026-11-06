@@ -8,6 +8,7 @@ NOTE: Subcrates have their own changelogs: [bevy-tnua-physics-integration-layer]
 
 ## [Unreleased]
 
+## 0.33.2 - 2026-11-06
 ### Added
 - `#[derive(Reflect)]` to anything that implements `FromTemplate`.
 

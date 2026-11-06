@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 0.14.2 - 2026-11-06
 ### Added
 - `#[derive(Reflect)]` to anything that implements `FromTemplate`.
 
