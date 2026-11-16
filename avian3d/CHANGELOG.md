@@ -11,6 +11,11 @@ NOTES:
 
 ## [Unreleased]
 
+## 0.13.2 - 2026-11-16
+### Fixed
+- `TnuaToggle::Disabled | TnuaToggle::SenseOnly` [preventing motors from being
+  applied on other entities](https://github.com/idanarye/bevy-tnua/issues/138).
+
 ## 0.13.1 - 2026-10-30
 ### Added
 - BSN support: implement `FromTemplate` for `TnuaAvian2dSensorShape` and

@@ -443,7 +443,7 @@ fn apply_motors_system(
     for (motor, mut forces, tnua_toggle, tnua_gravity) in query.iter_mut() {
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
-                return;
+                continue;
             }
             TnuaToggle::Enabled => {}
         }

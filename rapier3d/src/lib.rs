@@ -422,7 +422,7 @@ fn apply_motors_system(
         match tnua_toggle.copied().unwrap_or_default() {
             TnuaToggle::Disabled | TnuaToggle::SenseOnly => {
                 *external_force = Default::default();
-                return;
+                continue;
             }
             TnuaToggle::Enabled => {}
         }

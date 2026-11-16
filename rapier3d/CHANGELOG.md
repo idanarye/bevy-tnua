@@ -8,6 +8,11 @@ NOTE: This changelog is shared between bevy-tnua-rapier2d and bevy-tnua-rapier3d
 
 ## [Unreleased]
 
+## 0.19.2 - 2026-11-16
+### Fixed
+- `TnuaToggle::Disabled | TnuaToggle::SenseOnly` [preventing motors from being
+  applied on other entities](https://github.com/idanarye/bevy-tnua/issues/138).
+
 ## 0.19.1 - 2026-10-30
 ### Added
 - BSN support: implement `FromTemplate` for `TnuaRapier2dSensorShape` and
